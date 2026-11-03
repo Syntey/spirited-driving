@@ -1,4 +1,4 @@
-import app.futured.kmptemplate.gradle.configuration.ProjectSettings
+import com.syntey.spiriteddriving.gradle.configuration.ProjectSettings
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)

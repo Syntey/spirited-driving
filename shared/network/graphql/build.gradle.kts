@@ -1,5 +1,5 @@
-import app.futured.kmptemplate.gradle.configuration.ProductFlavors
-import app.futured.kmptemplate.gradle.configuration.ProjectSettings
+import com.syntey.spiriteddriving.gradle.configuration.ProductFlavors
+import com.syntey.spiriteddriving.gradle.configuration.ProjectSettings
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 
 plugins {

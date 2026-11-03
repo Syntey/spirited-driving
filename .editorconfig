@@ -4,9 +4,6 @@ ktlint = disabled
 [**/build/buildkonfig/**]
 ktlint = disabled
 
-[**/_Template**]
-ktlint = disabled
-
 [*.{kt,kts}]
 
 max_line_length = 140
@@ -21,7 +18,7 @@ ij_kotlin_allow_trailing_comma_on_call_site = true
 
 # moko-resources generates every resource as an extension property of `MR`, so each one would need its own import.
 # Keep aligned with `WildcardImport` in config/detekt.yml
-ij_kotlin_packages_to_use_import_on_demand = java.util.*,kotlinx.android.synthetic.**,app.futured.kmptemplate.resources.*
+ij_kotlin_packages_to_use_import_on_demand = java.util.*,kotlinx.android.synthetic.**,com.syntey.spiriteddriving.resources.*
 
 continuation_indent_size = 4
 
