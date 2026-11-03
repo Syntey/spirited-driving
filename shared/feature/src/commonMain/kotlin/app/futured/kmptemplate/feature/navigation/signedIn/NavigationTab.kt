@@ -1,6 +1,6 @@
 package app.futured.kmptemplate.feature.navigation.signedIn
 
-import app.futured.kmptemplate.resources.MR
+import app.futured.kmptemplate.resources.*
 import dev.icerock.moko.resources.desc.StringDesc
 import dev.icerock.moko.resources.desc.desc
 

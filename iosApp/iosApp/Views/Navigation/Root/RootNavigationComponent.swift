@@ -9,7 +9,7 @@ struct RootNavigationComponent<Model: RootNavigationComponentModelProtocol>: Vie
             if let navigationEntry = model.slotChild {
                 switch onEnum(of: navigationEntry) {
                 case let .login(entry):
-                    LoginComponent(model: LoginComponentModel(entry.screen)).id(entry.iosViewId)
+                    LoginComponent(entry.screen).id(entry.iosViewId)
                 case let .signedIn(entry):
                     SignedInNavigationComponent(model: SignedInNavigationComponentModel(entry.navHost)).id(entry.iosViewId)
                 }

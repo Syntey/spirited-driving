@@ -3,7 +3,7 @@ package app.futured.kmptemplate.feature.ui.thirdScreen
 import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.kmptemplate.feature.ui.base.AppComponentContext
 import app.futured.kmptemplate.feature.ui.base.ScreenComponent
-import app.futured.kmptemplate.resources.MR
+import app.futured.kmptemplate.resources.*
 import dev.icerock.moko.resources.format
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.annotation.Factory

@@ -15,6 +15,8 @@ plugins {
     alias(libs.plugins.skie)
     alias(libs.plugins.moko.resources)
     alias(libs.plugins.koin)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.compose.compiler)
 
     id(libs.plugins.conventions.lint.get().pluginId)
 }
@@ -64,6 +66,7 @@ kotlin {
             export(libs.futured.arkitekt.decompose)
             export(projects.shared.feature)
             export(projects.shared.kmpResources)
+            export(projects.shared.ui)
 
             export(libs.decompose)
             export(libs.essenty)
@@ -85,12 +88,16 @@ kotlin {
                 implementation(projects.shared.network.rest)
                 implementation(projects.shared.persistence)
                 implementation(projects.shared.kmpResources)
+                implementation(projects.shared.ui)
 
                 implementation(libs.decompose)
                 implementation(libs.koin.core)
                 implementation(libs.koin.annotations)
                 implementation(libs.logging.kermit)
                 implementation(libs.logging.kermitCrashlytics)
+
+                // Required for Compose compiler plugin, as this module links Compose UI from `shared:ui` into the iOS framework
+                implementation(libs.jetbrains.compose.runtime)
             }
         }
 
@@ -106,8 +113,10 @@ kotlin {
                 api(libs.futured.arkitekt.decompose)
                 api(projects.shared.feature)
                 api(projects.shared.kmpResources)
+                api(projects.shared.ui)
 
                 api(libs.decompose)
+                api(libs.essenty)
                 api(libs.kotlinx.immutableCollections)
 
                 implementation(libs.logging.nsExceptionKt.core)

@@ -7,7 +7,7 @@ import app.futured.kmptemplate.feature.domain.CounterUseCaseArgs
 import app.futured.kmptemplate.feature.domain.SyncDataUseCase
 import app.futured.kmptemplate.feature.ui.base.AppComponentContext
 import app.futured.kmptemplate.feature.ui.base.ScreenComponent
-import app.futured.kmptemplate.resources.MR
+import app.futured.kmptemplate.resources.*
 import app.futured.kmptemplate.resources.datetime.desc
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.lifecycle.doOnCreate

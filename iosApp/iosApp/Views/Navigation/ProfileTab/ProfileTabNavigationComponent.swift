@@ -11,9 +11,9 @@ struct ProfileTabNavigationComponent<Model: ProfileTabNavigationComponentModelPr
         ) { child in
             switch onEnum(of: child) {
             case let .profile(entry):
-                ProfileComponent(model: ProfileComponentModel(entry.screen))
+                ProfileComponent(entry.screen)
             case let .third(entry):
-                ThirdComponent(model: ThirdComponentModel(entry.screen))
+                ThirdComponent(entry.screen)
             }
         }
     }

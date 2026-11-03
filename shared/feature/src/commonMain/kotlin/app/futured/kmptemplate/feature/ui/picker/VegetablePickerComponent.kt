@@ -4,7 +4,7 @@ import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.decompose.navigation.resultFlow
 import app.futured.kmptemplate.feature.ui.base.AppComponentContext
 import app.futured.kmptemplate.feature.ui.base.ScreenComponent
-import app.futured.kmptemplate.resources.MR
+import app.futured.kmptemplate.resources.*
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import dev.icerock.moko.resources.desc.desc
 import kotlinx.collections.immutable.persistentListOf
