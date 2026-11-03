@@ -2,7 +2,7 @@
 <resources>
 
     <!-- App -->
-    <string name="template_app_name">Futured KMP Template</string>
+    <string name="app_name">Spirited Driving</string>
 
     <!-- Generic -->
     <string name="generic_close">Close</string>

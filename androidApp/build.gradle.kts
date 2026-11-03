@@ -1,4 +1,4 @@
-import app.futured.kmptemplate.gradle.configuration.ProjectSettings
+import com.syntey.spiriteddriving.gradle.configuration.ProjectSettings
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -96,7 +96,7 @@ android {
     lint {
         textReport = true // Write a text report to the console (Useful for CI logs)
         xmlReport = true // Write XML report
-        abortOnError = false // Do not abort build when error is found -> Danger will report this to the MR
+        abortOnError = false // Do not abort build when error is found -> CI uploads the report as an artifact
         explainIssues = false // HTML/XML reports are too verbose in console logs
         checkDependencies = false // Required to get all unused resource from other modules (disabled to speed up linting)
         checkTestSources = true // Also check test case code for lint issues

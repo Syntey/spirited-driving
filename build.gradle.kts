@@ -1,4 +1,4 @@
-import app.futured.kmptemplate.gradle.task.LintCheckTask
+import com.syntey.spiriteddriving.gradle.task.LintCheckTask
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
 
 plugins {
@@ -10,6 +10,15 @@ plugins {
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.koin) apply false
+    alias(libs.plugins.version.catalog.update)
+}
+
+// Keeps the hand-grouped order and the `project-*-namespace` versions no dependency references.
+versionCatalogUpdate {
+    sortByKey.set(false)
+    keep {
+        keepUnusedVersions.set(true)
+    }
 }
 
 tasks.register<LintCheckTask>("lintCheck")
