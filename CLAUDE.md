@@ -17,6 +17,7 @@
 - **Naming**: PascalCase for classes (*Component, *Screen, *UseCase, *ViewState)
 - **Error Handling**: Use sealed NetworkError classes and results (Success/Failure)
 - **Platform-specific code**: Use .android.kt and .ios.kt suffixes
+- **Resources**: Import moko resources with `app.futured.kmptemplate.resources.*` (wildcard allowed by lint), not one import per resource
 - **State**: Immutable data classes for state representation
 - **Max limits**: 140 char line length, 25 functions per class, 20 per file
 - **Testing**: Required for business logic and data transformations

@@ -2,9 +2,34 @@
 
 iOS-specific conventions for the SwiftUI layer in `iosApp/`.
 
+## Compose Multiplatform Screens
+
+Screens are implemented in Compose Multiplatform (`shared:ui`) and exposed to Swift as `*ScreenUiController`
+functions. Their SwiftUI view is a thin `*Component` that takes the KMP screen directly — no ComponentModel,
+as there is no state for Swift to observe:
+
+```swift
+struct FirstComponent: View {
+    private let screen: FirstScreen
+
+    init(_ screen: FirstScreen) {
+        self.screen = screen
+    }
+
+    var body: some View {
+        ComposeView { FirstScreenUiController(screen: screen) }
+            .composeScreen()                                            // Edge to edge, Compose applies safe area
+            .navigationTitle(Localizable.first_screen_title.localized)  // Native navigation chrome stays in SwiftUI
+    }
+}
+```
+
+Native navigation (`NavigationStack`, `TabView`, sheets) and any native SwiftUI screen follow the
+Component + ComponentModel pattern below.
+
 ## Component + ComponentModel Pattern
 
-Every screen and navigation view follows the Component + ComponentModel pattern:
+Navigation views and native SwiftUI screens follow the Component + ComponentModel pattern:
 
 1. **Protocol** (`*ComponentModelProtocol`) — defines the public interface (properties, actions)
 2. **ComponentModel** (`@Observable final class`) — conforms to the protocol, wraps KMP component

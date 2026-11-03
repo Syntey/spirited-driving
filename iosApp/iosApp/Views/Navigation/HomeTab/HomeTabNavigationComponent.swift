@@ -11,17 +11,17 @@ struct HomeTabNavigationComponent<Model: HomeTabNavigationComponentModelProtocol
         ) { child in
             switch onEnum(of: child) {
             case let .first(entry):
-                FirstComponent(model: FirstComponentModel(entry.screen))
+                FirstComponent(entry.screen)
             case let .second(entry):
-                SecondComponent(model: SecondComponentModel(entry.screen))
+                SecondComponent(entry.screen)
             case let .third(entry):
-                ThirdComponent(model: ThirdComponentModel(entry.screen))
+                ThirdComponent(entry.screen)
             }
         }
         .sheet(item: $model.sheetItem) { item in
             switch onEnum(of: item.instance) {
             case let .picker(instance):
-                PickerComponent(model: PickerComponentModel(instance.screen))
+                PickerComponent(instance.screen)
                     .presentationDetents(.init([.medium]))
             }
         }

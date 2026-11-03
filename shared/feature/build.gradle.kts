@@ -16,7 +16,8 @@ dependencies {
     add("kspCommonMainMetadata", libs.futured.arkitekt.decomposeProcessor)
 }
 
-tasks.withType<KotlinCompilationTask<*>>().configureEach {
+// Platform KSP tasks (e.g. `kspAndroidMain`) read the common KSP output as well, so they need the same dependency as compilations.
+tasks.matching { it.name.startsWith("ksp") || it is KotlinCompilationTask<*> }.configureEach {
     if (name != "kspCommonMainKotlinMetadata") {
         dependsOn("kspCommonMainKotlinMetadata")
     }

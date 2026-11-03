@@ -26,6 +26,7 @@ include(":shared:feature")
 include(":shared:persistence")
 include(":shared:platform")
 include(":shared:resources")
+include(":shared:ui")
 // this removes compiler warning about same KLIB name https://youtrack.jetbrains.com/projects/KT/issues/KT-66568/w-KLIB-resolver-The-same-uniquename...-found-in-more-than-one-library
 project(":shared:resources").name = "kmp-resources"
 include(":baselineprofile")

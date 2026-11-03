@@ -4,7 +4,7 @@ import android.content.Context
 import android.os.Build
 import app.futured.kmptemplate.android.BuildConfig
 import app.futured.kmptemplate.platform.binding.Platform
-import app.futured.kmptemplate.resources.MR
+import app.futured.kmptemplate.resources.*
 
 class PlatformImpl(applicationContext: Context) : Platform {
     override val appName: String = MR.strings.template_app_name.getString(applicationContext)

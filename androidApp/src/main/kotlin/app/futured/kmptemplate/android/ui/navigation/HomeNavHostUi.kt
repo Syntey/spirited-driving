@@ -1,8 +1,8 @@
 package app.futured.kmptemplate.android.ui.navigation
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
@@ -13,21 +13,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.futured.kmptemplate.android.ui.screen.FirstScreenUi
-import app.futured.kmptemplate.android.ui.screen.PickerScreenUi
-import app.futured.kmptemplate.android.ui.screen.SecondScreenUi
-import app.futured.kmptemplate.android.ui.screen.ThirdScreenUi
 import app.futured.kmptemplate.feature.navigation.home.HomeChild
 import app.futured.kmptemplate.feature.navigation.home.HomeConfig
 import app.futured.kmptemplate.feature.navigation.home.HomeNavHost
 import app.futured.kmptemplate.feature.navigation.home.HomeSheetChild
 import app.futured.kmptemplate.feature.navigation.home.HomeSheetConfig
 import app.futured.kmptemplate.feature.ui.picker.PickerScreen
+import app.futured.kmptemplate.resources.*
+import app.futured.kmptemplate.ui.screen.FirstScreenUi
+import app.futured.kmptemplate.ui.screen.PickerScreenUi
+import app.futured.kmptemplate.ui.screen.SecondScreenUi
+import app.futured.kmptemplate.ui.screen.ThirdScreenUi
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.stack.ChildStack
+import dev.icerock.moko.resources.StringResource
 
 @OptIn(ExperimentalDecomposeApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -42,11 +44,19 @@ fun HomeNavHostUi(
 
     Scaffold(
         modifier = modifier,
-        contentWindowInsets = WindowInsets.navigationBars,
+        topBar = {
+            NavHostTopBar(
+                title = kmpStringResource(stack.active.instance.title),
+                canNavigateBack = stack.backStack.isNotEmpty(),
+                onNavigateBack = actions::pop,
+            )
+        },
         content = { paddings ->
             Children(
                 stack = stack,
-                modifier = Modifier.padding(paddings),
+                modifier = Modifier
+                    .padding(paddings)
+                    .consumeWindowInsets(paddings),
                 animation = predictiveBackAnimation(
                     backHandler = navHost.backHandler,
                     onBack = actions::pop,
@@ -72,6 +82,13 @@ fun HomeNavHostUi(
         null -> Unit
     }
 }
+
+private val HomeChild.title: StringResource
+    get() = when (this) {
+        is HomeChild.First -> MR.strings.first_screen_title
+        is HomeChild.Second -> MR.strings.second_screen_title
+        is HomeChild.Third -> MR.strings.third_screen_title
+    }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
