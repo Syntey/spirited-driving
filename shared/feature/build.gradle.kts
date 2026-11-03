@@ -1,4 +1,4 @@
-import app.futured.kmptemplate.gradle.configuration.ProjectSettings
+import com.syntey.spiriteddriving.gradle.configuration.ProjectSettings
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask
 
 plugins {

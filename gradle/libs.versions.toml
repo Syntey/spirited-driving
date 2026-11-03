@@ -1,5 +1,5 @@
 [versions]
-agp = "9.4.1"
+agp = "9.5.0"
 kotlin = "2.4.10"
 ksp = "2.3.12"
 desugarLibs = "2.1.5"
@@ -42,23 +42,22 @@ profileinstaller = "1.4.1"
 google-servicesPlugin = "4.5.0"
 google-firebaseAppDistributionPlugin = "5.3.0"
 arkitekt = "6.1.0"
+versionCatalogUpdate = "1.1.1"
 
 # Android Namespaces
-project-android-namespace = "app.futured.kmptemplate.android"
-project-shared-app-namespace = "app.futured.kmptemplate.app.android"
-project-shared-feature-namespace = "app.futured.kmptemplate.feature.android"
-project-shared-network-graphql-namespace = "app.futured.kmptemplate.network.graphql.android"
-project-shared-network-graphql-packageName = "app.futured.kmptemplate.network.graphql"
-project-shared-network-rest-namespace = "app.futured.kmptemplate.network.rest.android"
-project-shared-network-rest-packageName = "app.futured.kmptemplate.network.rest"
-project-shared-persistence-namespace = "app.futured.kmptemplate.persistence.android"
-project-shared-arkitekt-crUsecases-namespace = "app.futured.arkitekt.cr_usecases.android"
-project-shared-arkitekt-decompose-namespace = "app.futured.arkitekt.decompose.android"
-project-shared-platform-namespace = "app.futured.kmptemplate.platform.android"
-project-shared-resources-namespace = "app.futured.kmptemplate.resources.android"
-project-shared-resources-packageName = "app.futured.kmptemplate.resources"
-project-shared-ui-namespace = "app.futured.kmptemplate.ui.android"
-project-baselineprofile-namespace = "app.futured.kmptemplate.baselineprofile"
+project-android-namespace = "com.syntey.spiriteddriving.android"
+project-shared-app-namespace = "com.syntey.spiriteddriving.app.android"
+project-shared-feature-namespace = "com.syntey.spiriteddriving.feature.android"
+project-shared-network-graphql-namespace = "com.syntey.spiriteddriving.network.graphql.android"
+project-shared-network-graphql-packageName = "com.syntey.spiriteddriving.network.graphql"
+project-shared-network-rest-namespace = "com.syntey.spiriteddriving.network.rest.android"
+project-shared-network-rest-packageName = "com.syntey.spiriteddriving.network.rest"
+project-shared-persistence-namespace = "com.syntey.spiriteddriving.persistence.android"
+project-shared-platform-namespace = "com.syntey.spiriteddriving.platform.android"
+project-shared-resources-namespace = "com.syntey.spiriteddriving.resources.android"
+project-shared-resources-packageName = "com.syntey.spiriteddriving.resources"
+project-shared-ui-namespace = "com.syntey.spiriteddriving.ui.android"
+project-baselineprofile-namespace = "com.syntey.spiriteddriving.baselineprofile"
 
 [libraries]
 
@@ -180,6 +179,7 @@ firebase-distribution = { id = "com.google.firebase.appdistribution", version.re
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detektGradlePlugin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 koin = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompilerPlugin" }
+version-catalog-update = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }
 
 # Precompiled script plugins
 conventions-lint = { id = "conventions-lint" }
