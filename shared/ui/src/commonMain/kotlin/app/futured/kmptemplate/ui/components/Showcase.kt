@@ -1,10 +1,10 @@
-package app.futured.kmptemplate.android.ui.components
+package app.futured.kmptemplate.ui.components
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import app.futured.kmptemplate.android.MyApplicationTheme
+import app.futured.kmptemplate.ui.theme.MyApplicationTheme
 
 /**
  * A @Composable wrapper that displays content on a Surface with application theme.

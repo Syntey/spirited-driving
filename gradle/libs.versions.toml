@@ -1,43 +1,46 @@
 [versions]
-agp = "9.1.1"
-kotlin = "2.4.0"
-ksp = "2.3.9"
+agp = "9.4.1"
+kotlin = "2.4.10"
+ksp = "2.3.12"
 desugarLibs = "2.1.5"
-androidxLifecycle = "2.10.0"
-androidxComposeBom = "2026.01.01"
+androidxLifecycle = "2.11.0" # Android-only, consumed by `androidApp`
+androidxComposeBom = "2026.09.00"
 materialIcons = "1.7.7"
-jetbrainsComposeRuntime = "1.10.1" # Needs to align with version in Compose BOM as closely as possible
-androidxActivity = "1.12.4"
-decompose = "3.4.0"
-essenty = "2.5.0"
+composeMultiplatform = "1.12.1" # Needs to align with version in Compose BOM as closely as possible
+composeMultiplatformMaterial3 = "1.9.0" # Versioned separately from `composeMultiplatform`, see `compose.material3` in CMP Gradle plugin
+composeMultiplatformMaterialIcons = "1.7.3" # No longer published together with `composeMultiplatform`
+jetbrainsLifecycle = "2.11.0" # The Compose Multiplatform counterpart of `androidxLifecycle`, consumed by `shared:ui`
+androidxActivity = "1.13.0"
+decompose = "3.5.0"
+essenty = "2.6.0"
 koin = "4.2.2"
-koinCompilerPlugin = "1.0.1"
-kotlinx-coroutines = "1.10.2"
-kotlinx-immutableCollections = "0.4.0"
-kotlinx-dateTime = "0.7.1"
-ktlintGradlePlugin = "14.0.1"
+koinCompilerPlugin = "1.2.1" # Must be compatible with: `kotlin`
+kotlinx-coroutines = "1.11.0"
+kotlinx-immutableCollections = "0.5.2"
+kotlinx-dateTime = "0.8.0"
+ktlintGradlePlugin = "14.2.0"
 ktlint = "1.8.0"
 detektGradlePlugin = "1.23.8"
-composeLint = "1.4.2"
+composeLint = "1.6.0"
 apollo = "5.0.0"
 ktorfit = "2.7.5" # Must be compatible with: `ksp`
-ktor = "3.5.0" # Must be compatible with: `ktorfit`
+ktor = "3.5.2" # Must be compatible with: `ktorfit`
 kotlinx-serialization = "1.11.0" # Must be compatible with: `kotlin`
 timber = "5.0.1"
-kermit = "2.0.8"
-skie = "0.10.13" # Must be compatible with: `kotlin`
+kermit = "2.2.0"
+skie = "0.10.15" # Must be compatible with: `kotlin`
 buildkonfig = "0.17.1"
 nsExceptionKt = "1.0.0-BETA-7"
 datastore = "1.2.1"
-moko-resources = "0.26.3"
-baselineProfile = "1.5.0-alpha02"
-junit = "1.2.1"
-espressoCore = "3.6.1"
-uiautomator = "2.3.0"
-benchmarkMacroJunit4 = "1.4.1"
+moko-resources = "0.27.1"
+baselineProfile = "1.5.0"
+junit = "1.3.0"
+espressoCore = "3.7.0"
+uiautomator = "2.4.0"
+benchmarkMacroJunit4 = "1.5.0"
 profileinstaller = "1.4.1"
-google-servicesPlugin = "4.4.2"
-google-firebaseAppDistributionPlugin = "5.2.0"
+google-servicesPlugin = "4.5.0"
+google-firebaseAppDistributionPlugin = "5.3.0"
 arkitekt = "6.1.0"
 
 # Android Namespaces
@@ -54,6 +57,7 @@ project-shared-arkitekt-decompose-namespace = "app.futured.arkitekt.decompose.an
 project-shared-platform-namespace = "app.futured.kmptemplate.platform.android"
 project-shared-resources-namespace = "app.futured.kmptemplate.resources.android"
 project-shared-resources-packageName = "app.futured.kmptemplate.resources"
+project-shared-ui-namespace = "app.futured.kmptemplate.ui.android"
 project-baselineprofile-namespace = "app.futured.kmptemplate.baselineprofile"
 
 [libraries]
@@ -73,7 +77,16 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-material-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIcons" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
-jetbrains-compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "jetbrainsComposeRuntime" }
+
+# Compose Multiplatform
+jetbrains-compose-runtime = { group = "org.jetbrains.compose.runtime", name = "runtime", version.ref = "composeMultiplatform" }
+jetbrains-compose-foundation = { group = "org.jetbrains.compose.foundation", name = "foundation", version.ref = "composeMultiplatform" }
+jetbrains-compose-ui = { group = "org.jetbrains.compose.ui", name = "ui", version.ref = "composeMultiplatform" }
+jetbrains-compose-ui-tooling = { group = "org.jetbrains.compose.ui", name = "ui-tooling", version.ref = "composeMultiplatform" }
+jetbrains-compose-ui-tooling-preview = { group = "org.jetbrains.compose.ui", name = "ui-tooling-preview", version.ref = "composeMultiplatform" }
+jetbrains-compose-material3 = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "composeMultiplatformMaterial3" }
+jetbrains-compose-material-icons = { group = "org.jetbrains.compose.material", name = "material-icons-core", version.ref = "composeMultiplatformMaterialIcons" }
+jetbrains-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "jetbrainsLifecycle" }
 
 # Koin
 koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
@@ -123,6 +136,7 @@ skie-annotations = { group = "co.touchlab.skie", name = "configuration-annotatio
 
 # Moko
 moko-resources = { group = "dev.icerock.moko", name = "resources", version.ref = "moko-resources" }
+moko-resources-compose = { group = "dev.icerock.moko", name = "resources-compose", version.ref = "moko-resources" }
 
 # Network
 network-apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }
@@ -152,6 +166,7 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 android-test = { id = "com.android.test", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }

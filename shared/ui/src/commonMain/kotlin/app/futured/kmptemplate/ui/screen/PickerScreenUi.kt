@@ -1,4 +1,4 @@
-package app.futured.kmptemplate.android.ui.screen
+package app.futured.kmptemplate.ui.screen
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
@@ -26,15 +26,18 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.futured.kmptemplate.android.ui.components.Showcase
 import app.futured.kmptemplate.feature.ui.picker.PickerScreen
 import app.futured.kmptemplate.feature.ui.picker.PickerScreen.Actions.Companion.noOpActions
 import app.futured.kmptemplate.feature.ui.picker.PickerState
 import app.futured.kmptemplate.feature.ui.picker.pickerStatePreviews
-import app.futured.kmptemplate.resources.MR
-import app.futured.kmptemplate.resources.kmpStringResource
-import app.futured.kmptemplate.resources.localized
+import app.futured.kmptemplate.resources.*
+import app.futured.kmptemplate.ui.components.Showcase
+import dev.icerock.moko.resources.compose.localized
+import dev.icerock.moko.resources.compose.stringResource
 
+/**
+ * Picker is presented as a sheet on both platforms, so unlike the other screens it draws its own header.
+ */
 @Composable
 fun PickerScreenUi(
     pickerScreen: PickerScreen,
@@ -57,15 +60,16 @@ private fun Content(
         modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text(kmpStringResource(MR.strings.picker_title)) },
+                title = { Text(stringResource(MR.strings.picker_title)) },
                 actions = {
                     IconButton(onClick = actions::onDismiss) {
-                        Icon(Icons.Filled.Close, contentDescription = kmpStringResource(MR.strings.generic_close))
+                        Icon(Icons.Filled.Close, contentDescription = stringResource(MR.strings.generic_close))
                     }
                 },
                 windowInsets = WindowInsets(0),
             )
         },
+        contentWindowInsets = WindowInsets(0),
     ) { paddings ->
         Box(Modifier.padding(paddings)) {
             Crossfade(targetState = viewState.isLoading) { isLoading ->
