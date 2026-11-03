@@ -30,13 +30,13 @@
 }
 
 # TODO PROJECT-SETUP update package name
--keep,includedescriptorclasses class app.futured.kmptemplate.**$$serializer { *; }
+-keep,includedescriptorclasses class com.syntey.spiriteddriving.**$$serializer { *; }
 # TODO PROJECT-SETUP update package name
--keepclassmembers class app.futured.kmptemplate.** {
+-keepclassmembers class com.syntey.spiriteddriving.** {
     *** Companion;
 }
 # TODO PROJECT-SETUP update package name
--keepclasseswithmembers class app.futured.kmptemplate.** {
+-keepclasseswithmembers class com.syntey.spiriteddriving.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
 

@@ -1,41 +1,48 @@
-name: Check Pull request
+name: PR Check
 
-on: [ pull_request ]
+on:
+  pull_request:
+    paths-ignore:
+      - 'iosApp/**'
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  detect-changes:
-    uses: futuredapp/.github/.github/workflows/kmp-cloud-detect-changes.yml@2.7.0
-
-  check-android:
-    needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.androidFiles == 'true' }}
-    uses: futuredapp/.github/.github/workflows/android-cloud-check.yml@2.7.0
-    with:
-      LINT_GRADLE_TASKS: lintCheck
-      # `testAndroidHostTest` covers androidApp module and all shared modules all at once.
-      TEST_GRADLE_TASKS: testAndroidHostTest
-
-  check-ios:
-    needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.iosFiles == 'true' }}
-    uses: futuredapp/.github/.github/workflows/ios-kmp-selfhosted-test.yml@2.7.0
-    with:
-      kmp_swift_package_integration: true
-      kmp_swift_package_path: iosApp/shared/KMP
-      kmp_swift_package_flavor: dev
-
-  # Single required status check for branch protection; passes when checks succeed or are skipped.
-  ci-status:
-    if: always()
-    needs: [ detect-changes, check-android, check-ios ]
+  check:
+    name: Lint and test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Verify check results
-        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
-        run: |
-          echo "One or more checks failed"
-          exit 1
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Lint
+        # ktlint, detekt and Android lint.
+        run: ./gradlew lintCheck
+
+      - name: Test
+        if: ${{ !cancelled() }}
+        # Runs unit tests of all shared modules at once.
+        run: ./gradlew testAndroidHostTest
+
+      - name: Upload reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            **/build/reports/
+            **/build/test-results/
+          if-no-files-found: ignore

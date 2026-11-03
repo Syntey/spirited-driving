@@ -1,121 +1,26 @@
-# Futured KMP Template
-
-Hey there 👋
-
-This is our template from which we build Kotlin Multiplatform applications that target Android and
-iOS platforms.
-It is our opinionated way of building KMP apps and shines a light on how we structure our
-architecture and what tools and libraries we use.
-
-To give you a short overview of our stack, we use:
-
-- [Compose Multiplatform](https://www.jetbrains.com/compose-multiplatform/) for screens shared
-  between both platforms (`shared:ui`), hosted in native navigation: Jetpack Compose on Android
-  and SwiftUI on iOS. The rest of the application is shared in KMP.
-- [Decompose](https://github.com/arkivanov/Decompose) for sharing presentation logic and navigation
-  state.
-- [Arkitekt](https://github.com/futuredapp/arkitekt) (`decompose` + `cr-usecases`) for our
-  opinionated component base, use-case execution scopes, and `@GenerateFactory` codegen on top of
-  Decompose.
-- The presentation layer follows the MVI-like design pattern.
-- [Koin](https://insert-koin.io/) for dependency injection, wired with
-  [Koin Annotations](https://insert-koin.io/docs/reference/koin-annotations/definitions/) and the
-  Koin Compiler plugin (no KSP processor required).
-- [SKIE](https://skie.touchlab.co/) for better Kotlin->Swift interop (exhaustive enums, sealed
-  classes, Coroutines support).
-- [moko-resources](https://github.com/icerockdev/moko-resources) for sharing string (and other types
-  of) resources.
-- [apollo-kotlin](https://github.com/apollographql/apollo-kotlin) network client for apps that call
-  GraphQL APIs.
-- [ktorfit](https://github.com/Foso/Ktorfit) network client for apps that call plain HTTP APIs.
-- [Jetpack DataStore](https://developer.android.com/jetpack/androidx/releases/datastore) as a simple
-  preferences storage (we have JSON-based and primitive implementations).
-- [iOS-templates](https://github.com/futuredapp/iOS-templates) as template which generates a new iOS
-  scene using MVVM-C architecture.
-
-The template is a sample app with several screens to let you kick off the project with everything
-set up, incl. navigation and some API calls.
-
--------8<------- CUT HERE AFTER CLONING -------8<-------
-
-# Project Name
+# Spirited Driving
 
 ![kmp](https://img.shields.io/badge/multiplatform-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
 ![compose](https://img.shields.io/badge/compose_multiplatform-2bab6b.svg?style=for-the-badge&logo=jetpackcompose&logoColor=white)
 ![swiftui](https://img.shields.io/badge/swiftui-%23000000.svg?style=for-the-badge&logo=swift&logoColor=white)
 
-![kotlin-version](https://img.shields.io/badge/kotlin-2.0.0-%237F52FF.svg?style=flat-square&logo=kotlin&logoColor=white)
+![kotlin-version](https://img.shields.io/badge/kotlin-2.4.10-%237F52FF.svg?style=flat-square&logo=kotlin&logoColor=white)
 ![android-minsdk](https://img.shields.io/badge/minsdk-29-2bab6b.svg?style=flat-square&logo=android&logoColor=white)
-![android-targetsdk](https://img.shields.io/badge/targetsdk-34-2bab6b.svg?style=flat-square&logo=android&logoColor=white)
-![ios-target](https://img.shields.io/badge/target-16.0-%23000000.svg?style=flat-square&logo=apple&logoColor=white)
-
-~~Short project description.~~
-
-## Project info
-
-- Deadline: ~~**--. --. ----**~~
-- Design: ~~Figma (add link)~~
-- ~~Backend: GrahlQL / Apiary / OpenAPI (add link)~~
-    - ~~Prod: https://live.app.com~~
-    - ~~Dev: https://staging.app.com~~
-- ~~Localizations: Czech, English – POEditor / Google Sheets (add link)~~
-- [Architecture decision records](doc/adr/README.md)
-
-### KMP
-
-- Product Flavors: dev, prod
-- Architecture: [Arkitekt](https://github.com/futuredapp/arkitekt) — `decompose` components and
-  `cr-usecases` for coroutine-based use cases.
-
-### Android
-
-- ApplicationId: ~~`app.futured.project`~~
-- minSdk: ~~`29`~~
-- targetSdk: ~~`36`~~
-- Supports: ~~**Dark mode, landscape orientation**~~
-- Build Variants: debug, enterprise, release
-
-### iOS
-
-- Deployment target: ~~**16.0**~~
-- Bundle identifier: ~~`app.futured.project`~~
-- Supports: ~~**Dark mode, landscape orientation, iPadOS, watchOS**~~
-- Language: ~~**Swift 5.0**~~
-- IDE: ~~**Xcode 11.0**~~
-- Dependency management: [Swift package manager](https://swift.org/package-manager/)
-- Command line tools: **[Fastlane](https://docs.fastlane.tools)**
-- Code style:
-    - **[SwiftLint](https://swift.org/package-manager/)**
-    - **[Danger](https://github.com/futuredapp/danger)**
-
-## Team:
-
-- ~~Jana Nováková, PM, <jana.novakova@futured.app>~~
-- ~~Jan Novák, iOS developer, <jan.novak@futured.app>~~
-- ~~John Newman, tester, <john.newman@futured.app>~~
+![android-targetsdk](https://img.shields.io/badge/targetsdk-36-2bab6b.svg?style=flat-square&logo=android&logoColor=white)
+![ios-target](https://img.shields.io/badge/target-17.0-%23000000.svg?style=flat-square&logo=apple&logoColor=white)
 
 ## Used Tools
 
-- Code style - **[ktlint](https://ktlint.github.io/)**, *
-  *[detekt](https://arturbosch.github.io/detekt/)**, *
-  *[Android lint](http://tools.android.com/tips/lint)**, *
-  *[Danger](https://github.com/futuredapp/danger)**
+- Code style - **[ktlint](https://pinterest.github.io/ktlint/)**,
+  **[detekt](https://detekt.dev/)**,
+  **[Android lint](https://developer.android.com/studio/write/lint)**
 - Kotlin -> Swift interop - **[skie](https://skie.touchlab.co/)**
-
-### ~~Test accounts~~
-
-- ~~dev - login: `a@a.com`, password: `hesloheslo`~~
-
-### Security Standard
-
-This project complies with ~~Standard (F0), High (F1), Highest (F2)~~ security standard.
-
-~~[Project specific standard](www.notion.so)~~
 
 ## Gradle tasks
 
 1. `clean` - Remove all `build` folders
-2. `lintCheck` - Run `ktlint`, `detekt` checks. The same runs on CI.
+2. `lintCheck` - Run `ktlint`, `detekt` and Android lint checks. The same runs on CI, together with
+   `testAndroidHostTest` (see `.github/workflows/on_pull_request.yml`).
 3. `ktlintFormat` - Reformat source code according to ktlint rules.
 4. `assembleAndCopyDebugSwiftPackage` - Assemble debug KMP XCFramework and copy it into local iOS
    Swift Package as dependency. (This task shouldn't be used directly, build the KMP target in
@@ -158,13 +63,13 @@ Four environment variables control the build process:
     - Controls API endpoints and environment-specific configuration
     - Passed to Gradle as `-P buildkonfig.flavor=$(KMP_BUILD_FLAVOR)`
 
-- **`KMP_BUILD_MODE`**: Controls which architectures are compiled (`simulator`, `device`, or `all`)
+- **`KMP_FRAMEWORK_TARGETS`**: Controls which architectures are compiled (`simulator`, `device`, or `all`)
     - `simulator` — builds only `iosSimulatorArm64` (fastest for local development)
     - `device` — builds only `iosArm64`
-    - `all` — builds both targets (default, required for XCFramework distribution)
-    - Configured in `.xcconfig` files; Beta and Release always use `all`
-    - Passed to Gradle as `-PkmpBuildMode=$(KMP_BUILD_MODE)`
-- 
+    - `all` — builds both targets (default)
+    - Configured in `.xcconfig` files; Beta and Release always use `device`
+    - Passed to Gradle as `-PkmpFrameworkTargets=$(KMP_FRAMEWORK_TARGETS)`
+
 - **`KMP_IS_STATIC`**: Controls whether the KMP XCFramework is linked statically or dynamically
     - `false` (dynamic) — set in `Debug.xcconfig`; **required for SwiftUI previews** to work in
       Xcode, as the preview process cannot load a statically linked KMP framework
@@ -175,15 +80,15 @@ Four environment variables control the build process:
 
 ### Local Build Configuration
 
-Developers can override `KMP_BUILD_MODE` locally for faster iteration:
+Developers can override `KMP_FRAMEWORK_TARGETS` locally for faster iteration:
 
 1. Copy `iosApp/Config Files/Local.default.xcconfig` → `iosApp/Config Files/Local.xcconfig`
-2. Set `KMP_BUILD_MODE = simulator` in `Local.xcconfig`
+2. Set `KMP_FRAMEWORK_TARGETS = simulator` in `Local.xcconfig`
 3. `Local.xcconfig` is gitignored — changes won't affect other developers
 
 The Debug configuration includes both files (`Local.default.xcconfig` with optional include for
 `Local.xcconfig`), so local overrides take precedence. Beta and Release configurations hardcode
-`KMP_BUILD_MODE = all` and do not use local overrides.
+`KMP_FRAMEWORK_TARGETS = device` and do not use local overrides.
 
 ### Development Workflow
 
@@ -200,7 +105,7 @@ To build and update the KMP package during development:
       `./gradlew assembleAndCopyDebugSwiftPackage -P buildkonfig.flavor=[dev|prod]`
 
 3. **After KMP code changes**:
-    - Always rebuild the "KMP Package" target to update the XCFramework
+    - Always rebuild the "Build KMP" target to update the XCFramework
     - Then build the main app target to use the updated KMP code
 
 ### SwiftUI Previews
@@ -224,13 +129,13 @@ component from `shared:feature` and only draws the screen content. Navigation ch
 - **iOS** — navigation stays in SwiftUI (`NavigationStack`, `TabView`, sheets) driven by Decompose.
   Each screen is exposed to Swift as a `*ScreenUiController` function
   (`shared/ui/src/iosMain/kotlin/.../ui/ViewControllers.ios.kt`) and hosted by `ComposeView` in a
-  thin SwiftUI view (`iosApp/iosApp/Views/Scenes/*/*Component.swift`), which also sets the native
+  thin SwiftUI view (`iosApp/SpiritedDriving/Views/Scenes/*/*Component.swift`), which also sets the native
   navigation title.
 
 When adding a new screen:
 
-1. Create the screen component in `shared:feature` (see `_TemplateScreen.kt`).
-2. Create its UI in `shared:ui` (see `_TemplateScreenUi.kt`).
+1. Create the screen component in `shared:feature` (see `ui/secondScreen` for a minimal example).
+2. Create its UI in `shared:ui` (see `SecondScreenUi.kt`).
 3. Android: render it from the navigation host.
 4. iOS: add a `*ScreenUiController` to `ViewControllers.ios.kt` and a `*Component` SwiftUI view
    hosting it, then render it from the navigation view.
@@ -302,19 +207,7 @@ Navigation("Root") {
 
 ## Project Setup
 
-### Initial script
-
-Use the `init_template.sh` script to set up the template.
-The script is a Kotlin-based tool (`init_template.main.kts`) that renames directories and package names throughout the project to match your specified package name.
-The shell wrapper automatically ensures Kotlin is installed via SDKMAN if needed.
-
-#### Usage
-
-```shell
-./init_template.sh
-```
-
-#### Note on iOS
+### First iOS build
 
 The Swift Package XCFramework has to be build manually for the first time using `./gradlew assembleAndCopyDebugSwiftPackage` in order for XCode to resolve Swift Package as being valid.
 
@@ -379,16 +272,3 @@ project:
 3. On iOS, do not forget to also upload debug symbols to Crashlytics. The KMP framework is static
    in Beta and Release builds, so no standalone debug symbols are generated for KMP, instead, they
    are included in the app itself.
-
-## Deep Linking
-
-Deep links are provided by each platform to common code and parsed using `DeepLinkResolver` class.
-The (sample) app currently supports the following url scheme: `kmptemplate` and the following links:
-
-- `kmptemplate://home` -- Opens Home tab with default stack.
-- `kmptemplate://profile` -- Opens Profile tab with default stack.
-- `kmptemplate://home/second` -- Opens SecondScreen in Home tab.
-- `kmptemplate://home/third?arg={argument}` -- Opens ThirdScreen in Home tab with provided argument.
-  The `argument` is mandatory.
-- `kmptemplate://home/third/{argument}` -- Opens ThirdScreen in Home tab with provided argument. The
-  `argument` is mandatory.
