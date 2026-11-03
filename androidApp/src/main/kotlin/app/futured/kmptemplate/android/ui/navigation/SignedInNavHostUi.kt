@@ -1,5 +1,7 @@
 package app.futured.kmptemplate.android.ui.navigation
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -51,12 +53,16 @@ fun SignedInNavHostUi(
                 }
             }
         },
+        // Top inset is left to the top bar of each tab's navigation host
+        contentWindowInsets = WindowInsets(0),
     ) { paddingValues ->
         TabsContent(
             stack = stack,
             backHandler = navHost.backHandler,
             onBack = actions::onBack,
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues),
         )
     }
 }

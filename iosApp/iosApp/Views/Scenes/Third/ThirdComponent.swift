@@ -1,18 +1,16 @@
+import KMP
 import SwiftUI
 
-struct ThirdComponent<Model: ThirdComponentModelProtocol>: View {
-    @State var model: Model
+struct ThirdComponent: View {
+    private let screen: ThirdScreen
+
+    init(_ screen: ThirdScreen) {
+        self.screen = screen
+    }
 
     var body: some View {
-        Text(model.text)
+        ComposeView { ThirdScreenUiController(screen: screen) }
+            .composeScreen()
             .navigationTitle(Localizable.third_screen_title.localized)
     }
 }
-
-#if DEBUG
-#Preview {
-    NavigationStack {
-        ThirdComponent(model: ThirdComponentModelMock())
-    }
-}
-#endif

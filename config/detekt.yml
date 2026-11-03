@@ -50,6 +50,12 @@ style:
     active: true
     ignoreAnnotated:
       - Composable
+  WildcardImport:
+    active: true
+    excludeImports:
+      - 'java.util.*'
+      # moko-resources generates every resource as an extension property of `MR`, so each one would need its own import
+      - 'app.futured.kmptemplate.resources.*' # Keep aligned with .editorconfig file
 
 complexity:
   LongParameterList:

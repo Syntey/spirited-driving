@@ -1,23 +1,24 @@
 package app.futured.kmptemplate.android.ui.navigation
 
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.futured.kmptemplate.android.ui.screen.ProfileScreenUi
-import app.futured.kmptemplate.android.ui.screen.ThirdScreenUi
 import app.futured.kmptemplate.feature.navigation.profile.ProfileChild
 import app.futured.kmptemplate.feature.navigation.profile.ProfileConfig
 import app.futured.kmptemplate.feature.navigation.profile.ProfileNavHost
+import app.futured.kmptemplate.resources.*
+import app.futured.kmptemplate.ui.screen.ProfileScreenUi
+import app.futured.kmptemplate.ui.screen.ThirdScreenUi
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
+import dev.icerock.moko.resources.StringResource
 
 @OptIn(ExperimentalDecomposeApi::class)
 @Composable
@@ -30,11 +31,19 @@ fun ProfileNavHostUi(
 
     Scaffold(
         modifier = modifier,
-        contentWindowInsets = WindowInsets.navigationBars,
+        topBar = {
+            NavHostTopBar(
+                title = kmpStringResource(stack.active.instance.title),
+                canNavigateBack = stack.backStack.isNotEmpty(),
+                onNavigateBack = actions::pop,
+            )
+        },
         content = { paddings ->
             Children(
                 stack = stack,
-                modifier = Modifier.padding(paddings),
+                modifier = Modifier
+                    .padding(paddings)
+                    .consumeWindowInsets(paddings),
                 animation = predictiveBackAnimation(
                     backHandler = navHost.backHandler,
                     onBack = actions::pop,
@@ -48,3 +57,9 @@ fun ProfileNavHostUi(
         },
     )
 }
+
+private val ProfileChild.title: StringResource
+    get() = when (this) {
+        is ProfileChild.Profile -> MR.strings.profile_screen_title
+        is ProfileChild.Third -> MR.strings.third_screen_title
+    }

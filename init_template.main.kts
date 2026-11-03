@@ -32,6 +32,7 @@ renameGradleSubproject("shared/network/rest", appPackageName)
 renameGradleSubproject("shared/persistence", appPackageName)
 renameGradleSubproject("shared/platform", appPackageName)
 renameGradleSubproject("shared/resources", appPackageName)
+renameGradleSubproject("shared/ui", appPackageName)
 
 findAndReplaceInFileTree(
     parent = Path.of("shared/arkitekt-decompose"),
@@ -59,6 +60,18 @@ findAndReplaceInFile(
 
 findAndReplaceInFile(
     file = File("build.gradle.kts"),
+    search = templatePackageName,
+    replaceWith = appPackageName,
+)
+
+findAndReplaceInFile(
+    file = File(".editorconfig"),
+    search = templatePackageName,
+    replaceWith = appPackageName,
+)
+
+findAndReplaceInFile(
+    file = File("config/detekt.yml"),
     search = templatePackageName,
     replaceWith = appPackageName,
 )

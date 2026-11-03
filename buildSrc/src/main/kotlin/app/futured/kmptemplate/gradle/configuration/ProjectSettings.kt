@@ -15,7 +15,9 @@ object ProjectSettings {
     object Android {
         const val MinSdkVersion = 29
         const val TargetSdkVersion = 36
-        const val CompileSdkVersion = 36
+
+        // androidx.lifecycle 2.11.0 (pulled in by Compose Multiplatform) refuses to be compiled against anything lower.
+        const val CompileSdkVersion = 37
 
         const val ApplicationId = "app.futured.kmptemplate.android"
 

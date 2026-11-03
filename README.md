@@ -9,8 +9,9 @@ architecture and what tools and libraries we use.
 
 To give you a short overview of our stack, we use:
 
-- Native UI on both platforms. Jetpack Compose on Android and SwiftUI on iOS. The rest of the
-  application is shared in KMP.
+- [Compose Multiplatform](https://www.jetbrains.com/compose-multiplatform/) for screens shared
+  between both platforms (`shared:ui`), hosted in native navigation: Jetpack Compose on Android
+  and SwiftUI on iOS. The rest of the application is shared in KMP.
 - [Decompose](https://github.com/arkivanov/Decompose) for sharing presentation logic and navigation
   state.
 - [Arkitekt](https://github.com/futuredapp/arkitekt) (`decompose` + `cr-usecases`) for our
@@ -40,7 +41,7 @@ set up, incl. navigation and some API calls.
 # Project Name
 
 ![kmp](https://img.shields.io/badge/multiplatform-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
-![compose](https://img.shields.io/badge/jetpack_compose-2bab6b.svg?style=for-the-badge&logo=android&logoColor=white)
+![compose](https://img.shields.io/badge/compose_multiplatform-2bab6b.svg?style=for-the-badge&logo=jetpackcompose&logoColor=white)
 ![swiftui](https://img.shields.io/badge/swiftui-%23000000.svg?style=for-the-badge&logo=swift&logoColor=white)
 
 ![kotlin-version](https://img.shields.io/badge/kotlin-2.0.0-%237F52FF.svg?style=flat-square&logo=kotlin&logoColor=white)
@@ -208,11 +209,37 @@ SwiftUI previews require a **dynamically linked** KMP framework. The `Debug` bui
 sets `KMP_IS_STATIC = false` in `Debug.xcconfig` to enable this. `Beta` and `Release`
 configurations use static linking.
 
-#### Preview mock pattern
+Screens themselves are written in Compose Multiplatform, so they are previewed with Compose
+`@Preview` instead (see [Previews](#previews)). SwiftUI previews are meant for native SwiftUI views.
+
+## UI Architecture
+
+Screens are implemented once in Compose Multiplatform, in the `shared:ui` module
+(`shared/ui/src/commonMain/kotlin/.../ui/screen/*ScreenUi.kt`). Each of them renders a screen
+component from `shared:feature` and only draws the screen content. Navigation chrome stays native:
+
+- **Android** — navigation hosts in `androidApp/.../ui/navigation/*NavHostUi.kt` render Decompose
+  stacks and slots, and draw top bars, bottom navigation and bottom sheets around the shared
+  screens.
+- **iOS** — navigation stays in SwiftUI (`NavigationStack`, `TabView`, sheets) driven by Decompose.
+  Each screen is exposed to Swift as a `*ScreenUiController` function
+  (`shared/ui/src/iosMain/kotlin/.../ui/ViewControllers.ios.kt`) and hosted by `ComposeView` in a
+  thin SwiftUI view (`iosApp/iosApp/Views/Scenes/*/*Component.swift`), which also sets the native
+  navigation title.
+
+When adding a new screen:
+
+1. Create the screen component in `shared:feature` (see `_TemplateScreen.kt`).
+2. Create its UI in `shared:ui` (see `_TemplateScreenUi.kt`).
+3. Android: render it from the navigation host.
+4. iOS: add a `*ScreenUiController` to `ViewControllers.ios.kt` and a `*Component` SwiftUI view
+   hosting it, then render it from the navigation view.
+
+### Previews
 
 Shared KMP code exposes preview mock objects (e.g. `FirstScreenPreviews`) that provide fake,
-no-op implementations of screen interfaces with configurable view states. These are consumed on the
-iOS side inside `#if DEBUG` / `#Preview` blocks.
+no-op implementations of screen interfaces with configurable view states. These are consumed by
+Compose `@Preview` functions in `shared:ui`, next to the screen they preview.
 
 **Kotlin side** (`shared/feature/src/commonMain/kotlin/.../firstScreen/FirstScreenPreviews.kt`):
 
@@ -223,14 +250,14 @@ object FirstScreenPreviews {
 }
 ```
 
-**Swift side** (`iosApp/iosApp/Views/Screen/First/FirstView.swift`):
+**UI side** (`shared/ui/src/commonMain/kotlin/.../ui/screen/FirstScreenUi.kt`):
 
-```swift
-#if DEBUG
-#Preview("FirstView") {
-    FirstView(FirstViewModel(FirstScreenPreviews.shared.screen()))
+```kotlin
+@Preview
+@Composable
+private fun FirstScreenPreview() = Showcase {
+    Content(viewState = FirstScreenPreviews.viewState(), ...)
 }
-#endif
 ```
 
 When adding a new screen, create a `*Previews` object in the screen's package following the same
