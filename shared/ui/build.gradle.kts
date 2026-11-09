@@ -1,26 +1,10 @@
-import com.syntey.spiriteddriving.gradle.configuration.ProjectSettings
-
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    id(libs.plugins.conventions.kmp.library.get().pluginId)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
-
-    id(libs.plugins.conventions.lint.get().pluginId)
 }
 
 kotlin {
-    jvmToolchain(ProjectSettings.Kotlin.JvmToolchainVersion)
-
-    android {
-        namespace = libs.versions.project.shared.ui.namespace.get()
-        compileSdk = ProjectSettings.Android.CompileSdkVersion
-        minSdk = ProjectSettings.Android.MinSdkVersion
-    }
-
-    iosArm64()
-    iosSimulatorArm64()
-
     sourceSets {
         commonMain {
             dependencies {

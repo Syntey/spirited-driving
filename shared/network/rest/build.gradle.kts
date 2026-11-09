@@ -1,36 +1,20 @@
 import com.syntey.spiriteddriving.gradle.configuration.ProductFlavors
-import com.syntey.spiriteddriving.gradle.configuration.ProjectSettings
+import com.syntey.spiriteddriving.gradle.configuration.modulePackageName
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 
 plugins {
-    alias(libs.plugins.android.kotlin.multiplatform.library)
-    alias(libs.plugins.kotlin.multiplatform)
+    id(libs.plugins.conventions.kmp.library.get().pluginId)
+    id(libs.plugins.conventions.koin.get().pluginId)
     alias(libs.plugins.ksp)
     alias(libs.plugins.ktorfit)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.buildkonfig)
-    alias(libs.plugins.koin)
-
-    id(libs.plugins.conventions.lint.get().pluginId)
 }
 
 kotlin {
-    jvmToolchain(ProjectSettings.Kotlin.JvmToolchainVersion)
-
-    android {
-        namespace = libs.versions.project.shared.network.rest.namespace.get()
-        compileSdk = ProjectSettings.Android.CompileSdkVersion
-        minSdk = ProjectSettings.Android.MinSdkVersion
-    }
-
-    iosArm64()
-    iosSimulatorArm64()
-
     sourceSets {
         commonMain {
             dependencies {
-                implementation(libs.koin.core)
-                implementation(libs.koin.annotations)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.bundles.ktorfit)
                 implementation(libs.kotlinx.serialization.json)
@@ -51,17 +35,11 @@ kotlin {
                 implementation(libs.network.ktor.client.engine.darwin)
             }
         }
-
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
-            }
-        }
     }
 }
 
 buildkonfig {
-    packageName = libs.versions.project.shared.network.rest.packageName.get()
+    packageName = project.modulePackageName
     objectName = "FlavorConstants"
 
     defaultConfigs {
@@ -78,8 +56,4 @@ buildkonfig {
             buildConfigField(STRING, "ktorUserAgentVersion", libs.versions.ktor.get())
         }
     }
-}
-
-koinCompiler {
-    userLogs.set(false)
 }
