@@ -1,6 +1,6 @@
 # Spirited Driving: Architecture
 
-> **Status:** draft, being iterated. Last updated 2026-11-06.
+> **Status:** draft, being iterated. Last updated 2026-11-08.
 >
 > How the app is built. The product idea, core concepts and scope are in [overview.md](overview.md).
 
@@ -11,10 +11,12 @@
 - **The map is Google Maps on Android and Apple MapKit on iOS.** Both are free the way we use them.
 - **Navigation in the MVP is a hand-off** to the platform's maps app (Google Maps on Android, Apple Maps on iOS) with
   waypoints.
-- **Kotlin Multiplatform with shared Compose screens.** Logic and UI are shared. The map view and a few device
-  services are platform code behind shared interfaces.
-- **One look on both platforms:** shared Compose UI with glass effects from Haze, a light and a dark theme that
-  follow the system, portrait only.
+- **Kotlin Multiplatform with shared Compose screens.** Logic and UI are shared: every screen's content is the same
+  Compose code on both platforms. Platform code is the frame around it on iOS (navigation, sheets, alerts), the
+  maps, and a few device services ([Shared and native UI](#shared-and-native-ui)).
+- **One look on both platforms:** shared Compose UI, a light and a dark theme that follow the system, portrait
+  only. Glass effects come from Haze and follow the platform: Liquid Glass style on iOS, frosted glass on Android
+  (see [Theme](theme.md)).
 - **Minimum OS: Android 12 (API 31) and iOS 26.** Native iOS parts, such as navigation bars and alerts, use the
   current design (Liquid Glass).
 
@@ -55,7 +57,7 @@ waypoints the target maps app accepts. Output: the baseline route and 1–3 fun 
 - an ID, used to save the route or record a drive on it
 - geometry as an encoded polyline
 - duration and distance
-- stats for comparing routes (which ones is open, see [Route planning](features/route-planning.md))
+- stats for comparing routes (which ones is open, see [Route planning](features/route-planning/README.md))
 - hand-off waypoints: a short, ordered list of points that keeps the maps app on this route (see
   [Navigation](#navigation))
 - attribution for the route data ("© OpenStreetMap contributors")
@@ -84,18 +86,19 @@ Attribution: both SDKs show their own logo and legal notice. The app also shows 
 the route data, and on Google maps in the EEA it shows "Routing provided by …" before navigation starts (Google Maps
 Platform EEA terms).
 
-### How the map fits into shared UI
+### How the map screen is built
 
 Screens are Compose Multiplatform (`shared:ui`). On iOS, native SwiftUI navigation hosts each screen as a Compose
-view controller. The map is the one part of a screen that is native on each platform:
+view controller. The map screen is built per platform: the map, the sheet over it and the map buttons are native
+on iOS, so the sheet and buttons are real Liquid Glass over the map. The sheet's content is shared Compose on both
+platforms.
 
 ```
 shared:feature   TripPlanComponent ──► RouteMapState (routes, markers, camera)
-                                            │
-shared:ui        TripPlanScreenUi ──► RouteMap(state, onEvent)          expect
-                                            │
-                   androidMain   GoogleMap { Polyline, Marker }         maps-compose
-                   iosMain       UIKitViewController(MapViewFactory)    Swift, MKMapView
+                                   └─► sheet state (search, budget, routes)
+
+Android          shared:ui   MapScreenUi: GoogleMap + bottom sheet { TripPlanSheetUi }           maps-compose
+iOS              iosApp      MapScreen: MKMapView + native sheet { ComposeView(TripPlanSheetUi) }    SwiftUI, MapKit
 ```
 
 - `RouteMapState` is an immutable model in common code: route lines (points, and whether a line is the baseline,
@@ -103,13 +106,17 @@ shared:ui        TripPlanScreenUi ──► RouteMap(state, onEvent)          ex
   location. Events go back up: map long-pressed (pick a destination), route tapped (select it), camera moved.
 - Coordinates use a common `GeoPoint` type, so no platform map type reaches shared code. Polyline decoding is
   common code with unit tests.
-- **Android:** the `RouteMap` actual uses `maps-compose`.
-- **iOS:** the `RouteMap` actual embeds a `UIViewController` that Swift creates through a `MapViewFactory`, a Kotlin
-  interface implemented in Swift and registered at startup like `PlatformBindings`. Swift renders the state with
-  `MKPolyline` and annotations.
-- Search bar, budget chips and route cards are shared Compose UI on top of the map. Haze blurs only what Compose
-  draws, and the map is native, so surfaces over the map are translucent and tinted, without blur. Haze blur is
-  used where Compose content is behind, such as a list scrolling under a header.
+- `TripPlanSheetUi` is the sheet's content and its steps (search, route planning, one route), shared by both
+  platforms: the search field, budget chips and route cards.
+- **Android:** `MapScreenUi` (`shared:ui`, Android source set) draws the map with `maps-compose`, and the sheet and
+  map buttons as solid Compose surfaces.
+- **iOS:** `MapScreen` in Swift renders `RouteMapState` on an `MKMapView` with `MKPolyline` and annotations, and
+  shows the map buttons with native glass. The sheet is a native sheet that stays open, with detents, and the map
+  stays usable behind it. It hosts `TripPlanSheetUi` as a Compose view controller with a transparent background,
+  so the native glass shows through. Screens opened from the map open as sheets stacked on it
+  ([Navigation](navigation.md#screens-over-the-map)).
+- Haze is used where Compose content is behind, such as a list scrolling under a header (see
+  [Theme](theme.md#glass)). It doesn't sample native views, so it isn't used over the map.
 
 ## Navigation
 
@@ -125,19 +132,29 @@ The app opens the platform's maps app with the route's hand-off waypoints.
   roads. The app passes the target app's waypoint limit in the plan request.
 - Building the link is common code with unit tests. Opening it is a small platform call.
 - Location permission is "while using" only: guidance runs in the maps app.
+- The app isn't told when a drive ends. [Drive feedback](features/drive-feedback/README.md) works from the hand-off
+  time and the route's planned duration, and a local notification scheduled at the hand-off, with no push server.
 
 ## Place search
 
 Destination search comes from the backend on both platforms. The backend runs Photon, an open-source geocoder for
 OpenStreetMap data that suggests places as you type.
 
-- **Search places.** Input: the typed text and the user's location, so nearby places rank first. Output:
-  suggestions with name, address and coordinates.
-- **Reverse lookup.** Input: a point tapped on the map. Output: the nearest address, shown as the destination's
+- **Search places.** Input: the typed text, and the user's location (or the centre of the map without location
+  access), which only orders places with the same name. Diacritics and case are ignored. Output: suggestions with name, area, coordinates, the kind of place (town, street,
+  address, nature, place of interest) and whether it is in the covered area.
+- **Reverse lookup.** Input: a point long-pressed on the map. Output: the nearest address, shown as the point's
   label.
+- **Language:** calls carry the phone's preferred languages as `Accept-Language`. Place names come in that
+  language where the map data has it, otherwise in the local one. The app's own strings stay English.
 
 In the app, search sits behind a `PlaceSearch` interface in shared code, implemented by `ApiPlaceSearch` (and a fake
-for previews and tests). The app waits for a short pause in typing before it calls the API.
+for previews and tests):
+
+- It searches from 2 characters, after a 300 ms pause in typing, and cancels a search still running when a new one
+  starts.
+- Recent places live in `shared:persistence`. Matching them against the typed text, and bolding the matched part of
+  a name, ignore case and diacritics, in common code with unit tests.
 
 ## Accounts
 
@@ -177,13 +194,13 @@ The existing modules and what each one gets for trip planning:
 | Module                | Role                                                    | Trip planning parts                                    |
 |-----------------------|---------------------------------------------------------|--------------------------------------------------------|
 | `androidApp`          | Android entry point                                     | Maps API key (see [Configuration](#configuration))     |
-| `iosApp`              | SwiftUI shell: native navigation, hosts Compose screens | MapKit map view, `MapViewFactory`, Firebase sign-in    |
+| `iosApp`              | SwiftUI shell: native navigation, hosts Compose screens | `MapScreen` (MapKit map, native sheet, glass map buttons), Firebase sign-in |
 | `shared:app`          | DI graph, logging, crash reporting                      | Wiring of the new interfaces                           |
 | `shared:feature`      | Decompose components, use cases, navigation             | `TripPlanComponent`, use cases, `RoutePlanner`, `PlaceSearch` |
-| `shared:ui`           | Compose Multiplatform screens                           | Trip planning screen, `RouteMap` (expect/actual)       |
+| `shared:ui`           | Compose Multiplatform screens                           | `TripPlanSheetUi`, Android `MapScreenUi`               |
 | `shared:network:rest` | Ktorfit/Ktor client, DTOs, `NetworkResult`              | Backend API client                                     |
-| `shared:persistence`  | DataStore                                               | Recent destinations, settings, last used budget, IDs of drives started while signed out |
-| `shared:platform`     | Interfaces implemented natively on each platform        | Location, Firebase sign-in and App Check               |
+| `shared:persistence`  | DataStore                                               | Recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet |
+| `shared:platform`     | Interfaces implemented natively on each platform        | Location, Firebase sign-in and App Check, local notifications |
 | `shared:resources`    | Shared strings and images                               | Attribution texts                                      |
 
 `shared:network:graphql` comes from the project template (sample API) and will be removed.
@@ -195,6 +212,23 @@ domain errors the UI can explain: offline, no route within the budget, region no
 Each [feature](overview.md#features) gets its own components and use cases. How features map to screens is in
 [navigation.md](navigation.md).
 
+### Shared and native UI
+
+The content of every screen is shared Compose in `shared:ui`, one implementation for both platforms. Platform code
+draws only the frame around it:
+
+| Part                                                   | Android                       | iOS                                |
+|--------------------------------------------------------|-------------------------------|------------------------------------|
+| Screen and sheet content: lists, cards, buttons, chips | Compose, shared               | Compose, shared                    |
+| Navigation between screens, navigation bars            | Compose                       | SwiftUI                            |
+| Sheets                                                 | Compose                       | SwiftUI, hosting the shared content |
+| Alerts                                                 | Compose (Material dialog)     | Native alert                       |
+| Map and map buttons                                    | Compose (`maps-compose`)      | SwiftUI, MapKit                    |
+
+The Platforms tables in the [screen designs](overview.md#design) (sizes, button and chip styles, iOS-style or
+Material lists) are values of the same shared components, chosen per platform in one place in `shared:ui`
+(`.android.kt` / `.ios.kt`), like the glass modifier ([Theme](theme.md#materials)). No screen is written twice.
+
 ## Configuration
 
 - **Google Maps API key:** kept out of git. It comes from `local.properties` locally and from a CI secret for
@@ -205,8 +239,8 @@ Each [feature](overview.md#features) gets its own components and use cases. How 
 
 To check on real devices once the parts exist:
 
-1. **iOS map screen:** Compose UI over the MapKit view feels native, including panning, zooming and tapping
-   routes.
+1. **iOS map sheet:** the Compose content in the native sheet feels native: moving between detents, scrolling
+   inside the sheet, the keyboard while searching, and the glass showing through the transparent background.
 2. **Hand-off fidelity:** Google Maps and Apple Maps follow the planned route when given its waypoints. Test on
    trips the author knows well.
 
