@@ -1,12 +1,11 @@
 package com.syntey.spiriteddriving.app.logging
 
 import com.syntey.spiriteddriving.app.crashreporting.CrashlyticsReporter
+import com.syntey.spiriteddriving.network.rest.result.NetworkError
 import co.touchlab.kermit.LogWriter
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
 import kotlin.coroutines.cancellation.CancellationException
-import com.syntey.spiriteddriving.network.graphql.result.NetworkError as GraphqlNetworkError
-import com.syntey.spiriteddriving.network.rest.result.NetworkError as RestNetworkError
 
 /**
  * This object takes care of KMP logging setup.
@@ -34,8 +33,7 @@ internal object AppLogging {
     )
 
     private fun throwableFilter(throwable: Throwable): Boolean = when (throwable) {
-        is GraphqlNetworkError.ConnectionError -> false
-        is RestNetworkError.ConnectionError -> false
+        is NetworkError.ConnectionError -> false
         is CancellationException -> false
         else -> true
     }

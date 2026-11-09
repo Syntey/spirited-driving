@@ -10,6 +10,9 @@ object ProjectSettings {
 
     object Kotlin {
         const val JvmToolchainVersion = 17
+
+        // Shared modules derive their package from it, see `modulePackageName`.
+        const val BasePackageName = "com.syntey.spiriteddriving"
     }
 
     object Android {

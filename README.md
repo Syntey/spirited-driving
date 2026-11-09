@@ -29,8 +29,6 @@
    iOS Swift Package as dependency. (This task shouldn't be used directly, build the KMP target in
    Xcode, instead.)
 6. `generateMRcommonMain` - Regenerate shared resource IDs.
-7. `:shared:network:graphql:generateApolloSources` - Generate Apollo sources (rebuilds models after
-   adding modifying queries, mutations, etc.).
 
 ## Kotlin Multiplatform Swift Package Integration
 
@@ -216,7 +214,7 @@ The Swift Package XCFramework has to be build manually for the first time using 
 The project utilizes [BuildKonfig](https://github.com/yshrsmz/BuildKonfig) plugin for implementing
 build flavors in the network module.
 There are two product flavors: `dev` and `prod`, which select API url used in `:shared:network:rest`
-and `:shared:network:graphql` modules.
+module.
 
 In general, the build flavor can be specified as a Gradle build flag
 
@@ -224,7 +222,7 @@ In general, the build flavor can be specified as a Gradle build flag
 ./gradlew whateverTask -P buildkonfig.flavor=dev
 ```
 
-Please, refer to `:shared:network:*` module Gradle configs for more info.
+Please, refer to `:shared:network:rest` Gradle config for more info.
 
 #### Android
 

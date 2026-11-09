@@ -10,34 +10,24 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
-    alias(libs.plugins.android.kotlin.multiplatform.library)
+    id(libs.plugins.conventions.kmp.library.get().pluginId)
+    id(libs.plugins.conventions.koin.get().pluginId)
     alias(libs.plugins.skie)
     alias(libs.plugins.moko.resources)
-    alias(libs.plugins.koin)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
-
-    id(libs.plugins.conventions.lint.get().pluginId)
 }
 
 kotlin {
-    jvmToolchain(ProjectSettings.Kotlin.JvmToolchainVersion)
     applyDefaultHierarchyTemplate()
 
-    // Turns off warnings about beta feature https://youtrack.jetbrains.com/issue/KT-61573
-    compilerOptions.freeCompilerArgs.add("-Xexpect-actual-classes")
-
     android {
-        namespace = libs.versions.project.shared.app.namespace.get()
-        compileSdk = ProjectSettings.Android.CompileSdkVersion
-        minSdk = ProjectSettings.Android.MinSdkVersion
         androidResources { enable = true }
     }
 
     val xcf = XCFramework(ProjectSettings.IOS.FrameworkName)
 
-    // Always declare both targets for source set compatibility
+    // Both targets are always declared (by `conventions-kmp-library`) for source set compatibility
     val arm64 = iosArm64()
     val simArm64 = iosSimulatorArm64()
 
@@ -73,8 +63,6 @@ kotlin {
             export(libs.kotlinx.immutableCollections)
             export(libs.moko.resources)
 
-            linkerOpts("-lsqlite3")
-
             xcf.add(this)
         }
     }
@@ -84,26 +72,17 @@ kotlin {
             dependencies {
                 implementation(projects.shared.platform)
                 implementation(projects.shared.feature)
-                implementation(projects.shared.network.graphql)
                 implementation(projects.shared.network.rest)
                 implementation(projects.shared.persistence)
                 implementation(projects.shared.kmpResources)
                 implementation(projects.shared.ui)
 
                 implementation(libs.decompose)
-                implementation(libs.koin.core)
-                implementation(libs.koin.annotations)
                 implementation(libs.logging.kermit)
                 implementation(libs.logging.kermitCrashlytics)
 
                 // Required for Compose compiler plugin, as this module links Compose UI from `shared:ui` into the iOS framework
                 implementation(libs.jetbrains.compose.runtime)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(libs.kotlin.test)
             }
         }
 
@@ -149,10 +128,6 @@ multiplatformResources {
     resourcesVisibility.set(MRVisibility.Internal)
     resourcesClassName.set("MR")
     iosBaseLocalizationRegion.set(ProjectSettings.IOS.MokoBaseLocalizationRegion)
-}
-
-koinCompiler {
-    userLogs.set(false)
 }
 
 private fun Copy.assembleAndCopySwiftPackageForBuildType(buildType: NativeBuildType) {

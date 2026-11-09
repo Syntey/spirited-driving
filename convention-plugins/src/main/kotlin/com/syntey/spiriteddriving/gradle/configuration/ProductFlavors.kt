@@ -5,7 +5,6 @@ package com.syntey.spiriteddriving.gradle.configuration
  */
 interface ProductFlavor {
     val name: String
-    val apolloApiUrl: String
     val restApiUrl: String
 }
 
@@ -15,13 +14,11 @@ object ProductFlavors {
 
     object Dev : ProductFlavor {
         override val name: String = "dev"
-        override val apolloApiUrl: String = "https://rickandmortyapi.com/graphql"
         override val restApiUrl: String = "https://swapi.info/api/"
     }
 
     object Prod : ProductFlavor {
         override val name: String = "prod"
-        override val apolloApiUrl: String = "https://rickandmortyapi.com/graphql"
         override val restApiUrl: String = "https://swapi.info/api/"
     }
 }
