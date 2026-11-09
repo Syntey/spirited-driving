@@ -20,9 +20,9 @@ Ready-made fun round trips near the user, for when there's no destination, just 
 
 ## Needs and provides
 
-- **Needs:** the [Map](map.md) to show drives on; ratings from [Drive feedback](drive-feedback.md);
-  [Account](account.md) for sign-in.
-- **Provides:** a route for [Drive](drive.md) and [Saved routes](saved-routes.md).
+- **Needs:** the [Map](../map/README.md) to show drives on; ratings from [Drive feedback](../drive-feedback/README.md);
+  [Account](../account/README.md) for sign-in.
+- **Provides:** a route for [Drive](../drive/README.md) and [Saved routes](../saved-routes/README.md).
 
 ## Account
 
@@ -36,4 +36,4 @@ Drives near a point, one drive's route.
 
 1. **Ranking:** how ratings should order the list. Needs testing with real ratings.
 2. **Details:** which numbers and details a drive shows (see
-   [Route planning](route-planning.md#open-questions)).
+   [Route planning](../route-planning/README.md#open-questions)).

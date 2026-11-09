@@ -1,6 +1,6 @@
 # Route planning
 
-> **Status:** draft, MVP. Last updated 2026-11-06.
+> **Status:** draft, MVP. Last updated 2026-11-08.
 
 The core of the app: from a start, a destination and a detour budget to a list of available routes.
 
@@ -23,17 +23,18 @@ The core of the app: from a start, a destination and a detour budget to a list o
 - Nothing shown is about speed.
 - The first budget is a fixed default in time; the user can't change the default. After that, the budget
   remembers the last type and value used.
-- All routes, the fastest one included, use only motorways the user has a vignette for. Until the user sets their
-  vignettes, routes avoid vignette motorways and a hint points to the setting.
+- All routes, the fastest one included, use only motorways the user has a vignette for.
 - Clear messages cover the cases where no fun route fits the budget, the area isn't covered, or the phone is
   offline.
+- When no fun route fits, the plan says how much budget the closest fun route needs, and the user can pick the
+  smallest budget that fits in one tap.
 
 ## Needs and provides
 
-- **Needs:** places from [Destination search](destination-search.md) or the [Map](map.md); units and
-  vignettes from [Settings](settings.md).
-- **Provides:** the selected route for [Drive](drive.md) and [Saved routes](saved-routes.md); route lines drawn on
-  the [Map](map.md).
+- **Needs:** places from [Destination search](../destination-search/README.md) or the [Map](../map/README.md); units and
+  vignettes from [Settings](../settings/README.md).
+- **Provides:** the selected route for [Drive](../drive/README.md) and [Saved routes](../saved-routes/README.md);
+  route lines drawn on the [Map](../map/README.md).
 
 ## Account
 
@@ -45,6 +46,7 @@ Plan a trip.
 
 ## Open questions
 
-1. **Chip values:** the steps between +15 min and +2 h, and the km chips. Needs real data.
+1. **Chip values:** the steps between +15 min and +2 h, the km chips, and mile chips of their own, since converted
+   km chips give odd numbers. Needs real data.
 2. **Route facts:** which facts describe a route best. Curvy-road distance and climbing come first; check them in
    testing.

@@ -1,0 +1,601 @@
+<title>First Launch Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Roboto:wght@400;500;700&display=swap">
+<style>
+/* Layout: a working phone on a graphite stage, with a narrow control column; stacks on phones. */
+:root {
+  --bg: #ECEEF1;
+  --surface: #FFFFFF;
+  --fg: #1A1C1E;
+  --muted: #565C64;
+  --line: #D3D7DD;
+  --accent: #BD162C;
+  --on-accent: #FFFFFF;
+  --bezel: #1E2125;
+  --stage: #DDE1E6;
+  --font-display: 'Barlow Semi Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111316; --surface: #1B1E22; --fg: #E2E2E5; --muted: #A6ACB4; --line: #30343A;
+    --accent: #FC4952; --on-accent: #410007; --bezel: #2C3036; --stage: #181B1F; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111316; --surface: #1B1E22; --fg: #E2E2E5; --muted: #A6ACB4; --line: #30343A;
+  --accent: #FC4952; --on-accent: #410007; --bezel: #2C3036; --stage: #181B1F; color-scheme: dark;
+}
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); }
+.app {
+  box-sizing: border-box; max-width: 1180px; margin: 0 auto;
+  padding-block: 24px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "intro" "stage" "controls";
+}
+@media (min-width: 860px) {
+  .app { grid-template-columns: 300px minmax(0, 1fr); grid-template-areas: "intro stage" "controls stage"; grid-template-rows: auto 1fr; align-items: start; }
+  .stage { position: sticky; top: 16px; }
+}
+.intro { grid-area: intro; display: grid; gap: 8px; }
+.eyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 34px; line-height: 1.05; text-wrap: balance; }
+.lede { margin: 0; font-size: 15px; line-height: 1.5; color: var(--muted); max-width: 46ch; }
+
+.controls { grid-area: controls; display: grid; gap: 18px; align-content: start; }
+.field { display: grid; gap: 8px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.field legend, .label { padding: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { display: grid; place-items: center; min-height: 40px; border-radius: 9px; font-size: 14px; font-weight: 500; cursor: pointer; color: var(--fg); }
+.seg input:checked + label { background: var(--accent); color: var(--on-accent); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.switch { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; font-size: 14px; }
+.switch input { appearance: none; width: 44px; height: 26px; border-radius: 13px; background: var(--line); position: relative; margin: 0; cursor: pointer; flex: none; transition: background 0.2s; }
+.switch input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.2s; }
+.switch input:checked { background: var(--accent); }
+.switch input:checked::after { transform: translateX(18px); }
+.switch input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.status { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+.status b { font-weight: 600; }
+.restart { justify-self: start; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.restart:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); max-width: 46ch; }
+
+.stage { grid-area: stage; display: grid; justify-items: center; padding: 20px 0; border-radius: 28px; background: var(--stage); min-width: 0; }
+.device-wrap { position: relative; }
+.device { position: absolute; left: 0; top: 0; transform-origin: 0 0; width: 414px; height: 868px; box-sizing: border-box; padding: 12px; border-radius: 60px; background: var(--bezel); box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.45); }
+
+/* ---------- the phone screen ---------- */
+.screen {
+  position: relative; width: 390px; height: 844px; overflow: hidden; border-radius: 48px;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none; outline: none;
+  color: var(--onSurf); background: var(--land);
+}
+.screen:focus-visible { box-shadow: 0 0 0 3px var(--p); }
+.screen.ios { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; }
+.screen.android { font-family: Roboto, system-ui, sans-serif; }
+.screen.ios.light { --p: #BD162C; --onP: #FFFFFF; --sc: #D9E3F2; --onSc: #3E4853; --tc: #FFDEAD; --onTc: #604100; --onSurf: #1A1C1E; --onSurfVar: #42474E; --dotOff: rgba(66, 71, 78, 0.3); --glass: rgba(249, 249, 252, 0.72); --glassEdge: rgba(255, 255, 255, 0.85); --shadow: rgba(16, 20, 28, 0.22); --fill: rgba(118, 118, 128, 0.12); --dialog: rgba(242, 242, 247, 0.86); --scrim: rgba(0, 0, 0, 0.25); }
+.screen.ios.dark { --p: #FC4952; --onP: #410007; --sc: #3E4853; --onSc: #D9E3F2; --tc: #604100; --onTc: #FFDEAD; --onSurf: #E2E2E5; --onSurfVar: #C2C7CF; --dotOff: rgba(194, 199, 207, 0.4); --glass: rgba(30, 32, 34, 0.62); --glassEdge: rgba(255, 255, 255, 0.14); --shadow: rgba(0, 0, 0, 0.55); --fill: rgba(118, 118, 128, 0.26); --dialog: rgba(44, 46, 50, 0.86); --scrim: rgba(0, 0, 0, 0.45); }
+.screen.android.light { --p: #BD162C; --onP: #FFFFFF; --sc: #D9E3F2; --onSc: #3E4853; --tc: #FFDEAD; --onTc: #604100; --onSurf: #1A1C1E; --onSurfVar: #42474E; --outlineVar: #C2C7CF; --dotOff: rgba(66, 71, 78, 0.3); --frost: rgba(243, 243, 247, 0.8); --shadow: rgba(16, 20, 28, 0.22); --dialog: #F1F1F5; --scrim: rgba(0, 0, 0, 0.32); }
+.screen.android.dark { --p: #FC4952; --onP: #410007; --sc: #3E4853; --onSc: #D9E3F2; --tc: #604100; --onTc: #FFDEAD; --onSurf: #E2E2E5; --onSurfVar: #C2C7CF; --outlineVar: #42474E; --dotOff: rgba(194, 199, 207, 0.4); --frost: rgba(26, 28, 30, 0.76); --shadow: rgba(0, 0, 0, 0.55); --dialog: #2A2D31; --scrim: rgba(0, 0, 0, 0.5); }
+
+.art { position: absolute; inset: 0; overflow: hidden; }
+.track { position: absolute; left: 0; top: 0; width: 1950px; height: 844px; will-change: transform; }
+.track svg { position: absolute; left: 0; top: 0; display: block; }
+.fade-layer { position: absolute; inset: 0; pointer-events: none; }
+
+.skip { position: absolute; z-index: 3; border: 0; font: inherit; cursor: pointer; color: var(--onSurf); }
+.ios .skip { top: 58px; right: 16px; height: 44px; padding: 0 18px; border-radius: 999px; font-size: 15px; font-weight: 600; background: var(--glass); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%); box-shadow: inset 0 0 0 1px var(--glassEdge), 0 8px 24px -10px var(--shadow); }
+.android .skip { top: 48px; right: 16px; height: 48px; padding: 0 20px; border-radius: 999px; font-size: 14px; font-weight: 500; background: var(--frost); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12); }
+
+.panel { position: absolute; z-index: 2; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; }
+.ios .panel { left: 12px; right: 12px; bottom: 12px; height: 360px; border-radius: 40px; padding: 26px 0 20px; background: var(--glass); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); box-shadow: inset 0 0 0 1px var(--glassEdge), 0 16px 40px -16px var(--shadow); }
+.android .panel { left: 0; right: 0; bottom: 0; height: 384px; border-radius: 28px 28px 0 0; padding: 28px 0 36px; background: var(--frost); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: 0 -4px 16px -6px var(--shadow); }
+.pages { position: relative; flex: 1; min-height: 0; }
+.page { position: absolute; inset: 0; box-sizing: border-box; display: flex; flex-direction: column; will-change: transform; }
+.ios .page, .ios .actions { padding: 0 22px; }
+.android .page, .android .actions { padding: 0 24px; }
+.page h2 { margin: 0; font-size: 28px; font-weight: 700; }
+.ios .page h2 { line-height: 34px; }
+.android .page h2 { line-height: 36px; }
+.page p { margin: 8px 0 0; color: var(--onSurfVar); }
+.ios .page p { font-size: 17px; line-height: 22px; }
+.android .page p { font-size: 16px; line-height: 24px; }
+.cover { align-self: flex-start; height: 28px; display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; background: var(--tc); color: var(--onTc); margin-bottom: 14px; }
+.ios .cover { padding: 0 12px 0 9px; font-size: 13px; font-weight: 600; }
+.android .cover { padding: 0 12px 0 8px; font-size: 12px; font-weight: 500; margin-bottom: 16px; }
+.chips { margin-top: 16px; display: flex; gap: 8px; }
+.chips span { border-radius: 999px; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+.ios .chips span { height: 36px; padding: 0 14px; font-size: 15px; background: var(--fill); }
+.ios .chips span.on { font-weight: 600; background: var(--p); color: var(--onP); }
+.android .chips span { height: 32px; padding: 0 16px; font-size: 14px; font-weight: 500; color: var(--onSurfVar); box-shadow: inset 0 0 0 1px var(--outlineVar); }
+.android .chips span.on { background: var(--p); color: var(--onP); box-shadow: none; }
+
+.actions { display: flex; flex-direction: column; }
+.dots { align-self: center; display: flex; gap: 6px; }
+.dot { position: relative; height: 6px; width: 6px; border-radius: 3px; background: var(--dotOff); overflow: hidden; }
+.dot i { position: absolute; inset: 0; background: var(--p); opacity: 0; }
+.btns { display: grid; }
+.ios .btns { margin-top: 14px; }
+.android .btns { margin-top: 16px; }
+.btns > * { grid-area: 1 / 1; }
+.btn { border: 0; border-radius: 999px; font: inherit; cursor: pointer; width: 100%; }
+.ios .btn { height: 50px; font-size: 17px; font-weight: 600; }
+.android .btn { height: 48px; font-size: 15px; font-weight: 500; }
+.btn.primary { background: var(--p); color: var(--onP); }
+.btn.tonal { background: var(--sc); color: var(--onSc); }
+.btn:focus-visible, .skip:focus-visible, .dialog button:focus-visible { outline: 2px solid var(--p); outline-offset: 2px; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.android .pair { gap: 8px; }
+.terms-wrap { overflow: hidden; }
+.terms { margin: 0; text-align: center; color: var(--onSurfVar); }
+.ios .terms { padding-top: 12px; font-size: 13px; line-height: 18px; }
+.android .terms { padding-top: 12px; font-size: 12px; line-height: 16px; }
+.terms a { color: var(--p); }
+
+/* system location prompt, a mock */
+.overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: var(--scrim); }
+.overlay[hidden] { display: none; }
+.dialog { box-sizing: border-box; color: var(--onSurf); text-align: center; }
+.ios .dialog { width: 300px; border-radius: 30px; padding: 22px 18px 16px; background: var(--dialog); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.5); }
+.android .dialog { width: 320px; border-radius: 28px; padding: 24px 20px 18px; background: var(--dialog); box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.5); }
+.dialog h3 { margin: 0; font-size: 17px; line-height: 22px; font-weight: 600; text-wrap: balance; }
+.android .dialog h3 { font-size: 20px; line-height: 26px; font-weight: 500; }
+.dialog p { margin: 6px 0 0; font-size: 13px; line-height: 18px; color: var(--onSurfVar); }
+.precise { margin: 14px auto 0; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--fill, rgba(0, 0, 0, 0.06)); font-size: 13px; font-weight: 600; }
+.choices { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choice { display: grid; justify-items: center; gap: 8px; font-size: 14px; }
+.choice .ring { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; background: var(--sc); color: var(--onSc); }
+.choice.on .ring { box-shadow: 0 0 0 3px var(--p); }
+.dialog .stack { margin-top: 16px; display: grid; gap: 8px; }
+.dialog .stack button { min-height: 44px; border: 0; border-radius: 999px; font: inherit; font-size: 16px; cursor: pointer; background: var(--fill, rgba(0, 0, 0, 0.06)); color: var(--p); font-weight: 600; }
+.android .dialog .stack button { background: var(--sc); color: var(--onSc); font-size: 14px; font-weight: 500; min-height: 48px; }
+.done-card { box-sizing: border-box; width: 300px; padding: 24px 20px 18px; border-radius: 30px; text-align: center; background: var(--dialog); color: var(--onSurf); }
+.done-card h3 { margin: 0; font-size: 20px; line-height: 26px; }
+.done-card p { margin: 6px 0 16px; font-size: 15px; line-height: 20px; color: var(--onSurfVar); }
+@media (prefers-reduced-motion: reduce) { .switch input, .switch input::after { transition: none; } }
+</style>
+
+<div class="app">
+  <header class="intro">
+    <p class="eyebrow">Spirited Driving</p>
+    <h1>First launch prototype</h1>
+    <p class="lede">Swipe the three intro pages with a finger or the mouse, or tap the buttons. Open this page on a phone to try it at real size.</p>
+  </header>
+
+  <section class="stage" id="stage" aria-label="Prototype">
+    <div class="device-wrap" id="deviceWrap">
+      <div class="device" id="device">
+        <div class="screen ios light" id="screen" tabindex="0" aria-label="First launch, phone screen. Left and right arrow keys change the intro page.">
+          <div class="art" id="art" aria-hidden="true">
+            <div class="track" id="track">
+              <svg id="sceneSvg" width="1950" height="844" viewBox="0 0 1950 844"></svg>
+              <svg id="carSvg" width="1950" height="844" viewBox="0 0 1950 844"></svg>
+            </div>
+          </div>
+          <button class="skip" id="skip" type="button">Skip</button>
+          <div class="panel" id="panel">
+            <div class="pages" id="pages"></div>
+            <div class="actions">
+              <div class="dots" id="dots" role="img" aria-label="Step 1 of 5"></div>
+              <div class="btns">
+                <button class="btn primary" id="next" type="button">Next</button>
+                <button class="btn primary" id="cont" type="button" hidden>Continue</button>
+                <div class="pair" id="pair" hidden>
+                  <button class="btn tonal" type="button" data-vignette="yes">Yes, I have one</button>
+                  <button class="btn tonal" type="button" data-vignette="no">No</button>
+                </div>
+              </div>
+              <div class="terms-wrap" id="termsWrap">
+                <p class="terms">By continuing, you accept the <a href="#terms">Terms</a> and <a href="#privacy">Privacy Policy</a>.</p>
+              </div>
+            </div>
+          </div>
+          <div class="overlay" id="prompt" hidden>
+            <div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="promptTitle"></div>
+          </div>
+          <div class="overlay" id="done" hidden>
+            <div class="done-card" role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+              <h3 id="doneTitle">First launch is done</h3>
+              <p id="doneText">The map opens next.</p>
+              <button class="btn primary" type="button" id="again">Start again</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="controls" aria-label="Prototype settings">
+    <fieldset class="field">
+      <legend>Platform</legend>
+      <div class="seg">
+        <input type="radio" name="platform" id="pf-ios" value="ios" checked><label for="pf-ios">iOS</label>
+        <input type="radio" name="platform" id="pf-android" value="android"><label for="pf-android">Android</label>
+      </div>
+    </fieldset>
+    <fieldset class="field">
+      <legend>Phone theme</legend>
+      <div class="seg">
+        <input type="radio" name="theme" id="th-light" value="light" checked><label for="th-light">Light, day</label>
+        <input type="radio" name="theme" id="th-dark" value="dark"><label for="th-dark">Dark, dusk</label>
+      </div>
+    </fieldset>
+    <fieldset class="field">
+      <legend>Illustration</legend>
+      <div class="seg">
+        <input type="radio" name="art" id="art-slide" value="slide" checked><label for="art-slide">Sliding</label>
+        <input type="radio" name="art" id="art-static" value="static"><label for="art-static">Static</label>
+      </div>
+    </fieldset>
+    <label class="switch" for="reduce"><input type="checkbox" id="reduce" role="switch">Reduce motion: fade between steps</label>
+    <p class="status" id="status" aria-live="polite"><b>Step 1 of 5</b> · What it is</p>
+    <button class="restart" type="button" id="restart">Start again</button>
+    <p class="note">This runs in a browser, so the glass only approximates Haze, and the location prompt is a stand-in for the system one. The artwork, copy and layout match the design canvas.</p>
+  </aside>
+</div>
+
+<script type="application/json" id="art-data">__DATA__</script>
+<script>
+(function () {
+  const D = JSON.parse(document.getElementById('art-data').textContent);
+  const W = 390;
+  const $ = (id) => document.getElementById(id);
+  const screen = $('screen'), track = $('track'), sceneSvg = $('sceneSvg'), carSvg = $('carSvg');
+  const pagesEl = $('pages'), dotsEl = $('dots'), termsWrap = $('termsWrap'), skipBtn = $('skip');
+  const nextBtn = $('next'), contBtn = $('cont'), pair = $('pair');
+  const NAMES = ['What it is', 'The budget', 'The hand-off', 'Location', 'Vignette'];
+  const PIN = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5a7 7 0 0 0-7 7c0 5 7 12 7 12s7-7 7-12a7 7 0 0 0-7-7zm0 9.6a2.6 2.6 0 1 1 0-5.2 2.6 2.6 0 0 1 0 5.2z"></path></svg>';
+  const COPY = {
+    ios: [
+      ['Take the fun way', 'For people who enjoy driving: curvy country roads, hills and passes instead of the motorway.'],
+      ['You set the extra time', 'Pick a destination and how much longer you’ll spend, like +30 min. You get the most fun route that fits.'],
+      ['Drive it in Apple Maps', 'Your route opens in Apple Maps for turn-by-turn guidance. Afterwards, tell us how it was.'],
+      ['Start where you are', 'The map and your routes start from your location. Keep Precise Location on, so routes start on the right road.'],
+      ['Do you have a Czech motorway vignette?', 'Without one, routes avoid motorways that need it. You can change this in Settings.']
+    ],
+    android: [
+      ['Take the fun way', 'For people who enjoy driving: curvy country roads, hills and passes instead of the motorway.'],
+      ['You set the extra time', 'Pick a destination and how much longer you’ll spend, like +30 min. You get the most fun route that fits.'],
+      ['Drive it in Google Maps', 'Your route opens in Google Maps for turn-by-turn guidance. Afterwards, tell us how it was.'],
+      ['Start where you are', 'The map and your routes start from your location. Choose Precise, so routes start on the right road.'],
+      ['Do you have a Czech motorway vignette?', 'Without one, routes avoid motorways that need it. You can change this in Settings.']
+    ]
+  };
+
+  const mq = (q) => { try { return window.matchMedia(q).matches; } catch (e) { return false; } };
+  const S = {
+    platform: 'ios',
+    theme: mq('(prefers-color-scheme: dark)') ? 'dark' : 'light',
+    art: 'slide',
+    reduce: mq('(prefers-reduced-motion: reduce)'),
+    p: 0, page: 0, bg: 0, raf: 0, drag: null, scale: 1, suppressClick: false
+  };
+
+  // ----- road geometry, the same as the canvas -----
+  const bez = (s, t) => {
+    const u = 1 - t;
+    const x = u * u * u * s[0][0] + 3 * u * u * t * s[1][0] + 3 * u * t * t * s[2][0] + t * t * t * s[3][0];
+    const y = u * u * u * s[0][1] + 3 * u * u * t * s[1][1] + 3 * u * t * t * s[2][1] + t * t * t * s[3][1];
+    const dx = 3 * u * u * (s[1][0] - s[0][0]) + 6 * u * t * (s[2][0] - s[1][0]) + 3 * t * t * (s[3][0] - s[2][0]);
+    const dy = 3 * u * u * (s[1][1] - s[0][1]) + 6 * u * t * (s[2][1] - s[1][1]) + 3 * t * t * (s[3][1] - s[2][1]);
+    return { x, y, a: Math.atan2(dy, dx) };
+  };
+  const samples = [];
+  let acc = 0;
+  D.segs.forEach((sg) => {
+    for (let k = 0; k <= 400; k++) {
+      const q = bez(sg, k / 400);
+      if (samples.length) { const l = samples[samples.length - 1]; acc += Math.hypot(q.x - l.x, q.y - l.y); }
+      q.s = acc; samples.push(q);
+    }
+  });
+  const at = (s) => {
+    let lo = 0, hi = samples.length - 1;
+    if (s <= 0) return samples[0];
+    while (hi - lo > 1) { const m = (lo + hi) >> 1; if (samples[m].s < s) lo = m; else hi = m; }
+    return samples[hi];
+  };
+  const L = D.leads;
+  const leadAt = (p) => {
+    if (p <= 0) return L[0] + (L[1] - L[0]) * p;
+    if (p >= 4) return L[4] + (L[4] - L[3]) * (p - 4);
+    const i = Math.floor(p), f = p - i;
+    return L[i] + (L[i + 1] - L[i]) * f;
+  };
+  const carT = (s) => {
+    const q = at(s);
+    const x = q.x - Math.sin(q.a) * D.lane, y = q.y + Math.cos(q.a) * D.lane;
+    const d = (q.a * 180 / Math.PI).toFixed(2);
+    return [`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${d})`, `translate(${(x + 1.6).toFixed(2)} ${(y + 2.6).toFixed(2)}) rotate(${d})`];
+  };
+
+  // ----- building -----
+  let carEls = {};
+  function buildArt() {
+    const k = S.theme === 'dark' ? 'dusk' : 'day';
+    sceneSvg.innerHTML = D.scene[k];
+    carSvg.innerHTML = D.cars[k];
+    carEls = {
+      mx: carSvg.querySelector('[data-car="mx"]'), mxs: carSvg.querySelector('[data-shadow="mx"]'),
+      gt: carSvg.querySelector('[data-car="gt"]'), gts: carSvg.querySelector('[data-shadow="gt"]')
+    };
+    screen.style.background = D.land[k];
+  }
+  function buildPages() {
+    pagesEl.textContent = '';
+    COPY[S.platform].forEach(([title, body], i) => {
+      const el = document.createElement('div');
+      el.className = 'page';
+      if (i === 0) {
+        const chip = document.createElement('span');
+        chip.className = 'cover';
+        chip.innerHTML = PIN;
+        chip.appendChild(document.createTextNode('Czechia for now'));
+        el.appendChild(chip);
+      }
+      const h = document.createElement('h2');
+      h.textContent = title;
+      const p = document.createElement('p');
+      p.textContent = body;
+      el.append(h, p);
+      if (i === 1) {
+        const chips = document.createElement('div');
+        chips.className = 'chips';
+        chips.setAttribute('role', 'img');
+        chips.setAttribute('aria-label', 'Budget chips, +30 min selected');
+        ['+15 min', '+30 min', '+45 min', '+1 h'].forEach((t) => {
+          const c = document.createElement('span');
+          c.textContent = t;
+          if (t === '+30 min') c.className = 'on';
+          chips.appendChild(c);
+        });
+        el.appendChild(chips);
+      }
+      pagesEl.appendChild(el);
+    });
+  }
+  function buildDots() {
+    dotsEl.textContent = '';
+    for (let i = 0; i < 5; i++) { const d = document.createElement('span'); d.className = 'dot'; d.appendChild(document.createElement('i')); dotsEl.appendChild(d); }
+  }
+  function applyScreenClass() {
+    screen.className = 'screen ' + S.platform + ' ' + S.theme;
+  }
+
+  // ----- rendering one frame -----
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function render() {
+    const p = S.p;
+    const view = S.art === 'static' ? D.staticStep : (S.reduce ? S.bg : p);
+    track.style.transform = `translate3d(${(-W * view).toFixed(2)}px, 0, 0)`;
+    const s = leadAt(view);
+    const a = carT(s), b = carT(s - D.gap);
+    if (carEls.mx) {
+      carEls.mx.setAttribute('transform', a[0]); carEls.mxs.setAttribute('transform', a[1]);
+      carEls.gt.setAttribute('transform', b[0]); carEls.gts.setAttribute('transform', b[1]);
+    }
+    const pw = pagesEl.clientWidth || W;
+    Array.prototype.forEach.call(pagesEl.children, (el, i) => {
+      const off = i - p;
+      el.style.transform = `translate3d(${(off * pw).toFixed(2)}px, 0, 0)`;
+      const vis = Math.abs(off) < 1;
+      el.style.visibility = vis ? 'visible' : 'hidden';
+      if (Math.abs(off) < 0.5) el.removeAttribute('aria-hidden'); else el.setAttribute('aria-hidden', 'true');
+    });
+    Array.prototype.forEach.call(dotsEl.children, (d, i) => {
+      const w = Math.max(0, 1 - Math.abs(p - i));
+      d.style.width = (6 + 14 * w).toFixed(2) + 'px';
+      d.firstChild.style.opacity = w.toFixed(3);
+    });
+    const t = clamp(1 - p, 0, 1);
+    termsWrap.style.height = (termsWrap.firstElementChild.offsetHeight * t).toFixed(2) + 'px';
+    termsWrap.style.opacity = t.toFixed(3);
+    termsWrap.style.visibility = t > 0.01 ? 'visible' : 'hidden';
+    const so = clamp((2.5 - p) / 0.5, 0, 1);
+    skipBtn.style.opacity = so.toFixed(3);
+    skipBtn.style.visibility = so > 0.01 ? 'visible' : 'hidden';
+    const r = clamp(Math.round(p), 0, 4);
+    nextBtn.hidden = r > 2;
+    contBtn.hidden = r !== 3;
+    pair.hidden = r !== 4;
+  }
+  function settle() {
+    S.p = S.page;
+    render();
+    dotsEl.setAttribute('aria-label', 'Step ' + (S.page + 1) + ' of 5');
+    $('status').innerHTML = '<b>Step ' + (S.page + 1) + ' of 5</b> · ' + NAMES[S.page];
+  }
+
+  // ----- moving between pages -----
+  const easeOut = (k) => 1 - Math.pow(1 - k, 3);
+  const easeInOut = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+  function stop() { if (S.raf) cancelAnimationFrame(S.raf); S.raf = 0; }
+  function animateP(to, dur, ease, done) {
+    stop();
+    const from = S.p, t0 = performance.now();
+    const f = (now) => {
+      const k = Math.min(1, (now - t0) / dur);
+      S.p = from + (to - from) * ease(k);
+      render();
+      if (k < 1) S.raf = requestAnimationFrame(f); else { S.raf = 0; if (done) done(); }
+    };
+    S.raf = requestAnimationFrame(f);
+  }
+  function crossfadeArt() {
+    const art = $('art');
+    const ghost = track.cloneNode(true);
+    ghost.removeAttribute('id');
+    const layer = document.createElement('div');
+    layer.className = 'fade-layer';
+    layer.appendChild(ghost);
+    art.appendChild(layer);
+    return () => {
+      const anim = layer.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 320, easing: 'ease-out' });
+      anim.onfinish = () => layer.remove();
+    };
+  }
+  function goTo(target, how) {
+    target = clamp(target, 0, 4);
+    const from = S.p;
+    S.page = target;
+    if (S.reduce) {
+      stop();
+      const changed = S.bg !== target && S.art !== 'static';
+      const fadeOut = changed ? crossfadeArt() : null;
+      S.bg = target;
+      S.p = target;
+      settle();
+      if (fadeOut) fadeOut();
+      pagesEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: 'ease-out' });
+      return;
+    }
+    const dist = Math.abs(target - from);
+    const dur = how === 'fling' ? clamp(220 + 260 * dist, 240, 520) : clamp(380 + 200 * dist, 420, 1100);
+    animateP(target, dur, how === 'fling' ? easeOut : easeInOut, () => { S.bg = target; settle(); });
+  }
+
+  // ----- dragging the intro pages -----
+  const rubber = (x) => (x * 0.4) / (1 + x * 0.6);
+  screen.addEventListener('pointerdown', (e) => {
+    if (!$('prompt').hidden || !$('done').hidden) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    if (e.target.closest('button, a')) return;
+    if (S.page > 2) return;
+    stop();
+    S.drag = { id: e.pointerId, x0: e.clientX, y0: e.clientY, p0: S.p, active: false, hist: [[performance.now(), e.clientX]] };
+  });
+  screen.addEventListener('pointermove', (e) => {
+    const d = S.drag;
+    if (!d || d.id !== e.pointerId) return;
+    const dx = (e.clientX - d.x0) / S.scale, dy = (e.clientY - d.y0) / S.scale;
+    if (!d.active) {
+      if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) { if (Math.abs(dy) > 12) S.drag = null; return; }
+      d.active = true;
+      try { screen.setPointerCapture(e.pointerId); } catch (err) { /* not capturable */ }
+    }
+    let p = d.p0 - dx / W;
+    if (p < 0) p = -rubber(-p);
+    if (p > 2) p = 2 + rubber(p - 2);
+    S.p = p;
+    d.hist.push([performance.now(), e.clientX]);
+    if (d.hist.length > 6) d.hist.shift();
+    render();
+  });
+  const endDrag = (e) => {
+    const d = S.drag;
+    if (!d || d.id !== e.pointerId) return;
+    S.drag = null;
+    if (!d.active) return;
+    S.suppressClick = true;
+    setTimeout(() => { S.suppressClick = false; }, 0);
+    const h = d.hist, first = h[0], last = h[h.length - 1];
+    const v = (last[1] - first[1]) / S.scale / Math.max(1, last[0] - first[0]);
+    const base = Math.round(d.p0);
+    let target;
+    if (v < -0.3) target = Math.floor(S.p) + 1;
+    else if (v > 0.3) target = Math.ceil(S.p) - 1;
+    else target = Math.round(S.p);
+    target = clamp(target, Math.max(0, base - 1), Math.min(2, base + 1));
+    goTo(target, 'fling');
+  };
+  screen.addEventListener('pointerup', endDrag);
+  screen.addEventListener('pointercancel', endDrag);
+  screen.addEventListener('click', (e) => { if (S.suppressClick) { e.stopPropagation(); e.preventDefault(); } }, true);
+  screen.addEventListener('keydown', (e) => {
+    if (e.target !== screen) return;
+    if (e.key === 'ArrowRight' && S.page < 2) { e.preventDefault(); goTo(S.page + 1); }
+    if (e.key === 'ArrowLeft' && S.page > 0 && S.page <= 2) { e.preventDefault(); goTo(S.page - 1); }
+  });
+
+  // ----- buttons -----
+  nextBtn.addEventListener('click', () => goTo(S.page + 1));
+  skipBtn.addEventListener('click', () => goTo(3));
+  contBtn.addEventListener('click', showPrompt);
+  pair.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-vignette]');
+    if (!b) return;
+    $('doneText').textContent = b.dataset.vignette === 'yes'
+      ? 'Routes may use motorways. The map opens next.'
+      : 'Routes avoid vignette motorways. The map opens next.';
+    $('done').hidden = false;
+    $('again').focus();
+  });
+  termsWrap.addEventListener('click', (e) => { if (e.target.closest('a')) e.preventDefault(); });
+  function showPrompt() {
+    const dlg = $('dialog');
+    const choose = '<div class="stack">';
+    if (S.platform === 'ios') {
+      dlg.innerHTML = '<h3 id="promptTitle">Allow “Spirited Driving” to use your location?</h3>'
+        + '<p>The map and your routes start from where you are.</p>'
+        + '<span class="precise">' + PIN + 'Precise: On</span>'
+        + choose + '<button type="button">Allow Once</button><button type="button">Allow While Using App</button><button type="button">Don’t Allow</button></div>';
+    } else {
+      dlg.innerHTML = '<h3 id="promptTitle">Allow Spirited Driving to access this device’s location?</h3>'
+        + '<div class="choices"><div class="choice on"><span class="ring">' + PIN.replace(/14/g, '26') + '</span>Precise</div><div class="choice"><span class="ring">' + PIN.replace(/14/g, '20') + '</span>Approximate</div></div>'
+        + choose + '<button type="button">While using the app</button><button type="button">Only this time</button><button type="button">Don’t allow</button></div>';
+    }
+    $('prompt').hidden = false;
+    const first = dlg.querySelector('button');
+    if (first) first.focus();
+  }
+  $('dialog').addEventListener('click', (e) => {
+    if (!e.target.closest('button')) return;
+    $('prompt').hidden = true;
+    goTo(4);
+    screen.focus();
+  });
+  function restart() {
+    stop();
+    $('prompt').hidden = true;
+    $('done').hidden = true;
+    S.page = 0; S.p = 0; S.bg = 0;
+    settle();
+  }
+  $('again').addEventListener('click', () => { restart(); screen.focus(); });
+  $('restart').addEventListener('click', restart);
+
+  // ----- settings -----
+  document.querySelectorAll('input[name="platform"]').forEach((r) => r.addEventListener('change', () => {
+    S.platform = r.value; applyScreenClass(); buildPages(); render(); if (!$('prompt').hidden) showPrompt();
+  }));
+  document.querySelectorAll('input[name="theme"]').forEach((r) => r.addEventListener('change', () => {
+    S.theme = r.value; applyScreenClass(); buildArt(); render();
+  }));
+  document.querySelectorAll('input[name="art"]').forEach((r) => r.addEventListener('change', () => { S.art = r.value; render(); }));
+  $('reduce').addEventListener('change', (e) => { S.reduce = e.target.checked; S.bg = S.page; render(); });
+
+  // ----- fitting the phone to the window -----
+  function fit() {
+    const stage = $('stage');
+    const wide = window.innerWidth >= 860;
+    const availW = stage.clientWidth - 16;
+    const availH = window.innerHeight - 72;
+    let k = Math.min(1, availW / 414);
+    if (wide) k = Math.min(k, availH / 868);
+    k = Math.max(0.4, k);
+    S.scale = k;
+    $('device').style.transform = `scale(${k})`;
+    const wrap = $('deviceWrap');
+    wrap.style.width = (414 * k).toFixed(1) + 'px';
+    wrap.style.height = (868 * k).toFixed(1) + 'px';
+  }
+  window.addEventListener('resize', () => { fit(); render(); });
+
+  // ----- start -----
+  document.getElementById(S.theme === 'dark' ? 'th-dark' : 'th-light').checked = true;
+  $('reduce').checked = S.reduce;
+  applyScreenClass();
+  buildArt();
+  buildPages();
+  buildDots();
+  fit();
+  settle();
+})();
+</script>

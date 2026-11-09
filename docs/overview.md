@@ -1,6 +1,6 @@
 # Spirited Driving: Overview
 
-> **Status:** draft, being iterated. Last updated 2026-11-06.
+> **Status:** draft, being iterated. Last updated 2026-11-08.
 >
 > Entry point for product and architecture design. Topics that outgrow this file get their own file in `docs/`
 > and a link from here.
@@ -32,7 +32,8 @@ enjoys driving can use the app.
 How the app talks to users, in the app and in the store listing:
 
 - Words describe the road and the drive (curvy, scenic, enjoyable), never speed. The app shows no speeds.
-- No car makes or models are named. Illustrations show light sports cars that aren't a real model.
+- No car makes or models are named. Illustrations may draw well-known light sports cars, simplified and without
+  badges or logos.
 
 ## Competitive landscape
 
@@ -70,30 +71,34 @@ navigation experience good enough for daily use.
 
 ## Features
 
-Each feature has its own file in [features/](features/). A feature is a complete piece of functionality, not a
-screen. How the user moves between features is in [navigation.md](navigation.md).
+Each feature has its own folder in [features/](features/): `README.md` says what it does, and `design.md` how its
+screens look (see [Design](#design)). A feature is a complete piece of functionality, not a screen. How the user
+moves between features is in [navigation.md](navigation.md).
 
 MVP, for the [launch](#launch) region:
 
-| Feature                                                | Purpose                                                  | Account          |
-|--------------------------------------------------------|----------------------------------------------------------|------------------|
-| [Map](features/map.md)                                 | Primary screen: a map around the user, with search       | No               |
-| [Destination search](features/destination-search.md)   | Find a place by typing                                   | No               |
-| [Route planning](features/route-planning.md)           | From a budget to a list of available routes              | No               |
-| [Drive](features/drive.md)                             | Hand the route to Google Maps or Apple Maps              | No               |
-| [Drive feedback](features/drive-feedback.md)           | Rate the route after driving it                          | No               |
-| [Settings](features/settings.md)                       | Units, vignettes, tips                                   | No               |
-| [Account](features/account.md)                         | Sign in with Google or Apple                             | —                |
-| [First launch](features/first-launch.md)               | Intro and location permission                            | No               |
-| [Saved routes](features/saved-routes.md)               | Keep routes to drive later                               | Yes              |
-| [Trip history](features/trip-history.md)               | Past drives                                              | Yes              |
+| Feature                                                     | Purpose                                             | Account |
+|-------------------------------------------------------------|-----------------------------------------------------|---------|
+| [Map](features/map/README.md)                               | Primary screen: a map around the user, with search  | No      |
+| [Destination search](features/destination-search/README.md) | Find a place by typing                              | No      |
+| [Route planning](features/route-planning/README.md)         | From a budget to a list of available routes         | No      |
+| [Drive](features/drive/README.md)                           | Hand the route to Google Maps or Apple Maps         | No      |
+| [Drive feedback](features/drive-feedback/README.md)         | Rate the route after driving it                     | No      |
+| [Settings](features/settings/README.md)                     | Units, vignettes, about the app                     | No      |
+| [Account](features/account/README.md)                       | Sign in with Google or Apple                        | —       |
+| [First launch](features/first-launch/README.md)             | Intro, location permission, vignette                | No      |
+| [Saved routes](features/saved-routes/README.md)             | Keep routes to drive later                          | Yes     |
+| [Trip history](features/trip-history/README.md)             | Past drives                                         | Yes     |
 
 **Future ideas**
 
-- Round trips: [ready-made drives nearby](features/recommended-drives.md), or on demand ("1-hour loop from here").
-  Postponed until A→B routes work well; too many unknowns. First in line after that, since the audience often drives
-  with no destination.
+- Round trips: [ready-made drives nearby](features/recommended-drives/README.md), or on demand ("1-hour loop from
+  here"). Postponed until A→B routes work well; too many unknowns. First in line after that, since the audience
+  often drives with no destination.
 - In-app turn-by-turn navigation
+- Choice of maps app for the hand-off, such as Google Maps on iOS or Mapy.com. Depends on how each one takes
+  waypoints, and how it works with Android Auto and CarPlay.
+- Favourite places, such as Home and Work
 - Favourite roads, roads to avoid
 - Recording drives and stats
 - Community-rated roads, shared routes
@@ -105,6 +110,24 @@ MVP, for the [launch](#launch) region:
 
 - Lap timing, speed leaderboards or anything else that rewards speeding on public roads
 - Track-day tools
+
+## Design
+
+- **[Theme](theme.md):** colours, type, shapes, glass and the empty and error layout, shared by every screen.
+- **Screens:** each feature's `design.md`, so far [Map](features/map/design.md),
+  [Destination search](features/destination-search/design.md), [Route planning](features/route-planning/design.md), [Drive](features/drive/design.md),
+  [Drive feedback](features/drive-feedback/design.md), [First launch](features/first-launch/design.md),
+  [Account](features/account/design.md), [Saved routes](features/saved-routes/design.md),
+  [Settings](features/settings/design.md) and [Trip history](features/trip-history/design.md). A design's Platforms table says how the one shared screen is styled on
+  each platform; it never means two screens ([Architecture](architecture.md#shared-and-native-ui)).
+
+Written design is a spec for building a screen, not a record of it. Once a screen is built, the code holds its
+layout, sizes and copy:
+
+- Its `design.md` is deleted. The decisions the code can't explain, and why they were made, move to a short
+  "Design" section in the feature's `README.md`.
+- Screenshots come from screenshot tests and are never added by hand, so they stay current.
+- The theme keeps its reasons and drops its tables of values.
 
 ## Architecture
 
@@ -119,7 +142,7 @@ How the app is built is described in [architecture.md](architecture.md). In shor
 
 - **Region:** Czechia.
 - **Language:** English.
-- **Price:** free. Users can leave a tip as an in-app purchase ([Settings](features/settings.md)).
+- **Price:** free. How the app earns money is open ([Settings](features/settings/README.md#open-questions)).
 
 ## Sources
 
