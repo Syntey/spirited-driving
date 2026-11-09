@@ -9,7 +9,7 @@ materialIcons = "1.7.7"
 composeMultiplatform = "1.12.1" # Needs to align with version in Compose BOM as closely as possible
 composeMultiplatformMaterial3 = "1.9.0" # Versioned separately from `composeMultiplatform`, see `compose.material3` in CMP Gradle plugin
 composeMultiplatformMaterialIcons = "1.7.3" # No longer published together with `composeMultiplatform`
-jetbrainsLifecycle = "2.11.0" # The Compose Multiplatform counterpart of `androidxLifecycle`, consumed by `shared:ui`
+jetbrainsLifecycle = "2.11.0" # The Compose Multiplatform counterpart of `androidxLifecycle`, consumed by Compose modules
 androidxActivity = "1.13.0"
 decompose = "3.5.0"
 essenty = "2.6.0"
@@ -42,8 +42,9 @@ google-servicesPlugin = "4.5.0"
 google-firebaseAppDistributionPlugin = "5.3.0"
 arkitekt = "6.1.0"
 versionCatalogUpdate = "1.1.1"
+modulesGraphAssert = "2.9.1"
 
-# Android Namespaces (shared modules derive theirs from their directory, see `conventions-kmp-library`)
+# Android Namespaces (shared modules derive theirs from their path, see `conventions-kmp-library`)
 project-android-namespace = "com.syntey.spiriteddriving.android"
 project-baselineprofile-namespace = "com.syntey.spiriteddriving.baselineprofile"
 
@@ -139,6 +140,7 @@ androidx-datastore-preferences-core = { group = "androidx.datastore", name = "da
 gradlePlugin-android = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 gradlePlugin-kotlin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 gradlePlugin-compose = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
+gradlePlugin-kotlinSerialization = { group = "org.jetbrains.kotlin", name = "kotlin-serialization", version.ref = "kotlin" }
 gradlePlugin-koin = { group = "io.insert-koin", name = "koin-compiler-gradle-plugin", version.ref = "koinCompilerPlugin" }
 gradlePlugin-ktlint = { group = "org.jlleitschuh.gradle", name = "ktlint-gradle", version.ref = "ktlintGradlePlugin" }
 gradlePlugin-detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detektGradlePlugin" }
@@ -163,11 +165,14 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detektGradlePlugin
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 koin = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompilerPlugin" }
 version-catalog-update = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }
+modules-graph-assert = { id = "com.jraska.module.graph.assertion", version.ref = "modulesGraphAssert" }
 
 # Precompiled script plugins
 conventions-root = { id = "conventions-root" }
 conventions-lint = { id = "conventions-lint" }
 conventions-kmp-library = { id = "conventions-kmp-library" }
+conventions-compose = { id = "conventions-compose" }
+conventions-arkitekt = { id = "conventions-arkitekt" }
 conventions-kmp-feature = { id = "conventions-kmp-feature" }
 conventions-koin = { id = "conventions-koin" }
 

@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 /**
  * Top bar of a navigation stack.
  *
- * Screens in `shared:ui` do not draw a top bar, because on iOS it is provided by native `NavigationStack`.
+ * Shared screens do not draw a top bar, because on iOS it is provided by native `NavigationStack`.
  * On Android, it is drawn by the navigation host instead.
  */
 @OptIn(ExperimentalMaterial3Api::class)

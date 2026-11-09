@@ -1,6 +1,6 @@
 package com.syntey.spiriteddriving.android.tools.binding
 
-import com.syntey.spiriteddriving.platform.binding.PlatformFirebaseCrashlytics
+import com.syntey.spiriteddriving.core.platform.binding.PlatformFirebaseCrashlytics
 
 class PlatformFirebaseCrashlyticsImpl : PlatformFirebaseCrashlytics {
 

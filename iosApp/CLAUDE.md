@@ -4,7 +4,7 @@ iOS-specific conventions for the SwiftUI layer in `iosApp/`.
 
 ## Compose Multiplatform Screens
 
-Screens are implemented in Compose Multiplatform (`shared:ui`) and exposed to Swift as `*ScreenUiController`
+Screens are implemented in Compose Multiplatform (in their `:feature:*` module) and exposed to Swift as `*ScreenUiController`
 functions. Their SwiftUI view is a thin `*Component` that takes the KMP screen directly — no ComponentModel,
 as there is no state for Swift to observe:
 
