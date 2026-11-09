@@ -12,7 +12,7 @@
 - **System fonts:** SF Pro on iOS, Roboto on Android. No bundled fonts.
 - **Glass follows the platform**, both through Haze: Liquid Glass style on iOS, frosted glass on Android.
 
-In code, the theme is a Material 3 `MaterialTheme` in `shared:ui`, so Material components pick up the colours,
+In code, the theme is a Material 3 `MaterialTheme` in `:core:ui`, so Material components pick up the colours,
 type and shapes without extra styling.
 
 ## Colour
