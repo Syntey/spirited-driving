@@ -108,12 +108,13 @@ dependencies {
     coreLibraryDesugaring(libs.androidTools.desugarLibs)
     lintChecks(libs.lint.compose)
 
-    implementation(projects.shared.app)
-    implementation(projects.shared.feature)
-    implementation(projects.shared.platform)
+    implementation(projects.shared)
+    implementation(projects.core.platform)
+    implementation(projects.core.resources)
+    implementation(projects.core.ui)
+    // Its navigation hosts draw the features' screens
+    implementation(projects.feature.sample)
     implementation(libs.futured.arkitekt.decompose)
-    implementation(projects.shared.kmpResources)
-    implementation(projects.shared.ui)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.bundles.compose)

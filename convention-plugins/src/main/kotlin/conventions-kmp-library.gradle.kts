@@ -23,6 +23,11 @@ kotlin {
         namespace = project.androidNamespace
         compileSdk = ProjectSettings.Android.CompileSdkVersion
         minSdk = ProjectSettings.Android.MinSdkVersion
+
+        // Runs `commonTest` on the JVM (`testAndroidHostTest`), which is what CI runs.
+        withHostTest {
+            isIncludeAndroidResources = true
+        }
     }
 
     iosArm64()

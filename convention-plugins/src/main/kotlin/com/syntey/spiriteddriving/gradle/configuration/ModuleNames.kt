@@ -3,14 +3,12 @@ package com.syntey.spiriteddriving.gradle.configuration
 import org.gradle.api.Project
 
 /**
- * Kotlin package of a shared module, derived from its directory: `shared/network/rest` is
- * `com.syntey.spiriteddriving.network.rest`. The `shared` directory only groups the modules, so it is not part of the package.
+ * Kotlin package of a shared module, derived from its path: `:data:network` is `com.syntey.spiriteddriving.data.network`.
  */
 val Project.modulePackageName: String
     get() {
-        val segments = projectDir.relativeTo(rootDir).invariantSeparatorsPath
-            .split("/")
-            .dropWhile { it == "shared" }
+        val segments = path.split(":")
+            .filter { it.isNotEmpty() }
             .map { it.replace("-", "") }
         return (listOf(ProjectSettings.Kotlin.BasePackageName) + segments).joinToString(".")
     }

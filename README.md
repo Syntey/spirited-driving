@@ -15,6 +15,7 @@
   **[detekt](https://detekt.dev/)**,
   **[Android lint](https://developer.android.com/studio/write/lint)**
 - Kotlin -> Swift interop - **[skie](https://skie.touchlab.co/)**
+- Module dependency rules - **[modules-graph-assert](https://github.com/jraska/modules-graph-assert)**
 
 ## Gradle tasks
 
@@ -115,45 +116,77 @@ configurations use static linking.
 Screens themselves are written in Compose Multiplatform, so they are previewed with Compose
 `@Preview` instead (see [Previews](#previews)). SwiftUI previews are meant for native SwiftUI views.
 
+## Modules
+
+```
+       androidApp          iosApp (Swift)
+            └───────┬───────────┘
+                 :shared          Koin graph, navigation hosts, logging, crash reporting, iOS framework
+     ┌──────────────┼──────────────┐
+ :feature:*    :data:network   :data:persistence
+     └──────────────┼──────────────┘
+ :core:domain   :core:ui   :core:resources   :core:platform
+```
+
+- **`:feature:*`** holds a feature's components, Compose screens and iOS view controllers. It depends
+  on `:core:*` modules only, so features never see each other or the data implementations.
+- **`:data:*`** holds the network client and local storage, and implements the interfaces in
+  `:core:domain`. It depends on `:core:*` modules only.
+- **`:core:*`** holds domain types and interfaces, the theme and Decompose base classes, shared
+  strings and images, and the interfaces each platform implements natively.
+- **`:shared`** is the only module that sees all others. Features meet each other in its navigation
+  hosts, and domain interfaces meet their `:data:*` implementations in its Koin graph.
+
+The build fails when a module breaks these rules, or when its longest dependency chain gets
+longer than four steps (`moduleGraphAssert` in the root `build.gradle.kts`).
+`./gradlew generateModulesGraphvizText` prints the current graph.
+A module's package and Android namespace come from its path (`:data:network` is
+`com.syntey.spiriteddriving.data.network`), so a new feature's build file only applies
+`conventions-kmp-feature`.
+
+`:feature:sample` holds the project template's sample screens until real features replace them.
+
 ## UI Architecture
 
-Screens are implemented once in Compose Multiplatform, in the `shared:ui` module
-(`shared/ui/src/commonMain/kotlin/.../ui/screen/*ScreenUi.kt`). Each of them renders a screen
-component from `shared:feature` and only draws the screen content. Navigation chrome stays native:
+Screens are implemented once in Compose Multiplatform, in the feature module that owns them, next
+to the component they render (e.g. `feature/sample/.../firstScreen/FirstScreenUi.kt`). A screen
+only draws its content. Navigation chrome stays native:
 
 - **Android** — navigation hosts in `androidApp/.../ui/navigation/*NavHostUi.kt` render Decompose
   stacks and slots, and draw top bars, bottom navigation and bottom sheets around the shared
   screens.
 - **iOS** — navigation stays in SwiftUI (`NavigationStack`, `TabView`, sheets) driven by Decompose.
-  Each screen is exposed to Swift as a `*ScreenUiController` function
-  (`shared/ui/src/iosMain/kotlin/.../ui/ViewControllers.ios.kt`) and hosted by `ComposeView` in a
-  thin SwiftUI view (`iosApp/SpiritedDriving/Views/Scenes/*/*Component.swift`), which also sets the native
-  navigation title.
+  Each screen is exposed to Swift as a `*ScreenUiController` function (the feature's
+  `src/iosMain/.../ViewControllers.ios.kt`) and hosted by `ComposeView` in a thin SwiftUI view
+  (`iosApp/SpiritedDriving/Views/Scenes/*/*Component.swift`), which also sets the native navigation
+  title.
 
 When adding a new screen:
 
-1. Create the screen component in `shared:feature` (see `ui/secondScreen` for a minimal example).
-2. Create its UI in `shared:ui` (see `SecondScreenUi.kt`).
-3. Android: render it from the navigation host.
-4. iOS: add a `*ScreenUiController` to `ViewControllers.ios.kt` and a `*Component` SwiftUI view
-   hosting it, then render it from the navigation view.
+1. Create the screen component and its UI in the feature module (see `secondScreen` in
+   `:feature:sample` for a minimal example).
+2. Expose the screen in the feature's `*Screens` object (see `SampleScreens`), since Arkitekt
+   generates internal factories, and create it from a navigation host in `:shared`.
+3. Android: render it from the navigation host UI.
+4. iOS: add a `*ScreenUiController` to the feature's `ViewControllers.ios.kt` and a `*Component`
+   SwiftUI view hosting it, then render it from the navigation view.
 
 ### Previews
 
-Shared KMP code exposes preview mock objects (e.g. `FirstScreenPreviews`) that provide fake,
-no-op implementations of screen interfaces with configurable view states. These are consumed by
-Compose `@Preview` functions in `shared:ui`, next to the screen they preview.
+Each screen has a preview mock object (e.g. `FirstScreenPreviews`) that provides a fake, no-op
+implementation of the screen interface with configurable view states. Compose `@Preview` functions
+next to the screen use it.
 
-**Kotlin side** (`shared/feature/src/commonMain/kotlin/.../firstScreen/FirstScreenPreviews.kt`):
+**Mock** (`feature/sample/.../firstScreen/FirstScreenPreviews.kt`):
 
 ```kotlin
-object FirstScreenPreviews {
+internal object FirstScreenPreviews {
     fun viewState(...) = FirstViewState(...)
     fun screen(viewState: FirstViewState = viewState()): FirstScreen = object : FirstScreen { ... }
 }
 ```
 
-**UI side** (`shared/ui/src/commonMain/kotlin/.../ui/screen/FirstScreenUi.kt`):
+**Preview** (`feature/sample/.../firstScreen/FirstScreenUi.kt`):
 
 ```kotlin
 @Preview
@@ -213,7 +246,7 @@ The Swift Package XCFramework has to be build manually for the first time using 
 
 The project utilizes [BuildKonfig](https://github.com/yshrsmz/BuildKonfig) plugin for implementing
 build flavors in the network module.
-There are two product flavors: `dev` and `prod`, which select API url used in `:shared:network:rest`
+There are two product flavors: `dev` and `prod`, which select API url used in `:data:network`
 module.
 
 In general, the build flavor can be specified as a Gradle build flag
@@ -222,7 +255,7 @@ In general, the build flavor can be specified as a Gradle build flag
 ./gradlew whateverTask -P buildkonfig.flavor=dev
 ```
 
-Please, refer to `:shared:network:rest` Gradle config for more info.
+Please, refer to `:data:network` Gradle config for more info.
 
 #### Android
 
