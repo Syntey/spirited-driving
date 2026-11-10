@@ -1,6 +1,5 @@
 package com.syntey.spiriteddriving.shared.navigation.profile
 
-import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.decompose.ext.asStateFlow
 import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
@@ -14,7 +13,6 @@ import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
 
-@GenerateFactory
 @Factory
 internal class ProfileNavHostComponent(
     @InjectedParam componentContext: AppComponentContext,

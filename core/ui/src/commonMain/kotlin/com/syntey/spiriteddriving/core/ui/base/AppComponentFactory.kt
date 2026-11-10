@@ -5,9 +5,11 @@ import org.koin.core.component.get
 import org.koin.core.parameter.parametersOf
 
 /**
- * Factory object for creating application components using Koin.
+ * Factory object for creating application components using Koin. Navigation hosts are created through it.
  *
- * Screens and navigation hosts annotated with `@GenerateFactory` get a generated factory instead.
+ * Feature screens annotated with `@GenerateFactory` get a generated factory instead. [parameters] must follow the order of
+ * the component's `@InjectedParam` constructor parameters after the context; a mismatch fails at runtime, when Koin
+ * resolves the component.
  */
 object AppComponentFactory : KoinComponent {
 
