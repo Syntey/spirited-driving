@@ -3,9 +3,10 @@ package com.syntey.spiriteddriving.shared.navigation.root
 import app.futured.arkitekt.crusecases.execute
 import app.futured.arkitekt.decompose.ext.asStateFlow
 import com.syntey.spiriteddriving.shared.domain.IsUserLoggedInUseCase
-import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInNavHostComponentFactory
+import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInNavHostComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
+import com.syntey.spiriteddriving.core.ui.base.AppComponentFactory
 import com.syntey.spiriteddriving.feature.sample.SampleScreens
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.activate
@@ -39,10 +40,10 @@ internal class RootNavHostComponent(
                 )
 
                 is RootConfig.SignedIn -> RootChild.SignedIn(
-                    navHost = SignedInNavHostComponentFactory.createComponent(
-                        componentContext = childCtx,
-                        navigationToLogin = { rootNavigator.slotNavigator.activate(RootConfig.Login) },
-                        initialConfig = config.initialConfig,
+                    navHost = AppComponentFactory.createAppComponent<SignedInNavHostComponent>(
+                        childCtx,
+                        { rootNavigator.slotNavigator.activate(RootConfig.Login) },
+                        config.initialConfig,
                     ),
                 )
             }
