@@ -36,3 +36,6 @@ include(":data:network")
 include(":data:persistence")
 
 include(":feature:sample")
+
+// Architecture rules, see `konsist/build.gradle.kts`
+include(":konsist")

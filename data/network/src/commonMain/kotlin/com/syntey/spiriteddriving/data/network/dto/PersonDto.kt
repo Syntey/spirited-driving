@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Person(
+internal data class PersonDto(
     @SerialName("name") val name: String? = null,
     @SerialName("homeworld") val homeworld: String? = null,
     @SerialName("gender") val gender: String? = null,

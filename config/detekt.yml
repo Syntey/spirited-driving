@@ -37,6 +37,8 @@ style:
     active: true
     ignoreAnnotated:
       - Preview
+      - ScreenPreviews
+      - ComponentPreviews
   DestructuringDeclarationWithTooManyEntries:
     active: true
     ignoreAnnotated:

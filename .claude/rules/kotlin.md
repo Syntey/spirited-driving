@@ -1,0 +1,16 @@
+---
+paths:
+  - "**/*.kt"
+---
+
+# Kotlin
+
+- `internal` unless another module uses it.
+- Immutable by default: `val`, `data class` for values, kotlinx `ImmutableList`/`ImmutableMap` in state.
+- No `!!`. Handle null with `?:`, `?.let`, or `requireNotNull(x) { "why it can't be null" }`.
+- No `GlobalScope` or `runBlocking` in production code. Components run work through use cases (`execute`), which
+  are cancelled with the component.
+- Platform code goes in `androidMain`/`iosMain` with `.android.kt`/`.ios.kt` file names. Prefer an interface in
+  common code to `expect`/`actual`.
+- Comments say why, when the code can't. No comments that restate the code or describe the change you made.
+- Import moko resources with `com.syntey.spiriteddriving.core.resources.*`, not one import per resource.

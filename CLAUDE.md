@@ -1,24 +1,36 @@
-# Spirited Driving Commands and Guidelines
+# Spirited Driving
 
-## Common Commands
-- `./gradlew clean` - Remove all build artifacts
-- `./gradlew lintCheck` - Run ktlint, detekt and Android lint; any error fails it
-- `./gradlew ktlintFormat` - Automatically fix style issues
-- `./gradlew test` - Run all tests
-- `./gradlew :feature:<name>:testAndroidHostTest` - Run one feature module's tests
-- `./gradlew generateMRcommonMain` - Regenerate shared resources
+Kotlin Multiplatform app for Android and iOS, with shared Compose screens. Design starts at `docs/overview.md`; how the
+app is built is in `docs/architecture.md`.
 
-## iOS-specific Commands
-- `cd iosApp/shared/KMP && make build KMP_FRAMEWORK_BUILD_TYPE=debug KMP_BUILD_FLAVOR=dev`
-- `./gradlew assembleAndCopyDebugSwiftPackage` - Build debug XCFramework for SPM
+## Commands
+- `./gradlew lintCheck` - ktlint, detekt, Android lint and the Konsist architecture rules (`konsist/`); any error fails it
+- `./gradlew ktlintFormat` - Fix formatting
+- `./gradlew testAndroidHostTest` - Every shared module's tests on the JVM, as CI runs them; `:<module>:testAndroidHostTest` for one
+- `./gradlew :konsist:test` - Only the architecture rules
+- `./gradlew generateMRcommonMain` - Regenerate resource accessors after editing `core/resources/.../strings.xml`
+- `./gradlew :androidApp:assembleDebug` - Build the Android app
+- iOS app: `./gradlew assembleAndCopyDebugSwiftPackage -PkmpFrameworkTargets=simulator -PisStatic=false`, then
+  `xcodebuild -project iosApp/SpiritedDriving.xcodeproj -scheme SpiritedDriving -destination 'generic/platform=iOS Simulator' ARCHS=arm64 -quiet build`.
+  Xcode doesn't rebuild the Kotlin framework itself, and `-PisStatic=false` matches Debug builds, which SwiftUI previews need.
 
-## Code Style Guidelines
-- **Architecture**: Decompose components with state, events, and navigation
-- **Modules**: `:feature:*` and `:data:*` depend on `:core:*` only (the build enforces it); features reach data through `:core:domain` interfaces, and navigation hosts and Koin wiring live in `:shared`. See README "Modules"
-- **Naming**: PascalCase for classes (*Component, *Screen, *UseCase, *ViewState)
-- **Error Handling**: Use sealed NetworkError classes and results (Success/Failure)
-- **Platform-specific code**: Use .android.kt and .ios.kt suffixes
-- **Resources**: Import moko resources with `com.syntey.spiriteddriving.core.resources.*` (wildcard allowed by lint), not one import per resource
-- **State**: Immutable data classes for state representation
-- **Max limits**: 140 char line length, 25 functions per class, 20 per file
-- **Testing**: Required for business logic and data transformations
+## Definition of done
+`lintCheck` and `testAndroidHostTest` pass, both apps build, and business logic and data mapping have tests.
+
+## Skills
+- `create-screen` - A screen or sheet, or a new feature module
+- `network-worker` - A backend API call: domain interface, DTOs, Ktorfit API, mapping and errors
+- `platform-binding` - A native SDK or device service behind a `:core:platform` interface
+
+Load the matching skill before writing code in its area, even if it didn't load by itself.
+
+Rules for Kotlin, tests and Konsist load from `.claude/rules/` when you touch matching files. If a
+skill or rule is wrong or out of date, fix it in the same change.
+
+## Conventions
+- **Modules**: `:feature:*` and `:data:*` depend on `:core:*` only (the build enforces it); features reach data
+  through `:core:domain` interfaces, and navigation hosts and Koin wiring live in `:shared`. See README "Modules".
+- **Layers**: Decompose components hold immutable view state, handle actions and drive navigation; use cases hold the
+  logic; `:data:*` maps DTOs and network errors to domain types.
+- **Naming**: `*Component`, `*Screen`, `*ViewState`, `*ScreenNavigation`, `*UseCase`, `*Dto`, `*Api`, `Api*` for
+  implementations of domain interfaces.
