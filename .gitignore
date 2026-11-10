@@ -10,3 +10,7 @@ local.properties
 xcuserdata
 Local.xcconfig
 .kotlin
+
+# Firebase config, provided locally or by CI
+google-services.json
+GoogleService-Info.plist
