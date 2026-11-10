@@ -23,12 +23,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.feature.sample.firstScreen.FirstScreen.Actions.Companion.noOpActions
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.Showcase
+import com.syntey.spiriteddriving.core.ui.preview.ScreenPreviews
 import com.syntey.spiriteddriving.core.ui.tools.EventsEffect
 import com.syntey.spiriteddriving.core.ui.tools.onEvent
 import dev.icerock.moko.resources.compose.localized
@@ -107,7 +107,7 @@ private fun Content(
     }
 }
 
-@Preview
+@ScreenPreviews
 @Composable
 private fun FirstScreenPreview() = Showcase {
     Content(
