@@ -16,12 +16,14 @@
   **[Android lint](https://developer.android.com/studio/write/lint)**
 - Kotlin -> Swift interop - **[skie](https://skie.touchlab.co/)**
 - Module dependency rules - **[modules-graph-assert](https://github.com/jraska/modules-graph-assert)**
+- Architecture rules - **[Konsist](https://docs.konsist.lemonappdev.com/)**: the shape of components, view states,
+  use cases, DTOs and APIs, in `konsist/`
 
 ## Gradle tasks
 
 1. `clean` - Remove all `build` folders
-2. `lintCheck` - Run `ktlint`, `detekt` and Android lint checks. The same runs on CI, together with
-   `testAndroidHostTest` (see `.github/workflows/on_pull_request.yml`).
+2. `lintCheck` - Run `ktlint`, `detekt`, Android lint and the Konsist architecture rules. The same runs on CI,
+   together with `testAndroidHostTest` (see `.github/workflows/on_pull_request.yml`).
 3. `ktlintFormat` - Reformat source code according to ktlint rules.
 4. `assembleAndCopyDebugSwiftPackage` - Assemble debug KMP XCFramework and copy it into local iOS
    Swift Package as dependency. (This task shouldn't be used directly, build the KMP target in
@@ -174,8 +176,13 @@ When adding a new screen:
 ### Previews
 
 Each screen has a preview mock object (e.g. `FirstScreenPreviews`) that provides a fake, no-op
-implementation of the screen interface with configurable view states. Compose `@Preview` functions
+implementation of the screen interface with configurable view states. Compose preview functions
 next to the screen use it.
+
+Previews use the multipreview annotations in `:core:ui` (`core.ui.preview`) rather than a bare
+`@Preview`: `@ScreenPreviews` renders a screen in light and dark mode and with large fonts on dense
+phone screens, `@ComponentPreviews` renders a smaller composable in light and dark mode with small
+and large fonts.
 
 **Mock** (`feature/sample/.../firstScreen/FirstScreenPreviews.kt`):
 
@@ -189,7 +196,7 @@ internal object FirstScreenPreviews {
 **Preview** (`feature/sample/.../firstScreen/FirstScreenUi.kt`):
 
 ```kotlin
-@Preview
+@ScreenPreviews
 @Composable
 private fun FirstScreenPreview() = Showcase {
     Content(viewState = FirstScreenPreviews.viewState(), ...)
