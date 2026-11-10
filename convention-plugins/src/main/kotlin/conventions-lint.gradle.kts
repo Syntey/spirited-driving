@@ -1,5 +1,7 @@
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.report.ReportMergeTask
+import com.syntey.spiriteddriving.gradle.configuration.ProjectSettings
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.extensions.DetektExtension
+import dev.detekt.gradle.report.ReportMergeTask
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
@@ -13,7 +15,7 @@ https://docs.gradle.org/current/userguide/custom_plugins.html#sec:precompiled_pl
 // As of now, we cannot use Gradle version catalogs with Precompiled Script plugins: https://github.com/gradle/gradle/issues/15383
 plugins {
     id("org.jlleitschuh.gradle.ktlint")
-    id("io.gitlab.arturbosch.detekt")
+    id("dev.detekt")
 }
 
 val libs = the<LibrariesForLibs>()
@@ -21,7 +23,7 @@ val libs = the<LibrariesForLibs>()
 // Ktlint
 project.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     version.set(libs.versions.ktlint)
-    ignoreFailures.set(true)
+    ignoreFailures.set(false)
     android.set(true)
     outputToConsole.set(true)
     reporters {
@@ -32,30 +34,40 @@ project.configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     // filtering does not work, see below 👇
 }
 
-// Detekt
-project.configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension> {
-    ignoreFailures = false
-    source.setFrom(files(
-        "src/main/kotlin",
-        "src/commonMain/kotlin",
-        "src/jvmMain/kotlin",
-        "src/androidMain/kotlin",
-        "src/appleMain/kotlin",
-        "src/iosMain/kotlin",
-    ))
+/*
+Detekt. Any issue fails the build (`failOnSeverity` defaults to `Error`, the severity of every rule).
+
+detekt 2 registers a task per source set (light analysis: syntax only) and per Android compilation (full analysis:
+type-aware rules too). `lintCheck` runs the ones in `ProjectSettings.Lint.DetektTasks`.
+ */
+project.configure<DetektExtension> {
     config.setFrom(files("$rootDir/config/detekt.yml"))
     buildUponDefaultConfig = true
 }
 
-tasks.withType<Detekt> {
+tasks.withType<Detekt>().configureEach {
     reports {
-        sarif.required.set(false)
-        md.required.set(false)
-        txt.required.set(true)
-        xml.required.set(true)
+        sarif.required = false
+        markdown.required = false
+        checkstyle.required = true
     }
 
-    finalizedBy(rootProject.tasks.getByName("detektReportMerge"))
+    // Source sets include generated code (KSP, moko-resources, BuildKonfig), which isn't ours to lint
+    val buildDirectory = layout.buildDirectory.get().asFile.absolutePath
+    exclude { it.file.absolutePath.startsWith(buildDirectory) }
+}
+
+// Common source sets include the KSP output, so detekt has to run after KSP
+pluginManager.withPlugin("com.google.devtools.ksp") {
+    tasks.withType<Detekt>().configureEach {
+        dependsOn("kspCommonMainKotlinMetadata")
+    }
+}
+
+val lintCheckDetektTasks = tasks.withType<Detekt>().matching { it.name in ProjectSettings.Lint.DetektTasks }
+
+lintCheckDetektTasks.configureEach {
+    finalizedBy(rootProject.tasks.named("detektReportMerge"))
 }
 
 /**
@@ -91,5 +103,6 @@ tasks.matching { it.name == "runKtlintFormatOverCommonMainSourceSet" }.configure
 }
 
 rootProject.tasks.named("detektReportMerge", ReportMergeTask::class.java) {
-    input.from(tasks.withType<Detekt>().map { it.xmlReportFile })
+    // Files, not task outputs: the merge collects what ran, instead of pulling in every report's task
+    input.from(lintCheckDetektTasks.map { it.reports.checkstyle.outputLocation.get().asFile })
 }

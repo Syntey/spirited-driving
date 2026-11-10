@@ -3,31 +3,41 @@ agp = "9.5.1"
 kotlin = "2.4.10"
 ksp = "2.3.12"
 desugarLibs = "2.1.5"
-androidxLifecycle = "2.11.0" # Android-only, consumed by `androidApp`
+# Android-only, consumed by `androidApp`
+androidxLifecycle = "2.11.0"
 androidxComposeBom = "2026.09.00"
 materialIcons = "1.7.7"
-composeMultiplatform = "1.12.1" # Needs to align with version in Compose BOM as closely as possible
-composeMultiplatformMaterial3 = "1.9.0" # Versioned separately from `composeMultiplatform`, see `compose.material3` in CMP Gradle plugin
-composeMultiplatformMaterialIcons = "1.7.3" # No longer published together with `composeMultiplatform`
-jetbrainsLifecycle = "2.11.0" # The Compose Multiplatform counterpart of `androidxLifecycle`, consumed by Compose modules
+# Needs to align with version in Compose BOM as closely as possible
+composeMultiplatform = "1.12.1"
+# Versioned separately from `composeMultiplatform`, see `compose.material3` in CMP Gradle plugin
+composeMultiplatformMaterial3 = "1.9.0"
+# No longer published together with `composeMultiplatform`
+composeMultiplatformMaterialIcons = "1.7.3"
+# The Compose Multiplatform counterpart of `androidxLifecycle`, consumed by Compose modules
+jetbrainsLifecycle = "2.11.0"
 androidxActivity = "1.13.0"
 decompose = "3.5.0"
 essenty = "2.6.0"
 koin = "4.2.2"
-koinCompilerPlugin = "1.2.1" # Must be compatible with: `kotlin`
+# Must be compatible with: `kotlin`
+koinCompilerPlugin = "1.2.1"
 kotlinx-coroutines = "1.11.0"
 kotlinx-immutableCollections = "0.5.2"
 kotlinx-dateTime = "0.8.0"
 ktlintGradlePlugin = "14.2.0"
 ktlint = "1.8.0"
-detektGradlePlugin = "1.23.8"
+detektGradlePlugin = "2.0.0-alpha.6"
 composeLint = "1.6.0"
-ktorfit = "2.7.5" # Must be compatible with: `ksp`
-ktor = "3.5.2" # Must be compatible with: `ktorfit`
-kotlinx-serialization = "1.11.0" # Must be compatible with: `kotlin`
+# Must be compatible with: `ksp`
+ktorfit = "2.7.5"
+# Must be compatible with: `ktorfit`
+ktor = "3.5.2"
+# Must be compatible with: `kotlin`
+kotlinx-serialization = "1.11.0"
 timber = "5.0.1"
 kermit = "2.2.0"
-skie = "0.10.15" # Must be compatible with: `kotlin`
+# Must be compatible with: `kotlin`
+skie = "0.10.15"
 buildkonfig = "0.17.1"
 nsExceptionKt = "1.0.0-BETA-7"
 datastore = "1.2.1"
@@ -143,7 +153,7 @@ gradlePlugin-compose = { group = "org.jetbrains.kotlin", name = "compose-compile
 gradlePlugin-kotlinSerialization = { group = "org.jetbrains.kotlin", name = "kotlin-serialization", version.ref = "kotlin" }
 gradlePlugin-koin = { group = "io.insert-koin", name = "koin-compiler-gradle-plugin", version.ref = "koinCompilerPlugin" }
 gradlePlugin-ktlint = { group = "org.jlleitschuh.gradle", name = "ktlint-gradle", version.ref = "ktlintGradlePlugin" }
-gradlePlugin-detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detektGradlePlugin" }
+gradlePlugin-detekt = { group = "dev.detekt", name = "detekt-gradle-plugin", version.ref = "detektGradlePlugin" }
 gradlePlugin-ksp = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
 
 [plugins]
@@ -161,7 +171,7 @@ moko-resources = { id = "dev.icerock.mobile.multiplatform-resources", version.re
 androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "baselineProfile" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-servicesPlugin" }
 firebase-distribution = { id = "com.google.firebase.appdistribution", version.ref = "google-firebaseAppDistributionPlugin" }
-detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detektGradlePlugin" }
+detekt = { id = "dev.detekt", version.ref = "detektGradlePlugin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 koin = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompilerPlugin" }
 version-catalog-update = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }

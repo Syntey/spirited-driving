@@ -3,8 +3,10 @@ package com.syntey.spiriteddriving.shared.logging
 import com.syntey.spiriteddriving.shared.crashreporting.CrashlyticsReporter
 import co.touchlab.kermit.DefaultFormatter
 import co.touchlab.kermit.LogWriter
+import co.touchlab.kermit.Message
 import co.touchlab.kermit.MessageStringFormatter
 import co.touchlab.kermit.Severity
+import co.touchlab.kermit.Tag
 
 /**
  * Custom implementation of Kermit [LogWriter] that logs messages and non-fatal
@@ -29,8 +31,8 @@ internal class CrashlyticsKermitLogWriter(
 ) : LogWriter() {
 
     init {
-        if (minCrashSeverity != null && minSeverity > minCrashSeverity) {
-            throw IllegalArgumentException("minSeverity ($minSeverity) cannot be greater than minCrashSeverity ($minCrashSeverity)")
+        require(minCrashSeverity == null || minSeverity <= minCrashSeverity) {
+            "minSeverity ($minSeverity) cannot be greater than minCrashSeverity ($minCrashSeverity)"
         }
     }
 
@@ -40,6 +42,8 @@ internal class CrashlyticsKermitLogWriter(
         if (throwable != null && !isLoggable(throwable)) {
             return
         }
+
+        crashlytics.logMessage(messageStringFormatter.formatMessage(severity, Tag(tag), Message(message)))
 
         if (throwable != null && minCrashSeverity != null && severity >= minCrashSeverity) {
             crashlytics.sendNonFatalException(throwable)

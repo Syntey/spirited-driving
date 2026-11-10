@@ -8,6 +8,12 @@ object ProjectSettings {
         const val TaskGroup = "futured"
     }
 
+    object Lint {
+        // The detekt tasks `lintCheck` runs: a full analysis of common and Android code (shared modules, app) and a light one of
+        // iOS code, which detekt can only analyze fully for JVM and Android compilations
+        val DetektTasks = setOf("detektMainAndroid", "detektRelease", "detektIosMainSourceSet")
+    }
+
     object Kotlin {
         const val JvmToolchainVersion = 17
 

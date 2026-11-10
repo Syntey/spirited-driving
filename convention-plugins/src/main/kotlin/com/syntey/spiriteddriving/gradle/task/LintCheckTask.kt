@@ -16,9 +16,9 @@ open class LintCheckTask : DefaultTask() {
         group = ProjectSettings.Gradle.TaskGroup
 
         /*
-        These tasks runs for each module that has applied ktlint or detekt plugins.
+        These tasks runs for each module that has applied ktlint, detekt or Android lint plugins.
 
-        The filtering is needed due to the fact that some gradle subprojects (such as :shared)
+        The filtering is needed due to the fact that some gradle subprojects (such as :core)
         do not have any gradle configuration, nor source files -- acting as an "umbrella" module.
         */
         configure<ExtraPropertiesExtension> {
@@ -29,15 +29,24 @@ open class LintCheckTask : DefaultTask() {
                 }
 
             project.subprojects
-                .filter { it.plugins.hasPlugin("io.gitlab.arturbosch.detekt") }
-                .forEach {
-                    dependsOn("${it.path}:detekt")
+                .filter { it.plugins.hasPlugin("dev.detekt") }
+                .forEach { subproject ->
+                    subproject.tasks.names
+                        .filter { it in ProjectSettings.Lint.DetektTasks }
+                        .forEach { dependsOn("${subproject.path}:$it") }
                 }
 
             project.subprojects
                 .filter { it.plugins.hasPlugin("com.android.library") || it.plugins.hasPlugin("com.android.application") }
                 .forEach {
                     dependsOn("${it.path}:lintRelease")
+                }
+
+            // Shared KMP modules have a single Android variant, linted by `com.android.lint` (see `conventions-kmp-library`)
+            project.subprojects
+                .filter { it.plugins.hasPlugin("com.android.kotlin.multiplatform.library") && it.plugins.hasPlugin("com.android.lint") }
+                .forEach {
+                    dependsOn("${it.path}:lintAndroidMain")
                 }
         }
     }

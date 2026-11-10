@@ -1,18 +1,9 @@
-build:
-  maxIssues: 50
-  excludeCorrectable: false
-  weights:
-  # complexity: 2
-  # LongParameterList: 1
-  # style: 1
-  # comments: 1
-
 config:
   validation: true
   warningsAsErrors: false
   checkExhaustiveness: false
-  # when writing own rules with new properties, exclude the property path e.g.: 'my_rule_set,.*>.*>[my_property]'
-  excludes: ''
+  # when writing own rules with new properties, exclude the property path e.g.: ['my_rule_set', '.*>.*>[my_property]']
+  excludes: []
 
 naming:
   active: true
@@ -25,7 +16,7 @@ naming:
     excludeClassPattern: '$^'
     ignoreAnnotated:
       - Composable
-      - Previe
+      - Preview
   TopLevelPropertyNaming:
     constantPattern: '[A-Za-z][_A-Za-z0-9]*'
 
@@ -34,7 +25,7 @@ style:
   UnusedPrivateProperty:
     active: true
     allowedNames: '_|ignored|expected|serialVersionUID|commonMain|iosMain|androidMain|commonTest|iosTest|androidTest|debug|enterprise|release'
-  UnusedPrivateMember:
+  UnusedPrivateFunction:
     active: true
     ignoreAnnotated:
       - Composable
@@ -64,10 +55,10 @@ complexity:
       - Composable
   TooManyFunctions:
     active: true
-    thresholdInInterfaces: 25
-    thresholdInClasses: 25
-    thresholdInFiles: 20
-    thresholdInObjects: 20
+    allowedFunctionsPerInterface: 25
+    allowedFunctionsPerClass: 25
+    allowedFunctionsPerFile: 20
+    allowedFunctionsPerObject: 20
   LongMethod:
     active: true
     ignoreAnnotated:

@@ -1,5 +1,5 @@
 import com.syntey.spiriteddriving.gradle.task.LintCheckTask
-import io.gitlab.arturbosch.detekt.report.ReportMergeTask
+import dev.detekt.gradle.report.ReportMergeTask
 
 /*
 Applied to the root project only. Besides registering the tasks below, it puts this build's classes (`ProjectSettings`,
