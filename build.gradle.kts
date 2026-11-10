@@ -29,10 +29,19 @@ moduleGraphAssert {
     assertOnAnyBuild = true
 }
 
+// Architecture rules (see `konsist/build.gradle.kts`) are part of the static checks
+tasks.named("lintCheck") {
+    dependsOn(":konsist:test")
+}
+
 // Keeps the hand-grouped order and the `project-*-namespace` versions no dependency references.
 versionCatalogUpdate {
     sortByKey.set(false)
     keep {
         keepUnusedVersions.set(true)
+    }
+    // Held back on purpose, see the comment on each version in the catalog
+    pin {
+        versions.add("koinCompilerPlugin")
     }
 }

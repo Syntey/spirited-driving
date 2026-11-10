@@ -20,7 +20,9 @@ decompose = "3.6.1"
 essenty = "2.7.1"
 koin = "4.2.2"
 # Must be compatible with: `kotlin`
-koinCompilerPlugin = "1.2.3"
+# Held at 1.2.1 (pinned in the root build script): 1.2.2 and 1.2.3 break the iOS framework link, because `:shared`
+# re-declares the `@Configuration` hints of the feature modules it exports. https://github.com/InsertKoinIO/koin-compiler-plugin/issues/146
+koinCompilerPlugin = "1.2.1"
 kotlinx-coroutines = "1.11.0"
 kotlinx-immutableCollections = "0.5.2"
 kotlinx-dateTime = "0.8.0"
@@ -53,6 +55,7 @@ google-firebaseAppDistributionPlugin = "5.3.1"
 arkitekt = "6.1.0"
 versionCatalogUpdate = "1.1.2"
 modulesGraphAssert = "2.9.1"
+konsist = "1.0.0-beta.1"
 
 # Android Namespaces (shared modules derive theirs from their path, see `conventions-kmp-library`)
 project-android-namespace = "com.syntey.spiriteddriving.android"
@@ -103,6 +106,7 @@ decompose-compose-ext = { module = "com.arkivanov.decompose:extensions-compose",
 essenty = { module = "com.arkivanov.essenty:lifecycle", version.ref = "essenty" }
 # Testing
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junit" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
