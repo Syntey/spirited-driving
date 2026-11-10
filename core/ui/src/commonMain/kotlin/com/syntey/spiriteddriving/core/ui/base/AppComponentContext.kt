@@ -20,10 +20,7 @@ interface AppComponentContext : ArkitektComponentContext<AppComponentContext>
  *
  * @param componentContext [ComponentContext] to wrap.
  */
-class DefaultAppComponentContext(
-    componentContext: ComponentContext,
-    override val navigationResultRegistry: NavigationResultRegistry,
-) :
+class DefaultAppComponentContext(componentContext: ComponentContext, override val navigationResultRegistry: NavigationResultRegistry) :
     AppComponentContext,
     LifecycleOwner by componentContext,
     StateKeeperOwner by componentContext,

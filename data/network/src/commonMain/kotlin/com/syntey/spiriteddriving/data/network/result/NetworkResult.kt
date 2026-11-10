@@ -12,17 +12,17 @@ import kotlin.contracts.contract
  * Wrapper class with either [Success] or [Failure] state.
  * The class is used as as a result of network operations.
  */
-sealed class NetworkResult<out T> {
+sealed interface NetworkResult<out T> {
 
     /**
      * The success result with [data] as the response of the operation.
      */
-    data class Success<T>(val data: T) : NetworkResult<T>()
+    data class Success<T>(val data: T) : NetworkResult<T>
 
     /**
      * The failed result with [error] as the failure cause of the operation.
      */
-    data class Failure(val error: NetworkError) : NetworkResult<Nothing>()
+    data class Failure(val error: NetworkError) : NetworkResult<Nothing>
 
     companion object {
         fun <T> success(data: T) = Success(data)

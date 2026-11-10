@@ -29,8 +29,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Lint
-        # ktlint, detekt and Android lint.
-        run: ./gradlew lintCheck
+        run: ./gradlew lintCheck --continue
 
       - name: Test
         if: ${{ !cancelled() }}
