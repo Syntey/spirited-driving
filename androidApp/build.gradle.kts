@@ -1,3 +1,4 @@
+import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 import com.syntey.spiriteddriving.gradle.configuration.ProjectSettings
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -5,8 +6,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.androidx.baselineprofile)
-    // TODO PROJECT-SETUP enable after providing google-services.json
-    // alias(libs.plugins.google.services)
+    alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.distribution)
 
     id(libs.plugins.conventions.lint.get().pluginId)
@@ -94,14 +94,16 @@ android {
     }
 
     lint {
-        textReport = true // Write a text report to the console (Useful for CI logs)
-        xmlReport = true // Write XML report
-        abortOnError = false // Do not abort build when error is found -> CI uploads the report as an artifact
         explainIssues = false // HTML/XML reports are too verbose in console logs
         checkDependencies = false // Required to get all unused resource from other modules (disabled to speed up linting)
         checkTestSources = true // Also check test case code for lint issues
         checkReleaseBuilds = false // If we run a full lint analysis as build part in CI, we can skip redundant checks
     }
+}
+
+// google-services.json is gitignored, so a fresh clone builds without Firebase
+googleServices {
+    missingGoogleServicesStrategy = MissingGoogleServicesStrategy.WARN
 }
 
 dependencies {

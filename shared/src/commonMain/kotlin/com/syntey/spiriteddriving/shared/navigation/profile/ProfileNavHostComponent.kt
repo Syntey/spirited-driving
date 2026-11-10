@@ -17,7 +17,7 @@ import org.koin.core.annotation.InjectedParam
 internal class ProfileNavHostComponent(
     @InjectedParam componentContext: AppComponentContext,
     @InjectedParam toLogin: () -> Unit,
-    @InjectedParam private val initialStack: List<ProfileConfig>,
+    @InjectedParam initialStack: List<ProfileConfig>,
 ) : AppComponent<Unit, Nothing>(componentContext, Unit),
     ProfileNavHost {
 
@@ -38,7 +38,7 @@ internal class ProfileNavHostComponent(
 
     override val actions: ProfileNavHost.Actions = object : ProfileNavHost.Actions {
         override fun navigate(newStack: List<Child<ProfileConfig, ProfileChild>>) =
-            navigator.stackNavigator.navigate { newStack.map { it.configuration } }
+            navigator.stackNavigator.navigate { newStack.map { child -> child.configuration } }
 
         override fun pop() = navigator.stackNavigator.pop()
     }
