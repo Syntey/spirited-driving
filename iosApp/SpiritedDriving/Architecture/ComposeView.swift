@@ -4,7 +4,7 @@ import UIKit
 /**
  Hosts a Compose Multiplatform screen in SwiftUI.
 
- Screens are implemented once in `shared:ui` and exposed to Swift as `*ScreenUiController` functions,
+ Screens are implemented once in their `:feature:*` module and exposed to Swift as `*ScreenUiController` functions,
  while navigation stays native (`NavigationStack`, `TabView`, sheets) and is driven by Decompose.
  */
 struct ComposeView: UIViewControllerRepresentable {

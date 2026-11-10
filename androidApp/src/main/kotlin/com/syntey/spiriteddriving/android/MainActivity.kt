@@ -11,10 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.syntey.spiriteddriving.android.ui.navigation.RootNavHostUi
-import com.syntey.spiriteddriving.feature.navigation.root.RootNavHost
-import com.syntey.spiriteddriving.feature.navigation.root.RootNavHostFactory
-import com.syntey.spiriteddriving.feature.ui.base.DefaultAppComponentContext
-import com.syntey.spiriteddriving.ui.theme.MyApplicationTheme
+import com.syntey.spiriteddriving.shared.navigation.root.RootNavHost
+import com.syntey.spiriteddriving.shared.navigation.root.RootNavHostFactory
+import com.syntey.spiriteddriving.core.ui.base.DefaultAppComponentContext
+import com.syntey.spiriteddriving.core.ui.theme.MyApplicationTheme
 import com.arkivanov.decompose.retainedComponent
 
 class MainActivity : ComponentActivity() {

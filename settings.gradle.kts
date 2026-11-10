@@ -1,4 +1,7 @@
 pluginManagement {
+    // Convention plugins and the build's shared configuration (`ProjectSettings`, `ProductFlavors`, …)
+    includeBuild("convention-plugins")
+
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -19,16 +22,17 @@ rootProject.name = "SpiritedDriving"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":androidApp")
-include(":shared:app")
-include(":shared:network:graphql")
-include(":shared:network:rest")
-include(":shared:feature")
-include(":shared:persistence")
-include(":shared:platform")
-include(":shared:resources")
-include(":shared:ui")
-// this removes compiler warning about same KLIB name https://youtrack.jetbrains.com/projects/KT/issues/KT-66568/w-KLIB-resolver-The-same-uniquename...-found-in-more-than-one-library
-project(":shared:resources").name = "kmp-resources"
 include(":baselineprofile")
 
-includeBuild("convention-plugins")
+// Shared code. Which module may depend on which is checked by `moduleGraphAssert` in the root build script.
+include(":shared")
+
+include(":core:domain")
+include(":core:platform")
+include(":core:resources")
+include(":core:ui")
+
+include(":data:network")
+include(":data:persistence")
+
+include(":feature:sample")

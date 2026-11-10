@@ -4,7 +4,7 @@ import android.app.Application
 import com.syntey.spiriteddriving.android.tools.binding.PlatformBindingsImpl
 import org.koin.android.ext.koin.androidContext
 import timber.log.Timber
-import com.syntey.spiriteddriving.app.KmpApplication as SharedApp
+import com.syntey.spiriteddriving.shared.KmpApplication as SharedApp
 
 class App : Application() {
 

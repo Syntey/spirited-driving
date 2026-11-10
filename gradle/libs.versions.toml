@@ -1,5 +1,5 @@
 [versions]
-agp = "9.5.0"
+agp = "9.5.1"
 kotlin = "2.4.10"
 ksp = "2.3.12"
 desugarLibs = "2.1.5"
@@ -9,7 +9,7 @@ materialIcons = "1.7.7"
 composeMultiplatform = "1.12.1" # Needs to align with version in Compose BOM as closely as possible
 composeMultiplatformMaterial3 = "1.9.0" # Versioned separately from `composeMultiplatform`, see `compose.material3` in CMP Gradle plugin
 composeMultiplatformMaterialIcons = "1.7.3" # No longer published together with `composeMultiplatform`
-jetbrainsLifecycle = "2.11.0" # The Compose Multiplatform counterpart of `androidxLifecycle`, consumed by `shared:ui`
+jetbrainsLifecycle = "2.11.0" # The Compose Multiplatform counterpart of `androidxLifecycle`, consumed by Compose modules
 androidxActivity = "1.13.0"
 decompose = "3.5.0"
 essenty = "2.6.0"
@@ -22,7 +22,6 @@ ktlintGradlePlugin = "14.2.0"
 ktlint = "1.8.0"
 detektGradlePlugin = "1.23.8"
 composeLint = "1.6.0"
-apollo = "5.0.0"
 ktorfit = "2.7.5" # Must be compatible with: `ksp`
 ktor = "3.5.2" # Must be compatible with: `ktorfit`
 kotlinx-serialization = "1.11.0" # Must be compatible with: `kotlin`
@@ -43,20 +42,10 @@ google-servicesPlugin = "4.5.0"
 google-firebaseAppDistributionPlugin = "5.3.0"
 arkitekt = "6.1.0"
 versionCatalogUpdate = "1.1.1"
+modulesGraphAssert = "2.9.1"
 
-# Android Namespaces
+# Android Namespaces (shared modules derive theirs from their path, see `conventions-kmp-library`)
 project-android-namespace = "com.syntey.spiriteddriving.android"
-project-shared-app-namespace = "com.syntey.spiriteddriving.app.android"
-project-shared-feature-namespace = "com.syntey.spiriteddriving.feature.android"
-project-shared-network-graphql-namespace = "com.syntey.spiriteddriving.network.graphql.android"
-project-shared-network-graphql-packageName = "com.syntey.spiriteddriving.network.graphql"
-project-shared-network-rest-namespace = "com.syntey.spiriteddriving.network.rest.android"
-project-shared-network-rest-packageName = "com.syntey.spiriteddriving.network.rest"
-project-shared-persistence-namespace = "com.syntey.spiriteddriving.persistence.android"
-project-shared-platform-namespace = "com.syntey.spiriteddriving.platform.android"
-project-shared-resources-namespace = "com.syntey.spiriteddriving.resources.android"
-project-shared-resources-packageName = "com.syntey.spiriteddriving.resources"
-project-shared-ui-namespace = "com.syntey.spiriteddriving.ui.android"
 project-baselineprofile-namespace = "com.syntey.spiriteddriving.baselineprofile"
 
 [libraries]
@@ -130,17 +119,11 @@ logging-kermit = { group = "co.touchlab", name = "kermit", version.ref = "kermit
 logging-kermitCrashlytics = { module = "co.touchlab:kermit-crashlytics", version.ref = "kermit" }
 logging-nsExceptionKt-core = { group = "com.rickclephas.kmp", name = "nsexception-kt-core", version.ref = "nsExceptionKt" }
 
-# SKIE
-skie-annotations = { group = "co.touchlab.skie", name = "configuration-annotations", version.ref = "skie" }
-
 # Moko
 moko-resources = { group = "dev.icerock.moko", name = "resources", version.ref = "moko-resources" }
 moko-resources-compose = { group = "dev.icerock.moko", name = "resources-compose", version.ref = "moko-resources" }
 
 # Network
-network-apollo-runtime = { group = "com.apollographql.apollo", name = "apollo-runtime", version.ref = "apollo" }
-network-apollo-normalizedCache-core = { group = "com.apollographql.apollo", name = "apollo-normalized-cache", version.ref = "apollo" }
-network-apollo-normalizedCache-sqlite = { group = "com.apollographql.apollo", name = "apollo-normalized-cache-sqlite", version.ref = "apollo" }
 network-ktorfit-ksp = { group = "de.jensklingenberg.ktorfit", name = "ktorfit-ksp", version.ref = "ktorfit" }
 network-ktorfit-lib = { group = "de.jensklingenberg.ktorfit", name = "ktorfit-lib", version.ref = "ktorfit" }
 network-ktorfit-converters = { group = "de.jensklingenberg.ktorfit", name = "ktorfit-converters-response", version.ref = "ktorfit" }
@@ -148,14 +131,17 @@ network-ktor-client-contentNegotiation = { group = "io.ktor", name = "ktor-clien
 network-ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
 network-ktor-client-engine-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 network-ktor-client-engine-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
-network-ktor-http = { module = "io.ktor:ktor-http", version.ref = "ktor" }
 network-ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 # Datastore
 androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
 
 # Convention plugin dependencies
+gradlePlugin-android = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
 gradlePlugin-kotlin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+gradlePlugin-compose = { group = "org.jetbrains.kotlin", name = "compose-compiler-gradle-plugin", version.ref = "kotlin" }
+gradlePlugin-kotlinSerialization = { group = "org.jetbrains.kotlin", name = "kotlin-serialization", version.ref = "kotlin" }
+gradlePlugin-koin = { group = "io.insert-koin", name = "koin-compiler-gradle-plugin", version.ref = "koinCompilerPlugin" }
 gradlePlugin-ktlint = { group = "org.jlleitschuh.gradle", name = "ktlint-gradle", version.ref = "ktlintGradlePlugin" }
 gradlePlugin-detekt = { group = "io.gitlab.arturbosch.detekt", name = "detekt-gradle-plugin", version.ref = "detektGradlePlugin" }
 gradlePlugin-ksp = { group = "com.google.devtools.ksp", name = "com.google.devtools.ksp.gradle.plugin", version.ref = "ksp" }
@@ -168,7 +154,6 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-apollo = { id = "com.apollographql.apollo", version.ref = "apollo" }
 ktorfit = { id = "de.jensklingenberg.ktorfit", version.ref = "ktorfit" }
 skie = { id = "co.touchlab.skie", version.ref = "skie" }
 buildkonfig = { id = "com.codingfeline.buildkonfig", version.ref = "buildkonfig" }
@@ -180,10 +165,16 @@ detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detektGradlePlugin
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 koin = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompilerPlugin" }
 version-catalog-update = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }
+modules-graph-assert = { id = "com.jraska.module.graph.assertion", version.ref = "modulesGraphAssert" }
 
 # Precompiled script plugins
+conventions-root = { id = "conventions-root" }
 conventions-lint = { id = "conventions-lint" }
-conventions-annotationProcessing = { id = "conventions-annotations-processor" }
+conventions-kmp-library = { id = "conventions-kmp-library" }
+conventions-compose = { id = "conventions-compose" }
+conventions-arkitekt = { id = "conventions-arkitekt" }
+conventions-kmp-feature = { id = "conventions-kmp-feature" }
+conventions-koin = { id = "conventions-koin" }
 
 [bundles]
 compose = [
@@ -194,12 +185,6 @@ compose = [
     "androidx-compose-ui-tooling-preview",
     "androidx-compose-material-icons",
     "androidx-compose-material3"
-]
-
-apollo = [
-    "network-apollo-runtime",
-    "network-apollo-normalizedCache-core",
-    "network-apollo-normalizedCache-sqlite"
 ]
 
 ktorfit = [
