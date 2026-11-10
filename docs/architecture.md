@@ -1,6 +1,6 @@
 # Spirited Driving: Architecture
 
-> **Status:** draft, being iterated. Last updated 2026-11-08.
+> **Status:** draft, being iterated. Last updated 2026-11-09.
 >
 > How the app is built. The product idea, core concepts and scope are in [overview.md](overview.md).
 
@@ -49,7 +49,7 @@ flowchart LR
 ## Route planning
 
 The app sends start, destination and budget to the backend and gets back the baseline route and the fun routes.
-The backend specification owns the API contract; the app keeps its own DTOs in `shared:network:rest`.
+The backend specification owns the API contract; the app keeps its own DTOs in `:data:network`.
 
 **Plan a trip.** Input: start, destination, budget (+min or +km), the user's vignettes, and the most hand-off
 waypoints the target maps app accepts. Output: the baseline route and 1–3 fun routes. Each route carries:
@@ -62,10 +62,11 @@ waypoints the target maps app accepts. Output: the baseline route and 1–3 fun 
   [Navigation](#navigation))
 - attribution for the route data ("© OpenStreetMap contributors")
 
-In the app, route planning sits behind a `RoutePlanner` interface in shared domain code, with two implementations:
+In the app, route planning sits behind a `RoutePlanner` interface in `:core:domain`, with two implementations:
 
-- `ApiRoutePlanner` calls the backend through `shared:network:rest`.
-- `FakeRoutePlanner` returns recorded plans for previews and tests, and lets the app run without a backend.
+- `ApiRoutePlanner` in `:data:network` calls the backend.
+- `FakeRoutePlanner` in `:core:domain` returns recorded plans for previews and tests, and lets the app run without
+  a backend.
 
 ## Map
 
@@ -88,28 +89,28 @@ Platform EEA terms).
 
 ### How the map screen is built
 
-Screens are Compose Multiplatform (`shared:ui`). On iOS, native SwiftUI navigation hosts each screen as a Compose
-view controller. The map screen is built per platform: the map, the sheet over it and the map buttons are native
-on iOS, so the sheet and buttons are real Liquid Glass over the map. The sheet's content is shared Compose on both
-platforms.
+Screens are Compose Multiplatform, in the feature module that owns them. On iOS, native SwiftUI navigation hosts
+each screen as a Compose view controller. The map screen is built per platform: the map, the sheet over it and the
+map buttons are native on iOS, so the sheet and buttons are real Liquid Glass over the map. The sheet's content is
+shared Compose on both platforms.
 
 ```
-shared:feature   TripPlanComponent ──► RouteMapState (routes, markers, camera)
-                                   └─► sheet state (search, budget, routes)
+:feature:map   TripPlanComponent ──► RouteMapState (routes, markers, camera)
+                                 └─► sheet state (search, budget, routes)
 
-Android          shared:ui   MapScreenUi: GoogleMap + bottom sheet { TripPlanSheetUi }           maps-compose
-iOS              iosApp      MapScreen: MKMapView + native sheet { ComposeView(TripPlanSheetUi) }    SwiftUI, MapKit
+Android        :feature:map   MapScreenUi: GoogleMap + bottom sheet { TripPlanSheetUi }           maps-compose
+iOS            iosApp         MapScreen: MKMapView + native sheet { ComposeView(TripPlanSheetUi) }    SwiftUI, MapKit
 ```
 
 - `RouteMapState` is an immutable model in common code: route lines (points, and whether a line is the baseline,
   a fun route or the selected one), start and destination markers, camera bounds, and whether to show the user's
   location. Events go back up: map long-pressed (pick a destination), route tapped (select it), camera moved.
-- Coordinates use a common `GeoPoint` type, so no platform map type reaches shared code. Polyline decoding is
-  common code with unit tests.
+- Coordinates use a `GeoPoint` type from `:core:domain`, so no platform map type reaches shared code. Polyline
+  decoding is in `:core:domain` too, with unit tests.
 - `TripPlanSheetUi` is the sheet's content and its steps (search, route planning, one route), shared by both
   platforms: the search field, budget chips and route cards.
-- **Android:** `MapScreenUi` (`shared:ui`, Android source set) draws the map with `maps-compose`, and the sheet and
-  map buttons as solid Compose surfaces.
+- **Android:** `MapScreenUi` (`:feature:map`, Android source set) draws the map with `maps-compose`, and the sheet
+  and map buttons as solid Compose surfaces.
 - **iOS:** `MapScreen` in Swift renders `RouteMapState` on an `MKMapView` with `MKPolyline` and annotations, and
   shows the map buttons with native glass. The sheet is a native sheet that stays open, with detents, and the map
   stays usable behind it. It hosts `TripPlanSheetUi` as a Compose view controller with a transparent background,
@@ -130,7 +131,7 @@ The app opens the platform's maps app with the route's hand-off waypoints.
 
 - The maps app takes its own fastest path between waypoints, so the backend places them to keep it on the chosen
   roads. The app passes the target app's waypoint limit in the plan request.
-- Building the link is common code with unit tests. Opening it is a small platform call.
+- Building the link is common code in `:core:domain`, with unit tests. Opening it is a small platform call.
 - Location permission is "while using" only: guidance runs in the maps app.
 - The app isn't told when a drive ends. [Drive feedback](features/drive-feedback/README.md) works from the hand-off
   time and the route's planned duration, and a local notification scheduled at the hand-off, with no push server.
@@ -148,12 +149,12 @@ OpenStreetMap data that suggests places as you type.
 - **Language:** calls carry the phone's preferred languages as `Accept-Language`. Place names come in that
   language where the map data has it, otherwise in the local one. The app's own strings stay English.
 
-In the app, search sits behind a `PlaceSearch` interface in shared code, implemented by `ApiPlaceSearch` (and a fake
-for previews and tests):
+In the app, search sits behind a `PlaceSearch` interface in `:core:domain`, implemented by `ApiPlaceSearch` in
+`:data:network` (and a fake for previews and tests):
 
 - It searches from 2 characters, after a 300 ms pause in typing, and cancels a search still running when a new one
   starts.
-- Recent places live in `shared:persistence`. Matching them against the typed text, and bolding the matched part of
+- Recent places live in `:data:persistence`. Matching them against the typed text, and bolding the matched part of
   a name, ignore case and diacritics, in common code with unit tests.
 
 ## Accounts
@@ -175,7 +176,7 @@ own database, keyed by the Firebase user ID.
   sign-in the backend attaches them to the account.
 - The app opens straight into trip planning. Opening a feature that needs an account asks the user to sign in
   first. (The template's root navigation starts at the login screen; that changes.)
-- In the app, sign-in sits behind an interface in `shared:platform`, implemented with the native Firebase SDKs on
+- In the app, sign-in sits behind an interface in `:core:platform`, implemented with the native Firebase SDKs on
   each platform, like `PlatformFirebaseCrashlytics`.
 
 Calls to the backend carry up to two tokens:
@@ -189,33 +190,46 @@ without one.
 
 ## App structure
 
-The existing modules and what each one gets for trip planning:
+The modules and what each one holds for the MVP. A feature module is created with the first feature that goes
+into it.
 
-| Module                | Role                                                    | Trip planning parts                                    |
-|-----------------------|---------------------------------------------------------|--------------------------------------------------------|
-| `androidApp`          | Android entry point                                     | Maps API key (see [Configuration](#configuration))     |
-| `iosApp`              | SwiftUI shell: native navigation, hosts Compose screens | `MapScreen` (MapKit map, native sheet, glass map buttons), Firebase sign-in |
-| `shared:app`          | DI graph, logging, crash reporting                      | Wiring of the new interfaces                           |
-| `shared:feature`      | Decompose components, use cases, navigation             | `TripPlanComponent`, use cases, `RoutePlanner`, `PlaceSearch` |
-| `shared:ui`           | Compose Multiplatform screens                           | `TripPlanSheetUi`, Android `MapScreenUi`               |
-| `shared:network:rest` | Ktorfit/Ktor client, DTOs, `NetworkResult`              | Backend API client                                     |
-| `shared:persistence`  | DataStore                                               | Recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet |
-| `shared:platform`     | Interfaces implemented natively on each platform        | Location, Firebase sign-in and App Check, local notifications |
-| `shared:resources`    | Shared strings and images                               | Attribution texts                                      |
+| Module                | Role                                                                  | Main parts                                             |
+|-----------------------|-----------------------------------------------------------------------|--------------------------------------------------------|
+| `:androidApp`         | Android entry point, draws the navigation hosts                       | Maps API key (see [Configuration](#configuration))     |
+| `iosApp`              | SwiftUI shell: native navigation, hosts Compose screens               | `MapScreen` (MapKit map, native sheet, glass map buttons), Firebase sign-in |
+| `:shared`             | Navigation hosts, Koin graph, logging, crash reporting, iOS framework | Wiring of `RoutePlanner` and `PlaceSearch` to their implementations |
+| `:feature:map`        | [Map](features/map/README.md), [Destination search](features/destination-search/README.md), [Route planning](features/route-planning/README.md), [Drive](features/drive/README.md), [Drive feedback](features/drive-feedback/README.md) | `TripPlanComponent`, its use cases, `TripPlanSheetUi`, Android `MapScreenUi` |
+| `:feature:routes`     | [Saved routes](features/saved-routes/README.md), [Trip history](features/trip-history/README.md) |                                  |
+| `:feature:profile`    | Profile, [Settings](features/settings/README.md), [Account](features/account/README.md) |                     |
+| `:feature:onboarding` | [First launch](features/first-launch/README.md)                       |                                                        |
+| `:core:domain`        | Domain types, and the interfaces features reach data through          | `GeoPoint`, `Route`, `RoutePlanner`, `PlaceSearch`, domain errors, polyline decoding, the hand-off link |
+| `:core:ui`            | Theme, shared components, Decompose base classes                      | Glass modifier, per-platform component styles          |
+| `:core:resources`     | Shared strings and images                                             | Attribution texts                                      |
+| `:core:platform`      | Interfaces implemented natively on each platform                      | Location, Firebase sign-in and App Check, local notifications |
+| `:data:network`       | Ktorfit/Ktor client, DTOs, `NetworkResult`                            | `ApiRoutePlanner`, `ApiPlaceSearch`                    |
+| `:data:persistence`   | DataStore                                                             | Recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet |
 
-`shared:network:graphql` comes from the project template (sample API) and will be removed.
+Features that share state share a module: one `TripPlanComponent` drives the map and its sheet, so everything shown
+on the map is `:feature:map`.
+
+`:feature:*` and `:data:*` modules depend on `:core:*` modules only, and the build fails otherwise (see "Modules" in
+the [README](../README.md#modules)). So features don't see each other, and reach data only through the
+`:core:domain` interfaces. They meet in `:shared`:
+
+- Its navigation hosts create each feature's screens through a public `*Screens` object in the feature, and connect
+  them, for example Profile opening Trip history.
+- Its Koin graph binds the `:core:domain` interfaces to their `:data:*` implementations.
 
 Inside a feature, the component holds immutable view state, handles events and drives navigation; use cases hold
 the logic; `RoutePlanner` and `PlaceSearch` hide where data comes from. Network errors (`NetworkError`) map to
 domain errors the UI can explain: offline, no route within the budget, region not covered.
 
-Each [feature](overview.md#features) gets its own components and use cases. How features map to screens is in
-[navigation.md](navigation.md).
+How features map to screens is in [navigation.md](navigation.md).
 
 ### Shared and native UI
 
-The content of every screen is shared Compose in `shared:ui`, one implementation for both platforms. Platform code
-draws only the frame around it:
+The content of every screen is shared Compose in its feature module, one implementation for both platforms.
+Platform code draws only the frame around it:
 
 | Part                                                   | Android                       | iOS                                |
 |--------------------------------------------------------|-------------------------------|------------------------------------|
@@ -226,7 +240,7 @@ draws only the frame around it:
 | Map and map buttons                                    | Compose (`maps-compose`)      | SwiftUI, MapKit                    |
 
 The Platforms tables in the [screen designs](overview.md#design) (sizes, button and chip styles, iOS-style or
-Material lists) are values of the same shared components, chosen per platform in one place in `shared:ui`
+Material lists) are values of the same shared components, chosen per platform in one place in `:core:ui`
 (`.android.kt` / `.ios.kt`), like the glass modifier ([Theme](theme.md#materials)). No screen is written twice.
 
 ## Configuration

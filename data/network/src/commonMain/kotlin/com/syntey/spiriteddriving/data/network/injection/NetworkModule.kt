@@ -1,0 +1,64 @@
+package com.syntey.spiriteddriving.data.network.injection
+
+import com.syntey.spiriteddriving.data.network.FlavorConstants
+import com.syntey.spiriteddriving.data.network.api.StarWarsApi
+import com.syntey.spiriteddriving.data.network.api.createStarWarsApi
+import com.syntey.spiriteddriving.data.network.plugin.ContentNegotiationPlugin
+import com.syntey.spiriteddriving.data.network.plugin.HttpTimeoutPlugin
+import com.syntey.spiriteddriving.data.network.plugin.LoggingPlugin
+import com.syntey.spiriteddriving.data.network.plugin.UserAgentPlugin
+import com.syntey.spiriteddriving.data.network.result.NetworkResultConverterFactory
+import de.jensklingenberg.ktorfit.Ktorfit
+import io.ktor.client.HttpClient
+import kotlinx.serialization.json.Json
+import org.koin.core.annotation.ComponentScan
+import org.koin.core.annotation.Configuration
+import org.koin.core.annotation.Module
+import org.koin.core.annotation.Named
+import org.koin.core.annotation.Single
+
+@Module
+@ComponentScan("com.syntey.spiriteddriving.data.network")
+@Configuration
+class NetworkModule {
+
+    @Single
+    @Named("apiUrl")
+    internal fun apiUrl(): String = FlavorConstants.apiUrl
+
+    @Single
+    @Named("restApiJson")
+    internal fun restApiJson(): Json = Json {
+        isLenient = true
+        prettyPrint = false
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
+
+    @Single
+    internal fun httpClient(
+        contentNegotiationPlugin: ContentNegotiationPlugin,
+        httpTimeoutPlugin: HttpTimeoutPlugin,
+        userAgentPlugin: UserAgentPlugin,
+        loggingPlugin: LoggingPlugin,
+    ): HttpClient = getNativeHttpClient {
+        contentNegotiationPlugin.install(this)
+        httpTimeoutPlugin.install(this)
+        userAgentPlugin.install(this)
+        loggingPlugin.install(this)
+    }
+
+    @Single
+    internal fun ktorFit(
+        @Named("apiUrl") apiUrl: String,
+        httpClient: HttpClient,
+        converterFactory: NetworkResultConverterFactory,
+    ): Ktorfit = Ktorfit.Builder()
+        .baseUrl(apiUrl)
+        .httpClient(httpClient)
+        .converterFactories(converterFactory)
+        .build()
+
+    @Single
+    internal fun starWarsApi(ktorFit: Ktorfit): StarWarsApi = ktorFit.createStarWarsApi()
+}

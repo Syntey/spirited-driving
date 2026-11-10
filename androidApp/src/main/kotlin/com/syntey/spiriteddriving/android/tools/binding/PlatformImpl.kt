@@ -3,8 +3,8 @@ package com.syntey.spiriteddriving.android.tools.binding
 import android.content.Context
 import android.os.Build
 import com.syntey.spiriteddriving.android.BuildConfig
-import com.syntey.spiriteddriving.platform.binding.Platform
-import com.syntey.spiriteddriving.resources.*
+import com.syntey.spiriteddriving.core.platform.binding.Platform
+import com.syntey.spiriteddriving.core.resources.*
 
 class PlatformImpl(applicationContext: Context) : Platform {
     override val appName: String = MR.strings.app_name.getString(applicationContext)

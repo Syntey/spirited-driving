@@ -12,10 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.syntey.spiriteddriving.ui.screen.LoginScreenUi
-import com.syntey.spiriteddriving.feature.navigation.root.RootChild
-import com.syntey.spiriteddriving.feature.navigation.root.RootConfig
-import com.syntey.spiriteddriving.feature.navigation.root.RootNavHost
+import com.syntey.spiriteddriving.feature.sample.loginScreen.LoginScreenUi
+import com.syntey.spiriteddriving.shared.navigation.root.RootChild
+import com.syntey.spiriteddriving.shared.navigation.root.RootConfig
+import com.syntey.spiriteddriving.shared.navigation.root.RootNavHost
 import com.arkivanov.decompose.router.slot.ChildSlot
 
 @Composable
