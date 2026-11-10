@@ -10,6 +10,11 @@ plugins {
 
 val libs = the<LibrariesForLibs>()
 
+dependencies {
+    // Compose rules for Android lint, which runs on this module's code (see `conventions-kmp-library`)
+    add("lintChecks", libs.lint.compose)
+}
+
 kotlin {
     sourceSets {
         commonMain {

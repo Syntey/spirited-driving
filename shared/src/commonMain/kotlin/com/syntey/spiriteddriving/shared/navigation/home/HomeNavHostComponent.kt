@@ -17,10 +17,8 @@ import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
 
 @Factory
-internal class HomeNavHostComponent(
-    @InjectedParam componentContext: AppComponentContext,
-    @InjectedParam private val initialStack: List<HomeConfig>,
-) : AppComponent<Unit, Nothing>(componentContext, Unit),
+internal class HomeNavHostComponent(@InjectedParam componentContext: AppComponentContext, @InjectedParam initialStack: List<HomeConfig>) :
+    AppComponent<Unit, Nothing>(componentContext, Unit),
     HomeNavHost {
 
     private val homeNavigator: HomeNavHostNavigation = HomeNavigator()
@@ -80,7 +78,7 @@ internal class HomeNavHostComponent(
 
     override val actions: HomeNavHost.Actions = object : HomeNavHost.Actions {
         override fun navigate(newStack: List<Child<HomeConfig, HomeChild>>) =
-            homeNavigator.stackNavigator.navigate { newStack.map { it.configuration } }
+            homeNavigator.stackNavigator.navigate { newStack.map { child -> child.configuration } }
         override fun pop() = homeNavigator.stackNavigator.pop()
         override fun onSheetDismissed() = homeNavigator.sheetNavigator.dismiss()
     }

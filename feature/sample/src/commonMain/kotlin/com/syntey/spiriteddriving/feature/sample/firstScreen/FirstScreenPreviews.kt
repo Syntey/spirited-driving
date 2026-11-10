@@ -17,8 +17,8 @@ internal object FirstScreenPreviews {
         createdAt = createdAt.desc(),
     )
 
-    fun screen(viewState: FirstViewState = viewState()): FirstScreen = object : FirstScreen {
-        override val viewState: StateFlow<FirstViewState> = MutableStateFlow(viewState)
+    fun screen(state: FirstViewState = viewState()): FirstScreen = object : FirstScreen {
+        override val viewState: StateFlow<FirstViewState> = MutableStateFlow(state)
         override val actions: FirstScreen.Actions = FirstScreen.Actions.noOpActions()
         override val events: Flow<FirstUiEvent> = emptyFlow()
     }

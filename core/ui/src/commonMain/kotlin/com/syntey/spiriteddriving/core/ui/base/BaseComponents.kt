@@ -16,6 +16,7 @@ import kotlinx.coroutines.Job
  * @param componentContext The context of the component.
  * @param defaultState The default state of the component.
  */
+@Suppress("AbstractClassCanBeConcreteClass") // Only meant to be extended
 abstract class AppComponent<VS : Any, E : Any>(componentContext: AppComponentContext, defaultState: VS) :
     BaseComponent<VS, E>(componentContext, defaultState),
     AppComponentContext by componentContext,
@@ -34,6 +35,7 @@ abstract class AppComponent<VS : Any, E : Any>(componentContext: AppComponentCon
  * @param componentContext The context of the component.
  * @param defaultState The default state of the component.
  */
+@Suppress("AbstractClassCanBeConcreteClass") // Only meant to be extended; `navigation` is abstract in `NavigationActionsProducer`
 abstract class ScreenComponent<VS : Any, E : Any, NAV : NavigationActions>(componentContext: AppComponentContext, defaultState: VS) :
     AppComponent<VS, E>(componentContext, defaultState),
     NavigationActionsProducer<NAV>

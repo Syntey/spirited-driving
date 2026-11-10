@@ -8,6 +8,8 @@ Base of every shared KMP module: targets, SDK levels, Android namespace, tests a
 plugins {
     id("org.jetbrains.kotlin.multiplatform")
     id("com.android.kotlin.multiplatform.library")
+    // The KMP Android plugin registers no lint tasks for the main code; this one adds `lintAndroidMain`.
+    id("com.android.lint")
     id("conventions-lint")
 }
 

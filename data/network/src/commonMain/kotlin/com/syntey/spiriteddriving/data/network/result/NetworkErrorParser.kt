@@ -15,10 +15,11 @@ import kotlin.coroutines.cancellation.CancellationException
 internal class NetworkErrorParser {
 
     /**
-     * Parses provided [throwable] into [NetworkError].
+     * Parses provided [throwable] into [NetworkError]. A [CancellationException] is rethrown, since it is the standard way
+     * of cancelling a coroutine.
      */
     fun parse(throwable: Throwable): NetworkError = when (throwable) {
-        is CancellationException -> throw throwable // CancellationExceptions are standard way of cancelling coroutine, should be rethrown
+        is CancellationException -> throw throwable
         is SerializationException -> NetworkError.SerializationError(throwable)
         is IOException, is UnresolvedAddressException -> NetworkError.ConnectionError(throwable)
         else -> NetworkError.UnknownError(throwable)

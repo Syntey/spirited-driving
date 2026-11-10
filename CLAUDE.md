@@ -2,7 +2,7 @@
 
 ## Common Commands
 - `./gradlew clean` - Remove all build artifacts
-- `./gradlew lintCheck` - Run ktlint and detekt checks
+- `./gradlew lintCheck` - Run ktlint, detekt and Android lint; any error fails it
 - `./gradlew ktlintFormat` - Automatically fix style issues
 - `./gradlew test` - Run all tests
 - `./gradlew :feature:<name>:testAndroidHostTest` - Run one feature module's tests
