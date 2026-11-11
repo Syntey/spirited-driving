@@ -32,6 +32,7 @@ import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Shows the messages of [hostState] at the bottom of a screen or sheet: a capsule on inverseSurface on iOS, Material's
@@ -53,7 +54,7 @@ fun MessageHost(hostState: SnackbarHostState, modifier: Modifier = Modifier) {
  * action was tapped.
  */
 suspend fun SnackbarHostState.showMessage(message: String, actionLabel: String? = null): Boolean =
-    withTimeoutOrNull(if (actionLabel != null) ACTION_MESSAGE_MILLIS else MESSAGE_MILLIS) {
+    withTimeoutOrNull((if (actionLabel != null) ACTION_MESSAGE_MILLIS else MESSAGE_MILLIS).milliseconds) {
         // Indefinite, so the timeout decides: cancelling showSnackbar dismisses the message
         showSnackbar(message, actionLabel, duration = SnackbarDuration.Indefinite)
     } == SnackbarResult.ActionPerformed

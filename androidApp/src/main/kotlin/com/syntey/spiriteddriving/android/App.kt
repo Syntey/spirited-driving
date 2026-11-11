@@ -8,6 +8,8 @@ import com.syntey.spiriteddriving.shared.KmpApplication as SharedApp
 
 class App : Application() {
 
+    val platformBindings by lazy { PlatformBindingsImpl(applicationContext = this) }
+
     override fun onCreate() {
         super.onCreate()
         initializeKmp()
@@ -16,7 +18,7 @@ class App : Application() {
 
     private fun initializeKmp() {
         SharedApp.initializeSharedApplication(
-            platformBindings = PlatformBindingsImpl(applicationContext = this),
+            platformBindings = platformBindings,
             isDebugBuild = BuildConfig.DEBUG,
         ) {
             androidContext(this@App)

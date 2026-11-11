@@ -1,6 +1,6 @@
 # Spirited Driving: Overview
 
-> **Status:** draft, being iterated. Last updated 2026-11-08.
+> **Status:** draft, being iterated. Last updated 2026-11-10.
 >
 > Entry point for product and architecture design. Topics that outgrow this file get their own file in `docs/`
 > and a link from here.
@@ -116,10 +116,11 @@ MVP, for the [launch](#launch) region:
 - **[Theme](theme.md):** colours, type, shapes, glass and the empty and error layout, shared by every screen.
 - **Screens:** each feature's `design.md`, so far [Map](features/map/design.md),
   [Destination search](features/destination-search/design.md), [Route planning](features/route-planning/design.md), [Drive](features/drive/design.md),
-  [Drive feedback](features/drive-feedback/design.md), [First launch](features/first-launch/design.md),
+  [Drive feedback](features/drive-feedback/design.md),
   [Account](features/account/design.md), [Saved routes](features/saved-routes/design.md),
   [Settings](features/settings/design.md) and [Trip history](features/trip-history/design.md). A design's Platforms table says how the one shared screen is styled on
-  each platform; it never means two screens ([Architecture](architecture.md#shared-and-native-ui)).
+  each platform; it never means two screens ([Architecture](architecture.md#shared-and-native-ui)). Built so far:
+  [First launch](features/first-launch/README.md#design).
 
 Written design is a spec for building a screen, not a record of it. Once a screen is built, the code holds its
 layout, sizes and copy:

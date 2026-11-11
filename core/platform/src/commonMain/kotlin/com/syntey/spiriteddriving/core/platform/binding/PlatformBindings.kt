@@ -15,4 +15,9 @@ interface PlatformBindings {
      * Provides a native binding to Firebase Crashlytics SDK.
      */
     fun firebaseCrashlytics(): PlatformFirebaseCrashlytics
+
+    /**
+     * Provides the permission to use the location, see [LocationPermission].
+     */
+    fun locationPermission(): PlatformLocationPermission
 }

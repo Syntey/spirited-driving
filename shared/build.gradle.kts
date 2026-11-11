@@ -61,6 +61,7 @@ kotlin {
             export(projects.core.platform)
             export(projects.core.resources)
             export(projects.core.ui)
+            export(projects.feature.onboarding)
             export(projects.feature.sample)
             export(libs.futured.arkitekt.decompose)
 
@@ -84,6 +85,7 @@ kotlin {
                 implementation(projects.data.network)
                 implementation(projects.data.persistence)
 
+                implementation(projects.feature.onboarding)
                 implementation(projects.feature.sample)
 
                 implementation(libs.logging.kermitCrashlytics)
@@ -93,11 +95,18 @@ kotlin {
             }
         }
 
+        commonTest {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+
         iosMain {
             dependencies {
                 api(projects.core.platform)
                 api(projects.core.resources)
                 api(projects.core.ui)
+                api(projects.feature.onboarding)
                 api(projects.feature.sample)
                 api(libs.futured.arkitekt.decompose)
 
