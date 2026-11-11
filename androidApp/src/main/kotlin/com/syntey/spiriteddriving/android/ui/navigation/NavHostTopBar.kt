@@ -1,7 +1,6 @@
 package com.syntey.spiriteddriving.android.ui.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -9,6 +8,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.core.ui.components.mirrorIn
+import com.syntey.spiriteddriving.core.ui.theme.Grid
+import dev.icerock.moko.resources.compose.painterResource
 
 /**
  * Top bar of a navigation stack.
@@ -30,7 +34,11 @@ fun NavHostTopBar(
         navigationIcon = {
             if (canNavigateBack) {
                 IconButton(onClick = onNavigateBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    Icon(
+                        painter = painterResource(MR.images.back),
+                        contentDescription = null,
+                        modifier = Modifier.size(Grid.d6).mirrorIn(LocalLayoutDirection.current),
+                    )
                 }
             }
         },

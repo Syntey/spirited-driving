@@ -145,14 +145,18 @@ private fun {Name}ScreenPreview() = Showcase {
 ```
 
 - The screen draws only its content: no top bar, back button or system insets. The navigation hosts draw those.
-- Colors, type and shapes come from the theme (`MaterialTheme.*`), never literal values. A component styled per
-  platform lives in `:core:ui` as `.android.kt` / `.ios.kt`, never in the screen ("Shared and native UI" in
-  `docs/architecture.md`).
+- Colors, type and shapes come from the theme (`MaterialTheme.*`, `AppTheme.*` for what Material has no slot for),
+  never literal values. Icons are `painterResource(MR.images.…)` from `:core:resources`, and `:core:ui` components take
+  their texts and icons as parameters. A value from a design's Platforms table comes from `AppTheme.platformStyle`, which holds
+  both platforms' values in `PlatformStyle` in `:core:ui`; add it there, never branch on the platform for styling in
+  the screen ("Shared and native UI" in `docs/architecture.md`). Copy that names a platform's app picks its string by
+  `AppTheme.platform`.
 - Strings go into `core/resources/src/commonMain/moko-resources/base/strings.xml`, then
   `./gradlew generateMRcommonMain`.
 - One preview per state that looks different (loaded, empty, error). Use the multipreview annotations from
   `core.ui.preview`, not a bare `@Preview`: `@ScreenPreviews` on a screen's content, `@ComponentPreviews` on a smaller
-  composable, like one in `:core:ui`.
+  composable, like one in `:core:ui`. A preview in `Showcase(platform = UiPlatform.Ios)` shows the iOS look in Android
+  Studio.
 
 **`{Name}ScreenPreviews.kt`**: preview data, shared by the previews (see `FirstScreenPreviews`).
 
