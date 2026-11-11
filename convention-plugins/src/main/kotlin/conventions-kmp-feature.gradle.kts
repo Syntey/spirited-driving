@@ -39,7 +39,6 @@ kotlin {
                 implementation(project(":core:ui"))
 
                 implementation(libs.futured.arkitekt.decomposeAnnotation)
-                implementation(libs.jetbrains.compose.material.icons)
                 implementation(libs.jetbrains.lifecycle.runtime.compose)
                 implementation(libs.moko.resources.compose)
             }

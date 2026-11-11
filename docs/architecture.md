@@ -1,6 +1,6 @@
 # Spirited Driving: Architecture
 
-> **Status:** draft, being iterated. Last updated 2026-11-09.
+> **Status:** draft, being iterated. Last updated 2026-11-10.
 >
 > How the app is built. The product idea, core concepts and scope are in [overview.md](overview.md).
 
@@ -240,8 +240,10 @@ Platform code draws only the frame around it:
 | Map and map buttons                                    | Compose (`maps-compose`)      | SwiftUI, MapKit                    |
 
 The Platforms tables in the [screen designs](overview.md#design) (sizes, button and chip styles, iOS-style or
-Material lists) are values of the same shared components, chosen per platform in one place in `:core:ui`
-(`.android.kt` / `.ios.kt`), like the glass modifier ([Theme](theme.md#materials)). No screen is written twice.
+Material lists) are values of the same shared components. Both platforms' values sit side by side in `PlatformStyle`
+in `:core:ui`, and `AppTheme` picks the set of the platform the app runs on, so a preview can show either. Only a
+component that needs a platform library is split into `.android.kt` / `.ios.kt`, like the glass
+([Theme](theme.md#materials)). No screen is written twice.
 
 ## Configuration
 

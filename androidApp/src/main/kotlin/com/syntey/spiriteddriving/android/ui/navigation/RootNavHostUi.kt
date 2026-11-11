@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.feature.sample.loginScreen.LoginScreenUi
 import com.syntey.spiriteddriving.shared.navigation.root.RootChild
 import com.syntey.spiriteddriving.shared.navigation.root.RootConfig
@@ -40,7 +40,7 @@ private fun ApplicationLoading(
 ) = Box(modifier.background(MaterialTheme.colorScheme.background)) {
     CircularProgressIndicator(
         Modifier
-            .size(48.dp)
+            .size(Grid.d12)
             .align(Alignment.Center),
     )
 }

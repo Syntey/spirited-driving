@@ -1,3 +1,7 @@
 <resources>
-    <style name="AppTheme" parent="android:Theme.Material.NoActionBar"/>
+    <!-- The window before Compose draws: the splash screen and the background behind the system bars -->
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:windowSplashScreenBackground">@color/background</item>
+    </style>
 </resources>
