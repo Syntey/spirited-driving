@@ -23,15 +23,22 @@ Shared code reaches native SDKs through interfaces in `:core:platform`, implemen
    (`core/platform/.../injection/PlatformModule.kt`), and the wrapper from step 1 next to it. This module has no
    Koin compiler plugin, so `@Single` and `@Factory` do nothing here.
 4. **Android**: `androidApp/src/main/kotlin/.../android/tools/binding/Platform<Name>Impl.kt`, returned from
-   `PlatformBindingsImpl`, which also has the application `Context`.
+   `PlatformBindingsImpl`, which also has the application `Context`. A binding that shows system UI, like a
+   permission prompt, needs the activity: connect it in `PlatformBindingsImpl.attach(activity)`, which
+   `MainActivity.onCreate` calls (see `PlatformLocationPermissionImpl`).
 5. **iOS**: `iosApp/SpiritedDriving/Platform/Platform<Name>Impl.swift` (`final class Platform<Name>Impl:
    Platform<Name>`), returned from `PlatformBindingsImpl.swift`. Rebuild the Kotlin framework first, or Swift won't
-   see the new interface.
+   see the new interface. The app target's Swift is on the main actor by default (`SWIFT_DEFAULT_ACTOR_ISOLATION`),
+   and calling a main-actor method from a Kotlin background thread crashes with `SIGTRAP`. So make each method
+   Kotlin may call off the main thread `nonisolated`, and move to the main actor inside it (see
+   `PlatformLocationPermissionImpl.swift`).
 6. **Setup**: SDK dependencies (Android in `gradle/libs.versions.toml`, iOS as a Swift package in the Xcode project),
    Android permissions in `androidApp/src/main/AndroidManifest.xml`, and iOS usage descriptions in
    `iosApp/SpiritedDriving/Info.plist`. Asking for a permission belongs to the binding, and the result tells shared
    code what to do next: granted, denied, or denied for good.
-7. **Use**: inject the interface (or its wrapper) into a use case or a `:data:*` class. A feature module that uses it
+7. **Use**: inject the interface (or its wrapper) into a use case or a `:data:*` class, marked `@Provided`: it comes
+   from the DSL `platformModule`, which the Koin compiler plugin doesn't see. Use cases run on a background thread,
+   so an implementation that needs the main thread (a permission prompt, `CLLocationManager`) moves there itself. A feature module that uses it
    adds `implementation(projects.core.platform)` to its build file. Tests use a fake from the test source set.
 
 ## Before you call it done

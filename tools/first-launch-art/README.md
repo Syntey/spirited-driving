@@ -1,11 +1,11 @@
 # First launch illustration
 
-Generates the artwork behind [First launch](../../docs/features/first-launch/design.md#illustration): an aerial
+Generates the artwork behind [First launch](../../docs/features/first-launch/README.md#design): an aerial
 view of a winding road through hills, forest, a village and a river, five screens wide, with two cars driving along
 it. A day version goes with the light theme, a dusk version with the dark theme.
 
 ```sh
-node tools/first-launch-art/generate.mjs          # writes everything to tools/first-launch-art/build/
+node tools/first-launch-art/generate.mjs          # writes the app's scene and everything in tools/first-launch-art/build/
 node tools/first-launch-art/generate.mjs --table  # prints positions along the road, for placing the cars
 ```
 
@@ -21,6 +21,9 @@ Needs Node 18 or newer and nothing else. The scenery is seeded, so every run dra
 | `review-*.svg`                         | For checking: every step's cars at once, page edges, the area under the panel, and the cars up close |
 | `OnboardingArt.dc.html`                | The illustration artboard for the design canvas                            |
 | `prototype.html`                       | The interactive prototype: `prototype.template.html` with the artwork filled in |
+
+It also writes the scene for the app, `feature/onboarding/.../art/OnboardingArtScene.kt`, which is checked in. Run the
+generator after every change, so the app and the canvas show the same picture.
 
 ## How it fits together
 
@@ -38,9 +41,13 @@ Needs Node 18 or newer and nothing else. The scenery is seeded, so every run dra
 - **Cars:** `mx5()` and `gr86()` draw them facing +x, about 40 units long. They are simplified, with no badges or
   logos ([tone](../../docs/overview.md#tone)).
 
-## For Compose
+## In the app
 
-The SVGs can't be used as they are. Vector images don't support dashed strokes, so the road's centre line is lost,
-and they don't support group opacity, which the dusk light cones use. The plan is to draw the road and the cars in
-code, placed along `road.json`, and to keep the rest of the scenery as vector images split one page each. A single
-bitmap five screens wide would take about 60 MB at 3× density.
+The app draws the illustration in code (`OnboardingArt` in `:feature:onboarding`), since Compose's vector images can't
+draw the road's dashed centre line, and a bitmap five screens wide would take about 60 MB at 3× density.
+
+- `OnboardingArtScene.kt` holds the scene as Kotlin draw calls, the palettes as `ArtPalette.Day` and `ArtPalette.Dusk`,
+  and the road as `ArtRoad`. The generator turns the scene's SVG markup into calls to the helpers in `ArtDrawing.kt`,
+  so it only knows the shapes the scene uses; a new kind of shape needs a helper and a case in the generator.
+- The scenery is drawn once and moved as a layer; the cars are drawn on top, placed along `ArtRoad.segments` the
+  same way the generator places them (`Road.kt`, checked by `CarsTest`).

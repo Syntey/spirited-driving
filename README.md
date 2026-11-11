@@ -146,7 +146,8 @@ A module's package and Android namespace come from its path (`:data:network` is
 `com.syntey.spiriteddriving.data.network`), so a new feature's build file only applies
 `conventions-kmp-feature`.
 
-`:feature:sample` holds the project template's sample screens until real features replace them.
+`:feature:onboarding` holds First launch. `:feature:sample` holds the project template's sample screens until real
+features replace them.
 
 ## UI Architecture
 
@@ -215,6 +216,7 @@ The following meta-description provides an overview of Decompose navigation tree
 ```kotlin
 Navigation("Root") {
     Slot {
+        Screen("Onboarding") // First launch, until the vignette is answered
         Screen("Login")
         Navigation("SignedIn") {
             // Bottom navigation stack

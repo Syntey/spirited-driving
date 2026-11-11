@@ -9,6 +9,8 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>The map and your routes start from where you are.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

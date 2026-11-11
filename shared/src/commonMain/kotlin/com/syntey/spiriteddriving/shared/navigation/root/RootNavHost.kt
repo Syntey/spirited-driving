@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.shared.navigation.root
 
 import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInConfig
 import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInNavHost
+import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreen
 import com.syntey.spiriteddriving.feature.sample.loginScreen.LoginScreen
 import com.arkivanov.decompose.router.slot.ChildSlot
 import kotlinx.coroutines.flow.StateFlow
@@ -17,13 +18,15 @@ interface RootNavHost {
 sealed interface RootConfig {
 
     @Serializable
+    data object Onboarding : RootConfig
+
+    @Serializable
     data object Login : RootConfig
 
     @Serializable
     data class SignedIn(val initialConfig: SignedInConfig = SignedInConfig.Home()) : RootConfig
 }
 
-@OptIn(ExperimentalUuidApi::class)
 sealed interface RootChild {
 
     /**
@@ -32,6 +35,8 @@ sealed interface RootChild {
      * (Otherwise, the view will lose the state and become unresponsive).
      */
     val iosViewId: String
+
+    data class Onboarding(val screen: OnboardingScreen, override val iosViewId: String = Uuid.random().toString()) : RootChild
 
     data class Login(val screen: LoginScreen, override val iosViewId: String = Uuid.random().toString()) : RootChild
 

@@ -24,6 +24,36 @@
     <string name="route_badge">Route %1$d</string>
     <string name="route_badge_fastest">Fastest route</string>
 
+    <!-- Budget chips -->
+    <string name="budget_minutes">+%1$d min</string>
+    <string name="budget_hours">+%1$s h</string>
+
+    <!-- First launch. Where the copy names the platform's maps app or its location prompt, it has an Android and an iOS version. -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_step">Step %1$d of %2$d</string>
+    <string name="onboarding_coverage">Czechia for now</string>
+    <string name="onboarding_what_title">Take the fun way</string>
+    <string name="onboarding_what_body">For people who enjoy driving: curvy country roads, hills and passes instead of the motorway.</string>
+    <string name="onboarding_terms">By continuing, you accept the %1$s and %2$s.</string>
+    <string name="onboarding_terms_link">Terms</string>
+    <string name="onboarding_privacy_link">Privacy Policy</string>
+    <string name="onboarding_budget_title">You set the extra time</string>
+    <string name="onboarding_budget_body">Pick a destination and how much longer you’ll spend, like +30 min. You get the most fun route that fits.</string>
+    <string name="onboarding_budget_chips">Budget chips, %1$s selected</string>
+    <string name="onboarding_handoff_title_android">Drive it in Google Maps</string>
+    <string name="onboarding_handoff_title_ios">Drive it in Apple Maps</string>
+    <string name="onboarding_handoff_body_android">Your route opens in Google Maps for turn-by-turn guidance. Afterwards, tell us how it was.</string>
+    <string name="onboarding_handoff_body_ios">Your route opens in Apple Maps for turn-by-turn guidance. Afterwards, tell us how it was.</string>
+    <string name="onboarding_location_title">Start where you are</string>
+    <string name="onboarding_location_body_android">The map and your routes start from your location. Choose Precise, so routes start on the right road.</string>
+    <string name="onboarding_location_body_ios">The map and your routes start from your location. Keep Precise Location on, so routes start on the right road.</string>
+    <string name="onboarding_vignette_title">Do you have a Czech motorway vignette?</string>
+    <string name="onboarding_vignette_body">Without one, routes avoid motorways that need it. You can change this in Settings.</string>
+    <string name="onboarding_vignette_yes">Yes, I have one</string>
+    <string name="onboarding_vignette_no">No</string>
+
     <!-- Tabs -->
     <string name="tab_home">Home</string>
     <string name="tab_profile">Profile</string>
