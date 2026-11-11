@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -22,7 +23,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.GlassButton
@@ -56,6 +60,8 @@ private fun Content(viewState: OnboardingViewState, actions: OnboardingScreen.Ac
     val scope = rememberCoroutineScope()
     val hazeState = rememberHazeState()
     var width by remember { mutableIntStateOf(0) }
+    var panelTop by remember { mutableFloatStateOf(Float.POSITIVE_INFINITY) }
+    val skipBottom = skipBottom()
 
     LaunchedEffect(viewState.step, reduceMotion) {
         position.settle(viewState.step, afterFling = false, reduceMotion = reduceMotion)
@@ -82,6 +88,8 @@ private fun Content(viewState: OnboardingViewState, actions: OnboardingScreen.Ac
             step = viewState.step,
             reduceMotion = reduceMotion,
             hazeState = hazeState,
+            controlsBottom = { skipBottom },
+            panelTop = { panelTop },
             modifier = Modifier.fillMaxSize(),
         )
         SkipButton(
@@ -98,7 +106,8 @@ private fun Content(viewState: OnboardingViewState, actions: OnboardingScreen.Ac
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
-                .padding(top = Grid.d2),
+                .padding(top = Grid.d2)
+                .onPlaced { panelTop = it.positionInParent().y },
         )
     }
 }
@@ -110,15 +119,27 @@ private fun Illustration(
     step: OnboardingStep,
     reduceMotion: Boolean,
     hazeState: HazeState,
+    controlsBottom: () -> Float,
+    panelTop: () -> Float,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier.hazeSource(hazeState)) {
         if (reduceMotion) {
             Crossfade(targetState = step, label = "illustration") { shown ->
-                OnboardingArt(position = { shown.ordinal.toFloat() }, modifier = Modifier.fillMaxSize())
+                OnboardingArt(
+                    position = { shown.ordinal.toFloat() },
+                    controlsBottom = controlsBottom,
+                    panelTop = panelTop,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         } else {
-            OnboardingArt(position = { position.value }, modifier = Modifier.fillMaxSize())
+            OnboardingArt(
+                position = { position.value },
+                controlsBottom = controlsBottom,
+                panelTop = panelTop,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }
@@ -136,6 +157,15 @@ private fun SkipButton(position: PagePosition, onClick: () -> Unit, hazeState: H
             .padding(top = Grid.d2, end = Grid.d4)
             .graphicsLayer { alpha = position.introShown },
     )
+}
+
+// Skip's bottom edge, in pixels from the top. Worked out from its layout rather than measured, so the illustration stays
+// put when Skip goes after the intro.
+@Composable
+private fun skipBottom(): Float {
+    val density = LocalDensity.current
+    val buttonBottom = with(density) { (Grid.d2 + AppTheme.platformStyle.glassButton.height).toPx() }
+    return WindowInsets.safeDrawing.getTop(density) + buttonBottom
 }
 
 @ScreenPreviews

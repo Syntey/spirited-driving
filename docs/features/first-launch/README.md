@@ -52,8 +52,9 @@ decisions behind it.
   has for images, because it holds text.
 - **The illustration slides along the road** with the pages, a panorama five screens wide, so the road leaves each
   page where it enters the next and the cars drive on as the user swipes. This turns the five steps into one drive.
-  With Reduce Motion (iOS) or animations off (Android) it fades from step to step instead. It's scaled to the screen's
-  height, which keeps the cars above the panel on any phone.
+  With Reduce Motion (iOS) or animations off (Android) it fades from step to step instead. It fills the screen's
+  height. Where the panel is taller than in the design, on a short screen or with large text, it moves up so the cars
+  stay above the panel, and shrinks only when moving further would take them under Skip.
 - **The illustration is drawn in code.** [tools/first-launch-art](../../../tools/first-launch-art/README.md)
   generates it, as SVG for the design canvas and as Kotlin draw calls for the app, from one scene. Vector images
   can't draw the road's dashed centre line, and a bitmap five screens wide would take about 60 MB.
@@ -76,3 +77,7 @@ None.
    the generator turns into its scene.
 2. **Terms and privacy policy:** where the pages are published. Until then the links in the terms line open
    placeholders (`LegalPages` in `:core:resources`).
+3. **Wide screens (known issue):** on tablets, unfolded foldables and phones in landscape, the illustration shows
+   bare land beside the first and last pages, as the scenery ends just past them, and the panel spans the whole
+   width. In landscape on a phone the panel also covers the cars. Fixing it needs wider scenery from the generator
+   and a maximum width for the panel.

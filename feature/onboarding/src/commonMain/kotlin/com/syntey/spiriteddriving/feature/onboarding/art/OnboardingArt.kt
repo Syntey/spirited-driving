@@ -19,21 +19,32 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Density
 import com.syntey.spiriteddriving.core.ui.components.Showcase
 import com.syntey.spiriteddriving.core.ui.preview.DarkLightPreviews
+import com.syntey.spiriteddriving.core.ui.theme.Grid
 
 /**
  * Two light sports cars on a winding road, seen from above: a panorama of five pages that pans with [position], with the
  * cars driving along the road as it does. A day version goes with the light theme, a dusk one with the dark theme.
  * Decorative, so screen readers skip it.
  *
- * The panorama is scaled to fill the height, which keeps the cars above the panel at the bottom on every screen, and each
- * page is centred, so a narrow screen crops both sides alike.
+ * The panorama fills the height, and each page is centred, so a narrow screen crops both sides alike. The cars keep clear
+ * of the controls at the top and the panel at the bottom: where the panel is taller than in the design, as on a short
+ * screen or with large text, the panorama moves up, and shrinks only when moving up would take the cars under the
+ * controls ([ArtFit]).
  *
  * @param position The page to show, read while drawing: 0 is the first page, 1.5 halfway between the second and the third.
+ * @param controlsBottom The bottom edge of the controls at the top, in pixels from the top, read while drawing.
+ * @param panelTop The top edge of the panel at the bottom, in pixels from the top, read while drawing.
  */
 @Composable
-internal fun OnboardingArt(position: () -> Float, modifier: Modifier = Modifier) {
+internal fun OnboardingArt(
+    position: () -> Float,
+    controlsBottom: () -> Float,
+    panelTop: () -> Float,
+    modifier: Modifier = Modifier,
+) {
     val palette = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) ArtPalette.Dusk else ArtPalette.Day
     Box(
         modifier = modifier
@@ -45,24 +56,31 @@ internal fun OnboardingArt(position: () -> Float, modifier: Modifier = Modifier)
         Spacer(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { translationX = -size.leftEdge(position()) * size.unit }
-                .drawBehind { scale(size.unit, pivot = Offset.Zero) { drawScenery(palette) } },
+                .graphicsLayer {
+                    val fit = fit(size, controlsBottom(), panelTop())
+                    translationX = -fit.leftEdge(size.width, position()) * fit.unit
+                    translationY = -fit.shiftUp
+                }
+                .drawBehind {
+                    val unit = fit(size, controlsBottom(), panelTop()).unit
+                    scale(unit, pivot = Offset.Zero) { drawScenery(palette) }
+                },
         )
         Spacer(
             modifier = Modifier
                 .fillMaxSize()
-                .drawBehind { drawCars(palette, position()) },
+                .drawBehind { drawCars(palette, position(), fit(size, controlsBottom(), panelTop())) },
         )
     }
 }
 
-private fun DrawScope.drawCars(palette: ArtPalette, position: Float) {
-    val unit = size.unit
-    val left = size.leftEdge(position)
+private fun DrawScope.drawCars(palette: ArtPalette, position: Float, fit: ArtFit) {
+    val left = fit.leftEdge(size.width, position)
     val lead = Cars.Default.leadAt(position)
     val follower = Cars.Default.followerAt(position)
     withTransform({
-        scale(unit, unit, pivot = Offset.Zero)
+        translate(0f, -fit.shiftUp)
+        scale(fit.unit, fit.unit, pivot = Offset.Zero)
         translate(-left, 0f)
     }) {
         placed(follower.x + ArtRoad.SHADOW_X, follower.y + ArtRoad.SHADOW_Y, follower.degrees) { drawGr86Shadow(palette) }
@@ -72,17 +90,19 @@ private fun DrawScope.drawCars(palette: ArtPalette, position: Float) {
     }
 }
 
-// Pixels per unit of the panorama.
-private val Size.unit: Float get() = height / ArtRoad.PAGE_HEIGHT
-
-// The panorama's x at the left edge of the screen, in its units.
-private fun Size.leftEdge(position: Float): Float {
-    val visibleWidth = width / unit
-    return ArtRoad.PAGE_WIDTH * position + (ArtRoad.PAGE_WIDTH - visibleWidth) / 2
+// A little room between the cars and the controls, so they don't touch.
+private fun Density.fit(size: Size, controlsBottom: Float, panelTop: Float): ArtFit {
+    val gap = Grid.d4.toPx()
+    return ArtFit.of(height = size.height, clearTop = controlsBottom + gap, clearBottom = panelTop - gap)
 }
 
 @DarkLightPreviews
 @Composable
 private fun OnboardingArtPreview() = Showcase {
-    OnboardingArt(position = { 2f }, modifier = Modifier.fillMaxWidth().aspectRatio(390f / 844f))
+    OnboardingArt(
+        position = { 2f },
+        controlsBottom = { 0f },
+        panelTop = { Float.POSITIVE_INFINITY },
+        modifier = Modifier.fillMaxWidth().aspectRatio(390f / 844f),
+    )
 }
