@@ -490,5 +490,247 @@ class Component extends DCLogic {
   write('prototype.html', template.replace('__DATA__', () => JSON.stringify(data).replace(/<\//g, '<\\/')));
 }
 
+// ---------- 5. the app: the same scene as Kotlin draw calls for Compose ----------
+// Compose's vector images can't draw the road's dashed centre line, so the app draws the scene in code. This turns the
+// scene's markup (the small part of SVG used above) into calls to the helpers in ArtDrawing.kt, with the palette as `p`.
+{
+  const PACKAGE = 'com.syntey.spiriteddriving.feature.onboarding.art';
+  const KT = path.join(HERE, '../../feature/onboarding/src/commonMain/kotlin', ...PACKAGE.split('.'), 'OnboardingArtScene.kt');
+
+  const num = (v) => {
+    const s = String(v).trim();
+    if (!/^-?\d+(\.\d+)?$/.test(s)) throw new Error('Not a plain number: ' + s);
+    return s.replace(/^(-?)0+(\d)/, '$1$2') + 'f';
+  };
+  const nums = (s) => s.trim().split(/[\s,]+/).map(num);
+  const colour = (v) => {
+    const hole = /^\{\{a\.(\w+)\}\}$/.exec(v);
+    if (hole) return 'p.' + hole[1];
+    throw new Error('Colours come from the palette: ' + v);
+  };
+  const ktColour = (v) => {
+    let m = /^#([0-9A-F]{6})$/i.exec(v);
+    if (m) return `Color(0xFF${m[1].toUpperCase()})`;
+    m = /^rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)$/.exec(v);
+    if (m) {
+      const hex = (n) => Number(n).toString(16).padStart(2, '0').toUpperCase();
+      return `Color(0x${hex(Math.round(Number(m[4]) * 255))}${hex(m[1])}${hex(m[2])}${hex(m[3])})`;
+    }
+    throw new Error('Unknown colour ' + v);
+  };
+
+  // Paths are parsed once, so each distinct one becomes a property of ArtPaths.
+  const paths = new Map();
+  const pathRef = (d) => {
+    if (!paths.has(d)) paths.set(d, 'path' + paths.size);
+    return 'ArtPaths.' + paths.get(d);
+  };
+
+  // Turns markup into Kotlin statements. Groups pass fill and line caps down to their children; a group whose opacity is
+  // `beam` (lights, only at dusk) becomes an `if`, and a group transform a `placed` block.
+  const toKotlin = (markup) => {
+    const out = [];
+    const stack = [{ fill: null, cap: null }];
+    let indent = 1;
+    const emit = (line) => out.push('    '.repeat(indent) + line);
+    for (const [, close, tag, attrText] of markup.matchAll(/<(\/?)(\w+)([^>]*)>/g)) {
+      if (close) {
+        if (tag !== 'g') continue;
+        const group = stack.pop();
+        for (let i = 0; i < group.blocks; i++) {
+          indent--;
+          emit('}');
+        }
+        continue;
+      }
+      const a = Object.fromEntries([...attrText.matchAll(/([\w-]+)="([^"]*)"/g)].map((m) => [m[1], m[2]]));
+      const parent = stack[stack.length - 1];
+      const fill = a.fill ?? parent.fill;
+      const cap = a['stroke-linecap'] ?? parent.cap;
+      if (tag === 'g') {
+        let blocks = 0;
+        if (a.opacity === '{{a.beam}}') {
+          emit('if (p.lightsOn) {');
+          indent++;
+          blocks++;
+        }
+        const t = a.transform && /^translate\(([^)]*)\) rotate\(([^)]*)\)$/.exec(a.transform);
+        if (t) {
+          const [x, y] = nums(t[1]);
+          emit(`placed(${x}, ${y}, ${nums(t[2])[0]}) {`);
+          indent++;
+          blocks++;
+        } else if (a.transform && !a.transform.startsWith('{{')) {
+          throw new Error('Unsupported group transform ' + a.transform);
+        }
+        stack.push({ fill, cap, blocks });
+        continue;
+      }
+
+      const alpha = a.opacity ? `, alpha = ${num(a.opacity)}` : '';
+      const shapes = [];
+      const fillColour = fill && fill !== 'none' ? colour(fill) : null;
+      if (tag === 'circle') {
+        shapes.push(`circle(${num(a.cx)}, ${num(a.cy)}, ${num(a.r)}, ${fillColour}${alpha})`);
+      } else if (tag === 'ellipse') {
+        const geometry = `${num(a.cx)}, ${num(a.cy)}, ${num(a.rx)}, ${num(a.ry)}`;
+        if (fillColour) shapes.push(`ellipse(${geometry}, ${fillColour})`);
+        if (a.stroke) shapes.push(`ellipseOutline(${geometry}, ${colour(a.stroke)}, ${num(a['stroke-width'])})`);
+      } else if (tag === 'rect') {
+        shapes.push(`roundRect(${num(a.x)}, ${num(a.y)}, ${num(a.width)}, ${num(a.height)}, ${a.rx ? num(a.rx) : '0f'}, ${fillColour}${alpha})`);
+      } else if (tag === 'path') {
+        const ref = pathRef(a.d);
+        if (fillColour) shapes.push(`fillPath(${ref}, ${fillColour}${alpha})`);
+        if (a.stroke) {
+          const dash = a['stroke-dasharray'] ? `, dash = floatArrayOf(${nums(a['stroke-dasharray']).join(', ')})` : '';
+          const round = cap === 'round' ? ', round = true' : '';
+          shapes.push(`strokePath(${ref}, ${colour(a.stroke)}, ${num(a['stroke-width'])}${round}${dash}${alpha})`);
+        }
+      } else {
+        throw new Error('Unsupported element ' + tag);
+      }
+      if (!shapes.length || shapes.some((s) => s.includes(', null'))) throw new Error(`<${tag}> needs a fill or a stroke`);
+
+      const rot = a.transform && /^rotate\(([^)]*)\)$/.exec(a.transform);
+      if (rot) {
+        const [deg, px, py] = nums(rot[1]);
+        emit(`rotated(${deg}, ${px}, ${py}) { ${shapes.join('; ')} }`);
+      } else if (a.transform && !a.transform.startsWith('{{')) {
+        throw new Error('Unsupported transform ' + a.transform);
+      } else {
+        shapes.forEach(emit);
+      }
+    }
+    return out;
+  };
+
+  // The scenery in parts of a few hundred calls, so no compiled function gets too big. Parts end between top-level shapes.
+  const sceneryParts = [];
+  {
+    let part = [];
+    let depth = 0;
+    for (const line of scene.split('\n')) {
+      part.push(line);
+      depth += (line.match(/<g[\s>]/g) || []).length - (line.match(/<\/g>/g) || []).length;
+      if (depth === 0 && part.length >= 250) {
+        sceneryParts.push(part.join('\n'));
+        part = [];
+      }
+    }
+    if (part.length) sceneryParts.push(part.join('\n'));
+  }
+  const withRoad = (s) => s.replace(/\{\{road\}\}/g, roadD);
+  const fn = (name, body, visibility = 'private') =>
+    [`${visibility} fun DrawScope.${name}(p: ArtPalette) {`, ...body, '}'].join('\n');
+
+  // A car: its shadow, drawn at the car's place plus the shadow offset, and the car itself, facing +x around 0,0.
+  const car = (name, draw) => {
+    const lines = draw('c.t', 'c.st');
+    return [
+      fn(`draw${name}Shadow`, toKotlin(lines[0]), 'internal'),
+      fn(`draw${name}`, toKotlin(lines.slice(2, -1).join('\n')), 'internal'),
+    ].join('\n\n');
+  };
+
+  const functions = [
+    fn('drawScenery', sceneryParts.map((_, i) => `    scenery${i}(p)`), 'internal'),
+    ...sceneryParts.map((s, i) => fn(`scenery${i}`, toKotlin(withRoad(s)))),
+    car('Mx5', mx5),
+    car('Gr86', gr86),
+  ];
+
+  const keys = Object.keys(day).filter((k) => k !== 'beam');
+  const palette = (name, pal) => [
+    `        val ${name} = ArtPalette(`,
+    ...keys.map((k) => `            ${k} = ${ktColour(pal[k])},`),
+    `            lightsOn = ${pal.beam > 0},`,
+    '        )',
+  ].join('\n');
+
+  const floats = (values, perLine) => {
+    const rows = [];
+    for (let i = 0; i < values.length; i += perLine) rows.push('        ' + values.slice(i, i + perLine).map(num).join(', ') + ',');
+    return rows.join('\n');
+  };
+  // Long paths are split into lines of at most 100 characters, at a command.
+  const splitPath = (d) => {
+    const parts = [];
+    let rest = d;
+    while (rest.length > 100) {
+      let cut = rest.lastIndexOf(' C', 100);
+      if (cut <= 0) cut = rest.lastIndexOf(' ', 100);
+      parts.push(rest.slice(0, cut + 1));
+      rest = rest.slice(cut + 1);
+    }
+    parts.push(rest);
+    return parts;
+  };
+  const pathProps = [...paths.entries()].map(([d, name]) => {
+    const parts = splitPath(d);
+    if (parts.length === 1) return `    val ${name} = svgPath("${d}")`;
+    const lines = parts.map((s, i) => `${i === 0 ? '        ' : '            '}"${s}"${i < parts.length - 1 ? ' +' : ','}`);
+    return [`    val ${name} = svgPath(`, ...lines, '    )'].join('\n');
+  });
+
+  const kotlin = `// Generated by tools/first-launch-art/generate.mjs from the same scene as the design canvas and the prototype.
+// Don't edit it: change the generator and run it again.
+@file:Suppress("MagicNumber", "LongMethod", "TooManyFunctions", "LargeClass", "LongParameterList")
+
+package ${PACKAGE}
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+
+/**
+ * The illustration's colours: [Day] goes with the light theme, [Dusk], with the lights on, with the dark theme.
+ */
+internal class ArtPalette(
+${keys.map((k) => `    val ${k}: Color,`).join('\n')}
+    val lightsOn: Boolean,
+) {
+    companion object {
+${palette('Day', day)}
+
+${palette('Dusk', dusk)}
+    }
+}
+
+/**
+ * The panorama's size and the road the cars drive along, in the panorama's units: one page is ${W} × ${H}.
+ */
+internal object ArtRoad {
+    const val PAGE_WIDTH = ${num(W)}
+    const val PAGE_HEIGHT = ${num(H)}
+    const val PAGE_COUNT = ${PAGES}
+
+    /** The road as cubic segments of 8 numbers: start, both control points and end, each as x and y. */
+    val segments = floatArrayOf(
+${floats(segs.flat(2).map(r1), 8)}
+    )
+
+    /** How far along the road the lead car is on each page. */
+    val leads = floatArrayOf(${CARS.lead.map(num).join(', ')})
+
+    /** How far the second car follows the lead car. */
+    const val GAP = ${num(CARS.gap)}
+
+    /** How far right of the centre line the cars drive. */
+    const val LANE = ${num(CARS.lane)}
+
+    /** The light comes from the top left, so shadows fall this far right and down. */
+    const val SHADOW_X = 1.6f
+    const val SHADOW_Y = 2.6f
+}
+
+${functions.join('\n\n')}
+
+private object ArtPaths {
+${pathProps.join('\n')}
+}
+`;
+  fs.writeFileSync(KT, kotlin);
+  console.log(`Wrote ${path.relative(path.join(HERE, '../..'), KT)}: ${paths.size} paths, ${sceneryParts.length} scenery parts`);
+}
+
 console.log(`Road ${Math.round(roadLen)} long, ${trees.length} tree clumps, bridge at ${r1(bridge.x)} ${r1(bridge.y)}. Wrote ${OUT}`);
 steps.forEach((st, i) => console.log(`Page ${i + 1}: MX-5 at ${r1(st.mx.x - i * W)} ${r1(st.mx.y)}, GR86 at ${r1(st.gt.x - i * W)} ${r1(st.gt.y)}`));

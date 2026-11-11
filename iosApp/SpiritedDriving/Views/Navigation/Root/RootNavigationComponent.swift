@@ -8,6 +8,8 @@ struct RootNavigationComponent<Model: RootNavigationComponentModelProtocol>: Vie
         Group {
             if let navigationEntry = model.slotChild {
                 switch onEnum(of: navigationEntry) {
+                case let .onboarding(entry):
+                    OnboardingComponent(entry.screen).id(entry.iosViewId)
                 case let .login(entry):
                     LoginComponent(entry.screen).id(entry.iosViewId)
                 case let .signedIn(entry):

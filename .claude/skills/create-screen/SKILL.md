@@ -144,7 +144,9 @@ private fun {Name}ScreenPreview() = Showcase {
 }
 ```
 
-- The screen draws only its content: no top bar, back button or system insets. The navigation hosts draw those.
+- The screen draws only its content: no top bar, back button or system insets. The navigation hosts draw those. A
+  screen that draws behind the system bars, like First launch with its full-screen illustration, keeps its own
+  controls clear of them with `WindowInsets.safeDrawing`.
 - Colors, type and shapes come from the theme (`MaterialTheme.*`, `AppTheme.*` for what Material has no slot for),
   never literal values. Icons are `painterResource(MR.images.…)` from `:core:resources`, and `:core:ui` components take
   their texts and icons as parameters. A value from a design's Platforms table comes from `AppTheme.platformStyle`, which holds
@@ -176,7 +178,8 @@ internal object {Name}ScreenPreviews {
        {Name}ComponentFactory.createComponent(componentContext, navigation, args)
    ```
 
-2. **iOS controller** in `feature/<feature>/src/iosMain/.../ViewControllers.ios.kt`:
+2. **iOS controller** in `feature/<feature>/src/iosMain/.../ViewControllers.ios.kt` (`fullScreenViewController` instead
+   of `screenViewController` for a screen that draws behind the system bars):
 
    ```kotlin
    fun {Name}ScreenUiController(screen: {Name}Screen): UIViewController = screenViewController {
@@ -228,7 +231,8 @@ internal object {Name}ScreenPreviews {
 4. `<Feature>Screens.kt` (an `object`, like `SampleScreens`) and `src/iosMain/.../ViewControllers.ios.kt` (with the
    file-level `@Suppress` from the sample).
 5. `shared/build.gradle.kts`: `implementation(projects.feature.<feature>)` in `commonMain`, `api(...)` in `iosMain`,
-   and `export(...)` in the framework block.
+   and `export(...)` in the framework block. `androidApp/build.gradle.kts`: `implementation(projects.feature.<feature>)`,
+   as its navigation hosts draw the screens.
 
 ## Before you call it done
 

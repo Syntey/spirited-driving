@@ -23,6 +23,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        (application as App).platformBindings.attach(this)
         rootNavHost = retainedComponent { retainedContext ->
             RootNavHostFactory.create(DefaultAppComponentContext(retainedContext))
         }
