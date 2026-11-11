@@ -62,7 +62,7 @@ kotlin {
             export(projects.core.resources)
             export(projects.core.ui)
             export(projects.feature.onboarding)
-            export(projects.feature.sample)
+            export(projects.feature.map)
             export(libs.futured.arkitekt.decompose)
 
             export(libs.decompose)
@@ -86,7 +86,7 @@ kotlin {
                 implementation(projects.data.persistence)
 
                 implementation(projects.feature.onboarding)
-                implementation(projects.feature.sample)
+                implementation(projects.feature.map)
 
                 implementation(libs.logging.kermitCrashlytics)
 
@@ -107,7 +107,7 @@ kotlin {
                 api(projects.core.resources)
                 api(projects.core.ui)
                 api(projects.feature.onboarding)
-                api(projects.feature.sample)
+                api(projects.feature.map)
                 api(libs.futured.arkitekt.decompose)
 
                 api(libs.decompose)

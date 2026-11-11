@@ -105,7 +105,7 @@ The first row of the start step, with a location arrow icon.
 
 ## Points picked on the map
 
-Touching and holding the map picks a point ([Map](../map/design.md#map)). Its label comes from a reverse lookup:
+Touching and holding the map picks a point ([Map](../map/design.md#picking-a-point)). Its label comes from a reverse lookup:
 
 - While it loads, the point is called "Point on the map".
 - The nearest address then becomes its name, and its area the town and region.
@@ -135,7 +135,7 @@ the field:
 
 |                | iOS                                           | Android                                         |
 |----------------|-----------------------------------------------|-------------------------------------------------|
-| Field          | Capsule, 48 pt, system fill                   | Search bar, 56 dp, `surfaceContainerHigh`       |
+| Field          | Capsule, 48 pt, system fill (the sheet's glass shows through) | Search bar, 56 dp, `surfaceContainerHigh` |
 | Close          | X button next to the field                    | Back arrow at the start of the field            |
 | Rows           | Rows on a translucent card, corners 22 pt     | List items, 72 dp, on the sheet                 |
 | Kind icons     | 30 pt circle                                  | 40 dp circle                                    |

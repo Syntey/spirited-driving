@@ -7,7 +7,7 @@ A feature module: its screens' components, Compose UI and iOS view controllers. 
 
 Arkitekt's KSP processor generates a factory for each component annotated with `@GenerateFactory`. The factories are
 internal, so a navigation host in `:shared` can't call them. Each feature exposes its screens through a public object
-instead (see `SampleScreens`).
+instead (see `OnboardingScreens`).
  */
 plugins {
     id("conventions-compose")

@@ -24,6 +24,8 @@ class RequestLocationAccessUseCaseTest {
                 listener.onResult(LocationAccess.Denied)
                 listener.onResult(LocationAccess.Precise)
             }
+            override fun currentAccess(listener: LocationPermissionListener) = Unit
+            override fun openSettings() = Unit
         }
 
         assertEquals(LocationAccess.Denied, RequestLocationAccessUseCase(LocationPermission(permission)).build(Unit))
@@ -31,5 +33,7 @@ class RequestLocationAccessUseCaseTest {
 
     private class AnsweringPermission(private val access: LocationAccess) : PlatformLocationPermission {
         override fun request(listener: LocationPermissionListener) = listener.onResult(access)
+        override fun currentAccess(listener: LocationPermissionListener) = Unit
+        override fun openSettings() = Unit
     }
 }

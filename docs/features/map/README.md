@@ -1,6 +1,6 @@
 # Map
 
-> **Status:** draft, MVP. Last updated 2026-11-07.
+> **Status:** partly built, MVP. Last updated 2026-11-11.
 
 The primary screen, inspired by Waze: a full-screen map around the user, with the destination search on it.
 
@@ -26,6 +26,31 @@ The primary screen, inspired by Waze: a full-screen map around the user, with th
 - **Provides:** a picked point as a place for [Route planning](../route-planning/README.md), and a map that
   [Route planning](../route-planning/README.md) draws route lines on.
 
+## Design
+
+The screen is `TripPlanComponent` in `:feature:map`. `MapScreenUi` draws it on Android and `MapComponent` on iOS, around
+the sheet's shared content, `TripPlanSheetUi` ([Architecture](../../architecture.md#how-the-map-screen-is-built)). The
+code holds its layout, sizes and copy; these are the decisions behind it. What isn't built yet, the covered area, the
+notes, the sheet's heights and picking a point, is still in [design.md](design.md).
+
+- **The map follows the user** whenever location access is on, so it opens where they are. Panning stops it, and the
+  locate button brings it back. The map doesn't turn with the heading.
+- **Each platform's own controls:** the locate button sits where that platform's maps app has it, at the top right under
+  the profile button on iOS and at the bottom right above the sheet on Android, with that app's symbol: an arrow on iOS,
+  a target on Android. On iOS it's an SF Symbol, as Phosphor has no arrow with a slash. It's grey without location
+  access.
+- **The profile button is at the top right,** out of the thumb's reach, as it's used rarely.
+- **Without location access** the locate button asks for it. Once the system won't ask again (iOS asks once, Android
+  twice), it opens the app's page in the system settings. Access is read again each time the app comes to the front,
+  so turning it on there shows at once.
+- **A muted base map,** so route lines stand out: MapKit's muted emphasis, and on Android a light and a dark JSON style,
+  since a map ID would move the map to a paid SKU. Business and transit points of interest are hidden on both.
+- **The map's padding is the sheet's height,** so the map's logo and legal notice stay visible. On iOS the collapsed
+  sheet is as tall as its Compose content measures, so it fits larger text.
+- **The sheet has only its collapsed height** until [Destination search](../destination-search/README.md) adds the half
+  and full heights. On Android it's a fixed surface until then. The search field and the profile button do nothing
+  yet; they open Destination search and Profile once those are built.
+
 ## Account
 
 Not needed.
@@ -33,3 +58,11 @@ Not needed.
 ## Backend
 
 None of its own.
+
+## Open questions
+
+1. **Heading on Android:** Google Maps' location dot shows the direction of travel, not the compass, so it shows no
+   heading while the user stands still. A compass heading needs the app's own location marker.
+2. **Zooming while following (Android):** any gesture that moves the map stops following, pinch-zoom too, while MapKit
+   keeps following through a zoom. Telling a zoom from a pan on Android needs the camera's target compared with the
+   user's location after the gesture.

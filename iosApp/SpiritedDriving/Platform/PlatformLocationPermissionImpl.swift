@@ -1,5 +1,6 @@
 import CoreLocation
 import KMP
+import UIKit
 
 final class PlatformLocationPermissionImpl: NSObject, PlatformLocationPermission, CLLocationManagerDelegate {
 
@@ -19,6 +20,27 @@ final class PlatformLocationPermissionImpl: NSObject, PlatformLocationPermission
         DispatchQueue.main.async {
             MainActor.assumeIsolated {
                 self.ask(listener)
+            }
+        }
+    }
+
+    nonisolated func currentAccess(listener: LocationPermissionListener) {
+        // Kotlin objects can be used from any thread
+        nonisolated(unsafe) let listener = listener
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                listener.onResult(access: self.currentAccess())
+            }
+        }
+    }
+
+    nonisolated func openSettings() {
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                guard let url = URL(string: UIApplication.openSettingsURLString) else {
+                    return
+                }
+                UIApplication.shared.open(url)
             }
         }
     }

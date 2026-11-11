@@ -153,8 +153,9 @@ private fun {Name}ScreenPreview() = Showcase {
   never literal values. Icons are `painterResource(MR.images.…)` from `:core:resources`, and `:core:ui` components take
   their texts and icons as parameters. A value from a design's Platforms table comes from `AppTheme.platformStyle`, which holds
   both platforms' values in `PlatformStyle` in `:core:ui`; add it there, never branch on the platform for styling in
-  the screen ("Shared and native UI" in `docs/architecture.md`). Copy that names a platform's app picks its string by
-  `AppTheme.platform`.
+  the screen ("Shared and native UI" in `docs/architecture.md`). A component only this feature uses lives in the
+  feature, and its values go in the feature's `{Feature}PlatformStyle` (see `MapPlatformStyle`), not in `PlatformStyle`.
+  Copy that names a platform's app picks its string by `AppTheme.platform`.
 - Strings go into `core/resources/src/commonMain/moko-resources/base/strings.xml`, then
   `./gradlew generateMRcommonMain`.
 - One preview per state that looks different (loaded, empty, error). Use the multipreview annotations from
@@ -162,7 +163,7 @@ private fun {Name}ScreenPreview() = Showcase {
   composable, like one in `:core:ui`. A preview in `Showcase(platform = UiPlatform.Ios)` shows the iOS look in Android
   Studio.
 
-**`{Name}ScreenPreviews.kt`**: preview data, shared by the previews (see `FirstScreenPreviews`).
+**`{Name}ScreenPreviews.kt`**: preview data, shared by the previews (see `TripPlanScreenPreviews`).
 
 ```kotlin
 internal object {Name}ScreenPreviews {
@@ -197,7 +198,8 @@ internal object {Name}ScreenPreviews {
      functions in the navigator (`stackNavigator.pushNew(...)`, `stackNavigator.pop()`, `sheetNavigator.activate(...)`).
    - `<Host>NavHostComponent.kt`: a branch in `childFactory` that calls `<Feature>Screens.{name}(...)`.
 4. **Android**: in `androidApp/.../ui/navigation/<Host>NavHostUi.kt`, render the child with `{Name}ScreenUi` and
-   add its title to the `title` mapping (a sheet gets a `ModalBottomSheet` branch).
+   add its title to the `title` mapping (a sheet gets a `ModalBottomSheet` branch, with
+   `dragHandle = { DragHandle() }` from `:core:ui`, not Material's default).
 5. **iOS**:
    - `iosApp/SpiritedDriving/Views/Scenes/{Name}/{Name}Component.swift`:
 
@@ -218,9 +220,8 @@ internal object {Name}ScreenPreviews {
      ```
 
    - Add `case let .{name}(entry): {Name}Component(entry.screen)` to the switch in the host's
-     `iosApp/SpiritedDriving/Views/Navigation/<Folder>/<Folder>NavigationComponent.swift`, where `<Folder>` is
-     `HomeTab`, `ProfileTab`, `Root` or `SignedIn` (a sheet goes into the `.sheet` switch). Xcode picks up new files
-     by itself.
+     `iosApp/SpiritedDriving/Views/Navigation/<Folder>/<Folder>NavigationComponent.swift`, where `<Folder>` is the
+     host's folder, such as `Root` (a sheet goes into the `.sheet` switch). Xcode picks up new files by itself.
 
 ## New feature module
 
@@ -229,9 +230,9 @@ internal object {Name}ScreenPreviews {
    package and namespace come from the path. Add `implementation(projects.core.platform)` only when the feature uses
    a platform binding.
 3. `injection/<Feature>Module.kt`: `@Module`, `@ComponentScan("com.syntey.spiriteddriving.feature.<feature>")`,
-   `@Configuration`, like `SampleModule`.
-4. `<Feature>Screens.kt` (an `object`, like `SampleScreens`) and `src/iosMain/.../ViewControllers.ios.kt` (with the
-   file-level `@Suppress` from the sample).
+   `@Configuration`, like `OnboardingModule`.
+4. `<Feature>Screens.kt` (an `object`, like `OnboardingScreens`) and `src/iosMain/.../ViewControllers.ios.kt` (with the
+   file-level `@Suppress` from onboarding's).
 5. `shared/build.gradle.kts`: `implementation(projects.feature.<feature>)` in `commonMain`, `api(...)` in `iosMain`,
    and `export(...)` in the framework block. `androidApp/build.gradle.kts`: `implementation(projects.feature.<feature>)`,
    as its navigation hosts draw the screens.

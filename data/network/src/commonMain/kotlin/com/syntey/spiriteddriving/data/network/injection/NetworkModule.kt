@@ -1,8 +1,6 @@
 package com.syntey.spiriteddriving.data.network.injection
 
 import com.syntey.spiriteddriving.data.network.FlavorConstants
-import com.syntey.spiriteddriving.data.network.api.StarWarsApi
-import com.syntey.spiriteddriving.data.network.api.createStarWarsApi
 import com.syntey.spiriteddriving.data.network.plugin.ContentNegotiationPlugin
 import com.syntey.spiriteddriving.data.network.plugin.HttpTimeoutPlugin
 import com.syntey.spiriteddriving.data.network.plugin.LoggingPlugin
@@ -58,7 +56,4 @@ class NetworkModule {
         .httpClient(httpClient)
         .converterFactories(converterFactory)
         .build()
-
-    @Single
-    internal fun starWarsApi(ktorFit: Ktorfit): StarWarsApi = ktorFit.createStarWarsApi()
 }
