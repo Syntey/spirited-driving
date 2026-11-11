@@ -31,7 +31,9 @@ generator after every change, so the app and the canvas show the same picture.
 - The cars sit at a distance along the road (`CARS.lead`, one per step). The GR86 follows the MX-5 by `CARS.gap`
   and both keep to the right lane. Between steps, the distance is interpolated, so the cars drive as the user
   swipes.
-- The cars stay in the top part of each screen, above the panel (y below about 450).
+- The cars' centres stay between y 200 and 412 on every page, leaving the bottom of each screen to the panel. The app
+  keeps that band between Skip and the panel (`ArtFit`), and `ArtFitTest` fails if the cars leave it, so after moving
+  the road, update `ArtFit.CARS_TOP` and `CARS_BOTTOM` too.
 
 ## Changing it
 
