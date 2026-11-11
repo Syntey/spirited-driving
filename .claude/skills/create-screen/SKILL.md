@@ -122,6 +122,8 @@ internal class {Name}Component(
   `componentState.update { it.copy(...) }`.
 - Logic beyond mapping to the view state goes into a use case in the feature's `domain` package, implementing
   Arkitekt's `UseCase<Args, T>` or `FlowUseCase<Args, T>`.
+- A `FlowUseCase` that should run only while the screen is visible (location updates, sensors) runs with
+  `executeWithLifecycle` from `core/ui/base` instead of `execute`: it pauses on stop and resumes on start.
 
 **`{Name}ScreenUi.kt`**: shared Compose for both platforms.
 
