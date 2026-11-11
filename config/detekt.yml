@@ -39,6 +39,7 @@ style:
       - Preview
       - ScreenPreviews
       - ComponentPreviews
+      - DarkLightPreviews
   DestructuringDeclarationWithTooManyEntries:
     active: true
     ignoreAnnotated:

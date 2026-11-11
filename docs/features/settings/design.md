@@ -64,6 +64,8 @@ and tapping it opens the phone's settings for it. The value refreshes when the u
    and a link to openstreetmap.org/copyright.
 2. **Open-source libraries:** every library the app uses, by name, generated at build time from the app's
    dependencies (AboutLibraries). Tapping one opens its licence text.
+3. **Icons:** "Phosphor Icons", with its MIT licence. Listed by hand, since the app copies the icons it uses instead of
+   depending on the library.
 
 The base maps aren't listed: Google Maps and Apple MapKit show their own legal notices on the map.
 

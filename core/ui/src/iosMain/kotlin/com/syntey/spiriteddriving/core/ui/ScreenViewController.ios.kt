@@ -12,7 +12,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.uikit.OnFocusBehavior
 import androidx.compose.ui.window.ComposeUIViewController
-import com.syntey.spiriteddriving.core.ui.theme.MyApplicationTheme
+import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import platform.UIKit.UIViewController
 import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.native.HiddenFromObjC
@@ -22,11 +22,29 @@ import kotlin.native.HiddenFromObjC
  *
  * Features call it from their `*ScreenUiController` functions; Swift calls those instead.
  */
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalObjCRefinement::class)
+@OptIn(ExperimentalObjCRefinement::class)
 @HiddenFromObjC
-fun screenViewController(content: @Composable () -> Unit): UIViewController = ComposeUIViewController(
+fun screenViewController(content: @Composable () -> Unit): UIViewController = themedViewController {
+    // SwiftUI lays the screen out under native bars (see `composeScreen()` in Swift), so that the background reaches
+    // behind them. The bars, together with the keyboard, are then kept clear of content here.
+    Box(Modifier.windowInsetsPadding(WindowInsets.safeDrawing)) {
+        content()
+    }
+}
+
+/**
+ * Like [screenViewController], for a screen that draws behind the status bar and the home indicator, such as one with a
+ * full-screen illustration. The screen keeps its own controls clear of them, through `WindowInsets.safeDrawing`.
+ */
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
+fun fullScreenViewController(content: @Composable () -> Unit): UIViewController = themedViewController(content)
+
+@OptIn(ExperimentalComposeUiApi::class)
+private fun themedViewController(content: @Composable () -> Unit): UIViewController = ComposeUIViewController(
     configure = {
-        // Keyboard is part of the safe drawing insets applied below, panning the content on top of that would move it twice.
+        // Keyboard is part of the safe drawing insets applied by the screen, panning the content on top of that would move it
+        // twice.
         onFocusBehavior = OnFocusBehavior.DoNothing
 
         // Render-thread frames hand their drawable back through the main queue, which a pushed screen's first synchronous
@@ -34,16 +52,12 @@ fun screenViewController(content: @Composable () -> Unit): UIViewController = Co
         parallelRendering = false
     },
 ) {
-    MyApplicationTheme {
+    AppTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background,
         ) {
-            // SwiftUI lays the screen out under native bars (see `composeScreen()` in Swift), so that the background reaches
-            // behind them. The bars, together with the keyboard, are then kept clear of content here.
-            Box(Modifier.windowInsetsPadding(WindowInsets.safeDrawing)) {
-                content()
-            }
+            content()
         }
     }
 }

@@ -6,17 +6,16 @@ desugarLibs = "2.1.5"
 # Android-only, consumed by `androidApp`
 androidxLifecycle = "2.11.0"
 androidxComposeBom = "2026.09.00"
-materialIcons = "1.7.8"
 # Needs to align with version in Compose BOM as closely as possible
 composeMultiplatform = "1.12.2"
 # Versioned separately from `composeMultiplatform`, see `compose.material3` in CMP Gradle plugin
 composeMultiplatformMaterial3 = "1.9.0"
-# No longer published together with `composeMultiplatform`
-composeMultiplatformMaterialIcons = "1.7.3"
 # The Compose Multiplatform counterpart of `androidxLifecycle`, consumed by Compose modules
 jetbrainsLifecycle = "2.11.0"
 androidxActivity = "1.13.0"
 decompose = "3.6.1"
+# Must be compatible with: `composeMultiplatform`
+haze = "2.1.0"
 essenty = "2.7.1"
 koin = "4.2.2"
 # Must be compatible with: `kotlin`
@@ -74,7 +73,6 @@ androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
-androidx-compose-material-icons = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIcons" }
 androidx-compose-runtime = { module = "androidx.compose.runtime:runtime" }
 # Compose Multiplatform
 jetbrains-compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
@@ -83,8 +81,13 @@ jetbrains-compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "
 jetbrains-compose-ui-tooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "composeMultiplatform" }
 jetbrains-compose-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "composeMultiplatform" }
 jetbrains-compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "composeMultiplatformMaterial3" }
-jetbrains-compose-material-icons = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "composeMultiplatformMaterialIcons" }
 jetbrains-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "jetbrainsLifecycle" }
+# Haze
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
+haze-blur = { module = "dev.chrisbanes.haze:haze-blur", version.ref = "haze" }
+haze-blur-materials = { module = "dev.chrisbanes.haze:haze-blur-materials", version.ref = "haze" }
+haze-glass = { module = "dev.chrisbanes.haze:haze-glass", version.ref = "haze" }
+haze-glass-material3 = { module = "dev.chrisbanes.haze:haze-glass-material3", version.ref = "haze" }
 # Koin
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
@@ -177,7 +180,6 @@ conventions-koin = { id = "conventions-koin" }
 [bundles]
 compose = [
     "androidx-compose-foundation",
-    "androidx-compose-material-icons",
     "androidx-compose-material3",
     "androidx-compose-runtime",
     "androidx-compose-ui",
