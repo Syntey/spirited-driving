@@ -14,7 +14,7 @@ import com.syntey.spiriteddriving.android.ui.navigation.RootNavHostUi
 import com.syntey.spiriteddriving.shared.navigation.root.RootNavHost
 import com.syntey.spiriteddriving.shared.navigation.root.RootNavHostFactory
 import com.syntey.spiriteddriving.core.ui.base.DefaultAppComponentContext
-import com.syntey.spiriteddriving.core.ui.theme.MyApplicationTheme
+import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.arkivanov.decompose.retainedComponent
 
 class MainActivity : ComponentActivity() {
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            MyApplicationTheme {
+            AppTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
@@ -44,5 +44,5 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 private fun DefaultPreview() {
-    MyApplicationTheme {}
+    AppTheme {}
 }

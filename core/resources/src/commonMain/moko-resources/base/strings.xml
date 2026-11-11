@@ -6,8 +6,23 @@
 
     <!-- Generic -->
     <string name="generic_close">Close</string>
+    <string name="generic_more">More</string>
+    <string name="generic_try_again">Try again</string>
+    <string name="generic_delete">Delete</string>
+    <string name="generic_loading">Loading</string>
     <string name="generic_sign_in">Sign In</string>
     <string name="generic_sign_out">Sign Out</string>
+
+    <!-- Rating -->
+    <string name="rating_label">Rate the route</string>
+    <string name="rating_good">Good</string>
+    <string name="rating_not_good">Not good</string>
+
+    <!-- Routes -->
+    <string name="fun_meter">Fun</string>
+    <string name="fun_meter_description">Fun %1$d of 5</string>
+    <string name="route_badge">Route %1$d</string>
+    <string name="route_badge_fastest">Fastest route</string>
 
     <!-- Tabs -->
     <string name="tab_home">Home</string>

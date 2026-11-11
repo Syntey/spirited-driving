@@ -113,6 +113,7 @@ dependencies {
     implementation(projects.shared)
     implementation(projects.core.platform)
     implementation(projects.core.resources)
+    implementation(libs.moko.resources.compose)
     implementation(projects.core.ui)
     // Its navigation hosts draw the features' screens
     implementation(projects.feature.sample)

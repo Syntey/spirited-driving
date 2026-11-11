@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -16,19 +14,21 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.syntey.spiriteddriving.shared.navigation.signedIn.NavigationTab
-import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInChild
-import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInConfig
-import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInNavHost
-import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInNavHostViewState
-import com.syntey.spiriteddriving.core.resources.localized
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.predictiveback.predictiveBackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.essenty.backhandler.BackHandler
+import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.core.ui.theme.Grid
+import com.syntey.spiriteddriving.shared.navigation.signedIn.NavigationTab
+import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInChild
+import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInConfig
+import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInNavHost
+import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInNavHostViewState
+import dev.icerock.moko.resources.ImageResource
+import dev.icerock.moko.resources.compose.painterResource
 
 @Composable
 fun SignedInNavHostUi(
@@ -47,7 +47,13 @@ fun SignedInNavHostUi(
                     NavigationBarItem(
                         selected = tab == viewState.selectedTab,
                         onClick = { actions.onTabSelected(tab) },
-                        icon = { Icon(tab.icon, contentDescription = null) },
+                        icon = {
+                            Icon(
+                                painter = painterResource(tab.icon),
+                                contentDescription = null,
+                                modifier = Modifier.size(Grid.d6),
+                            )
+                        },
                         label = { Text(text = tab.title.localized()) },
                     )
                 }
@@ -67,10 +73,10 @@ fun SignedInNavHostUi(
     }
 }
 
-private val NavigationTab.icon: ImageVector
+private val NavigationTab.icon: ImageResource
     get() = when (this) {
-        NavigationTab.HOME -> Icons.Filled.Home
-        NavigationTab.PROFILE -> Icons.Filled.AccountCircle
+        NavigationTab.HOME -> MR.images.home
+        NavigationTab.PROFILE -> MR.images.account
     }
 
 @OptIn(ExperimentalDecomposeApi::class)

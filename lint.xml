@@ -36,5 +36,8 @@
     <issue id="ComposeModifierMissing" severity="warning" />
     <issue id="ComposeViewModelForwarding" severity="warning" />
     <issue id="ComposeParameterOrder" severity="warning" />
-    <issue id="ComposeCompositionLocalUsage"/>
+    <issue id="ComposeCompositionLocalUsage">
+        <!-- The theme's own values, read through `AppTheme` like Material's are through `MaterialTheme` -->
+        <option name="allowed-composition-locals" value="LocalCustomColors,LocalCustomDimensions,LocalPlatformStyle,LocalReduceMotion,LocalUiPlatform" />
+    </issue>
 </lint>

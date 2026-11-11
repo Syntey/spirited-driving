@@ -7,8 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,11 +24,13 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.syntey.spiriteddriving.feature.sample.picker.PickerScreen.Actions.Companion.noOpActions
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.Showcase
+import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.preview.ScreenPreviews
+import com.syntey.spiriteddriving.feature.sample.picker.PickerScreen.Actions.Companion.noOpActions
 import dev.icerock.moko.resources.compose.localized
+import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 
 /**
@@ -60,7 +61,11 @@ private fun Content(
                 title = { Text(stringResource(MR.strings.picker_title)) },
                 actions = {
                     IconButton(onClick = actions::onDismiss) {
-                        Icon(Icons.Filled.Close, contentDescription = stringResource(MR.strings.generic_close))
+                        Icon(
+                            painter = painterResource(MR.images.close),
+                            contentDescription = stringResource(MR.strings.generic_close),
+                            modifier = Modifier.size(Grid.d6),
+                        )
                     }
                 },
                 windowInsets = WindowInsets(0),

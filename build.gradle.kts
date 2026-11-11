@@ -22,6 +22,8 @@ moduleGraphAssert {
         ":shared -> .*",
         ":(core|data|feature):.* -> :core:.*",
     )
+    // :core:ui uses only Compose: screens pass it their texts and icons, so a new string or icon doesn't rebuild the components
+    restricted = arrayOf(":core:ui -X> :core:resources")
     // :androidApp -> :shared -> :feature:* or :data:* -> :core:*, with room for one :core:* module using another
     maxHeight = 4
     configurations = setOf("api", "implementation") +
