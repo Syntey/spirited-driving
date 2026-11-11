@@ -1,6 +1,7 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 import com.syntey.spiriteddriving.gradle.configuration.ProjectSettings
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -20,6 +21,12 @@ kotlin {
     }
 }
 
+// Kept out of git: `MAPS_API_KEY` in local.properties, or the environment variable on CI. Without it the map stays blank.
+val mapsApiKey: String = providers.environmentVariable("MAPS_API_KEY").orNull
+    ?: rootProject.file("local.properties").takeIf { it.exists() }
+        ?.let { file -> Properties().apply { file.inputStream().use { load(it) } }.getProperty("MAPS_API_KEY") }
+    ?: ""
+
 android {
     namespace = libs.versions.project.android.namespace.get()
     compileSdk = ProjectSettings.Android.CompileSdkVersion
@@ -30,6 +37,7 @@ android {
         targetSdk = ProjectSettings.Android.TargetSdkVersion
         versionCode = System.getenv("ANDROID_BUILD_NUMBER")?.toIntOrNull() ?: 1
         versionName = System.getenv("ANDROID_VERSION_NAME") ?: "1.x.x-local"
+        manifestPlaceholders["mapsApiKey"] = mapsApiKey
     }
 
     buildFeatures {
@@ -116,7 +124,7 @@ dependencies {
     implementation(libs.moko.resources.compose)
     implementation(projects.core.ui)
     implementation(projects.feature.onboarding)
-    implementation(projects.feature.sample)
+    implementation(projects.feature.map)
     implementation(libs.futured.arkitekt.decompose)
 
     implementation(platform(libs.androidx.compose.bom))
@@ -134,6 +142,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
 
     implementation(libs.koin.android)
+    implementation(libs.google.playServices.location)
     implementation(libs.logging.timber)
 
     implementation(libs.androidx.profileinstaller)

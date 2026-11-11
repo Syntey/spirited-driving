@@ -56,7 +56,7 @@ class ScreenKonsistTest {
     fun `screen UI files have a preview`() {
         productionScope
             .files
-            .filter { it.name.endsWith("ScreenUi") && !it.isTemplateSample }
+            .filter { it.name.substringBefore('.').endsWith("ScreenUi") }
             .assertTrue(
                 rule = KoRule(
                     id = "SCREEN-3",

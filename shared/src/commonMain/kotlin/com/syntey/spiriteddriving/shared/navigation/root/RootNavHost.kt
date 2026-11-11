@@ -1,9 +1,7 @@
 package com.syntey.spiriteddriving.shared.navigation.root
 
-import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInConfig
-import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInNavHost
+import com.syntey.spiriteddriving.feature.map.tripPlanScreen.TripPlanScreen
 import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreen
-import com.syntey.spiriteddriving.feature.sample.loginScreen.LoginScreen
 import com.arkivanov.decompose.router.slot.ChildSlot
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
@@ -21,10 +19,7 @@ sealed interface RootConfig {
     data object Onboarding : RootConfig
 
     @Serializable
-    data object Login : RootConfig
-
-    @Serializable
-    data class SignedIn(val initialConfig: SignedInConfig = SignedInConfig.Home()) : RootConfig
+    data object Map : RootConfig
 }
 
 sealed interface RootChild {
@@ -38,7 +33,5 @@ sealed interface RootChild {
 
     data class Onboarding(val screen: OnboardingScreen, override val iosViewId: String = Uuid.random().toString()) : RootChild
 
-    data class Login(val screen: LoginScreen, override val iosViewId: String = Uuid.random().toString()) : RootChild
-
-    data class SignedIn(val navHost: SignedInNavHost, override val iosViewId: String = Uuid.random().toString()) : RootChild
+    data class Map(val screen: TripPlanScreen, override val iosViewId: String = Uuid.random().toString()) : RootChild
 }

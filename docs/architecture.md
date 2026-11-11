@@ -99,7 +99,7 @@ shared Compose on both platforms.
                                  └─► sheet state (search, budget, routes)
 
 Android        :feature:map   MapScreenUi: GoogleMap + bottom sheet { TripPlanSheetUi }           maps-compose
-iOS            iosApp         MapScreen: MKMapView + native sheet { ComposeView(TripPlanSheetUi) }    SwiftUI, MapKit
+iOS            iosApp         MapComponent: MKMapView + native sheet { ComposeView(TripPlanSheetUi) } SwiftUI, MapKit
 ```
 
 - `RouteMapState` is an immutable model in common code: route lines (points, and whether a line is the baseline,
@@ -107,11 +107,15 @@ iOS            iosApp         MapScreen: MKMapView + native sheet { ComposeView(
   location. Events go back up: map long-pressed (pick a destination), route tapped (select it), camera moved.
 - Coordinates use a `GeoPoint` type from `:core:domain`, so no platform map type reaches shared code. Polyline
   decoding is in `:core:domain` too, with unit tests.
+- The user's location reaches common code through `UserLocation` in `:core:platform` (the fused location provider on
+  Android, `CLLocationManager` on iOS), only while the screen is started. Whether the map follows the user is
+  `RouteMapState.followsUser`: on Android the map's camera moves with each location, on iOS it sets MapKit's own
+  tracking mode, and MapKit leaving that mode when the user pans is reported back.
 - `TripPlanSheetUi` is the sheet's content and its steps (search, route planning, one route), shared by both
   platforms: the search field, budget chips and route cards.
 - **Android:** `MapScreenUi` (`:feature:map`, Android source set) draws the map with `maps-compose`, and the sheet
   and map buttons as solid Compose surfaces.
-- **iOS:** `MapScreen` in Swift renders `RouteMapState` on an `MKMapView` with `MKPolyline` and annotations, and
+- **iOS:** `MapComponent` in Swift renders `RouteMapState` on an `MKMapView` with `MKPolyline` and annotations, and
   shows the map buttons with native glass. The sheet is a native sheet that stays open, with detents, and the map
   stays usable behind it. It hosts `TripPlanSheetUi` as a Compose view controller with a transparent background,
   so the native glass shows through. Screens opened from the map open as sheets stacked on it
@@ -175,7 +179,7 @@ own database, keyed by the Firebase user ID.
 - Drives started while signed out are recorded without a user. The app keeps their IDs on the device, and after
   sign-in the backend attaches them to the account.
 - The app opens straight into trip planning. Opening a feature that needs an account asks the user to sign in
-  first. (The template's root navigation starts at the login screen; that changes.)
+  first.
 - In the app, sign-in sits behind an interface in `:core:platform`, implemented with the native Firebase SDKs on
   each platform, like `PlatformFirebaseCrashlytics`.
 
@@ -196,7 +200,7 @@ into it.
 | Module                | Role                                                                  | Main parts                                             |
 |-----------------------|-----------------------------------------------------------------------|--------------------------------------------------------|
 | `:androidApp`         | Android entry point, draws the navigation hosts                       | Maps API key (see [Configuration](#configuration))     |
-| `iosApp`              | SwiftUI shell: native navigation, hosts Compose screens               | `MapScreen` (MapKit map, native sheet, glass map buttons), Firebase sign-in |
+| `iosApp`              | SwiftUI shell: native navigation, hosts Compose screens               | `MapComponent` (MapKit map, native sheet, glass map buttons), Firebase sign-in |
 | `:shared`             | Navigation hosts, Koin graph, logging, crash reporting, iOS framework | Wiring of `RoutePlanner` and `PlaceSearch` to their implementations |
 | `:feature:map`        | [Map](features/map/README.md), [Destination search](features/destination-search/README.md), [Route planning](features/route-planning/README.md), [Drive](features/drive/README.md), [Drive feedback](features/drive-feedback/README.md) | `TripPlanComponent`, its use cases, `TripPlanSheetUi`, Android `MapScreenUi` |
 | `:feature:routes`     | [Saved routes](features/saved-routes/README.md), [Trip history](features/trip-history/README.md) |                                  |
@@ -241,14 +245,17 @@ Platform code draws only the frame around it:
 
 The Platforms tables in the [screen designs](overview.md#design) (sizes, button and chip styles, iOS-style or
 Material lists) are values of the same shared components. Both platforms' values sit side by side in `PlatformStyle`
-in `:core:ui`, and `AppTheme` picks the set of the platform the app runs on, so a preview can show either. Only a
+in `:core:ui`, and `AppTheme` picks the set of the platform the app runs on, so a preview can show either. A component
+only one feature uses, like the map's search field, lives in that feature with its values in the feature's own style
+(`MapPlatformStyle`), picked by `AppTheme.platform` the same way. Only a
 component that needs a platform library is split into `.android.kt` / `.ios.kt`, like the glass
 ([Theme](theme.md#materials)). No screen is written twice.
 
 ## Configuration
 
-- **Google Maps API key:** kept out of git. It comes from `local.properties` locally and from a CI secret for
-  release builds, and is restricted in the Cloud console to the app's package name and signing certificate.
+- **Google Maps API key:** kept out of git. It comes from `MAPS_API_KEY` in `local.properties` locally and from the
+  `MAPS_API_KEY` environment variable (a CI secret) for release builds, and is restricted in the Cloud console to the
+  app's package name and signing certificate. Without it the Android map stays blank.
 - **Backend base URL:** per build flavor (dev, prod) through BuildKonfig.
 
 ## Test cases
