@@ -1,7 +1,7 @@
 # Theme
 
 > **Status:** colours, type, shapes, glass, buttons, chips, segmented switch, rating, progress, icon buttons, menus, sheet header, the empty and
-> error layout, notes, messages, lists, route badge, fun meter, placeholder rows built. Last updated 2026-11-11.
+> error layout, notes, messages, lists, route badge, fun meter, placeholder rows and the app icon built. Last updated 2026-11-11.
 >
 > Colours, type, shapes, glass materials and the empty and error layout shared by every screen. Screen design builds
 > on this.
@@ -99,7 +99,7 @@ screens don't choose:
   surface colour.
 - Haze follows the light or dark theme on its own. Blur runs on every supported Android version (Android 12+).
 - Over images, a clearer glass (`GlassStyle.clear`, `HazeMaterials.ultraThin()`) suits a small control. A panel that
-  holds text, like the one in [First launch](features/first-launch/README.md), keeps the default.
+  holds text, like the one in [First launch](features/first-launch/README.md#design), keeps the default.
 - On iOS, native parts (navigation bars, alerts, native sheets) are real Liquid Glass. Haze Glass is used for
   Compose surfaces only, and not on the same edge as a native bar, so the two don't sit side by side.
 
@@ -253,6 +253,19 @@ One layout for a list or a result with nothing to show, whether it's empty or so
   [Destination search](features/destination-search/design.md#states),
   [Route planning](features/route-planning/design.md#states), [Saved routes](features/saved-routes/design.md#list)
   and [Trip history](features/trip-history/design.md#states).
+
+## App icon
+
+The [spinner's](#progress) car in a bend, on racing red: an asphalt road with a white centre line, and the car in
+white.
+
+- The icon and the spinner are the same car, so the app has one mark wherever you see it.
+- The background is racing red, the one strong colour, as on screen. In the dark appearance on iOS it turns graphite
+  and the car takes the dark theme's red.
+- **iOS:** an Icon Composer document (`AppIcon.icon`) with the road, centre line and car as layers, so the system adds
+  the Liquid Glass light and makes the tinted and clear appearances itself.
+- **Android:** an adaptive icon, with a monochrome layer for themed icons in which the car is cut out of the road.
+- Both are generated from one drawing by [tools/app-icon](../tools/app-icon/README.md).
 
 ## Native parts
 

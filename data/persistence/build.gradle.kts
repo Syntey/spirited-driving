@@ -16,5 +16,10 @@ kotlin {
                 implementation(projects.core.domain)
             }
         }
+        commonTest {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
     }
 }

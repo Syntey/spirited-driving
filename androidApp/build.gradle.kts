@@ -115,7 +115,7 @@ dependencies {
     implementation(projects.core.resources)
     implementation(libs.moko.resources.compose)
     implementation(projects.core.ui)
-    // Its navigation hosts draw the features' screens
+    implementation(projects.feature.onboarding)
     implementation(projects.feature.sample)
     implementation(libs.futured.arkitekt.decompose)
 

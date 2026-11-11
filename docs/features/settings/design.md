@@ -53,7 +53,7 @@ and tapping it opens the phone's settings for it. The value refreshes when the u
 
 ### About
 
-- **Privacy policy** and **Terms** open the same web pages as [First launch](../first-launch/design.md), in the
+- **Privacy policy** and **Terms** open the same web pages as [First launch](../first-launch/README.md), in the
   in-app browser.
 - **Licences** opens [Licences](#licences).
 - **Version:** "1.0.0 (42)", the version and the build number. The row isn't tappable.
