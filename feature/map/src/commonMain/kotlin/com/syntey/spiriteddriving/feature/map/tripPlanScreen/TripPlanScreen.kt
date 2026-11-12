@@ -22,12 +22,20 @@ interface TripPlanScreen {
         /** Tapped the profile button. */
         fun onProfileClick()
 
+        /** Tapped Turn on in the "Precise location is off" note. */
+        fun onPreciseLocationClick()
+
+        /** Closed the "Precise location is off" note. */
+        fun onPreciseLocationNoteClose()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onSearchClick() = Unit
                 override fun onLocateClick() = Unit
                 override fun onMapPanned() = Unit
                 override fun onProfileClick() = Unit
+                override fun onPreciseLocationClick() = Unit
+                override fun onPreciseLocationNoteClose() = Unit
             }
         }
     }

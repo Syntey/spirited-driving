@@ -1,9 +1,12 @@
 package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 
+import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class RouteMapStateTest {
 
@@ -46,5 +49,70 @@ class RouteMapStateTest {
         )
 
         assertEquals(RouteMapState(), state.withAccess(LocationAccess.Denied))
+    }
+
+    private val dresden = GeoPoint(latitude = 51.05, longitude = 13.74)
+    private val prague = GeoPoint(latitude = 50.08, longitude = 14.42)
+    private val covered = FakeCoverageSource.Czechia
+    private val following = RouteMapState(showsUserLocation = true, followsUser = true)
+
+    @Test
+    fun `a user outside stops following and the overview includes both`() {
+        val state = following.withCoverage(covered).withUserLocation(dresden)
+
+        assertEquals(false, state.followsUser)
+        assertEquals(covered.bounds.including(dresden), state.overview)
+        assertEquals(1, state.overviewRequest)
+    }
+
+    @Test
+    fun `a location known before the covered area also stops following and includes both`() {
+        val state = following.withUserLocation(dresden).withCoverage(covered)
+
+        assertEquals(false, state.followsUser)
+        assertEquals(covered.bounds.including(dresden), state.overview)
+        assertEquals(1, state.overviewRequest)
+    }
+
+    @Test
+    fun `a user inside keeps following and the overview is the covered area`() {
+        val state = following.withCoverage(covered).withUserLocation(prague)
+
+        assertEquals(true, state.followsUser)
+        assertEquals(covered.bounds, state.overview)
+        assertEquals(0, state.overviewRequest)
+    }
+
+    @Test
+    fun `a user just outside the border requests the overview even when the overview is unchanged`() {
+        val justOutside = GeoPoint(latitude = 49.5, longitude = 12.2)
+        val state = following.withCoverage(covered).withUserLocation(justOutside)
+
+        assertEquals(covered.bounds, state.overview)
+        assertEquals(1, state.overviewRequest)
+    }
+
+    @Test
+    fun `a later location outside does not change the overview again`() {
+        val first = following.withCoverage(covered).withUserLocation(dresden)
+        val later = first.withUserLocation(GeoPoint(latitude = 52.0, longitude = 14.0))
+
+        assertEquals(first.overview, later.overview)
+        assertEquals(first.overviewRequest, later.overviewRequest)
+    }
+
+    @Test
+    fun `a later covered area keeps the overview`() {
+        val first = following.withCoverage(covered).withUserLocation(dresden)
+        val later = first.withCoverage(covered)
+
+        assertEquals(first.overview, later.overview)
+    }
+
+    @Test
+    fun `outside is false until both the covered area and the location are known`() {
+        assertFalse(following.withCoverage(covered).isOutsideCoveredArea)
+        assertFalse(following.withUserLocation(dresden).isOutsideCoveredArea)
+        assertTrue(following.withCoverage(covered).withUserLocation(dresden).isOutsideCoveredArea)
     }
 }
