@@ -42,8 +42,8 @@ Most searches are for a place the user already knows, so search is built to find
 ## Design
 
 The search is a step of the map's sheet: `TripPlanComponent` in `:feature:map` holds it, and `TripPlanSheetUi` draws
-the field and the suggestions on both platforms. The code holds its layout and copy; these are the decisions behind
-it. What isn't built yet, recent places, the start and points picked on the map, is still in [design.md](design.md).
+the field, recent places and the suggestions on both platforms. The code holds its layout and copy; these are the
+decisions behind it. What isn't built yet, the start and points picked on the map, is still in [design.md](design.md).
 
 - **Tapping the field moves the sheet to full height,** with the keyboard. Dragging the sheet lower or scrolling the
   list hides the keyboard and keeps the text. Close (X on iOS, the back arrow or Back on Android) clears the text and
@@ -56,8 +56,18 @@ it. What isn't built yet, recent places, the start and points picked on the map,
   the list doesn't flash.
 - **The field keeps its own copy of the text,** so typing never waits for the view state. Only clearing comes from
   outside: Clear, Close and choosing a place.
-- **Until recent places exist, the empty field shows "Search for a place."** The designed hint also teaches touching
-  and holding the map, which comes with [Route planning](../route-planning/README.md).
+- **Recent places are kept on the device as one list,** so they show at once and offline. The same place means the
+  same name within 100 m, as the backend can move a place's point a little; choosing it again replaces the kept one,
+  with its newer area.
+- **The empty field lists every recent place under "Recent"; while typing, up to 3 that match come first,** with a
+  clock for their icon, and the suggestions leave out the same places. They match on the name or the area, each typed
+  word from the start of a word, so a street is found by its town too.
+- **Swipe left removes a recent place, with no undo:** searching again brings it back. The row goes at once, without
+  waiting for the list to be saved.
+- **A recent place outside the covered area is dimmed,** as a suggestion is, in case the area shrinks; while the
+  covered area isn't loaded, every recent place counts as covered, since it was when it was chosen.
+- **Until picking a point exists, the empty field without recent places shows "Search for a place."** The designed
+  hint also teaches touching and holding the map, which comes with [Route planning](../route-planning/README.md).
 - **Matching ignores case and diacritics,** with one character folded to one, so the bold parts of a name line up with
   what was typed: "karlst" bolds "Karlšt". A word matches from its start only.
 - **Distances are straight lines from the user** in the units of the phone's region, miles in the US and the UK, until
@@ -66,7 +76,7 @@ it. What isn't built yet, recent places, the start and points picked on the map,
 - **Calls carry the phone's languages as `Accept-Language`,** on Android too, so place names come in the user's
   language where the map data has it.
 - **A slow search shows the car spinner** in place of the clear button after 0.5 s, so nothing in the field moves.
-- **Offline and failed searches say which it is,** each with Try again; no results has no button, as searching again
+- **Offline and failed searches say which it is,** each with Try again, below the recent places that match; no results has no button, as searching again
   means changing the text. Until picking a point exists, its text doesn't mention touching and holding the map.
 - **Until Route planning exists, choosing a place only drops its pin** on the [Map](../map/README.md#design). A place
   outside the covered area is dimmed, and tapping it explains that routes start and end in Czechia for now.

@@ -34,12 +34,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceKind
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.CloseButton
 import com.syntey.spiriteddriving.core.ui.components.GroupPosition
 import com.syntey.spiriteddriving.core.ui.components.IconAction
+import com.syntey.spiriteddriving.core.ui.components.ListHeader
 import com.syntey.spiriteddriving.core.ui.components.ListRowIcon
 import com.syntey.spiriteddriving.core.ui.components.ListGroupDefaultColors
 import com.syntey.spiriteddriving.core.ui.components.ListRow
@@ -145,6 +147,8 @@ internal fun Content(
         SearchResults(
             viewState = viewState,
             onSuggestionClick = actions::onSuggestionClick,
+            onRecentPlaceClick = actions::onRecentPlaceClick,
+            onRecentPlaceRemove = actions::onRecentPlaceRemove,
             onSearchRetry = actions::onSearchRetry,
             modifier = Modifier.weight(1f),
         )
@@ -185,10 +189,13 @@ private fun SearchRow(viewState: TripPlanViewState, actions: TripPlanScreen.Acti
 private fun SearchResults(
     viewState: TripPlanViewState,
     onSuggestionClick: (PlaceSuggestion) -> Unit,
+    onRecentPlaceClick: (Place) -> Unit,
+    onRecentPlaceRemove: (Place) -> Unit,
     onSearchRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val search = viewState.search
+    val recentRows = viewState.recentRows
     when {
         search.showsHint -> Text(
             text = stringResource(MR.strings.search_hint),
@@ -198,21 +205,13 @@ private fun SearchResults(
             modifier = modifier.fillMaxWidth().padding(horizontal = Grid.d6, vertical = Grid.d4),
         )
 
-        search.status == SearchStatus.Offline -> StateMessage(
-            icon = painterResource(MR.images.offline),
-            title = stringResource(MR.strings.search_offline_title),
-            message = stringResource(MR.strings.search_offline_text),
-            retry = retryAction(onSearchRetry),
-            modifier = modifier.fillMaxWidth().imePadding(),
-        )
-
-        search.status == SearchStatus.Failed -> StateMessage(
-            icon = painterResource(MR.images.warning),
-            title = stringResource(MR.strings.search_failed_title),
-            message = stringResource(MR.strings.search_failed_text),
-            retry = retryAction(onSearchRetry),
-            modifier = modifier.fillMaxWidth().imePadding(),
-        )
+        search.showsFailureAlone -> search.failure?.let { failure ->
+            FailureMessage(
+                failure = failure,
+                onSearchRetry = onSearchRetry,
+                modifier = modifier.fillMaxWidth().imePadding(),
+            )
+        }
 
         search.showsNoResults -> StateMessage(
             icon = painterResource(MR.images.search),
@@ -221,26 +220,49 @@ private fun SearchResults(
             modifier = modifier.fillMaxWidth().imePadding(),
         )
 
-        else -> SuggestionList(
-            rows = viewState.suggestionRows,
+        else -> PlaceList(
+            recentRows = recentRows,
+            suggestionRows = viewState.suggestionRows,
+            showsHeader = search.showsRecentHeader,
+            onRecentPlaceClick = onRecentPlaceClick,
+            onRecentPlaceRemove = onRecentPlaceRemove,
             onSuggestionClick = onSuggestionClick,
+            // Below the matching recent places, which stay while the search has failed
+            footer = search.failure?.let { failure ->
+                { FailureMessage(failure = failure, onSearchRetry = onSearchRetry, modifier = Modifier.fillMaxWidth()) }
+            },
             modifier = modifier,
         )
     }
 }
 
 @Composable
-private fun retryAction(onRetry: () -> Unit): IconAction = IconAction(
-    icon = painterResource(MR.images.refresh),
-    label = stringResource(MR.strings.generic_try_again),
-    onClick = onRetry,
-)
+private fun FailureMessage(failure: SearchFailure, onSearchRetry: () -> Unit, modifier: Modifier = Modifier) {
+    val retry = IconAction(
+        icon = painterResource(MR.images.refresh),
+        label = stringResource(MR.strings.generic_try_again),
+        onClick = onSearchRetry,
+    )
+    StateMessage(
+        icon = painterResource(failure.icon),
+        title = stringResource(failure.title),
+        message = stringResource(failure.text),
+        retry = retry,
+        modifier = modifier,
+    )
+}
 
+// The recent places and the suggestions form one group, the recent ones first, under a "Recent" header while the field is blank
 @Composable
-private fun SuggestionList(
-    rows: ImmutableList<SuggestionRow>,
+private fun PlaceList(
+    recentRows: ImmutableList<RecentPlaceRow>,
+    suggestionRows: ImmutableList<SuggestionRow>,
+    showsHeader: Boolean,
+    onRecentPlaceClick: (Place) -> Unit,
+    onRecentPlaceRemove: (Place) -> Unit,
     onSuggestionClick: (PlaceSuggestion) -> Unit,
     modifier: Modifier = Modifier,
+    footer: (@Composable () -> Unit)? = null,
 ) {
     val focusManager = LocalFocusManager.current
     val listState = rememberLazyListState()
@@ -248,36 +270,66 @@ private fun SuggestionList(
     LaunchedEffect(listState.isScrollInProgress) {
         if (listState.isScrollInProgress) focusManager.clearFocus()
     }
+    val count = recentRows.size + suggestionRows.size
     LazyColumn(state = listState, modifier = modifier.fillMaxWidth().imePadding()) {
-        itemsIndexed(rows) { index, row ->
+        if (showsHeader) {
+            item { ListHeader(text = stringResource(MR.strings.search_recent_header)) }
+        }
+        // Keyed, so a swiped row's state doesn't carry over to the row that moves up into its place
+        itemsIndexed(recentRows, key = { _, row -> row.place.toString() }) { index, row ->
             ListRow(
-                headline = boldHeadline(row),
-                supporting = supportingText(row),
+                headline = boldHeadline(name = row.place.name, boldRanges = row.boldRanges),
+                supporting = supportingText(isCovered = row.isCovered, distance = row.distance, area = row.place.area),
+                leading = { ListRowIcon(icon = painterResource(MR.images.recent)) },
+                onClick = { onRecentPlaceClick(row.place) },
+                swipeDelete = IconAction(
+                    icon = painterResource(MR.images.delete),
+                    label = stringResource(MR.strings.search_recent_remove),
+                    onClick = { onRecentPlaceRemove(row.place) },
+                ),
+                position = GroupPosition.of(index, count),
+                groupColors = ListGroupDefaultColors.translucent(),
+                isDimmed = !row.isCovered,
+                tabularSupporting = true,
+                contentDescription = recentAccessibilityText(row),
+            )
+        }
+        itemsIndexed(suggestionRows) { index, row ->
+            ListRow(
+                headline = boldHeadline(name = row.suggestion.place.name, boldRanges = row.boldRanges),
+                supporting = supportingText(
+                    isCovered = row.suggestion.isCovered,
+                    distance = row.distance,
+                    area = row.suggestion.place.area,
+                ),
                 leading = { ListRowIcon(icon = painterResource(row.suggestion.kind.icon)) },
                 onClick = { onSuggestionClick(row.suggestion) },
-                position = GroupPosition.of(index, rows.size),
+                position = GroupPosition.of(recentRows.size + index, count),
                 groupColors = ListGroupDefaultColors.translucent(),
                 isDimmed = !row.suggestion.isCovered,
                 tabularSupporting = true,
                 contentDescription = accessibilityText(row),
             )
         }
+        if (footer != null) {
+            item { footer() }
+        }
     }
 }
 
 // The matched parts of the name in semibold; the ranges end exclusively, as `until` makes them
-private fun boldHeadline(row: SuggestionRow): AnnotatedString = buildAnnotatedString {
-    append(row.suggestion.place.name)
-    row.boldRanges.forEach { range ->
+private fun boldHeadline(name: String, boldRanges: List<IntRange>): AnnotatedString = buildAnnotatedString {
+    append(name)
+    boldRanges.forEach { range ->
         addStyle(SpanStyle(fontWeight = FontWeight.SemiBold), range.first, range.last + 1)
     }
 }
 
 // A place outside the covered area says so in place of its distance, which routes can't reach anyway
 @Composable
-private fun supportingText(row: SuggestionRow): String? {
-    val first = if (row.suggestion.isCovered) row.distance else stringResource(MR.strings.search_not_covered)
-    return listOfNotNull(first, row.suggestion.place.area).joinToString(" · ").takeIf { it.isNotEmpty() }
+private fun supportingText(isCovered: Boolean, distance: String?, area: String?): String? {
+    val first = if (isCovered) distance else stringResource(MR.strings.search_not_covered)
+    return listOfNotNull(first, area).joinToString(" · ").takeIf { it.isNotEmpty() }
 }
 
 // Screen readers get the name, kind, distance and area as one sentence, and "not covered yet" for a place outside the area
@@ -290,6 +342,14 @@ private fun accessibilityText(row: SuggestionRow): String {
     return listOfNotNull(suggestion.place.name, kind, distance, suggestion.place.area, notCovered).joinToString(", ")
 }
 
+@Composable
+private fun recentAccessibilityText(row: RecentPlaceRow): String {
+    val distance = row.distance.takeIf { row.isCovered }
+    val notCovered = if (row.isCovered) null else stringResource(MR.strings.search_not_covered_a11y)
+    return listOfNotNull(row.place.name, stringResource(MR.strings.search_recent_a11y), distance, row.place.area, notCovered)
+        .joinToString(", ")
+}
+
 private val PlaceKind.icon: ImageResource
     get() = when (this) {
         PlaceKind.Town -> MR.images.place_town
@@ -297,6 +357,24 @@ private val PlaceKind.icon: ImageResource
         PlaceKind.Address -> MR.images.place_address
         PlaceKind.Nature -> MR.images.place_nature
         PlaceKind.PointOfInterest -> MR.images.place_poi
+    }
+
+private val SearchFailure.icon: ImageResource
+    get() = when (this) {
+        SearchFailure.Offline -> MR.images.offline
+        SearchFailure.Failed -> MR.images.warning
+    }
+
+private val SearchFailure.title: StringResource
+    get() = when (this) {
+        SearchFailure.Offline -> MR.strings.search_offline_title
+        SearchFailure.Failed -> MR.strings.search_failed_title
+    }
+
+private val SearchFailure.text: StringResource
+    get() = when (this) {
+        SearchFailure.Offline -> MR.strings.search_offline_text
+        SearchFailure.Failed -> MR.strings.search_failed_text
     }
 
 private val PlaceKind.word: StringResource
