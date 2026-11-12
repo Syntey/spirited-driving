@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.onboarding.onboardingScreen
+package com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen
 
 import app.futured.arkitekt.decompose.navigation.NavigationActions
 

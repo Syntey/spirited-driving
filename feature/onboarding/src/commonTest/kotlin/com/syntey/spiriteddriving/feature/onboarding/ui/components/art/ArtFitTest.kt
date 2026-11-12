@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.onboarding.art
+package com.syntey.spiriteddriving.feature.onboarding.ui.components.art
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

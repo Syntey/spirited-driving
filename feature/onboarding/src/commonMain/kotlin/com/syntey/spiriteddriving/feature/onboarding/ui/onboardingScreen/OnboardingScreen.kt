@@ -1,5 +1,6 @@
-package com.syntey.spiriteddriving.feature.onboarding.onboardingScreen
+package com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen
 
+import com.syntey.spiriteddriving.feature.onboarding.model.ui.OnboardingStep
 import kotlinx.coroutines.flow.StateFlow
 
 interface OnboardingScreen {

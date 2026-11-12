@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.onboarding.art
+package com.syntey.spiriteddriving.feature.onboarding.ui.components.art
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

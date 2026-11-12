@@ -151,14 +151,14 @@ A module's package and Android namespace come from its path (`:data:network` is
 ## UI Architecture
 
 Screens are implemented once in Compose Multiplatform, in the feature module that owns them, next
-to the component they render (e.g. `feature/onboarding/.../onboardingScreen/OnboardingScreenUi.kt`). A screen
+to the component they render (e.g. `feature/onboarding/.../ui/onboardingScreen/OnboardingScreenUi.kt`). A screen
 only draws its content. Navigation chrome stays native:
 
 - **Android** — navigation hosts in `androidApp/.../ui/navigation/*NavHostUi.kt` render Decompose
   stacks and slots, and draw top bars and bottom sheets around the shared screens.
 - **iOS** — navigation stays in SwiftUI (`NavigationStack`, sheets) driven by Decompose.
   Each screen is exposed to Swift as a `*ScreenUiController` function (the feature's
-  `src/iosMain/.../ViewControllers.ios.kt`) and hosted by `ComposeView` in a thin SwiftUI view
+  `src/iosMain/.../ui/ViewControllers.ios.kt`) and hosted by `ComposeView` in a thin SwiftUI view
   (`iosApp/SpiritedDriving/Views/Scenes/*/*Component.swift`), which also sets the native navigation
   title.
 
@@ -168,8 +168,8 @@ native glass buttons and a native sheet on iOS, and only the sheet's content is 
 
 When adding a new screen:
 
-1. Create the screen component and its UI in the feature module (see `onboardingScreen` in
-   `:feature:onboarding`).
+1. Create the screen component and its UI in the feature module (see `ui/onboardingScreen` in
+   `:feature:onboarding`), laid out by layer as the `create-screen` skill describes.
 2. Expose the screen in the feature's `*Screens` object (see `OnboardingScreens`), since Arkitekt
    generates internal factories, and create it from a navigation host in `:shared`.
 3. Android: render it from the navigation host UI.
@@ -178,34 +178,34 @@ When adding a new screen:
 
 ### Previews
 
-Each screen has a preview object (e.g. `OnboardingScreenPreviews`) with view states for its
-previews, and a fake, no-op implementation of the screen interface where a preview needs the whole
-screen. Compose preview functions next to the screen use it.
+Each screen has a preview-states object (e.g. `OnboardingPreviewStates`, in the feature's `model/ui`) with view
+states its previews share, and a fake, no-op implementation of the screen interface where a preview needs the whole
+screen. Previews sit at the bottom of the file of the composable they show.
 
 Previews use the multipreview annotations in `:core:ui` (`core.ui.preview`) rather than a bare
 `@Preview`: `@ScreenPreviews` renders a screen in light and dark mode and with large fonts on dense
 phone screens, `@ComponentPreviews` renders a smaller composable in light and dark mode with small
 and large fonts.
 
-**Preview data** (`feature/onboarding/.../onboardingScreen/OnboardingScreenPreviews.kt`):
+**Preview data** (`feature/onboarding/.../model/ui/OnboardingPreviewStates.kt`):
 
 ```kotlin
-internal object OnboardingScreenPreviews {
+internal object OnboardingPreviewStates {
     fun viewState(step: OnboardingStep = OnboardingStep.WhatItIs) = OnboardingViewState(step = step)
 }
 ```
 
-**Preview** (`feature/onboarding/.../onboardingScreen/OnboardingScreenUi.kt`):
+**Preview** (`feature/onboarding/.../ui/onboardingScreen/OnboardingScreenUi.kt`):
 
 ```kotlin
 @ScreenPreviews
 @Composable
 private fun OnboardingScreenPreview() = Showcase {
-    Content(viewState = OnboardingScreenPreviews.viewState(), actions = noOpActions())
+    Content(viewState = OnboardingPreviewStates.viewState(), actions = noOpActions())
 }
 ```
 
-When adding a new screen, create a `*Previews` object in the screen's package following the same
+When adding a new screen, create a `*PreviewStates` object in the feature's `model/ui` following the same
 pattern.
 
 ## Navigation Structure

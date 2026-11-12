@@ -1,5 +1,8 @@
-package com.syntey.spiriteddriving.feature.onboarding.onboardingScreen
+package com.syntey.spiriteddriving.feature.onboarding.ui.components
 
+import com.syntey.spiriteddriving.feature.onboarding.model.ui.OnboardingStep
+import com.syntey.spiriteddriving.feature.onboarding.model.ui.PagePosition
+import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreen
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

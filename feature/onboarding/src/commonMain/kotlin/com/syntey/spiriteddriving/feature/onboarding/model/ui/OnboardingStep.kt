@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.onboarding.onboardingScreen
+package com.syntey.spiriteddriving.feature.onboarding.model.ui
 
 /**
  * The pages of First launch, in order.

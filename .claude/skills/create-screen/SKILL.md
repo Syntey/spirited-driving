@@ -20,7 +20,8 @@ failure message says how to fix a violation.
 
 ## The screen package
 
-Package `com.syntey.spiriteddriving.feature.<feature>.<name>Screen` in `feature/<feature>/src/commonMain/kotlin/`.
+Package `com.syntey.spiriteddriving.feature.<feature>.ui.<name>Screen` in `feature/<feature>/src/commonMain/kotlin/`, laid
+out as in [Feature packages](#feature-packages).
 
 **`{Name}Screen.kt`**: the public contract, implemented by the component, used by both platforms' UI.
 
@@ -142,7 +143,7 @@ private fun Content(viewState: {Name}ViewState, actions: {Name}Screen.Actions, m
 @ScreenPreviews
 @Composable
 private fun {Name}ScreenPreview() = Showcase {
-    Content(viewState = {Name}ScreenPreviews.viewState(), actions = noOpActions())
+    Content(viewState = {Name}PreviewStates.viewState(), actions = noOpActions())
 }
 ```
 
@@ -163,13 +164,33 @@ private fun {Name}ScreenPreview() = Showcase {
   composable, like one in `:core:ui`. A preview in `Showcase(platform = UiPlatform.Ios)` shows the iOS look in Android
   Studio.
 
-**`{Name}ScreenPreviews.kt`**: preview data, shared by the previews (see `TripPlanScreenPreviews`).
+**`model/ui/{Name}PreviewStates.kt`**: sample view states that several previews share (see `TripPlanPreviewStates`).
+A preview's own data stays in its file.
 
 ```kotlin
-internal object {Name}ScreenPreviews {
+internal object {Name}PreviewStates {
     fun viewState(routes: ImmutableList<RouteItem> = ...) = {Name}ViewState(routes = routes)
 }
 ```
+
+### Feature packages
+
+A feature is split by layer, not by screen. Under `com.syntey.spiriteddriving.feature.<feature>`:
+
+```
+domain/            use cases
+injection/         the Koin module
+model/ui/          types view states are built from (row models, sub-states), and {Name}PreviewStates
+tools/             pure helpers, such as text formatting
+ui/                <Feature>Screens, and ViewControllers.ios.kt in iosMain
+ui/components/     composables beyond a screen's entry one, shared by the feature's screens
+ui/<name>Screen/   the contract, component, view state, navigation, UI events and entry composable
+```
+
+- `androidMain` and `commonTest` mirror these packages: `MapScreenUi.android.kt` is in `ui/tripPlanScreen`, a test of
+  `model/ui/SearchState` in `model/ui`. `iosMain/ui/ViewControllers.ios.kt` sits next to `<Feature>Screens`.
+- Previews go at the bottom of the file of the composable they show, never in a separate file. Only sample view states
+  shared by several previews get their own file, `model/ui/{Name}PreviewStates.kt`.
 
 ## Wiring
 
@@ -231,7 +252,7 @@ internal object {Name}ScreenPreviews {
    a platform binding.
 3. `injection/<Feature>Module.kt`: `@Module`, `@ComponentScan("com.syntey.spiriteddriving.feature.<feature>")`,
    `@Configuration`, like `OnboardingModule`.
-4. `<Feature>Screens.kt` (an `object`, like `OnboardingScreens`) and `src/iosMain/.../ViewControllers.ios.kt` (with the
+4. `ui/<Feature>Screens.kt` (an `object`, like `MapScreens`) and `src/iosMain/.../ui/ViewControllers.ios.kt` (with the
    file-level `@Suppress` from onboarding's).
 5. `shared/build.gradle.kts`: `implementation(projects.feature.<feature>)` in `commonMain`, `api(...)` in `iosMain`,
    and `export(...)` in the framework block. `androidApp/build.gradle.kts`: `implementation(projects.feature.<feature>)`,
