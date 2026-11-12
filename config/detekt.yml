@@ -56,6 +56,8 @@ complexity:
     active: true
     ignoreAnnotated:
       - Composable
+      # Koin fills these constructors; components gain a use case per action
+      - Factory
   TooManyFunctions:
     active: true
     allowedFunctionsPerInterface: 25

@@ -138,6 +138,7 @@ network-ktorfit-lib = { module = "de.jensklingenberg.ktorfit:ktorfit-lib", versi
 network-ktorfit-converters = { module = "de.jensklingenberg.ktorfit:ktorfit-converters-response", version.ref = "ktorfit" }
 network-ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 network-ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+network-ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 network-ktor-client-engine-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
 network-ktor-client-engine-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 network-ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }

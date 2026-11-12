@@ -60,4 +60,9 @@
     <string name="map_locate_following">Following your location</string>
     <string name="map_locate_show">Show your location</string>
     <string name="map_locate_no_access">Location access is off</string>
+    <string name="map_outside_title">You’re outside the covered area</string>
+    <string name="map_outside_text">Routes start and end in Czechia for now. Search for a destination there and pick the start by hand.</string>
+    <string name="map_precise_title">Precise location is off</string>
+    <string name="map_precise_text">Turn it on to start routes where you are.</string>
+    <string name="map_precise_action">Turn on</string>
 </resources>

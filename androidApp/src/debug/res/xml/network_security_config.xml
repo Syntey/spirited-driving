@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config xmlns:tools="http://schemas.android.com/tools">
-    <base-config>
+    <!-- Debug builds call the local backend over plain HTTP, on the emulator or at the Mac's address on the Wi-Fi.
+         Release builds don't use this file. -->
+    <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="user" tools:ignore="AcceptsUserCertificates"/>
             <certificates src="system"/>

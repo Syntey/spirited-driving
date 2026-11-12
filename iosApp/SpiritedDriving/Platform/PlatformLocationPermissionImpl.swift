@@ -34,6 +34,23 @@ final class PlatformLocationPermissionImpl: NSObject, PlatformLocationPermission
         }
     }
 
+    // iOS's prompt grants precise location only until the app is closed, so the user turns it on in Settings. The answer
+    // comes when they come back: access is read again on start.
+    nonisolated func requestPrecise(listener: LocationPermissionListener) {
+        // Kotlin objects can be used from any thread
+        nonisolated(unsafe) let listener = listener
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                guard let url = URL(string: UIApplication.openSettingsURLString) else {
+                    listener.onResult(access: self.currentAccess())
+                    return
+                }
+                UIApplication.shared.open(url)
+                listener.onResult(access: self.currentAccess())
+            }
+        }
+    }
+
     nonisolated func openSettings() {
         DispatchQueue.main.async {
             MainActor.assumeIsolated {

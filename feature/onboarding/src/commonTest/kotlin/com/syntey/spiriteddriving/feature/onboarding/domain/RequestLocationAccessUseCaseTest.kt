@@ -24,6 +24,7 @@ class RequestLocationAccessUseCaseTest {
                 listener.onResult(LocationAccess.Denied)
                 listener.onResult(LocationAccess.Precise)
             }
+            override fun requestPrecise(listener: LocationPermissionListener) = Unit
             override fun currentAccess(listener: LocationPermissionListener) = Unit
             override fun openSettings() = Unit
         }
@@ -33,6 +34,7 @@ class RequestLocationAccessUseCaseTest {
 
     private class AnsweringPermission(private val access: LocationAccess) : PlatformLocationPermission {
         override fun request(listener: LocationPermissionListener) = listener.onResult(access)
+        override fun requestPrecise(listener: LocationPermissionListener) = Unit
         override fun currentAccess(listener: LocationPermissionListener) = Unit
         override fun openSettings() = Unit
     }

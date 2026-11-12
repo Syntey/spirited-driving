@@ -243,6 +243,16 @@ MAPS_API_KEY=your-key
 CI passes it as the `MAPS_API_KEY` environment variable. Without a key the app runs, but the Android map stays
 blank. The iOS map (MapKit) needs no key.
 
+### Local backend
+
+Dev builds call the backend on your computer at port 8080: the Android emulator reaches it at `10.0.2.2`, the iOS
+simulator at `localhost`. An Android phone on the same Wi-Fi needs your computer's address in `local.properties`,
+best one your router keeps for it:
+
+```properties
+ANDROID_DEV_API_URL=http://192.168.1.20:8080/v1/
+```
+
 ### Product Flavors
 
 The project utilizes [BuildKonfig](https://github.com/yshrsmz/BuildKonfig) plugin for implementing

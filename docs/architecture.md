@@ -103,8 +103,8 @@ iOS            iosApp         MapComponent: MKMapView + native sheet { ComposeVi
 ```
 
 - `RouteMapState` is an immutable model in common code: route lines (points, and whether a line is the baseline,
-  a fun route or the selected one), start and destination markers, camera bounds, and whether to show the user's
-  location. Events go back up: map long-pressed (pick a destination), route tapped (select it), camera moved.
+  a fun route or the selected one), start and destination markers, the covered area, camera bounds, and whether to
+  show the user's location. Events go back up: map long-pressed (pick a destination), route tapped (select it), camera moved.
 - Coordinates use a `GeoPoint` type from `:core:domain`, so no platform map type reaches shared code. Polyline
   decoding is in `:core:domain` too, with unit tests.
 - The user's location reaches common code through `UserLocation` in `:core:platform` (the fused location provider on
@@ -210,8 +210,8 @@ into it.
 | `:core:ui`            | Theme, shared components, Decompose base classes                      | Glass modifier, per-platform component styles          |
 | `:core:resources`     | Shared strings and images                                             | Attribution texts                                      |
 | `:core:platform`      | Interfaces implemented natively on each platform                      | Location, Firebase sign-in and App Check, local notifications |
-| `:data:network`       | Ktorfit/Ktor client, DTOs, `NetworkResult`                            | `ApiRoutePlanner`, `ApiPlaceSearch`                    |
-| `:data:persistence`   | DataStore                                                             | Recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet |
+| `:data:network`       | Ktorfit/Ktor client, DTOs, `NetworkResult`                            | `ApiRoutePlanner`, `ApiPlaceSearch`, `ApiCoverageSource` |
+| `:data:persistence`   | DataStore                                                             | The covered area, recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet |
 
 Features that share state share a module: one `TripPlanComponent` drives the map and its sheet, so everything shown
 on the map is `:feature:map`.
@@ -256,7 +256,8 @@ component that needs a platform library is split into `.android.kt` / `.ios.kt`,
 - **Google Maps API key:** kept out of git. It comes from `MAPS_API_KEY` in `local.properties` locally and from the
   `MAPS_API_KEY` environment variable (a CI secret) for release builds, and is restricted in the Cloud console to the
   app's package name and signing certificate. Without it the Android map stays blank.
-- **Backend base URL:** per build flavor (dev, prod) through BuildKonfig.
+- **Backend base URL:** per build flavor (dev, prod) through BuildKonfig. Dev builds call the local backend; on an
+  Android phone it's at the address in `ANDROID_DEV_API_URL` in `local.properties`.
 
 ## Test cases
 

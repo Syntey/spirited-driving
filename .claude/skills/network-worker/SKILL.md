@@ -1,6 +1,6 @@
 ---
 name: network-worker
-description: Add or change a backend API call - the :core:domain interface, models and errors, the internal DTOs and Ktorfit *Api in :data:network, the Api* implementation that maps DTOs and errors to domain types, and their tests. Use whenever you touch :data:network, model an endpoint from the API spec, or map network errors, even if the user only says "load X from the backend".
+description: Add or change a backend API call - the :core:domain interface, models and errors, the internal DTOs and the Ktorfit SpiritedDrivingApi in :data:network, the Api* implementation that maps DTOs and errors to domain types, and their tests. Use whenever you touch :data:network, model an endpoint from the API spec, or map network errors, even if the user only says "load X from the backend".
 ---
 
 # Network worker
@@ -15,6 +15,8 @@ the Koin graph in `:shared` connects the two. Konsist checks the shape of DTOs, 
   don't guess a name, a `required` flag or a status code: a wrong guess compiles and fails only against the backend.
 - A local backend serves the spec as Swagger UI at http://localhost:8080/swagger and as YAML at
   http://localhost:8080/swagger/openapi.yaml. Check real responses there before trusting a DTO.
+- Dev builds call the local backend: the Android emulator at `10.0.2.2`, the iOS simulator at `localhost`, and an
+  Android phone at `ANDROID_DEV_API_URL` from `local.properties`.
 - The spec's server URL ends in `/v1`, so the app's base URL does too, and API paths are the spec's paths without the
   leading slash (`/plans` → `"plans"`).
 - Errors come as Problem Details (`application/problem+json`) with a machine-readable `code`. An unknown code is
@@ -61,10 +63,11 @@ internal data class PlanRequestDto(
 
 ## `:data:network`: the API
 
-In `data/network/.../api/<Area>Api.kt`:
+Every endpoint is a function of one Ktorfit interface, `data/network/.../api/SpiritedDrivingApi.kt`, in the order
+of the spec's paths:
 
 ```kotlin
-internal interface PlanApi {
+internal interface SpiritedDrivingApi {
 
     /** `POST /plans` (`planTrip`). */
     @POST("plans")
@@ -75,9 +78,9 @@ internal interface PlanApi {
 ```
 
 - Optional query parameters are nullable `= null`.
-- Register it in `injection/NetworkModule.kt`:
-  `@Single internal fun planApi(ktorFit: Ktorfit): PlanApi = ktorFit.createPlanApi()`. The `create…` function exists
-  after the first build.
+- `injection/NetworkModule.kt` provides it (`ktorFit.createSpiritedDrivingApi()`), so a new endpoint needs no wiring.
+- A call that sends `If-None-Match` returns `NetworkResult<Revalidated<…>>`, which carries the `ETag` or says the copy
+  is current (304).
 - Headers every call needs (App Check, the signed-in user's ID token) come from an `HttpClientPlugin`, not from
   method parameters, so no call can forget one.
 
@@ -85,10 +88,10 @@ internal interface PlanApi {
 
 ```kotlin
 @Factory
-internal class ApiRoutePlanner(private val planApi: PlanApi) : RoutePlanner {
+internal class ApiRoutePlanner(private val api: SpiritedDrivingApi) : RoutePlanner {
 
     override suspend fun plan(trip: TripRequest): TripPlan =
-        planApi.planTrip(trip.toDto()).getOrThrow().toDomain()
+        api.planTrip(trip.toDto()).getOrThrow().toDomain()
 }
 ```
 
@@ -106,6 +109,7 @@ internal class ApiRoutePlanner(private val planApi: PlanApi) : RoutePlanner {
 - Mapping both ways, for every field the app uses, and each error mapping.
 - Decoding a response recorded from the local backend with the app's JSON config (`NetworkModule().restApiJson()`).
   This catches nullability that doesn't match the backend.
+- `SpiritedDrivingApi` with the converter is tested over Ktor's `MockEngine`, as in `ApiCoverageSourceTest`.
 
 ## Not set up yet
 
@@ -115,9 +119,6 @@ The first network change that needs one of these sets it up, then updates this s
   in `NetworkResultConverterFactory` and add its `code` to `HttpError`.
 - **Auth headers**: an `HttpClientPlugin` that adds `X-Firebase-AppCheck` to every call and
   `Authorization: Bearer <ID token>` while signed in.
-- **Dev builds on a local backend**: `ProductFlavors.Dev.restApiUrl` still points at the template's sample API. The
-  Android emulator reaches the host at `10.0.2.2`, the iOS simulator at `localhost`. Both are plain HTTP, so Android
-  debug builds need cleartext allowed for that host and iOS needs `NSAllowsLocalNetworking`.
 
 ## Before you call it done
 

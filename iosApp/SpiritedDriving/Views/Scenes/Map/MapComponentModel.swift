@@ -81,7 +81,20 @@ final class MapComponentModelMock: MapComponentModelProtocol {
         overview: DomainGeoBounds(
             southWest: DomainGeoPoint(latitude: 48.55, longitude: 12.09),
             northEast: DomainGeoPoint(latitude: 51.06, longitude: 18.86)
-        )
+        ),
+        coveredArea: [
+            DomainGeoPolygon(
+                outline: [
+                    DomainGeoPoint(latitude: 48.55, longitude: 12.09),
+                    DomainGeoPoint(latitude: 48.55, longitude: 18.86),
+                    DomainGeoPoint(latitude: 51.06, longitude: 18.86),
+                    DomainGeoPoint(latitude: 51.06, longitude: 12.09),
+                    DomainGeoPoint(latitude: 48.55, longitude: 12.09)
+                ],
+                holes: []
+            )
+        ],
+        overviewRequest: 0
     )
     var locateButton = LocateButton.following
 
