@@ -1,8 +1,18 @@
 package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -30,9 +40,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLng
@@ -42,9 +54,11 @@ import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.GeoPolygon
@@ -60,6 +74,7 @@ import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 private const val FOLLOW_ZOOM = 15f
 private const val FOLLOW_MIN_ZOOM = 12f
@@ -84,50 +99,123 @@ private val WORLD = listOf(
 @Composable
 fun MapScreenUi(screen: TripPlanScreen, modifier: Modifier = Modifier) {
     val viewState by screen.viewState.collectAsStateWithLifecycle()
-    Content(viewState = viewState, actions = screen.actions, sheet = { TripPlanSheetUi(screen = screen) }, modifier = modifier)
+    Content(viewState = viewState, actions = screen.actions, sheet = { onCollapsedHeightChange ->
+        TripPlanSheetUi(screen = screen, onCollapsedHeightChange = onCollapsedHeightChange)
+    }, modifier = modifier)
 }
 
 @Composable
 private fun Content(
     viewState: TripPlanViewState,
     actions: TripPlanScreen.Actions,
-    sheet: @Composable () -> Unit,
+    sheet: @Composable (onCollapsedHeightChange: (Dp) -> Unit) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // The notes and search field, as the sheet's content measures them; until then about the field's height
+    var collapsedContentHeight by remember { mutableStateOf(Grid.d20) }
+    var handleHeight by remember { mutableStateOf(Grid.d0) }
     val density = LocalDensity.current
-    var sheetHeight by remember { mutableStateOf(Grid.d0) }
-    Box(modifier.fillMaxSize()) {
+    val statusBarHeight = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val navigationBarHeight = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val collapsedHeight = handleHeight + collapsedContentHeight + navigationBarHeight
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        // The collapsed height, at every height of the sheet, so the camera doesn't move as the sheet is dragged
         Map(
             map = viewState.map,
             onPanned = actions::onMapPanned,
-            contentPadding = PaddingValues(
-                top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding(),
-                bottom = sheetHeight,
-            ),
+            contentPadding = PaddingValues(top = statusBarHeight, bottom = collapsedHeight),
             modifier = Modifier.fillMaxSize(),
         )
         ProfileButton(
             onClick = actions::onProfileClick,
             modifier = Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(top = Grid.d2, end = Grid.d4),
         )
-        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth(), horizontalAlignment = Alignment.End) {
-            LocateControl(
-                locateButton = viewState.locateButton,
-                onClick = actions::onLocateClick,
-                modifier = Modifier.padding(end = Grid.d4, bottom = Grid.d4),
-            )
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceContainerLow,
-                shape = RoundedCornerShape(topStart = Grid.d8, topEnd = Grid.d8),
-                shadowElevation = Grid.d2,
-                modifier = Modifier.fillMaxWidth().onSizeChanged { sheetHeight = with(density) { it.height.toFloat().toDp() } },
+        AnimatedVisibility(
+            visible = viewState.sheetHeight == SheetHeight.Collapsed,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = Grid.d4, bottom = collapsedHeight + Grid.d4),
+        ) {
+            LocateControl(locateButton = viewState.locateButton, onClick = actions::onLocateClick)
+        }
+        MapSheet(
+            height = viewState.sheetHeight,
+            onHeightChange = actions::onSheetHeightChange,
+            collapsedHeight = collapsedHeight,
+            fullHeight = maxHeight - statusBarHeight,
+            halfHeight = maxHeight / 2,
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) {
+            Column(
+                Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(Modifier.windowInsetsPadding(WindowInsets.navigationBars), horizontalAlignment = Alignment.CenterHorizontally) {
-                    DragHandle()
-                    sheet()
-                }
+                DragHandle(Modifier.onSizeChanged { handleHeight = with(density) { it.height.toDp() } })
+                sheet { collapsedContentHeight = it }
             }
         }
+    }
+}
+
+/**
+ * The sheet over the map, at one of three heights. It's only as tall as the part that shows, so its list ends at the bottom
+ * of the screen at every height. A drag settles at the nearest height and reports it; a new [height] moves the sheet there.
+ */
+@Composable
+private fun MapSheet(
+    height: SheetHeight,
+    onHeightChange: (SheetHeight) -> Unit,
+    collapsedHeight: Dp,
+    halfHeight: Dp,
+    fullHeight: Dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val density = LocalDensity.current
+    // The offset is the visible height, so it grows as the sheet is dragged up: hence reverseDirection
+    val state = remember { AnchoredDraggableState(initialValue = height) }
+    val collapsedPx = with(density) { collapsedHeight.toPx() }
+    val halfPx = with(density) { halfHeight.toPx() }
+    val fullPx = with(density) { fullHeight.toPx() }
+    LaunchedEffect(collapsedPx, halfPx, fullPx) {
+        state.updateAnchors(
+            DraggableAnchors {
+                SheetHeight.Collapsed at collapsedPx
+                SheetHeight.Half at halfPx
+                SheetHeight.Full at fullPx
+            },
+            newTarget = state.targetValue,
+        )
+    }
+    // Focusing the field and closing the search move the sheet
+    LaunchedEffect(height) {
+        if (state.settledValue != height) state.animateTo(height)
+    }
+    val currentHeight by rememberUpdatedState(height)
+    val currentOnHeightChange by rememberUpdatedState(onHeightChange)
+    LaunchedEffect(state) {
+        snapshotFlow { state.settledValue }.collect { settled -> if (settled != currentHeight) currentOnHeightChange(settled) }
+    }
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = RoundedCornerShape(topStart = Grid.d8, topEnd = Grid.d8),
+        shadowElevation = Grid.d2,
+        modifier = modifier
+            .fillMaxWidth()
+            .layout { measurable, constraints ->
+                val visible = state.offset.takeUnless { it.isNaN() } ?: collapsedPx
+                val sheetHeight = visible.roundToInt().coerceIn(0, constraints.maxHeight)
+                val placeable = measurable.measure(constraints.copy(minHeight = sheetHeight, maxHeight = sheetHeight))
+                layout(placeable.width, sheetHeight) { placeable.place(0, 0) }
+            }
+            .anchoredDraggable(
+                state = state,
+                reverseDirection = true,
+                orientation = Orientation.Vertical,
+                flingBehavior = AnchoredDraggableDefaults.flingBehavior(state),
+            ),
+    ) {
+        content()
     }
 }
 
@@ -210,7 +298,10 @@ private fun Map(map: RouteMapState, onPanned: () -> Unit, contentPadding: Paddin
             mapToolbarEnabled = false,
             indoorLevelPickerEnabled = false,
         ),
-        content = { CoveredArea(area = map.coveredArea) },
+        content = {
+            CoveredArea(area = map.coveredArea)
+            map.destination?.let { Destination(point = it) }
+        },
         onMapLoaded = {
             isLoaded = true
             val loaded = currentMap
@@ -269,6 +360,12 @@ private fun CoveredArea(area: List<GeoPolygon>) {
     (outlines + holes).forEach { Polyline(points = it, color = border, width = borderWidth) }
 }
 
+/** The chosen destination's pin. */
+@Composable
+private fun Destination(point: GeoPoint) {
+    Marker(state = rememberUpdatedMarkerState(position = point.toLatLng()))
+}
+
 private fun GeoBounds.toLatLngBounds(): LatLngBounds = LatLngBounds(southWest.toLatLng(), northEast.toLatLng())
 
 private fun GeoPoint.toLatLng(): LatLng = LatLng(latitude, longitude)
@@ -281,7 +378,9 @@ private fun MapScreenFollowingPreview() {
         Content(
             viewState = state,
             actions = noOpActions(),
-            sheet = { TripPlanSheetUi(screen = TripPlanScreenPreviews.screen(state)) },
+            sheet = { onCollapsedHeightChange ->
+                TripPlanSheetUi(screen = TripPlanScreenPreviews.screen(state), onCollapsedHeightChange = onCollapsedHeightChange)
+            },
         )
     }
 }
@@ -294,7 +393,9 @@ private fun MapScreenNotFollowingPreview() {
         Content(
             viewState = state,
             actions = noOpActions(),
-            sheet = { TripPlanSheetUi(screen = TripPlanScreenPreviews.screen(state)) },
+            sheet = { onCollapsedHeightChange ->
+                TripPlanSheetUi(screen = TripPlanScreenPreviews.screen(state), onCollapsedHeightChange = onCollapsedHeightChange)
+            },
         )
     }
 }
@@ -307,7 +408,9 @@ private fun MapScreenOutsidePreview() {
         Content(
             viewState = state,
             actions = noOpActions(),
-            sheet = { TripPlanSheetUi(screen = TripPlanScreenPreviews.screen(state)) },
+            sheet = { onCollapsedHeightChange ->
+                TripPlanSheetUi(screen = TripPlanScreenPreviews.screen(state), onCollapsedHeightChange = onCollapsedHeightChange)
+            },
         )
     }
 }
@@ -320,7 +423,9 @@ private fun MapScreenNoAccessPreview() {
         Content(
             viewState = state,
             actions = noOpActions(),
-            sheet = { TripPlanSheetUi(screen = TripPlanScreenPreviews.screen(state)) },
+            sheet = { onCollapsedHeightChange ->
+                TripPlanSheetUi(screen = TripPlanScreenPreviews.screen(state), onCollapsedHeightChange = onCollapsedHeightChange)
+            },
         )
     }
 }

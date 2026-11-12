@@ -2,7 +2,6 @@ import KMP
 import SwiftUI
 
 private enum Layout {
-    static let initialSheetHeight: CGFloat = 82
     static let sheetBottomInset: CGFloat = 8
     static let buttonSize: CGFloat = 48
     static let buttonSpacing: CGFloat = 8
@@ -13,8 +12,6 @@ private enum Layout {
 
 struct MapComponent<Model: MapComponentModelProtocol>: View {
     @State var model: Model
-    // Until the sheet's content is measured: the search field and its padding
-    @State private var sheetHeight: CGFloat = Layout.initialSheetHeight
 
     init(model: Model) {
         _model = State(initialValue: model)
@@ -22,13 +19,13 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            MapView(map: model.map, bottomMargin: sheetHeight + Layout.sheetBottomInset, onPanned: model.onMapPanned)
+            MapView(map: model.map, bottomMargin: model.collapsedSheetHeight + Layout.sheetBottomInset, onPanned: model.onMapPanned)
                 .ignoresSafeArea()
             buttons
         }
         .sheet(isPresented: .constant(true)) {
-            ComposeView { model.sheetViewController { height in sheetHeight = height } }
-                .presentationDetents([.height(sheetHeight)])
+            ComposeView { model.sheetViewController() }
+                .presentationDetents([.height(model.collapsedSheetHeight), .medium, .large], selection: $model.sheetDetent)
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled)
                 .interactiveDismissDisabled()

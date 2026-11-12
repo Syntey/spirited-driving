@@ -50,7 +50,7 @@ internal data class PlanRequestDto(
 )
 ```
 
-- The name is the spec's schema name plus `Dto`. One property per line.
+- The name is the spec's schema name plus `Dto`.
 - Requests: `required` fields are non-null without a default, so the compiler makes every caller set them; optional
   ones are nullable `= null`.
 - Responses: `required` fields are non-null, the rest nullable `= null`. Model only the fields the app uses; the JSON

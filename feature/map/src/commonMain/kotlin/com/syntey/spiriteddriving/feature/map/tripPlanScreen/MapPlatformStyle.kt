@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.Dp
 import dev.icerock.moko.resources.ImageResource
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
+import com.syntey.spiriteddriving.core.ui.theme.IconButtonStyle
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 
@@ -22,12 +23,15 @@ import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
  * @property sheetSpacing Between the items of the sheet's content.
  * @property preciseLocationIcon The icon of the "Precise location is off" note: the locate target on Android, an outline arrow
  *   like the locate button on iOS.
+ * @property closesSearchWithBackArrow Closing the search: a back arrow in place of the field's search icon on Android, an X
+ *   button next to the field on iOS.
  */
 @Immutable
 internal data class MapPlatformStyle(
     val sheetContentPadding: PaddingValues,
     val sheetSpacing: Dp,
     val preciseLocationIcon: ImageResource,
+    val closesSearchWithBackArrow: Boolean,
     val searchField: SearchFieldStyle,
 ) {
     companion object {
@@ -42,6 +46,7 @@ internal data class MapPlatformStyle(
                 sheetContentPadding = PaddingValues(start = Grid.d4, top = Grid.d0, end = Grid.d4, bottom = Grid.d4),
                 sheetSpacing = Grid.d3,
                 preciseLocationIcon = MR.images.locate,
+                closesSearchWithBackArrow = true,
                 searchField = SearchFieldStyle(
                     height = Grid.d14,
                     iconSize = Grid.d6,
@@ -49,6 +54,7 @@ internal data class MapPlatformStyle(
                     horizontalPadding = Grid.d4,
                     textStyle = typography.bodyLarge,
                     isTranslucent = false,
+                    actionButton = IconButtonStyle(size = Grid.d10, iconSize = Grid.d6, isFilled = false),
                 ),
             )
 
@@ -56,6 +62,7 @@ internal data class MapPlatformStyle(
                 sheetContentPadding = PaddingValues(start = Grid.d3, top = Grid.d5, end = Grid.d3, bottom = Grid.d3_5),
                 sheetSpacing = Grid.d2_5,
                 preciseLocationIcon = MR.images.locate_arrow,
+                closesSearchWithBackArrow = false,
                 searchField = SearchFieldStyle(
                     height = Grid.d12,
                     iconSize = Grid.d5,
@@ -63,6 +70,7 @@ internal data class MapPlatformStyle(
                     horizontalPadding = Grid.d4,
                     textStyle = typography.bodyLarge,
                     isTranslucent = true,
+                    actionButton = IconButtonStyle(size = Grid.d6, iconSize = Grid.d4, isFilled = false),
                 ),
             )
         }
@@ -72,6 +80,7 @@ internal data class MapPlatformStyle(
 /**
  * A search field. [height] is the least height. [isTranslucent]: a grey fill that lets the glass behind show through,
  * with a grey icon, as iOS fields have; otherwise a solid Material search bar.
+ * [actionButton] is the back arrow and the clear button inside the field.
  */
 @Immutable
 internal data class SearchFieldStyle(
@@ -81,4 +90,5 @@ internal data class SearchFieldStyle(
     val horizontalPadding: Dp,
     val textStyle: TextStyle,
     val isTranslucent: Boolean,
+    val actionButton: IconButtonStyle,
 )

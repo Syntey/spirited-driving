@@ -39,10 +39,14 @@ struct MapView: UIViewRepresentable {
         configuration.pointOfInterestFilter = MKPointOfInterestFilter(excluding: Self.hiddenCategories)
         mapView.preferredConfiguration = configuration
         mapView.delegate = context.coordinator
+        // Its own margins only: inherited ones grow while the sheet is at full height, and MapKit fits regions inside the
+        // margins, so a destination chosen then would show zoomed out at the bottom edge
+        mapView.preservesSuperviewLayoutMargins = false
         mapView.showsUserLocation = map.showsUserLocation
         mapView.setRegion(Self.region(for: map.overview), animated: false)
         context.coordinator.shownOverviewRequest = map.overviewRequest
         context.coordinator.showCoveredArea(map.coveredArea, on: mapView)
+        context.coordinator.showDestination(map.destination, on: mapView)
 
         // The renderers take their colours from the trait collection when created, so the overlays are re-added on change
         let coordinator = context.coordinator
@@ -55,10 +59,11 @@ struct MapView: UIViewRepresentable {
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.onPanned = onPanned
         mapView.showsUserLocation = map.showsUserLocation
-        mapView.layoutMargins.bottom = bottomMargin
+        mapView.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: bottomMargin, right: 0)
         if map.coveredArea != context.coordinator.coveredArea {
             context.coordinator.showCoveredArea(map.coveredArea, on: mapView)
         }
+        context.coordinator.showDestination(map.destination, on: mapView)
 
         // The map doesn't rotate with the heading: `.follow`, not `.followWithHeading`
         let mode: MKUserTrackingMode = map.followsUser && map.showsUserLocation ? .follow : .none
@@ -101,6 +106,7 @@ struct MapView: UIViewRepresentable {
         var shownOverviewRequest: Int32 = 0
         var coveredArea: [DomainGeoPolygon] = []
         private var coveredOverlays: [MKOverlay] = []
+        private var destination: (point: DomainGeoPoint, annotation: MKPointAnnotation)?
 
         init(onPanned: @escaping () -> Void) {
             self.onPanned = onPanned
@@ -118,6 +124,24 @@ struct MapView: UIViewRepresentable {
             mapView.removeOverlays(coveredOverlays)
             coveredOverlays = area.isEmpty ? [] : makeCoveredOverlays(area)
             mapView.addOverlays(coveredOverlays, level: .aboveRoads)
+        }
+
+        // The chosen destination's pin, replaced only when the destination changes
+        func showDestination(_ point: DomainGeoPoint?, on mapView: MKMapView) {
+            if point == destination?.point {
+                return
+            }
+            if let shown = destination {
+                mapView.removeAnnotation(shown.annotation)
+            }
+            destination = point.map { point in
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = CLLocationCoordinate2D(latitude: point.latitude, longitude: point.longitude)
+                return (point, annotation)
+            }
+            if let shown = destination {
+                mapView.addAnnotation(shown.annotation)
+            }
         }
 
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
