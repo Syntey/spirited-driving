@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.core.ui.theme.Grid
-import com.syntey.spiriteddriving.feature.map.tripPlanScreen.MapScreenUi
+import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.MapScreenUi
 import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreenUi
 import com.syntey.spiriteddriving.shared.navigation.root.RootChild
 import com.syntey.spiriteddriving.shared.navigation.root.RootConfig

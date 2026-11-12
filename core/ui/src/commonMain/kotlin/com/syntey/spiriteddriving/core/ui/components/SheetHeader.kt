@@ -33,17 +33,18 @@ import com.syntey.spiriteddriving.core.ui.theme.SheetHeaderStyle
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 
 /**
- * The top of a sheet: a title, an optional line below it, and a close button. A tappable subtitle, such as "From My
- * location" in route planning, gets a [subtitleChevron] when one is passed and stays in the subtitle colour, since red
- * is kept for main actions.
+ * The top of a sheet: a title, an optional line below it, and a trailing control. The control is a close button, or
+ * another control such as a Cancel text button, passed as [trailing]. A tappable subtitle, such as "From My location" in
+ * route planning, gets a [subtitleChevron] when one is passed and stays in the subtitle colour, since red is kept for
+ * main actions.
  *
- * @param close The close button; its label is what screen readers hear.
+ * @param trailing The control at the end of the header, such as [SheetHeaderTextButton].
  * @param subtitleLeading Shown before the subtitle, such as a route's badge.
  */
 @Composable
 fun SheetHeader(
     title: String,
-    close: IconAction,
+    trailing: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     onSubtitleClick: (() -> Unit)? = null,
@@ -90,13 +91,55 @@ fun SheetHeader(
             }
         }
         Spacer(Modifier.width(Grid.d3))
-        // The touch target is taller than the circle; lifting the circle by the difference puts its top level with the title
-        val platformStyle = AppTheme.platformStyle
-        CloseButton(
-            action = close,
-            modifier = Modifier.offset(y = -(platformStyle.minTouchTarget - platformStyle.closeButton.size) / 2),
-        )
+        trailing()
     }
+}
+
+/**
+ * The top of a sheet with a close button at its end. See the [trailing] overload for the other controls.
+ *
+ * @param close The close button; its label is what screen readers hear.
+ */
+@Composable
+fun SheetHeader(
+    title: String,
+    close: IconAction,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    onSubtitleClick: (() -> Unit)? = null,
+    subtitleChevron: Painter? = null,
+    subtitleLeading: (@Composable () -> Unit)? = null,
+) {
+    val platformStyle = AppTheme.platformStyle
+    SheetHeader(
+        title = title,
+        trailing = {
+            // The touch target is taller than the circle; lifting the circle by the difference puts its top level with the title
+            CloseButton(
+                action = close,
+                modifier = Modifier.offset(y = -(platformStyle.minTouchTarget - platformStyle.closeButton.size) / 2),
+            )
+        },
+        modifier = modifier,
+        subtitle = subtitle,
+        onSubtitleClick = onSubtitleClick,
+        subtitleChevron = subtitleChevron,
+        subtitleLeading = subtitleLeading,
+    )
+}
+
+/** A text button at the end of a [SheetHeader], such as Cancel, with its label's top level with the title. */
+@Composable
+fun SheetHeaderTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val platformStyle = AppTheme.platformStyle
+    // The touch target is taller than the button; lifting it by the difference puts its top level with the title
+    AppButton(
+        text = text,
+        onClick = onClick,
+        colors = ButtonDefaultColors.text(),
+        style = ButtonDefaultStyles.small(),
+        modifier = modifier.offset(y = -(platformStyle.minTouchTarget - platformStyle.buttonSmall.height) / 2),
+    )
 }
 
 @ComponentPreviews
@@ -133,6 +176,10 @@ private fun SheetHeaderExamples() {
                 Box(Modifier.size(Grid.d6).clip(CircleShape).background(AppTheme.customColors.routeFun1))
             },
             close = close,
+        )
+        SheetHeader(
+            title = "Karlštejn Castle",
+            trailing = { SheetHeaderTextButton(text = "Cancel", onClick = {}) },
         )
     }
 }

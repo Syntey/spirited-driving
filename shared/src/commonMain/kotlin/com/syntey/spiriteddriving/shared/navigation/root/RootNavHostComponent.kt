@@ -6,7 +6,7 @@ import co.touchlab.kermit.Logger
 import com.syntey.spiriteddriving.shared.domain.IsOnboardingDoneUseCase
 import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
-import com.syntey.spiriteddriving.feature.map.MapScreens
+import com.syntey.spiriteddriving.feature.map.ui.MapScreens
 import com.syntey.spiriteddriving.feature.onboarding.OnboardingScreens
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.activate

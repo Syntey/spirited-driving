@@ -1,11 +1,10 @@
 package com.syntey.spiriteddriving.shared.navigation.root
 
-import com.syntey.spiriteddriving.feature.map.tripPlanScreen.TripPlanScreen
+import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
 import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreen
 import com.arkivanov.decompose.router.slot.ChildSlot
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
-import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 interface RootNavHost {
