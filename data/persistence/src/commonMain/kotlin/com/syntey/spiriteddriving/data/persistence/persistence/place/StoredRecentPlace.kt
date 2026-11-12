@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 internal data class StoredPlace(
-    @SerialName("name") val name: String,
+    @SerialName("name") val name: String? = null,
     @SerialName("area") val area: String?,
     @SerialName("location") val location: StoredPoint,
 )

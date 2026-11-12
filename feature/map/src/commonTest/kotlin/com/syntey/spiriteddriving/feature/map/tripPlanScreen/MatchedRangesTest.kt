@@ -48,6 +48,16 @@ class MatchedRangesTest {
     }
 
     @Test
+    fun `a null name gives no ranges`() {
+        assertEquals(emptyList(), matchedRanges(name = null, text = "karlst"))
+    }
+
+    @Test
+    fun `a null name still matches on its area`() {
+        assertTrue(placeMatches(name = null, area = "49.9394, 14.1882", text = "49.93"))
+    }
+
+    @Test
     fun `a name that starts with the typed text matches`() {
         assertTrue(placeMatches(name = "Karlštejn", area = null, text = "karlst"))
     }

@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.data.network.api
 
 import com.syntey.spiriteddriving.data.network.dto.coverage.CoverageDto
 import com.syntey.spiriteddriving.data.network.dto.place.PlaceSearchResultDto
+import com.syntey.spiriteddriving.data.network.dto.place.PlaceSuggestionDto
 import com.syntey.spiriteddriving.data.network.result.NetworkResult
 import com.syntey.spiriteddriving.data.network.result.Revalidated
 import de.jensklingenberg.ktorfit.http.GET
@@ -18,6 +19,13 @@ internal interface SpiritedDrivingApi {
         @Query("lat") lat: Double? = null,
         @Query("lon") lon: Double? = null,
     ): NetworkResult<PlaceSearchResultDto>
+
+    /** `GET /places/reverse` (`reverseLookup`). */
+    @GET("places/reverse")
+    suspend fun reverseLookup(
+        @Query("lat") lat: Double,
+        @Query("lon") lon: Double,
+    ): NetworkResult<PlaceSuggestionDto>
 
     /** `GET /coverage` (`getCoverage`). */
     @GET("coverage")

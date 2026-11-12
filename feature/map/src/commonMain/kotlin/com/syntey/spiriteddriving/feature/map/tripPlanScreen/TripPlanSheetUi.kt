@@ -277,8 +277,11 @@ private fun PlaceList(
         }
         // Keyed, so a swiped row's state doesn't carry over to the row that moves up into its place
         itemsIndexed(recentRows, key = { _, row -> row.place.toString() }) { index, row ->
+            // A point picked on the map has no name: the row says what it is, in plain text
+            val pointOnMap = stringResource(MR.strings.search_point_on_map)
             ListRow(
-                headline = boldHeadline(name = row.place.name, boldRanges = row.boldRanges),
+                headline = row.place.name?.let { boldHeadline(name = it, boldRanges = row.boldRanges) }
+                    ?: AnnotatedString(pointOnMap),
                 supporting = supportingText(isCovered = row.isCovered, distance = row.distance, area = row.place.area),
                 leading = { ListRowIcon(icon = painterResource(MR.images.recent)) },
                 onClick = { onRecentPlaceClick(row.place) },
@@ -296,7 +299,7 @@ private fun PlaceList(
         }
         itemsIndexed(suggestionRows) { index, row ->
             ListRow(
-                headline = boldHeadline(name = row.suggestion.place.name, boldRanges = row.boldRanges),
+                headline = boldHeadline(name = row.suggestion.place.name.orEmpty(), boldRanges = row.boldRanges),
                 supporting = supportingText(
                     isCovered = row.suggestion.isCovered,
                     distance = row.distance,
@@ -346,7 +349,8 @@ private fun accessibilityText(row: SuggestionRow): String {
 private fun recentAccessibilityText(row: RecentPlaceRow): String {
     val distance = row.distance.takeIf { row.isCovered }
     val notCovered = if (row.isCovered) null else stringResource(MR.strings.search_not_covered_a11y)
-    return listOfNotNull(row.place.name, stringResource(MR.strings.search_recent_a11y), distance, row.place.area, notCovered)
+    val name = row.place.name ?: stringResource(MR.strings.search_point_on_map)
+    return listOfNotNull(name, stringResource(MR.strings.search_recent_a11y), distance, row.place.area, notCovered)
         .joinToString(", ")
 }
 

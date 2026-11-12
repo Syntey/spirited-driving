@@ -41,8 +41,10 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -123,6 +125,7 @@ private fun Content(
         Map(
             map = viewState.map,
             onPanned = actions::onMapPanned,
+            onLongPress = actions::onMapLongPress,
             contentPadding = PaddingValues(top = statusBarHeight, bottom = collapsedHeight),
             modifier = Modifier.fillMaxSize(),
         )
@@ -265,10 +268,17 @@ private fun LocateControl(locateButton: LocateButton, onClick: () -> Unit, modif
 }
 
 /**
- * The Google map. It shows the covered area until it follows the user, and stops following when the user pans it.
+ * The Google map. It shows the covered area until it follows the user, and stops following when the user pans it. Touching and
+ * holding it picks a point, with a haptic tap.
  */
 @Composable
-private fun Map(map: RouteMapState, onPanned: () -> Unit, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
+private fun Map(
+    map: RouteMapState,
+    onPanned: () -> Unit,
+    onLongPress: (GeoPoint) -> Unit,
+    contentPadding: PaddingValues,
+    modifier: Modifier = Modifier,
+) {
     // The map SDK doesn't render in previews
     if (LocalInspectionMode.current) {
         Box(modifier.background(MaterialTheme.colorScheme.surfaceContainerHighest))
@@ -278,6 +288,8 @@ private fun Map(map: RouteMapState, onPanned: () -> Unit, contentPadding: Paddin
     val cameraPositionState = rememberCameraPositionState()
     val currentMap by rememberUpdatedState(map)
     val currentOnPanned by rememberUpdatedState(onPanned)
+    val currentOnLongPress by rememberUpdatedState(onLongPress)
+    val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val overviewPaddingPx = with(LocalDensity.current) { Grid.d6.roundToPx() }
     var isLoaded by remember { mutableStateOf(false) }
@@ -301,6 +313,10 @@ private fun Map(map: RouteMapState, onPanned: () -> Unit, contentPadding: Paddin
         content = {
             CoveredArea(area = map.coveredArea)
             map.destination?.let { Destination(point = it) }
+        },
+        onMapLongClick = { latLng ->
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            currentOnLongPress(GeoPoint(latitude = latLng.latitude, longitude = latLng.longitude))
         },
         onMapLoaded = {
             isLoaded = true

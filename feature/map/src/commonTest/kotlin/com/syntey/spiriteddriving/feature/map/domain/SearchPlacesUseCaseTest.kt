@@ -3,6 +3,7 @@ package com.syntey.spiriteddriving.feature.map.domain
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
+import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSearch
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase.SearchUpdate
@@ -93,10 +94,14 @@ class SearchPlacesUseCaseTest {
             delay(answerAfter)
             return FakePlaceSearch.Recorded
         }
+
+        override suspend fun placeAt(point: GeoPoint): Place? = null
     }
 
     private class OfflinePlaceSearch : PlaceSearch {
         override suspend fun search(text: String, near: GeoPoint?): List<PlaceSuggestion> =
             throw OfflineException(cause = null)
+
+        override suspend fun placeAt(point: GeoPoint): Place? = throw OfflineException(cause = null)
     }
 }

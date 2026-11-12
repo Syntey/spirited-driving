@@ -110,6 +110,11 @@ internal object TripPlanScreenPreviews {
             area = "Prague",
             location = GeoPoint(latitude = 50.0810, longitude = 14.4280),
         ),
+        Place(
+            name = null,
+            area = "49.9394, 14.1882",
+            location = GeoPoint(latitude = 49.9394, longitude = 14.1882),
+        ),
     ).toImmutableList()
 
     fun outsideViewState(): TripPlanViewState {
