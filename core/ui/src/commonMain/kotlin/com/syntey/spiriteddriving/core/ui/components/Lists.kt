@@ -60,6 +60,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
@@ -145,12 +146,7 @@ object ListGroupDefaultColors {
  * A row of a list: an optional leading icon or image, the headline, an optional supporting line and value, and an
  * optional trailing control. On iOS it's a cell of an inset grouped card at [position]; on Android a Material list item.
  *
- * @param value A setting's current value, such as "km": after the label on iOS, below it on Android.
- * @param chevron A row that opens a screen passes the chevron; it shows on iOS only, where such rows end in one.
- * @param isDimmed Fades the row, such as a place outside the covered area. It stays tappable.
- * @param isLoading The [CarSpinner] takes the headline's place and taps are ignored, such as while deleting the account.
- * @param swipeDelete Lets the row be swiped left to delete it, on both platforms. Its icon shows in the red area, and
- *   screen readers get its label as an action instead. A row that stays, such as when offline, slides back.
+ * This overload takes a plain [headline]; see the [AnnotatedString] overload for a styled one.
  */
 @Composable
 fun ListRow(
@@ -168,6 +164,62 @@ fun ListRow(
     groupColors: ListGroupColors = ListGroupDefaultColors.opaque(),
     isDimmed: Boolean = false,
     isLoading: Boolean = false,
+    tabularSupporting: Boolean = false,
+    contentDescription: String? = null,
+) {
+    ListRow(
+        headline = AnnotatedString(headline),
+        modifier = modifier,
+        supporting = supporting,
+        value = value,
+        leading = leading,
+        trailing = trailing,
+        onClick = onClick,
+        swipeDelete = swipeDelete,
+        chevron = chevron,
+        position = position,
+        colors = colors,
+        groupColors = groupColors,
+        isDimmed = isDimmed,
+        isLoading = isLoading,
+        tabularSupporting = tabularSupporting,
+        contentDescription = contentDescription,
+    )
+}
+
+/**
+ * A row of a list: an optional leading icon or image, the headline, an optional supporting line and value, and an
+ * optional trailing control. On iOS it's a cell of an inset grouped card at [position]; on Android a Material list item.
+ *
+ * @param headline The headline, possibly with styled spans, such as the matched part of a place's name in bold.
+ * @param value A setting's current value, such as "km": after the label on iOS, below it on Android.
+ * @param chevron A row that opens a screen passes the chevron; it shows on iOS only, where such rows end in one.
+ * @param isDimmed Fades the row, such as a place outside the covered area. It stays tappable.
+ * @param isLoading The [CarSpinner] takes the headline's place and taps are ignored, such as while deleting the account.
+ * @param swipeDelete Lets the row be swiped left to delete it, on both platforms. Its icon shows in the red area, and
+ *   screen readers get its label as an action instead. A row that stays, such as when offline, slides back.
+ * @param tabularSupporting Sets the [supporting] line's digits to equal width, so distances in a column line up.
+ * @param contentDescription What screen readers say for the whole row instead of its texts, when they don't make a good
+ *   sentence on their own, such as a place's name, kind, distance and area. Null keeps the texts.
+ */
+@Composable
+fun ListRow(
+    headline: AnnotatedString,
+    modifier: Modifier = Modifier,
+    supporting: String? = null,
+    value: String? = null,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
+    swipeDelete: IconAction? = null,
+    chevron: Painter? = null,
+    position: GroupPosition = GroupPosition.Alone,
+    colors: ListRowColors = ListRowDefaultColors.default(),
+    groupColors: ListGroupColors = ListGroupDefaultColors.opaque(),
+    isDimmed: Boolean = false,
+    isLoading: Boolean = false,
+    tabularSupporting: Boolean = false,
+    contentDescription: String? = null,
 ) {
     val style = AppTheme.platformStyle.list
     val row: @Composable () -> Unit = {
@@ -186,6 +238,8 @@ fun ListRow(
             groupColors = groupColors,
             isDimmed = isDimmed,
             isLoading = isLoading,
+            tabularSupporting = tabularSupporting,
+            contentDescription = contentDescription,
         )
     }
     // The inset and the clip stay still while the row moves, so the card's corners hold during a swipe
@@ -212,7 +266,7 @@ fun ListRow(
 @Composable
 private fun ListRowSurface(
     style: ListStyle,
-    headline: String,
+    headline: AnnotatedString,
     supporting: String?,
     value: String?,
     leading: (@Composable () -> Unit)?,
@@ -225,6 +279,8 @@ private fun ListRowSurface(
     groupColors: ListGroupColors,
     isDimmed: Boolean,
     isLoading: Boolean,
+    tabularSupporting: Boolean,
+    contentDescription: String?,
 ) {
     // iOS separators start at the text, so they don't cut through the leading icons
     val separatorStart = style.rowPadding.calculateStartPadding(LocalLayoutDirection.current) +
@@ -235,7 +291,14 @@ private fun ListRowSurface(
             .rowSurface(style, position, groupColors, separatorStart, onClick, swipeDelete, isLoading)
             .heightIn(min = minRowHeight(style, supporting, value))
             .padding(style.rowPadding)
-            .alpha(if (isDimmed) DIMMED_ALPHA else 1f),
+            .alpha(if (isDimmed) DIMMED_ALPHA else 1f)
+            .then(
+                if (contentDescription != null) {
+                    Modifier.semantics(mergeDescendants = true) { this.contentDescription = contentDescription }
+                } else {
+                    Modifier
+                },
+            ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Grid.d3),
     ) {
@@ -246,6 +309,7 @@ private fun ListRowSurface(
             value = value,
             isLoading = isLoading,
             colors = colors,
+            tabularSupporting = tabularSupporting,
             modifier = Modifier.weight(1f),
         )
         if (style.valueAfterLabel && value != null) {
@@ -535,11 +599,12 @@ private fun minRowHeight(style: ListStyle, supporting: String?, value: String?):
 
 @Composable
 private fun ListRowText(
-    headline: String,
+    headline: AnnotatedString,
     supporting: String?,
     value: String?,
     isLoading: Boolean,
     colors: ListRowColors,
+    tabularSupporting: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val style = AppTheme.platformStyle.list
@@ -557,7 +622,11 @@ private fun ListRowText(
             }
         }
         if (supporting != null) {
-            Text(text = supporting, style = style.supportingStyle, color = colors.supportingColor)
+            Text(
+                text = supporting,
+                style = if (tabularSupporting) style.supportingStyle.copy(fontFeatureSettings = TABULAR_DIGITS) else style.supportingStyle,
+                color = colors.supportingColor,
+            )
         }
         if (!style.valueAfterLabel && value != null) {
             Text(text = value, style = style.supportingStyle, color = colors.supportingColor)
@@ -580,6 +649,9 @@ private const val DIMMED_ALPHA = 0.5f
 
 // The glass shows through the card, as cards in Apple Maps' sheets do
 private const val TRANSLUCENT_GROUP_ALPHA = 0.6f
+
+// Equal-width digits, so numbers such as distances line up down a list
+private const val TABULAR_DIGITS = "tnum"
 
 // The icon fills about half of its circle, so the circle reads as a container
 private const val ICON_SCALE = 0.55f

@@ -43,8 +43,7 @@ Most searches are for a place the user already knows, so search is built to find
 
 The search is a step of the map's sheet: `TripPlanComponent` in `:feature:map` holds it, and `TripPlanSheetUi` draws
 the field and the suggestions on both platforms. The code holds its layout and copy; these are the decisions behind
-it. What isn't built yet, recent places, the start, the kinds and distances of places and the error states, is still
-in [design.md](design.md).
+it. What isn't built yet, recent places, the start and points picked on the map, is still in [design.md](design.md).
 
 - **Tapping the field moves the sheet to full height,** with the keyboard. Dragging the sheet lower or scrolling the
   list hides the keyboard and keeps the text. Close (X on iOS, the back arrow or Back on Android) clears the text and
@@ -59,8 +58,20 @@ in [design.md](design.md).
   outside: Clear, Close and choosing a place.
 - **Until recent places exist, the empty field shows "Search for a place."** The designed hint also teaches touching
   and holding the map, which comes with [Route planning](../route-planning/README.md).
+- **Matching ignores case and diacritics,** with one character folded to one, so the bold parts of a name line up with
+  what was typed: "karlst" bolds "Karlšt". A word matches from its start only.
+- **Distances are straight lines from the user** in the units of the phone's region, miles in the US and the UK, until
+  Settings lets the user choose. With approximate location they're whole kilometres or miles, and without location
+  access they're left out.
+- **Calls carry the phone's languages as `Accept-Language`,** on Android too, so place names come in the user's
+  language where the map data has it.
+- **A slow search shows the car spinner** in place of the clear button after 0.5 s, so nothing in the field moves.
+- **Offline and failed searches say which it is,** each with Try again; no results has no button, as searching again
+  means changing the text. Until picking a point exists, its text doesn't mention touching and holding the map.
 - **Until Route planning exists, choosing a place only drops its pin** on the [Map](../map/README.md#design). A place
-  outside the covered area can't be chosen; the message that explains it isn't built yet.
+  outside the covered area is dimmed, and tapping it explains that routes start and end in Czechia for now.
+- **Ordering places with the same name by the map's centre,** without location access, comes in a later slice; the
+  user's location already orders them.
 
 ## Account
 

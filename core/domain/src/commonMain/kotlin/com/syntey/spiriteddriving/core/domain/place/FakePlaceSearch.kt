@@ -28,6 +28,7 @@ class FakePlaceSearch(private val suggestions: List<PlaceSuggestion> = Recorded)
                     location = GeoPoint(latitude = 49.933809, longitude = 14.1832917),
                 ),
                 isCovered = true,
+                kind = PlaceKind.Town,
             ),
             PlaceSuggestion(
                 place = Place(
@@ -36,6 +37,7 @@ class FakePlaceSearch(private val suggestions: List<PlaceSuggestion> = Recorded)
                     location = GeoPoint(latitude = 49.939361, longitude = 14.1882543),
                 ),
                 isCovered = true,
+                kind = PlaceKind.PointOfInterest,
             ),
             PlaceSuggestion(
                 place = Place(
@@ -44,6 +46,7 @@ class FakePlaceSearch(private val suggestions: List<PlaceSuggestion> = Recorded)
                     location = GeoPoint(latitude = 50.0552885, longitude = 14.3641761),
                 ),
                 isCovered = true,
+                kind = PlaceKind.Street,
             ),
             PlaceSuggestion(
                 place = Place(
@@ -52,6 +55,7 @@ class FakePlaceSearch(private val suggestions: List<PlaceSuggestion> = Recorded)
                     location = GeoPoint(latitude = 51.0504, longitude = 13.7373),
                 ),
                 isCovered = false,
+                kind = PlaceKind.Town,
             ),
         )
     }
