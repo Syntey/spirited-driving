@@ -21,6 +21,13 @@ interface PlatformLocationPermission {
     fun currentAccess(listener: LocationPermissionListener)
 
     /**
+     * Offers precise location while only approximate is allowed, and reports what the user allows to [listener], once: on
+     * Android the system prompt, on iOS the app's page in the system settings, as iOS's prompt grants it only until the app
+     * is closed. Can be called from any thread; [listener] may be called on any thread.
+     */
+    fun requestPrecise(listener: LocationPermissionListener)
+
+    /**
      * Opens this app's page in the system settings, where the user can turn location access on after denying it for good.
      * Can be called from any thread.
      */

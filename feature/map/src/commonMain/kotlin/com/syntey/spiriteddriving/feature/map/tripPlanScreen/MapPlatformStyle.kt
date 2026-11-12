@@ -8,6 +8,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
+import dev.icerock.moko.resources.ImageResource
+import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
@@ -17,9 +19,17 @@ import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
  *
  * @property sheetContentPadding Around the content of the map's sheet: on Android below the sheet's drag handle, on iOS
  * from the top of the native sheet, below its grabber.
+ * @property sheetSpacing Between the items of the sheet's content.
+ * @property preciseLocationIcon The icon of the "Precise location is off" note: the locate target on Android, an outline arrow
+ *   like the locate button on iOS.
  */
 @Immutable
-internal data class MapPlatformStyle(val sheetContentPadding: PaddingValues, val searchField: SearchFieldStyle) {
+internal data class MapPlatformStyle(
+    val sheetContentPadding: PaddingValues,
+    val sheetSpacing: Dp,
+    val preciseLocationIcon: ImageResource,
+    val searchField: SearchFieldStyle,
+) {
     companion object {
         /** The values of the platform [AppTheme] shows. */
         val current: MapPlatformStyle
@@ -30,6 +40,8 @@ internal data class MapPlatformStyle(val sheetContentPadding: PaddingValues, val
         fun of(platform: UiPlatform, typography: Typography): MapPlatformStyle = when (platform) {
             UiPlatform.Android -> MapPlatformStyle(
                 sheetContentPadding = PaddingValues(start = Grid.d4, top = Grid.d0, end = Grid.d4, bottom = Grid.d4),
+                sheetSpacing = Grid.d3,
+                preciseLocationIcon = MR.images.locate,
                 searchField = SearchFieldStyle(
                     height = Grid.d14,
                     iconSize = Grid.d6,
@@ -42,6 +54,8 @@ internal data class MapPlatformStyle(val sheetContentPadding: PaddingValues, val
 
             UiPlatform.Ios -> MapPlatformStyle(
                 sheetContentPadding = PaddingValues(start = Grid.d3, top = Grid.d5, end = Grid.d3, bottom = Grid.d3_5),
+                sheetSpacing = Grid.d2_5,
+                preciseLocationIcon = MR.images.locate_arrow,
                 searchField = SearchFieldStyle(
                     height = Grid.d12,
                     iconSize = Grid.d5,

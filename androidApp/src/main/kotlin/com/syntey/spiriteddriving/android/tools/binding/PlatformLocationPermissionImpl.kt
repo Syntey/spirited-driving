@@ -66,6 +66,9 @@ class PlatformLocationPermissionImpl(private val context: Context) : PlatformLoc
         }
     }
 
+    // Asking with approximate access granted offers the upgrade to precise, so this is the same prompt
+    override fun requestPrecise(listener: LocationPermissionListener) = request(listener)
+
     override fun currentAccess(listener: LocationPermissionListener) {
         mainHandler.post {
             // As after a prompt: with no rationale to show, a denial seen before means the system won't ask again

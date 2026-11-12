@@ -14,6 +14,11 @@ struct MapView: UIViewRepresentable {
     // The covered area, with a margin around its corners
     private static let overviewPadding = 1.1
 
+    // The theme's `scrim` at 20% light and 50% dark, and `secondary` from core/ui's Colors.kt
+    private static let dimColor = UIColor(resource: .coveredAreaDim)
+    private static let borderColor = UIColor(resource: .coveredAreaBorder)
+    private static let borderWidth: CGFloat = 1.5
+
     private let map: RouteMapState
     private let bottomMargin: CGFloat
     private let onPanned: () -> Void
@@ -36,6 +41,14 @@ struct MapView: UIViewRepresentable {
         mapView.delegate = context.coordinator
         mapView.showsUserLocation = map.showsUserLocation
         mapView.setRegion(Self.region(for: map.overview), animated: false)
+        context.coordinator.shownOverviewRequest = map.overviewRequest
+        context.coordinator.showCoveredArea(map.coveredArea, on: mapView)
+
+        // The renderers take their colours from the trait collection when created, so the overlays are re-added on change
+        let coordinator = context.coordinator
+        mapView.registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (mapView: MKMapView, _) in
+            coordinator.showCoveredArea(coordinator.coveredArea, on: mapView)
+        }
         return mapView
     }
 
@@ -43,6 +56,9 @@ struct MapView: UIViewRepresentable {
         context.coordinator.onPanned = onPanned
         mapView.showsUserLocation = map.showsUserLocation
         mapView.layoutMargins.bottom = bottomMargin
+        if map.coveredArea != context.coordinator.coveredArea {
+            context.coordinator.showCoveredArea(map.coveredArea, on: mapView)
+        }
 
         // The map doesn't rotate with the heading: `.follow`, not `.followWithHeading`
         let mode: MKUserTrackingMode = map.followsUser && map.showsUserLocation ? .follow : .none
@@ -51,6 +67,18 @@ struct MapView: UIViewRepresentable {
             mapView.setUserTrackingMode(mode, animated: true)
             context.coordinator.isChangingMode = false
         }
+
+        // A request moves the map to the overview when it isn't following; following, the tracking mode keeps it on the user
+        if map.overviewRequest != context.coordinator.shownOverviewRequest {
+            context.coordinator.shownOverviewRequest = map.overviewRequest
+            if mode == .none {
+                mapView.setRegion(Self.region(for: map.overview), animated: true)
+            }
+        }
+    }
+
+    private static func coordinates(_ points: [DomainGeoPoint]) -> [CLLocationCoordinate2D] {
+        points.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
     }
 
     private static func region(for overview: DomainGeoBounds) -> MKCoordinateRegion {
@@ -70,6 +98,9 @@ struct MapView: UIViewRepresentable {
     final class Coordinator: NSObject, MKMapViewDelegate {
         var onPanned: () -> Void
         var isChangingMode = false
+        var shownOverviewRequest: Int32 = 0
+        var coveredArea: [DomainGeoPolygon] = []
+        private var coveredOverlays: [MKOverlay] = []
 
         init(onPanned: @escaping () -> Void) {
             self.onPanned = onPanned
@@ -80,6 +111,47 @@ struct MapView: UIViewRepresentable {
             if mode == .none, !isChangingMode {
                 onPanned()
             }
+        }
+
+        func showCoveredArea(_ area: [DomainGeoPolygon], on mapView: MKMapView) {
+            coveredArea = area
+            mapView.removeOverlays(coveredOverlays)
+            coveredOverlays = area.isEmpty ? [] : makeCoveredOverlays(area)
+            mapView.addOverlays(coveredOverlays, level: .aboveRoads)
+        }
+
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            switch overlay {
+            case let polygon as MKPolygon:
+                let renderer = MKPolygonRenderer(polygon: polygon)
+                renderer.fillColor = MapView.dimColor.resolvedColor(with: mapView.traitCollection)
+                return renderer
+            case let polyline as MKPolyline:
+                let renderer = MKPolylineRenderer(polyline: polyline)
+                renderer.strokeColor = MapView.borderColor.resolvedColor(with: mapView.traitCollection)
+                renderer.lineWidth = MapView.borderWidth
+                return renderer
+            default:
+                return MKOverlayRenderer(overlay: overlay)
+            }
+        }
+
+        // The world with the covered outlines cut out, then the holes and every outline and hole as a border
+        private func makeCoveredOverlays(_ area: [DomainGeoPolygon]) -> [MKOverlay] {
+            let world = MKMapRect.world
+            let corners = [
+                MKMapPoint(x: world.minX, y: world.minY),
+                MKMapPoint(x: world.maxX, y: world.minY),
+                MKMapPoint(x: world.maxX, y: world.maxY),
+                MKMapPoint(x: world.minX, y: world.maxY)
+            ]
+            let outlines = area.map { MapView.coordinates($0.outline) }
+            let holes = area.flatMap(\.holes).map { MapView.coordinates($0) }
+            let interiorPolygons = outlines.map { MKPolygon(coordinates: $0, count: $0.count) }
+            var overlays: [MKOverlay] = [MKPolygon(points: corners, count: corners.count, interiorPolygons: interiorPolygons)]
+            overlays += holes.map { MKPolygon(coordinates: $0, count: $0.count) as MKOverlay }
+            overlays += (outlines + holes).map { MKPolyline(coordinates: $0, count: $0.count) as MKOverlay }
+            return overlays
         }
     }
 }

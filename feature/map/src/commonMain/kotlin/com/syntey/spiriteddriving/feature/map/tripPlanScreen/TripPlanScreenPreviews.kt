@@ -1,5 +1,7 @@
 package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 
+import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
+import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,4 +16,23 @@ internal object TripPlanScreenPreviews {
         locationAccess = locationAccess,
         map = RouteMapState(showsUserLocation = locationAccess.allowsLocation, followsUser = followsUser),
     )
+
+    fun approximateViewState(): TripPlanViewState =
+        viewState(locationAccess = LocationAccess.Approximate).copy(isPreciseLocationNoteClosed = false)
+
+    fun outsideViewState(): TripPlanViewState {
+        val covered = FakeCoverageSource.Czechia
+        val dresden = GeoPoint(latitude = 51.05, longitude = 13.74)
+        return TripPlanViewState(
+            locationAccess = LocationAccess.Precise,
+            map = RouteMapState(
+                showsUserLocation = true,
+                followsUser = false,
+                userLocation = dresden,
+                overview = covered.bounds.including(dresden),
+                coveredArea = covered.area,
+                overviewRequest = 1,
+            ),
+        )
+    }
 }

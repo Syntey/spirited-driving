@@ -1,6 +1,6 @@
 # Map
 
-> **Status:** partly built, MVP. Last updated 2026-11-11.
+> **Status:** partly built, MVP. Last updated 2026-11-12.
 
 The primary screen, inspired by Waze: a full-screen map around the user, with the destination search on it.
 
@@ -30,8 +30,8 @@ The primary screen, inspired by Waze: a full-screen map around the user, with th
 
 The screen is `TripPlanComponent` in `:feature:map`. `MapScreenUi` draws it on Android and `MapComponent` on iOS, around
 the sheet's shared content, `TripPlanSheetUi` ([Architecture](../../architecture.md#how-the-map-screen-is-built)). The
-code holds its layout, sizes and copy; these are the decisions behind it. What isn't built yet, the covered area, the
-notes, the sheet's heights and picking a point, is still in [design.md](design.md).
+code holds its layout, sizes and copy; these are the decisions behind it. What isn't built yet, the sheet's heights and
+picking a point, is still in [design.md](design.md).
 
 - **The map follows the user** whenever location access is on, so it opens where they are. Panning stops it, and the
   locate button brings it back. The map doesn't turn with the heading.
@@ -47,6 +47,17 @@ notes, the sheet's heights and picking a point, is still in [design.md](design.m
   since a map ID would move the map to a paid SKU. Business and transit points of interest are hidden on both.
 - **The map's padding is the sheet's height,** so the map's logo and legal notice stay visible. On iOS the collapsed
   sheet is as tall as its Compose content measures, so it fits larger text.
+- **The covered area is kept on the device** and checked against the backend's version on each launch, so the map
+  dims it at once and offline. Until the first one arrives, the map opens on Czechia's corners, undimmed.
+- **Outside the covered area, the map zooms out once,** when the user's location and the covered area are first both
+  known. Later locations don't move the camera, so the user can pan, and the locate button follows them as usual.
+- **The dimming sits below place names on iOS,** so the towns across the border stay readable. Google Maps draws
+  shapes above its labels, so on Android they're dimmed too.
+- **Turn on, in the "Precise location is off" note, opens the app's page in Settings on iOS.** iOS's own prompt grants
+  precise location only until the app is closed, so the note would be back on the next launch. Android's prompt
+  switches it for good.
+- **Once closed, the precise-location note stays closed,** kept on the device: approximate location can be the user's
+  choice. Outside the covered area only that area's note shows, as it says more.
 - **The sheet has only its collapsed height** until [Destination search](../destination-search/README.md) adds the half
   and full heights. On Android it's a fixed surface until then. The search field and the profile button do nothing
   yet; they open Destination search and Profile once those are built.
@@ -57,7 +68,7 @@ Not needed.
 
 ## Backend
 
-None of its own.
+The covered area.
 
 ## Open questions
 

@@ -19,6 +19,7 @@ class GetLocationAccessUseCaseTest {
 
     private class CurrentPermission(private val access: LocationAccess) : PlatformLocationPermission {
         override fun request(listener: LocationPermissionListener) = Unit
+        override fun requestPrecise(listener: LocationPermissionListener) = Unit
         override fun currentAccess(listener: LocationPermissionListener) = listener.onResult(access)
         override fun openSettings() = Unit
     }
