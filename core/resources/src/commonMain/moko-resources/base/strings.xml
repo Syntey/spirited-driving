@@ -81,4 +81,7 @@
     <string name="search_failed_text">The problem is on our side, not your connection.</string>
     <string name="search_no_results_title">No places match “%1$s”</string>
     <string name="search_no_results_text">Check the spelling.</string>
+    <string name="search_recent_header">Recent</string>
+    <string name="search_recent_a11y">recent place</string>
+    <string name="search_recent_remove">Remove</string>
 </resources>

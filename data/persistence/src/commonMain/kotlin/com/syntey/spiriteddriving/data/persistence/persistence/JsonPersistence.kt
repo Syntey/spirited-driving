@@ -60,6 +60,36 @@ internal class JsonPersistence(@Provided private val dataStore: DataStore<Prefer
             }
 
     /**
+     * Replaces the object under [key] with what [transform] makes of it, in one edit. An object that can't be read as [T]
+     * reaches [transform] as `null`.
+     *
+     * @return The object [transform] made.
+     */
+    suspend inline fun <reified T : Any> update(
+        key: Preferences.Key<String>,
+        crossinline transform: (T?) -> T,
+    ): T {
+        var updated: T? = null
+        dataStore.edit { preferences ->
+            val current = preferences[key]?.let { jsonString ->
+                runCatching { json.decodeFromString<T>(jsonString) }
+                    .recoverCatching { error ->
+                        if (error is SerializationException) {
+                            logger.e(error) { "Unable to deserialize property with key '${key.name}'" }
+                            null
+                        } else {
+                            throw error
+                        }
+                    }.getOrThrow()
+            }
+            val value = transform(current)
+            preferences[key] = json.encodeToString<T>(value)
+            updated = value
+        }
+        return requireNotNull(updated)
+    }
+
+    /**
      * Removes persisted object with provided [key].
      */
     suspend fun delete(key: Preferences.Key<String>) = dataStore.edit { preferences -> preferences.remove(key) }

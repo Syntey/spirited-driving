@@ -135,4 +135,18 @@ class RouteMapStateTest {
         assertFalse(following.withUserLocation(dresden).isOutsideCoveredArea)
         assertTrue(following.withCoverage(covered).withUserLocation(dresden).isOutsideCoveredArea)
     }
+
+    @Test
+    fun `every point is covered until the covered area is loaded`() {
+        val dresden = GeoPoint(latitude = 51.05, longitude = 13.74)
+
+        assertTrue(RouteMapState().covers(dresden))
+    }
+
+    @Test
+    fun `a point outside the loaded covered area is not covered`() {
+        val dresden = GeoPoint(latitude = 51.05, longitude = 13.74)
+
+        assertFalse(RouteMapState(coveredArea = FakeCoverageSource.Czechia.area).covers(dresden))
+    }
 }

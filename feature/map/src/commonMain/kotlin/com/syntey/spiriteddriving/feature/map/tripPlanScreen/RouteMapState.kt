@@ -41,6 +41,12 @@ data class RouteMapState(
         )
     }
 
+    /**
+     * Whether [point] is in the covered area. Until the covered area is loaded every point counts as covered, as recent places
+     * were covered when they were chosen.
+     */
+    fun covers(point: GeoPoint): Boolean = coveredArea.isEmpty() || coveredArea.any { it.contains(point) }
+
     /** Whether the user is outside the covered area; false until both are known. */
     val isOutsideCoveredArea: Boolean
         get() {

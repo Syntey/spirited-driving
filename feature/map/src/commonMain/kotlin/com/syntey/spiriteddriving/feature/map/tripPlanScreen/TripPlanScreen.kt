@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 
+import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,6 +34,12 @@ interface TripPlanScreen {
         /** Tapped a suggestion. */
         fun onSuggestionClick(suggestion: PlaceSuggestion)
 
+        /** Tapped a recent place. */
+        fun onRecentPlaceClick(place: Place)
+
+        /** Swiped a recent place away. */
+        fun onRecentPlaceRemove(place: Place)
+
         /** Tapped Try again after a failed search. */
         fun onSearchRetry()
 
@@ -59,6 +66,8 @@ interface TripPlanScreen {
                 override fun onSearchClose() = Unit
                 override fun onSheetHeightChange(height: SheetHeight) = Unit
                 override fun onSuggestionClick(suggestion: PlaceSuggestion) = Unit
+                override fun onRecentPlaceClick(place: Place) = Unit
+                override fun onRecentPlaceRemove(place: Place) = Unit
                 override fun onSearchRetry() = Unit
                 override fun onLocateClick() = Unit
                 override fun onMapPanned() = Unit

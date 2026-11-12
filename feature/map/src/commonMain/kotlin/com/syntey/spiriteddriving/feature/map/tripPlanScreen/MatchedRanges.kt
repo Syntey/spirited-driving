@@ -6,16 +6,33 @@ package com.syntey.spiriteddriving.feature.map.tripPlanScreen
  * diacritics don't count, so "karlst" matches "Karlštejn". Overlapping parts are merged.
  */
 internal fun matchedRanges(name: String, text: String): List<IntRange> {
-    val typedWords = text.split(WHITESPACE).filter { it.isNotEmpty() }.map(::foldText)
+    val typedWords = typedWords(text)
     if (typedWords.isEmpty()) return emptyList()
     // Folding keeps every character's position, so the ranges found in the folded name are the ones in the name
     val folded = foldText(name)
-    val found = name.indices.filter { start -> start == 0 || !name[start - 1].isLetterOrDigit() }.mapNotNull { start ->
+    val found = wordStarts(name).mapNotNull { start ->
         val matchLength = typedWords.filter { folded.startsWith(it, startIndex = start) }.maxOfOrNull { it.length }
         matchLength?.let { start until start + it }
     }
     return merged(found)
 }
+
+/**
+ * Whether every word of [text] starts a word of [name] or [area], ignoring case and diacritics, as [matchedRanges] matches.
+ * Blank text matches nothing.
+ */
+internal fun placeMatches(name: String, area: String?, text: String): Boolean {
+    val typedWords = typedWords(text)
+    if (typedWords.isEmpty()) return false
+    val folded = foldText(name + " " + area.orEmpty())
+    val starts = wordStarts(folded)
+    return typedWords.all { word -> starts.any { folded.startsWith(word, startIndex = it) } }
+}
+
+private fun typedWords(text: String): List<String> = text.split(WHITESPACE).filter { it.isNotEmpty() }.map(::foldText)
+
+// The positions where a word begins: the first character, and each one after a character that isn't a letter or digit
+private fun wordStarts(text: String): List<Int> = text.indices.filter { start -> start == 0 || !text[start - 1].isLetterOrDigit() }
 
 /** Sorted by start, with overlapping ranges joined into one. */
 private fun merged(ranges: List<IntRange>): List<IntRange> {
