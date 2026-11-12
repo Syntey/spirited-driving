@@ -12,12 +12,19 @@ protocol MapComponentModelProtocol: AnyObject {
     var collapsedSheetHeight: CGFloat { get }
     /// The sheet's detent, which the view state owns: focusing the field and closing the search move it, and a drag sets it.
     var sheetDetent: PresentationDetent { get set }
+    /// Where the presented sheet's top edge is, from the top of the screen; 0 until measured. Its content is laid out at the
+    /// tallest detent, so its height says nothing about how much of the map the sheet covers.
+    var sheetTop: CGFloat { get set }
+    var routeLines: [RouteLine] { get }
+    var routeBounds: DomainGeoBounds? { get }
+    var showsMapButtons: Bool { get }
 
     func sheetViewController() -> UIViewController
     func onLocateClick()
     func onMapPanned()
     func onMapLongPress(_ point: DomainGeoPoint)
     func onProfileClick()
+    func onRouteClick(_ id: String)
 }
 
 @Observable
@@ -27,11 +34,15 @@ final class MapComponentModel: MapComponentModelProtocol {
 
     // Until the sheet's content is measured: the search field and its padding
     private(set) var collapsedSheetHeight: CGFloat = 82
+    var sheetTop: CGFloat = 0
 
     // MARK: Public computed properties
 
     var map: RouteMapState { viewState.map }
     var locateButton: LocateButton { viewState.locateButton }
+    var routeLines: [RouteLine] { Array(viewState.routeLines) }
+    var routeBounds: DomainGeoBounds? { viewState.routeBounds }
+    var showsMapButtons: Bool { viewState.showsMapButtons }
     var sheetDetent: PresentationDetent {
         get {
             switch viewState.sheetHeight {
@@ -106,6 +117,10 @@ final class MapComponentModel: MapComponentModelProtocol {
     func onProfileClick() {
         screen.actions.onProfileClick()
     }
+
+    func onRouteClick(_ id: String) {
+        screen.actions.onRouteClick(routeId: id)
+    }
 }
 
 #if DEBUG
@@ -137,6 +152,10 @@ final class MapComponentModelMock: MapComponentModelProtocol {
     var locateButton = LocateButton.following
     var collapsedSheetHeight: CGFloat = 82
     var sheetDetent: PresentationDetent = .height(82)
+    var sheetTop: CGFloat = 0
+    var routeLines: [RouteLine] = []
+    var routeBounds: DomainGeoBounds?
+    var showsMapButtons = true
 
     func sheetViewController() -> UIViewController {
         UIViewController()
@@ -146,5 +165,6 @@ final class MapComponentModelMock: MapComponentModelProtocol {
     func onMapPanned() {}
     func onMapLongPress(_ point: DomainGeoPoint) {}
     func onProfileClick() {}
+    func onRouteClick(_ id: String) {}
 }
 #endif

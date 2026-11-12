@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
@@ -43,11 +44,17 @@ fun RouteBadge(
     fastestIcon: Painter? = null,
 ) {
     require(number != null || fastestIcon != null) { "A route badge needs a number, or the fastest icon" }
-    val content = if (color.luminance() > LIGHT_LUMINANCE) OnLightRoute else Color.White
+    val content = onRouteColor(color)
+    val textStyle = MaterialTheme.typography.labelLarge.withTabularFigures()
+    // The badge and icon grow by the same factor as the number, so the number keeps its room at any font size. Android
+    // scales large text less than small text, so the factor comes from the number's own size, not from the badge's
+    val fontScale = with(LocalDensity.current) { textStyle.fontSize.toPx() / (textStyle.fontSize.value * density) }
+    val badgeSize = Grid.d6 * fontScale
+    val iconSize = Grid.d4 * fontScale
 
     Box(
         modifier = modifier
-            .size(Grid.d6)
+            .size(badgeSize)
             .clip(MaterialTheme.shapes.extraSmall)
             .background(color)
             .clearAndSetSemantics { this.contentDescription = contentDescription },
@@ -56,19 +63,26 @@ fun RouteBadge(
         if (number != null) {
             Text(
                 text = number.toString(),
-                style = MaterialTheme.typography.labelLarge.withTabularFigures(),
+                style = textStyle,
                 color = content,
             )
         } else if (fastestIcon != null) {
             Icon(
                 painter = fastestIcon,
                 contentDescription = null,
-                modifier = Modifier.size(Grid.d4),
+                modifier = Modifier.size(iconSize),
                 tint = content,
             )
         }
     }
 }
+
+/**
+ * The text colour on a route colour: dark on the lighter route colours of the dark theme, white on the darker ones of the
+ * light theme, so the text always contrasts with its colour.
+ */
+internal fun onRouteColor(color: Color): Color =
+    if (color.luminance() > LIGHT_LUMINANCE) OnLightRoute else Color.White
 
 // Light route colours in the dark theme and dark ones in the light theme: the text has to contrast with the colour
 private const val LIGHT_LUMINANCE = 0.4f

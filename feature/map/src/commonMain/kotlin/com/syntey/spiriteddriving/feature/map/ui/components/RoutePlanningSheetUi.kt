@@ -13,9 +13,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -173,9 +175,21 @@ private fun PlanningList() {
     }
 }
 
+// On iOS the rows sit on one translucent card, inset from its edge so the rows' corners stay inside it. The card ends
+// below the last row; the list scrolls inside it when the rows don't fit.
 @Composable
 private fun RouteList(rows: ImmutableList<RouteRow>, onRouteClick: (String) -> Unit) {
-    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(Grid.d1)) {
+    val style = MapPlatformStyle.current.routeList
+    val card = if (style.rowsOnCard) {
+        Modifier.clip(AppTheme.platformStyle.cardShape).background(ListGroupDefaultColors.translucent().containerColor)
+    } else {
+        Modifier.fillMaxHeight()
+    }
+    LazyColumn(
+        Modifier.fillMaxWidth().then(card),
+        contentPadding = PaddingValues(if (style.rowsOnCard) Grid.d1 else Grid.d0),
+        verticalArrangement = Arrangement.spacedBy(Grid.d1),
+    ) {
         items(rows, key = { it.id }) { row ->
             RouteRowItem(row = row, onClick = { onRouteClick(row.id) })
         }
@@ -187,7 +201,13 @@ private fun RouteList(rows: ImmutableList<RouteRow>, onRouteClick: (String) -> U
 @Composable
 private fun RouteRowItem(row: RouteRow, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val color = routeColor(row.number)
-    val shape = AppTheme.platformStyle.cardShape
+    val style = MapPlatformStyle.current.routeList
+    val shape = style.rowShape
+    val selectedFill = if (style.isSelectedRowLifted) {
+        AppTheme.customColors.listGroup
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHighest
+    }
     val badgeDescription = row.number?.let { stringResource(MR.strings.route_badge, it) }
         ?: stringResource(MR.strings.route_badge_fastest)
     Row(
@@ -195,10 +215,10 @@ private fun RouteRowItem(row: RouteRow, onClick: () -> Unit, modifier: Modifier 
             .fillMaxWidth()
             .semantics(mergeDescendants = true) { selected = row.isSelected }
             .clip(shape)
-            .background(if (row.isSelected) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent)
+            .background(if (row.isSelected) selectedFill else Color.Transparent)
             .then(if (row.isSelected) Modifier.border(Grid.d0_5, color, shape) else Modifier)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(Grid.d3),
+            .padding(Grid.d4),
         horizontalArrangement = Arrangement.spacedBy(Grid.d3),
         verticalAlignment = Alignment.Top,
     ) {
@@ -230,18 +250,6 @@ private fun RouteRowItem(row: RouteRow, onClick: () -> Unit, modifier: Modifier 
             label = stringResource(MR.strings.fun_meter),
             contentDescription = stringResource(MR.strings.fun_meter_description, row.funLevel),
         )
-    }
-}
-
-// Route 1 to 3 in the route colours, the fastest route in its own grey
-@Composable
-private fun routeColor(number: Int?): Color {
-    val colors = AppTheme.customColors
-    return when (number) {
-        null -> colors.routeFastest
-        1 -> colors.routeFun1
-        2 -> colors.routeFun2
-        else -> colors.routeFun3
     }
 }
 
