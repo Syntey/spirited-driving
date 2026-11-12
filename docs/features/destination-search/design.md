@@ -3,7 +3,7 @@
 > **Status:** partly built, being iterated. Last updated 2026-11-12.
 >
 > What's left to build of [Destination search](README.md): the search step of the map's sheet, for the destination and
-> for the start. The field, searching and the suggestions' order are built; the decisions behind them are in the
+> for the start. The field, searching, suggestions and their states are built; the decisions behind them are in the
 > README's [Design](README.md#design) section. Uses the [Theme](../../theme.md); the map, its sheet and the sheet's heights are described in the
 > [Map screen](../map/design.md).
 
@@ -41,36 +41,10 @@ Shown while the field is empty, under the header "Recent".
 
 ## Suggestions
 
-Shown while the field has text.
-
-- **Order:** up to 3 recent places that match the text, then the backend's suggestions, best match first, leaving
-  out any that already show as a recent place.
+- **Order:** up to 3 recent places that match the text, then the backend's suggestions, leaving out any that already
+  show as a recent place.
 - **Matching recent places:** their name or area has a word that starts with what was typed, ignoring case and
-  diacritics. They show at once and offline.
-- **Each row:** an icon for the place's kind (a clock for a recent place), the name, and the distance and area as
-  in [Recent places](#recent-places).
-- **Bold:** the parts of the name that match the typed words, from the start of a word, ignoring case and
-  diacritics ("karlst" bolds "Karlšt"). A name that matched in another language, such as "Prague" for "praha", has
-  nothing bold.
-- **Kinds:**
-
-  | Kind              | Icon     | Examples                              |
-  |-------------------|----------|---------------------------------------|
-  | Town              | Buildings | Cities, towns, villages, districts   |
-  | Street            | Road     | Streets without a house number        |
-  | Address           | House    | A street or village and house number  |
-  | Nature            | Mountain | Peaks, passes, viewpoints, lakes      |
-  | Place of interest | Pin      | Castles, shops, car parks; any kind the app doesn't know |
-
-  The icons sit in a circle on `secondaryContainer`.
-- **Not covered:** places outside the covered area are dimmed, and "Not covered yet" takes the distance's place:
-  "Not covered yet · Dresden, Saxony". Tapping one shows "Routes start and end in Czechia for now." in a message
-  capsule (iOS) or snackbar (Android).
-- Up to 10 suggestions come from the backend.
-
-**Distances** are straight lines from the user, in the units from Settings, with tabular figures: "850 m" under
-1 km (in steps of 50 m), "4.2 km" under 10 km, "28 km" from there; in miles, "0.3 mi", "4.2 mi", "17 mi". With
-approximate location they are whole km or miles. Without location access the distance is left out.
+  diacritics. They show at once and offline, with a clock for their icon.
 
 ## Searching
 
@@ -101,15 +75,8 @@ Touching and holding the map picks a point ([Map](../map/design.md#picking-a-poi
 
 ## States
 
-These use the [empty and error layout](../../theme.md#empty-and-error-states) in place of the suggestions, below
-the field:
-
-- **Offline:** recent places still show, matching ones too, with the layout below them: "You're offline" and
-  "Search needs a connection.", with Try again.
-- **Search failed** (server error or too many requests): "Search isn't working right now" and "The problem is on
-  our side, not your connection.", with Try again.
-- **No results:** "No places match "karlsxyz"" and "Check the spelling, or touch and hold the map to pick a
-  point." No button: searching again means changing the text.
+- **Offline:** recent places still show, matching ones too, above the offline layout.
+- **No results:** the text adds "or touch and hold the map to pick a point" once picking a point exists.
 
 ## Coming back
 
@@ -119,15 +86,7 @@ the field:
 
 ## Platforms
 
-|                | iOS                                           | Android                                         |
-|----------------|-----------------------------------------------|-------------------------------------------------|
-| Kind icons     | 30 pt circle                                  | 40 dp circle                                    |
-| Not covered tapped | Capsule on `inverseSurface`               | Snackbar                                        |
-
 - Swipe to remove is the same Compose code on both ([Architecture](../../architecture.md#shared-and-native-ui)).
-- Matching and bolding ignore diacritics in common code, with unit tests.
-- Screen readers hear a row as "Karlštejn Castle, place of interest, 28 kilometres, Karlštejn, Central Bohemia",
-  and a dimmed one with "not covered yet".
 
 ## Copy
 
@@ -137,13 +96,7 @@ the field:
 | Above the start field  | To Karlštejn Castle                                            |
 | Recent header          | Recent                                                         |
 | No recent places       | Search for a place, or touch and hold the map to pick a point. |
-| Row                    | 28 km · Karlštejn, Central Bohemia                             |
-| Not covered            | Not covered yet · Dresden, Saxony                              |
-| Not covered, tapped    | Routes start and end in Czechia for now.                       |
 | My location            | My location                                                    |
 | My location, notes     | Needs precise location / Needs location access / Outside the covered area |
 | Point on the map       | Point on the map                                               |
-| Offline                | You're offline / Search needs a connection.                    |
-| Search failed          | Search isn't working right now / The problem is on our side, not your connection. |
-| No results             | No places match "karlsxyz" / Check the spelling, or touch and hold the map to pick a point. |
-| Retry                  | Try again                                                      |
+| No results, with picking a point | Check the spelling, or touch and hold the map to pick a point. |

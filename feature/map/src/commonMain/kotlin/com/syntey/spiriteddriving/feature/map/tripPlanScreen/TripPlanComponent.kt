@@ -5,6 +5,7 @@ import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnStart
+import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
@@ -12,6 +13,7 @@ import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.core.ui.base.executeWithLifecycle
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.GetDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
@@ -19,7 +21,10 @@ import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
+import com.syntey.spiriteddriving.feature.map.domain.MIN_SEARCH_LENGTH
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase.SearchUpdate
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -40,7 +45,8 @@ internal class TripPlanComponent(
     private val isNoteClosedUseCase: IsNoteClosedUseCase,
     private val closeNoteUseCase: CloseNoteUseCase,
     private val searchPlacesUseCase: SearchPlacesUseCase,
-) : ScreenComponent<TripPlanViewState, Nothing, TripPlanScreenNavigation>(
+    private val getDistanceUnitUseCase: GetDistanceUnitUseCase,
+) : ScreenComponent<TripPlanViewState, TripPlanUiEvent, TripPlanScreenNavigation>(
     componentContext = componentContext,
     defaultState = TripPlanViewState(),
 ),
@@ -62,6 +68,11 @@ internal class TripPlanComponent(
         doOnStart(isOneTime = false) { readLocationAccess() }
         loadCoverage()
         readPreciseLocationNote()
+        // From the phone's region, so it's known before the first distance shows
+        getDistanceUnitUseCase.execute {
+            onSuccess { unit -> componentState.update { it.copy(distanceUnit = unit) } }
+            onError { error -> logger.e(error) { "Distance unit not read" } }
+        }
     }
 
     override fun onSearchFocus() = setSheetHeight(SheetHeight.Full)
@@ -73,13 +84,18 @@ internal class TripPlanComponent(
 
     override fun onSearchClear() = clearSearch()
 
+    override fun onSearchRetry() = search(componentState.value.search.text)
+
     override fun onSearchClose() = closeSearch()
 
     override fun onSheetHeightChange(height: SheetHeight) = setSheetHeight(height)
 
-    // Until route planning exists, choosing a place only drops its pin. Places outside the covered area can't be chosen.
+    // Until route planning exists, choosing a place only drops its pin.
     override fun onSuggestionClick(suggestion: PlaceSuggestion) {
-        if (!suggestion.isCovered) return
+        if (!suggestion.isCovered) {
+            sendUiEvent(TripPlanUiEvent.NotCovered)
+            return
+        }
         componentState.update { it.copy(map = it.map.withDestination(suggestion.place.location)) }
         closeSearch()
     }
@@ -108,12 +124,42 @@ internal class TripPlanComponent(
 
     // Each search cancels the one before, which may still wait for the pause in typing, so only the current text's answer shows
     private fun search(text: String) {
+        val isLongEnough = text.trim().length >= MIN_SEARCH_LENGTH
+        componentState.update { state ->
+            state.copy(
+                search = if (isLongEnough) {
+                    state.search.copy(status = SearchStatus.Searching, isSlow = false)
+                } else {
+                    state.search.copy(status = SearchStatus.Idle, suggestions = persistentListOf(), isSlow = false)
+                },
+            )
+        }
         val args = SearchPlacesUseCase.Args(text, near = componentState.value.map.userLocation)
         searchPlacesUseCase.execute(args) {
-            onSuccess { suggestions ->
-                componentState.update { it.copy(search = it.search.copy(suggestions = suggestions.toImmutableList())) }
+            onNext { update ->
+                componentState.update { state ->
+                    val current = state.search
+                    state.copy(
+                        search = when (update) {
+                            SearchUpdate.Slow -> current.copy(isSlow = true)
+
+                            is SearchUpdate.Found -> current.copy(
+                                suggestions = update.suggestions.toImmutableList(),
+                                status = if (isLongEnough) SearchStatus.Found else SearchStatus.Idle,
+                                isSlow = false,
+                            )
+                        },
+                    )
+                }
             }
-            onError { error -> logger.e(error) { "Place search failed" } }
+            onError { error ->
+                val isOffline = error is OfflineException
+                if (!isOffline) logger.e(error) { "Place search failed" }
+                val status = if (isOffline) SearchStatus.Offline else SearchStatus.Failed
+                componentState.update { state ->
+                    state.copy(search = state.search.copy(status = status, suggestions = persistentListOf(), isSlow = false))
+                }
+            }
         }
     }
 

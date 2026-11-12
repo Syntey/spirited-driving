@@ -11,4 +11,5 @@ internal data class PlaceSuggestionDto(
     @SerialName("name") val name: String,
     @SerialName("area") val area: String? = null,
     @SerialName("covered") val covered: Boolean,
+    @SerialName("kind") val kind: String,
 )

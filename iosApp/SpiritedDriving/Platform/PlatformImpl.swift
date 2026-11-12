@@ -29,4 +29,13 @@ final class PlatformImpl: Platform {
         let currentDevice = UIDevice.current
         return "\(currentDevice.systemName) \(currentDevice.systemVersion)"
     }
+
+    // Read from Kotlin's background threads, as network calls and use cases run there; Locale is safe off the main actor
+    nonisolated var preferredLanguages: [String] {
+        Locale.preferredLanguages
+    }
+
+    nonisolated var regionCode: String? {
+        Locale.current.region?.identifier
+    }
 }

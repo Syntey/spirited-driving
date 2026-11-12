@@ -1,7 +1,9 @@
 package com.syntey.spiriteddriving.data.network.place
 
+import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
+import com.syntey.spiriteddriving.core.domain.place.PlaceKind
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.data.network.api.createSpiritedDrivingApi
 import com.syntey.spiriteddriving.data.network.injection.NetworkModule
@@ -20,6 +22,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -45,10 +48,12 @@ class ApiPlaceSearchTest {
                     location = GeoPoint(latitude = 49.933809, longitude = 14.1832917),
                 ),
                 isCovered = true,
+                kind = PlaceKind.Town,
             ),
             suggestions.first(),
         )
         assertEquals("Karlštejnská", suggestions.last().place.name)
+        assertEquals(PlaceKind.Street, suggestions.last().kind)
     }
 
     @Test
@@ -98,6 +103,13 @@ class ApiPlaceSearchTest {
         assertEquals(503, error.statusCode)
     }
 
+    @Test
+    fun `no connection is thrown as offline`() = runTest {
+        val search = search { throw IOException("Network is unreachable") }
+
+        assertFailsWith<OfflineException> { search.search(text = "karlst", near = null) }
+    }
+
     private fun search(handler: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): ApiPlaceSearch {
         val client = HttpClient(
             MockEngine { request ->
@@ -125,6 +137,6 @@ class ApiPlaceSearchTest {
     private companion object {
         // Recorded from the local backend, trimmed to two items
         const val RECORDED_RESPONSE =
-            """{"items":[{"location":{"lat":49.933809,"lon":14.1832917},"name":"Karlštejn","area":"okres Beroun, Central Bohemian Region","covered":true},{"location":{"lat":50.0552885,"lon":14.3641761},"name":"Karlštejnská","area":"Prague","covered":true}]}"""
+            """{"items":[{"location":{"lat":49.933809,"lon":14.1832917},"name":"Karlštejn","area":"okres Beroun, Central Bohemian Region","covered":true,"kind":"TOWN"},{"location":{"lat":50.0552885,"lon":14.3641761},"name":"Karlštejnská","area":"Prague","covered":true,"kind":"STREET"}]}"""
     }
 }

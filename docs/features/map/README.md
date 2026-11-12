@@ -63,6 +63,8 @@ picking a point, is still in [design.md](design.md).
   [Destination search](../destination-search/README.md#design) below the field. On Android the sheet is only as tall
   as the part that shows, so its list ends at the bottom of the screen at every height, and the locate button hides
   above collapsed, where the sheet would cover it.
+- **The notes show on the collapsed sheet only,** so with the keyboard up the suggestions get the room. The collapsed
+  height is measured with them, so the sheet comes back to the same height.
 - **Until [Route planning](../route-planning/README.md) exists, choosing a place drops a pin** and moves the map to the
   streets around it. The profile button does nothing yet; it opens Profile once that's built.
 
