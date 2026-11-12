@@ -5,6 +5,7 @@
     <string name="app_name">Spirited Driving</string>
 
     <!-- Generic -->
+    <string name="generic_cancel">Cancel</string>
     <string name="generic_close">Close</string>
     <string name="generic_more">More</string>
     <string name="generic_try_again">Try again</string>
@@ -85,4 +86,27 @@
     <string name="search_recent_header">Recent</string>
     <string name="search_recent_a11y">recent place</string>
     <string name="search_recent_remove">Remove</string>
+
+    <!-- Route planning -->
+    <string name="planning_from_my_location">From My location</string>
+    <string name="planning_fastest">Fastest</string>
+    <string name="planning_looking">Looking for the most fun roads…</string>
+    <string name="planning_route_facts">%1$s of curvy roads · %2$s climbed</string>
+    <string name="planning_save">Save</string>
+    <string name="planning_drive">Drive</string>
+    <string name="planning_attribution">Route data © OpenStreetMap contributors</string>
+    <string name="planning_offline_title">You’re offline</string>
+    <string name="planning_offline_text">Planning needs a connection.</string>
+    <string name="planning_failed_title">Planning isn’t working right now</string>
+    <string name="planning_failed_text">The problem is on our side, not your connection.</string>
+
+    <!-- Units. The number is an argument; the unit is in the string. -->
+    <string name="unit_minutes">%1$d min</string>
+    <string name="unit_hours">%1$d h</string>
+    <string name="unit_hours_minutes">%1$d h %2$d min</string>
+    <string name="unit_metres">%1$s m</string>
+    <string name="unit_kilometres">%1$s km</string>
+    <string name="unit_miles">%1$s mi</string>
+    <string name="unit_feet">%1$s ft</string>
+    <string name="planning_extra">+%1$s</string>
 </resources>

@@ -64,6 +64,11 @@ complexity:
     allowedFunctionsPerClass: 30
     allowedFunctionsPerFile: 20
     allowedFunctionsPerObject: 20
+    # Previews sit at the bottom of their composable's file, one per state and platform, so they don't count
+    ignoreAnnotatedFunctions:
+      - Preview
+      - ComponentPreviews
+      - ScreenPreviews
   LongMethod:
     active: true
     ignoreAnnotated:

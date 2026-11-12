@@ -64,7 +64,7 @@ class ScreenKonsistTest {
                     reason = "Previews are how a screen is checked against its design without running the app, " +
                         "and @ScreenPreviews also shows it in dark mode and with large fonts.",
                     howToFix = "Add a private @ScreenPreviews function that renders the private Content composable inside " +
-                        "Showcase { }, with a view state from the screen's *ScreenPreviews object and noOpActions().",
+                        "Showcase { }, with a view state from the screen's *PreviewStates object and noOpActions().",
                 ),
             ) { file ->
                 file.functions().any { it.hasAnnotationWithName("ScreenPreviews") }

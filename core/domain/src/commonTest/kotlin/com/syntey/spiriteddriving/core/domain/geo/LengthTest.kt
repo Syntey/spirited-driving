@@ -20,6 +20,16 @@ class LengthTest {
     }
 
     @Test
+    fun `1 foot is 0 point 3048 metres`() {
+        assertEquals(1.0, 0.3048.metres.inFeet, absoluteTolerance = 1e-9)
+    }
+
+    @Test
+    fun `1 mile is 5280 feet`() {
+        assertEquals(5280.0, 1.miles.inFeet, absoluteTolerance = 1e-6)
+    }
+
+    @Test
     fun `whole metres round to the nearest metre`() {
         assertEquals(1609, 1.miles.inWholeMetres)
     }

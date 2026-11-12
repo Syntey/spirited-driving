@@ -17,6 +17,8 @@ value class Length private constructor(private val metres: Double) : Comparable<
 
     val inMiles: Double get() = metres / METRES_PER_MILE
 
+    val inFeet: Double get() = metres / METRES_PER_FOOT
+
     operator fun plus(other: Length): Length = Length(metres + other.metres)
 
     operator fun minus(other: Length): Length = Length(metres - other.metres)
@@ -37,3 +39,4 @@ value class Length private constructor(private val metres: Double) : Comparable<
 
 private const val METRES_PER_KILOMETRE = 1000.0
 private const val METRES_PER_MILE = 1609.344
+private const val METRES_PER_FOOT = 0.3048
