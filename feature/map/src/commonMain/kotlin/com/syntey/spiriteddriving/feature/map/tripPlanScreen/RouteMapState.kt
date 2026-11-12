@@ -78,6 +78,12 @@ data class RouteMapState(
         overviewRequest = overviewRequest + 1,
     )
 
+    /**
+     * The map with a pin at [point], picked on the map: it stops following the user, and the camera stays, as the user is already
+     * looking there.
+     */
+    fun withPickedPoint(point: GeoPoint): RouteMapState = copy(destination = point, followsUser = false)
+
     // The first time both the covered area and the user's location are known and the user is outside, the map stops following
     // and shows both. Later locations don't move it again.
     private fun showingOutside(previous: RouteMapState): RouteMapState {

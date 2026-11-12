@@ -3,11 +3,11 @@ package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 /**
  * The parts of [name] that the typed [text] matches, for showing them bold. The typed text is split into words on whitespace.
  * A word of [name] that starts with one of them, counting from its first character, gives the matched part. Case and
- * diacritics don't count, so "karlst" matches "Karlštejn". Overlapping parts are merged.
+ * diacritics don't count, so "karlst" matches "Karlštejn". Overlapping parts are merged. A null [name] has no ranges.
  */
-internal fun matchedRanges(name: String, text: String): List<IntRange> {
+internal fun matchedRanges(name: String?, text: String): List<IntRange> {
     val typedWords = typedWords(text)
-    if (typedWords.isEmpty()) return emptyList()
+    if (name == null || typedWords.isEmpty()) return emptyList()
     // Folding keeps every character's position, so the ranges found in the folded name are the ones in the name
     val folded = foldText(name)
     val found = wordStarts(name).mapNotNull { start ->
@@ -19,12 +19,12 @@ internal fun matchedRanges(name: String, text: String): List<IntRange> {
 
 /**
  * Whether every word of [text] starts a word of [name] or [area], ignoring case and diacritics, as [matchedRanges] matches.
- * Blank text matches nothing.
+ * Blank text matches nothing; an unnamed place matches on its area alone.
  */
-internal fun placeMatches(name: String, area: String?, text: String): Boolean {
+internal fun placeMatches(name: String?, area: String?, text: String): Boolean {
     val typedWords = typedWords(text)
     if (typedWords.isEmpty()) return false
-    val folded = foldText(name + " " + area.orEmpty())
+    val folded = foldText(listOfNotNull(name, area).joinToString(" "))
     val starts = wordStarts(folded)
     return typedWords.all { word -> starts.any { folded.startsWith(word, startIndex = it) } }
 }

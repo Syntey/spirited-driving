@@ -34,6 +34,27 @@ class RecentPlacesPersistenceTest {
     }
 
     @Test
+    fun `an unnamed place reads back with no name`() = runTest {
+        val persistence = recentPlacesPersistence()
+        val unnamed = samplePlace().copy(name = null)
+
+        persistence.update { listOf(unnamed) }
+
+        assertEquals(listOf(unnamed), persistence.get())
+    }
+
+    @Test
+    fun `a list stored before names were optional still reads`() = runTest {
+        val dataStore = InMemoryDataStore()
+        dataStore.edit {
+            it[RECENT_PLACES_KEY] =
+                """[{"name":"Karlštejn","area":"okres Beroun, Central Bohemian Region","location":{"lat":49.933809,"lon":14.1832917}}]"""
+        }
+
+        assertEquals(listOf(samplePlace()), recentPlacesPersistence(dataStore).get())
+    }
+
+    @Test
     fun `update gets the current list`() = runTest {
         val persistence = recentPlacesPersistence()
         persistence.update { listOf(samplePlace()) }

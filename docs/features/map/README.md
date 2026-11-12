@@ -31,7 +31,7 @@ The primary screen, inspired by Waze: a full-screen map around the user, with th
 The screen is `TripPlanComponent` in `:feature:map`. `MapScreenUi` draws it on Android and `MapComponent` on iOS, around
 the sheet's shared content, `TripPlanSheetUi` ([Architecture](../../architecture.md#how-the-map-screen-is-built)). The
 code holds its layout, sizes and copy; these are the decisions behind it. What isn't built yet, the half sheet's content and
-picking a point, is still in [design.md](design.md).
+what picking a point leads to, is still in [design.md](design.md).
 
 - **The map follows the user** whenever location access is on, so it opens where they are. Panning stops it, and the
   locate button brings it back. The map doesn't turn with the heading.
@@ -66,7 +66,8 @@ picking a point, is still in [design.md](design.md).
 - **The notes show on the collapsed sheet only,** so with the keyboard up the suggestions get the room. The collapsed
   height is measured with them, so the sheet comes back to the same height.
 - **Until [Route planning](../route-planning/README.md) exists, choosing a place drops a pin** and moves the map to the
-  streets around it. The profile button does nothing yet; it opens Profile once that's built.
+  streets around it. Touching and holding the map drops a pin there too, with a haptic tap, and the camera stays. The
+  profile button does nothing yet; it opens Profile once that's built.
 
 ## Account
 

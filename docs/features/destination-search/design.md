@@ -2,9 +2,9 @@
 
 > **Status:** partly built, being iterated. Last updated 2026-11-12.
 >
-> What's left to build of [Destination search](README.md): the search step of the map's sheet, for the destination and
-> for the start. The field, searching, suggestions, their states and recent places for the destination are built; the decisions behind them are in the
-> README's [Design](README.md#design) section. Uses the [Theme](../../theme.md); the map, its sheet and the sheet's heights are described in the
+> What's left to build of [Destination search](README.md): the search step of the map's sheet for the start. The
+> search for the destination is built, picking a point on the map too; the decisions behind it are in the README's
+> [Design](README.md#design) section. Uses the [Theme](../../theme.md); the map, its sheet and the sheet's heights are described in the
 > [Map screen](../map/design.md).
 
 ## Two uses of one step
@@ -28,11 +28,8 @@ destination search as it was.
 
 ## Recent places
 
-Built for destinations ([Design](README.md#design)). Still to come:
-
-- **None yet:** once picking a point exists, the hint teaches the gesture the map doesn't show: "Search for a place,
-  or touch and hold the map to pick a point."
-- Starts picked by hand and points picked on the map are kept too.
+Built for destinations and points picked on the map ([Design](README.md#design)). Still to come: starts picked by
+hand are kept too.
 
 ## Searching
 
@@ -52,16 +49,8 @@ The first row of the start step, with a location arrow icon.
 
 ## Points picked on the map
 
-Touching and holding the map picks a point ([Map](../map/design.md#picking-a-point)). Its label comes from a reverse lookup:
-
-- While it loads, the point is called "Point on the map".
-- The nearest address then becomes its name, and its area the town and region.
-- With no address nearby, or when the lookup fails, it stays "Point on the map", with its coordinates as the area:
-  "49.9394, 14.1882".
-
-## States
-
-- **No results:** the text adds "or touch and hold the map to pick a point" once picking a point exists.
+Picking a point is built ([Design](README.md#design)). While the start step is open, touching and holding the map picks
+the start instead. Until a point's lookup answers, route planning's header calls it "Point on the map".
 
 ## Coming back
 
@@ -75,8 +64,5 @@ Touching and holding the map picks a point ([Map](../map/design.md#picking-a-poi
 |------------------------|----------------------------------------------------------------|
 | Field, start           | Where from?                                                    |
 | Above the start field  | To Karlštejn Castle                                            |
-| No recent places       | Search for a place, or touch and hold the map to pick a point. |
 | My location            | My location                                                    |
 | My location, notes     | Needs precise location / Needs location access / Outside the covered area |
-| Point on the map       | Point on the map                                               |
-| No results, with picking a point | Check the spelling, or touch and hold the map to pick a point. |

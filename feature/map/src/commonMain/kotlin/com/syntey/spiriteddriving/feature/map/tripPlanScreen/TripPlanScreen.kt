@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 
+import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import kotlinx.coroutines.flow.Flow
@@ -49,6 +50,9 @@ interface TripPlanScreen {
         /** Moved the map by hand, so it stops following the user. */
         fun onMapPanned()
 
+        /** Touched and held the map at [point]. */
+        fun onMapLongPress(point: GeoPoint)
+
         /** Tapped the profile button. */
         fun onProfileClick()
 
@@ -71,6 +75,7 @@ interface TripPlanScreen {
                 override fun onSearchRetry() = Unit
                 override fun onLocateClick() = Unit
                 override fun onMapPanned() = Unit
+                override fun onMapLongPress(point: GeoPoint) = Unit
                 override fun onProfileClick() = Unit
                 override fun onPreciseLocationClick() = Unit
                 override fun onPreciseLocationNoteClose() = Unit
