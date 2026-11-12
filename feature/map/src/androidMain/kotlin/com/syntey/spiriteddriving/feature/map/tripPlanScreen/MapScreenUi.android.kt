@@ -42,9 +42,12 @@ import com.google.maps.android.compose.CameraMoveStartedReason
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Polygon
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
+import com.syntey.spiriteddriving.core.domain.geo.GeoPolygon
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.DragHandle
@@ -61,6 +64,19 @@ import kotlinx.coroutines.launch
 private const val FOLLOW_ZOOM = 15f
 private const val FOLLOW_MIN_ZOOM = 12f
 private const val FOLLOW_ANIMATION_MS = 500
+private const val DIM_ALPHA_LIGHT = 0.2f
+private const val DIM_ALPHA_DARK = 0.5f
+
+// The whole map, as a ring the covered area is cut out of. Google Maps joins points the short way round, so the ring
+// stops just short of the antimeridian instead of meeting itself there.
+private val WORLD = listOf(
+    LatLng(85.0, -179.99),
+    LatLng(85.0, 0.0),
+    LatLng(85.0, 179.99),
+    LatLng(-85.0, 179.99),
+    LatLng(-85.0, 0.0),
+    LatLng(-85.0, -179.99),
+)
 
 /**
  * The map screen on Android: the map, its buttons and the sheet, whose content is [TripPlanSheetUi], shared with iOS.
@@ -176,6 +192,7 @@ private fun Map(map: RouteMapState, onPanned: () -> Unit, contentPadding: Paddin
     val currentOnPanned by rememberUpdatedState(onPanned)
     val scope = rememberCoroutineScope()
     val overviewPaddingPx = with(LocalDensity.current) { Grid.d6.roundToPx() }
+    var isLoaded by remember { mutableStateOf(false) }
 
     GoogleMap(
         modifier = modifier,
@@ -193,7 +210,9 @@ private fun Map(map: RouteMapState, onPanned: () -> Unit, contentPadding: Paddin
             mapToolbarEnabled = false,
             indoorLevelPickerEnabled = false,
         ),
+        content = { CoveredArea(area = map.coveredArea) },
         onMapLoaded = {
+            isLoaded = true
             val loaded = currentMap
             if (!loaded.followsUser || loaded.userLocation == null) {
                 scope.launch {
@@ -202,6 +221,14 @@ private fun Map(map: RouteMapState, onPanned: () -> Unit, contentPadding: Paddin
             }
         },
     )
+
+    // A request moves the camera to the overview; before the map loads, onMapLoaded shows it
+    LaunchedEffect(map.overviewRequest) {
+        if (isLoaded && !currentMap.followsUser) {
+            val update = CameraUpdateFactory.newLatLngBounds(currentMap.overview.toLatLngBounds(), overviewPaddingPx)
+            cameraPositionState.animate(update, FOLLOW_ANIMATION_MS)
+        }
+    }
 
     LaunchedEffect(map.followsUser, map.userLocation) {
         val location = map.userLocation
@@ -225,6 +252,23 @@ private fun Map(map: RouteMapState, onPanned: () -> Unit, contentPadding: Paddin
     }
 }
 
+/**
+ * Dims the world outside the covered area and draws its border. Holes in the covered area aren't covered, so they're
+ * dimmed too.
+ */
+@Composable
+private fun CoveredArea(area: List<GeoPolygon>) {
+    if (area.isEmpty()) return
+    val dim = MaterialTheme.colorScheme.scrim.copy(alpha = if (isSystemInDarkTheme()) DIM_ALPHA_DARK else DIM_ALPHA_LIGHT)
+    val border = MaterialTheme.colorScheme.secondary
+    val borderWidth = with(LocalDensity.current) { Grid.d0_375.toPx() }
+    val outlines = remember(area) { area.map { polygon -> polygon.outline.map { it.toLatLng() } } }
+    val holes = remember(area) { area.flatMap { it.holes }.map { hole -> hole.map { it.toLatLng() } } }
+    Polygon(points = WORLD, holes = outlines, fillColor = dim, strokeWidth = 0f)
+    holes.forEach { Polygon(points = it, fillColor = dim, strokeWidth = 0f) }
+    (outlines + holes).forEach { Polyline(points = it, color = border, width = borderWidth) }
+}
+
 private fun GeoBounds.toLatLngBounds(): LatLngBounds = LatLngBounds(southWest.toLatLng(), northEast.toLatLng())
 
 private fun GeoPoint.toLatLng(): LatLng = LatLng(latitude, longitude)
@@ -246,6 +290,19 @@ private fun MapScreenFollowingPreview() {
 @Composable
 private fun MapScreenNotFollowingPreview() {
     val state = TripPlanScreenPreviews.viewState(followsUser = false)
+    Showcase {
+        Content(
+            viewState = state,
+            actions = noOpActions(),
+            sheet = { TripPlanSheetUi(screen = TripPlanScreenPreviews.screen(state)) },
+        )
+    }
+}
+
+@ScreenPreviews
+@Composable
+private fun MapScreenOutsidePreview() {
+    val state = TripPlanScreenPreviews.outsideViewState()
     Showcase {
         Content(
             viewState = state,

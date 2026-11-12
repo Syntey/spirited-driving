@@ -1,6 +1,8 @@
 package com.syntey.spiriteddriving.data.network.injection
 
 import com.syntey.spiriteddriving.data.network.FlavorConstants
+import com.syntey.spiriteddriving.data.network.api.SpiritedDrivingApi
+import com.syntey.spiriteddriving.data.network.api.createSpiritedDrivingApi
 import com.syntey.spiriteddriving.data.network.plugin.ContentNegotiationPlugin
 import com.syntey.spiriteddriving.data.network.plugin.HttpTimeoutPlugin
 import com.syntey.spiriteddriving.data.network.plugin.LoggingPlugin
@@ -45,6 +47,9 @@ class NetworkModule {
         userAgentPlugin.install(this)
         loggingPlugin.install(this)
     }
+
+    @Single
+    internal fun spiritedDrivingApi(ktorFit: Ktorfit): SpiritedDrivingApi = ktorFit.createSpiritedDrivingApi()
 
     @Single
     internal fun ktorFit(

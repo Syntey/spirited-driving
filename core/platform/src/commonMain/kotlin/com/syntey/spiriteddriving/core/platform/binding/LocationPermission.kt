@@ -21,6 +21,19 @@ class LocationPermission(private val binding: PlatformLocationPermission) {
         )
     }
 
+    /**
+     * Offers precise location while only approximate is allowed, and returns what the user allows once they answer.
+     */
+    suspend fun requestPrecise(): LocationAccess = suspendCancellableCoroutine { continuation ->
+        binding.requestPrecise(
+            object : LocationPermissionListener {
+                override fun onResult(access: LocationAccess) {
+                    if (continuation.isActive) continuation.resume(access)
+                }
+            },
+        )
+    }
+
     /** What the user allows now, without a prompt. */
     suspend fun current(): LocationAccess = suspendCancellableCoroutine { continuation ->
         binding.currentAccess(

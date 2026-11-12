@@ -21,6 +21,7 @@ class OpenLocationSettingsUseCaseTest {
     private class SettingsPermission : PlatformLocationPermission {
         var settingsOpened = false
 
+        override fun requestPrecise(listener: LocationPermissionListener) = Unit
         override fun request(listener: LocationPermissionListener) = Unit
         override fun currentAccess(listener: LocationPermissionListener) = Unit
         override fun openSettings() {
