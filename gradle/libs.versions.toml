@@ -51,6 +51,8 @@ benchmarkMacroJunit4 = "1.5.0"
 profileinstaller = "1.4.1"
 google-servicesPlugin = "4.5.0"
 google-firebaseAppDistributionPlugin = "5.3.1"
+google-playServicesLocation = "21.4.0"
+google-mapsCompose = "9.0.1"
 arkitekt = "6.1.0"
 versionCatalogUpdate = "1.1.2"
 modulesGraphAssert = "2.9.1"
@@ -115,6 +117,9 @@ androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", vers
 androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 androidx-benchmark-macro-junit4 = { module = "androidx.benchmark:benchmark-macro-junit4", version.ref = "benchmarkMacroJunit4" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "profileinstaller" }
+# Google Play services
+google-playServices-location = { module = "com.google.android.gms:play-services-location", version.ref = "google-playServicesLocation" }
+google-maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "google-mapsCompose" }
 # Desugar
 androidTools-desugarLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarLibs" }
 # Lint

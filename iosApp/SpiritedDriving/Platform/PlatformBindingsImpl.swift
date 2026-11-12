@@ -6,6 +6,9 @@ final class PlatformBindingsImpl: PlatformBindings {
     // Created here, on the main thread, as `CLLocationManager` must be
     private let locationPermissionImpl = PlatformLocationPermissionImpl()
 
+    // Created here, on the main thread, as `CLLocationManager` must be
+    private let locationImpl = PlatformLocationImpl()
+
     func platform() -> any Platform {
         PlatformImpl()
     }
@@ -16,5 +19,9 @@ final class PlatformBindingsImpl: PlatformBindings {
 
     func locationPermission() -> any PlatformLocationPermission {
         locationPermissionImpl
+    }
+
+    func location() -> any PlatformLocation {
+        locationImpl
     }
 }

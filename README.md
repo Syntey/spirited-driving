@@ -146,29 +146,31 @@ A module's package and Android namespace come from its path (`:data:network` is
 `com.syntey.spiriteddriving.data.network`), so a new feature's build file only applies
 `conventions-kmp-feature`.
 
-`:feature:onboarding` holds First launch. `:feature:sample` holds the project template's sample screens until real
-features replace them.
+`:feature:onboarding` holds First launch. `:feature:map` holds the map and its sheet.
 
 ## UI Architecture
 
 Screens are implemented once in Compose Multiplatform, in the feature module that owns them, next
-to the component they render (e.g. `feature/sample/.../firstScreen/FirstScreenUi.kt`). A screen
+to the component they render (e.g. `feature/onboarding/.../onboardingScreen/OnboardingScreenUi.kt`). A screen
 only draws its content. Navigation chrome stays native:
 
 - **Android** — navigation hosts in `androidApp/.../ui/navigation/*NavHostUi.kt` render Decompose
-  stacks and slots, and draw top bars, bottom navigation and bottom sheets around the shared
-  screens.
-- **iOS** — navigation stays in SwiftUI (`NavigationStack`, `TabView`, sheets) driven by Decompose.
+  stacks and slots, and draw top bars and bottom sheets around the shared screens.
+- **iOS** — navigation stays in SwiftUI (`NavigationStack`, sheets) driven by Decompose.
   Each screen is exposed to Swift as a `*ScreenUiController` function (the feature's
   `src/iosMain/.../ViewControllers.ios.kt`) and hosted by `ComposeView` in a thin SwiftUI view
   (`iosApp/SpiritedDriving/Views/Scenes/*/*Component.swift`), which also sets the native navigation
   title.
 
+The map screen is the exception: it's built per platform around each platform's map SDK, with
+native glass buttons and a native sheet on iOS, and only the sheet's content is shared Compose
+([Architecture](docs/architecture.md#how-the-map-screen-is-built)).
+
 When adding a new screen:
 
-1. Create the screen component and its UI in the feature module (see `secondScreen` in
-   `:feature:sample` for a minimal example).
-2. Expose the screen in the feature's `*Screens` object (see `SampleScreens`), since Arkitekt
+1. Create the screen component and its UI in the feature module (see `onboardingScreen` in
+   `:feature:onboarding`).
+2. Expose the screen in the feature's `*Screens` object (see `OnboardingScreens`), since Arkitekt
    generates internal factories, and create it from a navigation host in `:shared`.
 3. Android: render it from the navigation host UI.
 4. iOS: add a `*ScreenUiController` to the feature's `ViewControllers.ios.kt` and a `*Component`
@@ -176,31 +178,30 @@ When adding a new screen:
 
 ### Previews
 
-Each screen has a preview mock object (e.g. `FirstScreenPreviews`) that provides a fake, no-op
-implementation of the screen interface with configurable view states. Compose preview functions
-next to the screen use it.
+Each screen has a preview object (e.g. `OnboardingScreenPreviews`) with view states for its
+previews, and a fake, no-op implementation of the screen interface where a preview needs the whole
+screen. Compose preview functions next to the screen use it.
 
 Previews use the multipreview annotations in `:core:ui` (`core.ui.preview`) rather than a bare
 `@Preview`: `@ScreenPreviews` renders a screen in light and dark mode and with large fonts on dense
 phone screens, `@ComponentPreviews` renders a smaller composable in light and dark mode with small
 and large fonts.
 
-**Mock** (`feature/sample/.../firstScreen/FirstScreenPreviews.kt`):
+**Preview data** (`feature/onboarding/.../onboardingScreen/OnboardingScreenPreviews.kt`):
 
 ```kotlin
-internal object FirstScreenPreviews {
-    fun viewState(...) = FirstViewState(...)
-    fun screen(viewState: FirstViewState = viewState()): FirstScreen = object : FirstScreen { ... }
+internal object OnboardingScreenPreviews {
+    fun viewState(step: OnboardingStep = OnboardingStep.WhatItIs) = OnboardingViewState(step = step)
 }
 ```
 
-**Preview** (`feature/sample/.../firstScreen/FirstScreenUi.kt`):
+**Preview** (`feature/onboarding/.../onboardingScreen/OnboardingScreenUi.kt`):
 
 ```kotlin
 @ScreenPreviews
 @Composable
-private fun FirstScreenPreview() = Showcase {
-    Content(viewState = FirstScreenPreviews.viewState(), ...)
+private fun OnboardingScreenPreview() = Showcase {
+    Content(viewState = OnboardingScreenPreviews.viewState(), actions = noOpActions())
 }
 ```
 
@@ -217,39 +218,30 @@ The following meta-description provides an overview of Decompose navigation tree
 Navigation("Root") {
     Slot {
         Screen("Onboarding") // First launch, until the vignette is answered
-        Screen("Login")
-        Navigation("SignedIn") {
-            // Bottom navigation stack
-            Stack {
-                // Home tab
-                Navigation("Home") {
-                    Stack {
-                        Screen("First")
-                        Screen("Second") {
-                            Slot {
-                                Screen("Picker")
-                            }
-                        }
-                        Screen("Third")
-                    }
-                }
-                // Profile tab
-                Navigation("Profile") {
-                    Stack {
-                        Screen("Profile")
-                    }
-                }
-            }
-        }
+        Screen("TripPlan") // The map and its sheet
     }
 }
 ```
+
+Screens that open over the map, such as Profile and Saved routes, are added to this tree as they're
+built ([Navigation](docs/navigation.md#screens-over-the-map)).
 
 ## Project Setup
 
 ### First iOS build
 
 The Swift Package XCFramework has to be build manually for the first time using `./gradlew assembleAndCopyDebugSwiftPackage` in order for XCode to resolve Swift Package as being valid.
+
+### Google Maps API key
+
+The Android map needs a Maps SDK for Android key. Put it in `local.properties` (kept out of git):
+
+```properties
+MAPS_API_KEY=your-key
+```
+
+CI passes it as the `MAPS_API_KEY` environment variable. Without a key the app runs, but the Android map stays
+blank. The iOS map (MapKit) needs no key.
 
 ### Product Flavors
 

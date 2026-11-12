@@ -35,8 +35,8 @@ include(":core:ui")
 include(":data:network")
 include(":data:persistence")
 
+include(":feature:map")
 include(":feature:onboarding")
-include(":feature:sample")
 
 // Architecture rules, see `konsist/build.gradle.kts`
 include(":konsist")

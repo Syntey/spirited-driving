@@ -11,7 +11,7 @@ class UiKonsistTest {
     fun `only Grid in core-ui theme Dimensions creates dp values`() {
         productionScope
             .files
-            .filterNot { it.isTemplateSample || it.isGrid }
+            .filterNot { it.isGrid }
             .assertTrue(
                 rule = KoRule(
                     id = "UI-1",

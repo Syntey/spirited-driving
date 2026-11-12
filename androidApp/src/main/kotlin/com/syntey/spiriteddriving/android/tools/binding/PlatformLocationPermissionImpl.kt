@@ -2,9 +2,12 @@ package com.syntey.spiriteddriving.android.tools.binding
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -60,6 +63,24 @@ class PlatformLocationPermissionImpl(private val context: Context) : PlatformLoc
                 // the system answers at once without a prompt.
                 launcher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
             }
+        }
+    }
+
+    override fun currentAccess(listener: LocationPermissionListener) {
+        mainHandler.post {
+            // As after a prompt: with no rationale to show, a denial seen before means the system won't ask again
+            listener.onResult(
+                grantedAccess() ?: if (showsRationale() == false && wasDenied()) LocationAccess.DeniedForGood else LocationAccess.Denied,
+            )
+        }
+    }
+
+    override fun openSettings() {
+        mainHandler.post {
+            context.startActivity(
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         }
     }
 

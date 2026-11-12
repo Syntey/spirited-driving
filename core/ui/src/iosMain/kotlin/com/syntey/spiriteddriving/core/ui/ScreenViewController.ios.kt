@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.uikit.OnFocusBehavior
 import androidx.compose.ui.window.ComposeUIViewController
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
+import platform.UIKit.UIColor
 import platform.UIKit.UIViewController
 import kotlin.experimental.ExperimentalObjCRefinement
 import kotlin.native.HiddenFromObjC
@@ -40,18 +41,20 @@ fun screenViewController(content: @Composable () -> Unit): UIViewController = th
 @HiddenFromObjC
 fun fullScreenViewController(content: @Composable () -> Unit): UIViewController = themedViewController(content)
 
-@OptIn(ExperimentalComposeUiApi::class)
-private fun themedViewController(content: @Composable () -> Unit): UIViewController = ComposeUIViewController(
-    configure = {
-        // Keyboard is part of the safe drawing insets applied by the screen, panning the content on top of that would move it
-        // twice.
-        onFocusBehavior = OnFocusBehavior.DoNothing
+/**
+ * Hosts Compose content on a native sheet, such as the map's. The background stays clear, so the sheet's glass shows
+ * through; the content keeps clear of the sheet's grabber and edges itself.
+ */
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
+fun sheetViewController(content: @Composable () -> Unit): UIViewController = composeViewController(opaque = false) {
+    AppTheme {
+        content()
+    }
+}.also { it.view.backgroundColor = UIColor.clearColor }
 
-        // Render-thread frames hand their drawable back through the main queue, which a pushed screen's first synchronous
-        // draw is blocking while it waits for one, so the native push would stall until the drawable acquisition times out.
-        parallelRendering = false
-    },
-) {
+@OptIn(ExperimentalComposeUiApi::class)
+private fun themedViewController(content: @Composable () -> Unit): UIViewController = composeViewController(opaque = true) {
     AppTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -61,3 +64,19 @@ private fun themedViewController(content: @Composable () -> Unit): UIViewControl
         }
     }
 }
+
+@OptIn(ExperimentalComposeUiApi::class)
+private fun composeViewController(opaque: Boolean, content: @Composable () -> Unit): UIViewController = ComposeUIViewController(
+    configure = {
+        this.opaque = opaque
+
+        // Keyboard is part of the safe drawing insets applied by the screen, panning the content on top of that would move it
+        // twice.
+        onFocusBehavior = OnFocusBehavior.DoNothing
+
+        // Render-thread frames hand their drawable back through the main queue, which a pushed screen's first synchronous
+        // draw is blocking while it waits for one, so the native push would stall until the drawable acquisition times out.
+        parallelRendering = false
+    },
+    content = content,
+)

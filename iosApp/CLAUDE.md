@@ -9,22 +9,22 @@ functions. Their SwiftUI view is a thin `*Component` that takes the KMP screen d
 as there is no state for Swift to observe:
 
 ```swift
-struct FirstComponent: View {
-    private let screen: FirstScreen
+struct SavedRoutesComponent: View {
+    private let screen: SavedRoutesScreen
 
-    init(_ screen: FirstScreen) {
+    init(_ screen: SavedRoutesScreen) {
         self.screen = screen
     }
 
     var body: some View {
-        ComposeView { FirstScreenUiController(screen: screen) }
-            .composeScreen()                                            // Edge to edge, Compose applies safe area
-            .navigationTitle(Localizable.first_screen_title.localized)  // Native navigation chrome stays in SwiftUI
+        ComposeView { SavedRoutesScreenUiController(screen: screen) }
+            .composeScreen()                                                    // Edge to edge, Compose applies safe area
+            .navigationTitle(Localizable.saved_routes_screen_title.localized)  // Native navigation chrome stays in SwiftUI
     }
 }
 ```
 
-Native navigation (`NavigationStack`, `TabView`, sheets) and any native SwiftUI screen follow the
+Native navigation (`NavigationStack`, sheets) and any native SwiftUI screen, such as the map, follow the
 Component + ComponentModel pattern below.
 
 ## Component + ComponentModel Pattern
@@ -87,23 +87,23 @@ When creating a `Binding` to a property on an `@State` model, use the `$` projec
 
 ```swift
 // Correct
-TabView(selection: $model.selectedTab) { ... }
+Picker("", selection: $model.selectedUnit) { ... }
 .sheet(item: $model.sheetItem) { ... }
 .alert("", isPresented: $model.alert.isPresented) { ... }
 
 // Wrong
-TabView(selection: Binding(
-    get: { model.selectedTab },
-    set: { model.onTabSelected($0) }
+Picker("", selection: Binding(
+    get: { model.selectedUnit },
+    set: { model.onUnitSelected($0) }
 )) { ... }
 ```
 
 To make a property bindable, expose it with a getter/setter in the ComponentModel:
 
 ```swift
-var selectedTab: NavigationTab {
-    get { viewState.selectedTab }
-    set { actions.onTabSelected(tab: newValue) }
+var selectedUnit: DistanceUnit {
+    get { viewState.selectedUnit }
+    set { actions.onUnitSelected(unit: newValue) }
 }
 ```
 
@@ -176,27 +176,30 @@ All user-facing strings **must** use KMP localization keys from `Localizable` �
 
 ```swift
 // Correct
-Text(Localizable.first_screen_title.localized)
-Button(Localizable.first_screen_button.localized, action: model.onNext)
+Text(Localizable.onboarding_what_title.localized)
+Button(Localizable.onboarding_next.localized, action: model.onNext)
 
 // Wrong — hardcoded string
-Text("First Screen")
+Text("Take the fun way")
 ```
 
 ## Icons
 
-All icons **must** come from KMP shared resources (`Images.ic_*`) — never add new icons to `Assets.xcassets`. The KMP module is the single source of truth for icons shared across platforms.
-
-- Use `.templateImage` for monochrome icons that should adopt the current foreground style (menus, toolbars, list rows)
-- Use `.image` only for non-icon resources (logos, illustrations) that should render with original colors
+Icons come from the KMP shared resources (`MR.images`, the Phosphor SVGs in `:core:resources`) — never add icons to
+`Assets.xcassets`. The KMP module is the single source of truth for icons shared across platforms. Render a monochrome
+icon as a template, so it takes the current foreground style:
 
 ```swift
 // Correct — KMP icon with template rendering
-Images.ic_trash.templateImage
+MR.images().delete.image.renderingMode(.template)
 
-// Wrong — adding icons to xcassets
+// Wrong — adding icons to xcassets, or a system symbol
 Image(systemName: "trash")
 ```
+
+The exception is native chrome whose design names a system symbol: the map's glass buttons use SF Symbols
+(`location`, `location.fill`, `location.slash`, `person.fill`), as in Apple Maps, since Phosphor has no arrow with a
+slash.
 
 ## Struct Property Access Control
 

@@ -4,13 +4,10 @@ import app.futured.arkitekt.crusecases.execute
 import app.futured.arkitekt.decompose.ext.asStateFlow
 import co.touchlab.kermit.Logger
 import com.syntey.spiriteddriving.shared.domain.IsOnboardingDoneUseCase
-import com.syntey.spiriteddriving.shared.domain.IsUserLoggedInUseCase
-import com.syntey.spiriteddriving.shared.navigation.signedIn.SignedInNavHostComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
-import com.syntey.spiriteddriving.core.ui.base.AppComponentFactory
+import com.syntey.spiriteddriving.feature.map.MapScreens
 import com.syntey.spiriteddriving.feature.onboarding.OnboardingScreens
-import com.syntey.spiriteddriving.feature.sample.SampleScreens
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
@@ -23,12 +20,11 @@ import org.koin.core.annotation.InjectedParam
 internal class RootNavHostComponent(
     @InjectedParam componentContext: AppComponentContext,
     private val isOnboardingDoneUseCase: IsOnboardingDoneUseCase,
-    private val isUserLoggedInUseCase: IsUserLoggedInUseCase,
 ) : AppComponent<RootNavHostViewState, Nothing>(componentContext, RootNavHostViewState),
     RootNavHost {
 
     private val logger = Logger.withTag("RootNavHostComponent")
-    private val rootNavigator: RootNavHostNavigation = RootNavHostNavigator(onOnboardingFinished = ::checkUserLoggedIn)
+    private val rootNavigator: RootNavHostNavigation = RootNavHostNavigator()
 
     override val slot: StateFlow<ChildSlot<RootConfig, RootChild>> = childSlot(
         source = rootNavigator.slotNavigator,
@@ -38,21 +34,7 @@ internal class RootNavHostComponent(
         childFactory = { config, childCtx ->
             when (config) {
                 RootConfig.Onboarding -> RootChild.Onboarding(OnboardingScreens.onboarding(childCtx, rootNavigator))
-
-                RootConfig.Login -> RootChild.Login(
-                    SampleScreens.login(
-                        childCtx,
-                        rootNavigator,
-                    ),
-                )
-
-                is RootConfig.SignedIn -> RootChild.SignedIn(
-                    navHost = AppComponentFactory.createAppComponent<SignedInNavHostComponent>(
-                        childCtx,
-                        { rootNavigator.slotNavigator.activate(RootConfig.Login) },
-                        config.initialConfig,
-                    ),
-                )
+                RootConfig.Map -> RootChild.Map(MapScreens.tripPlan(childCtx, rootNavigator))
             }
         },
     ).asStateFlow()
@@ -66,23 +48,15 @@ internal class RootNavHostComponent(
     private fun checkOnboardingDone() {
         isOnboardingDoneUseCase.execute {
             onSuccess { isDone ->
-                if (isDone) checkUserLoggedIn() else rootNavigator.slotNavigator.activate(RootConfig.Onboarding)
+                if (isDone) {
+                    rootNavigator.slotNavigator.activate(RootConfig.Map)
+                } else {
+                    rootNavigator.slotNavigator.activate(RootConfig.Onboarding)
+                }
             }
             onError { error ->
                 logger.e(error) { "First launch state not read" }
-                checkUserLoggedIn()
-            }
-        }
-    }
-
-    private fun checkUserLoggedIn() {
-        isUserLoggedInUseCase.execute {
-            onSuccess { isLoggedIn ->
-                if (isLoggedIn) {
-                    rootNavigator.slotNavigator.activate(RootConfig.SignedIn())
-                } else {
-                    rootNavigator.slotNavigator.activate(RootConfig.Login)
-                }
+                rootNavigator.slotNavigator.activate(RootConfig.Map)
             }
         }
     }

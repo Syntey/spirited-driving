@@ -13,6 +13,18 @@ interface PlatformLocationPermission {
      * thread; [listener] may be called on any thread.
      */
     fun request(listener: LocationPermissionListener)
+
+    /**
+     * Reports what the user allows now to [listener], without a prompt: [LocationAccess.Denied] until they're first asked.
+     * Can be called from any thread; [listener] may be called on any thread.
+     */
+    fun currentAccess(listener: LocationPermissionListener)
+
+    /**
+     * Opens this app's page in the system settings, where the user can turn location access on after denying it for good.
+     * Can be called from any thread.
+     */
+    fun openSettings()
 }
 
 interface LocationPermissionListener {
