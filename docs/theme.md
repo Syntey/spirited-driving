@@ -1,7 +1,8 @@
 # Theme
 
-> **Status:** colours, type, shapes, glass, buttons, chips, segmented switch, rating, progress, icon buttons, menus, sheet header, the empty and
-> error layout, notes, messages, lists, route badge, fun meter, placeholder rows and the app icon built. Last updated 2026-11-11.
+> **Status:** colours, type, shapes, glass, buttons, chips, segmented switch, rating, progress, icon buttons, menus,
+> sheet header, drag handle, the empty and error layout, notes, messages, lists, route badge, fun meter, placeholder rows and the app icon
+> built. Last updated 2026-11-11.
 >
 > Colours, type, shapes, glass materials and the empty and error layout shared by every screen. Screen design builds
 > on this.
@@ -191,6 +192,12 @@ instead. Screen readers hear it as in progress.
 titleLarge on Android, and wraps rather than truncating. A tappable line, such as "From My location" in
 [Route planning](features/route-planning/design.md#layout), gets a chevron and stays grey, since red is kept for main
 actions. Close sits at the top, level with the title's first line.
+
+## Drag handle
+
+`DragHandle` is the bar at the top of every Android sheet: 32 × 4 dp, `onSurfaceVariant` at 40%, with 12 dp above
+and below. Material's own handle has 22 dp, which leaves too much empty space on the map's collapsed sheet. iOS
+sheets show the system's grabber.
 
 ## Notes
 

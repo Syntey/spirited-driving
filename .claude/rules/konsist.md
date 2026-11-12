@@ -16,5 +16,5 @@ fails at runtime. Don't add a rule the compiler already enforces.
 - Konsist 1.0 traps: a parent's `name` includes its type arguments (use `simpleName` from `Scope.kt`), and a
   parent's `packagee` is the package of the file that declares the child, not of the parent. Recognize a parent from
   another module by the file's imports.
-- An exception to a rule is an in-rule filter with a comment saying why, like `isTemplateSample`.
+- An exception to a rule is an in-rule filter with a comment saying why.
 - `./gradlew :konsist:test` runs the rules; `lintCheck` includes it.

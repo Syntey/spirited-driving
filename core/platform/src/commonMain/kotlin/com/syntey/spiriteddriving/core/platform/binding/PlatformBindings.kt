@@ -20,4 +20,7 @@ interface PlatformBindings {
      * Provides the permission to use the location, see [LocationPermission].
      */
     fun locationPermission(): PlatformLocationPermission
+
+    /** Provides the user's location while the app is in use, see [UserLocation]. */
+    fun location(): PlatformLocation
 }

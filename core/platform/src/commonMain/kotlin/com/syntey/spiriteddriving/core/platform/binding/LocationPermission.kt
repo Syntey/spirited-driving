@@ -20,4 +20,18 @@ class LocationPermission(private val binding: PlatformLocationPermission) {
             },
         )
     }
+
+    /** What the user allows now, without a prompt. */
+    suspend fun current(): LocationAccess = suspendCancellableCoroutine { continuation ->
+        binding.currentAccess(
+            object : LocationPermissionListener {
+                override fun onResult(access: LocationAccess) {
+                    if (continuation.isActive) continuation.resume(access)
+                }
+            },
+        )
+    }
+
+    /** Opens this app's page in the system settings. */
+    fun openSettings() = binding.openSettings()
 }

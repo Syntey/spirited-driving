@@ -12,8 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.core.ui.theme.Grid
+import com.syntey.spiriteddriving.feature.map.tripPlanScreen.MapScreenUi
 import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreenUi
-import com.syntey.spiriteddriving.feature.sample.loginScreen.LoginScreenUi
 import com.syntey.spiriteddriving.shared.navigation.root.RootChild
 import com.syntey.spiriteddriving.shared.navigation.root.RootConfig
 import com.syntey.spiriteddriving.shared.navigation.root.RootNavHost
@@ -29,8 +29,7 @@ fun RootNavHostUi(
     Box(modifier.background(MaterialTheme.colorScheme.background)) {
         when (val childInstance = slot.child?.instance) {
             is RootChild.Onboarding -> OnboardingScreenUi(screen = childInstance.screen, modifier = Modifier.fillMaxSize())
-            is RootChild.Login -> LoginScreenUi(screen = childInstance.screen, modifier = Modifier.fillMaxSize())
-            is RootChild.SignedIn -> SignedInNavHostUi(navHost = childInstance.navHost, modifier = Modifier.fillMaxSize())
+            is RootChild.Map -> MapScreenUi(screen = childInstance.screen, modifier = Modifier.fillMaxSize())
             null -> ApplicationLoading(Modifier.fillMaxSize())
         }
     }

@@ -10,10 +10,8 @@ struct RootNavigationComponent<Model: RootNavigationComponentModelProtocol>: Vie
                 switch onEnum(of: navigationEntry) {
                 case let .onboarding(entry):
                     OnboardingComponent(entry.screen).id(entry.iosViewId)
-                case let .login(entry):
-                    LoginComponent(entry.screen).id(entry.iosViewId)
-                case let .signedIn(entry):
-                    SignedInNavigationComponent(model: SignedInNavigationComponentModel(entry.navHost)).id(entry.iosViewId)
+                case let .map(entry):
+                    MapComponent(model: MapComponentModel(entry.screen)).id(entry.iosViewId)
                 }
             }
         }
