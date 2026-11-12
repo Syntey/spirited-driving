@@ -1,6 +1,6 @@
 # Destination search
 
-> **Status:** draft, MVP. Last updated 2026-11-08.
+> **Status:** partly built, MVP. Last updated 2026-11-12.
 
 Finding a place by typing, as the destination or the start of a trip. Its field is part of the
 [Map](../map/README.md), and [Route planning](../route-planning/README.md) uses the same search to change the start.
@@ -38,6 +38,29 @@ Most searches are for a place the user already knows, so search is built to find
 - **Needs:** units from [Settings](../settings/README.md) for the distances.
 - **Provides:** a place (name, area, coordinates) for [Route planning](../route-planning/README.md), as the
   destination or the start.
+
+## Design
+
+The search is a step of the map's sheet: `TripPlanComponent` in `:feature:map` holds it, and `TripPlanSheetUi` draws
+the field and the suggestions on both platforms. The code holds its layout and copy; these are the decisions behind
+it. What isn't built yet, recent places, the start, the kinds and distances of places and the error states, is still
+in [design.md](design.md).
+
+- **Tapping the field moves the sheet to full height,** with the keyboard. Dragging the sheet lower or scrolling the
+  list hides the keyboard and keeps the text. Close (X on iOS, the back arrow or Back on Android) clears the text and
+  collapses the sheet.
+- **Search on the keyboard only hides it.** Choosing the first suggestion for the user could plan a route to the
+  wrong place.
+- **Autocorrect is off,** so it doesn't change place names.
+- **The app searches from 2 characters, after a 300 ms pause in typing,** so each keystroke doesn't reach the backend.
+  A new search cancels the one still waiting or running, and the previous suggestions stay until its answer comes, so
+  the list doesn't flash.
+- **The field keeps its own copy of the text,** so typing never waits for the view state. Only clearing comes from
+  outside: Clear, Close and choosing a place.
+- **Until recent places exist, the empty field shows "Search for a place."** The designed hint also teaches touching
+  and holding the map, which comes with [Route planning](../route-planning/README.md).
+- **Until Route planning exists, choosing a place only drops its pin** on the [Map](../map/README.md#design). A place
+  outside the covered area can't be chosen; the message that explains it isn't built yet.
 
 ## Account
 

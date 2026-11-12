@@ -30,7 +30,7 @@ The primary screen, inspired by Waze: a full-screen map around the user, with th
 
 The screen is `TripPlanComponent` in `:feature:map`. `MapScreenUi` draws it on Android and `MapComponent` on iOS, around
 the sheet's shared content, `TripPlanSheetUi` ([Architecture](../../architecture.md#how-the-map-screen-is-built)). The
-code holds its layout, sizes and copy; these are the decisions behind it. What isn't built yet, the sheet's heights and
+code holds its layout, sizes and copy; these are the decisions behind it. What isn't built yet, the half sheet's content and
 picking a point, is still in [design.md](design.md).
 
 - **The map follows the user** whenever location access is on, so it opens where they are. Panning stops it, and the
@@ -45,8 +45,9 @@ picking a point, is still in [design.md](design.md).
   so turning it on there shows at once.
 - **A muted base map,** so route lines stand out: MapKit's muted emphasis, and on Android a light and a dark JSON style,
   since a map ID would move the map to a paid SKU. Business and transit points of interest are hidden on both.
-- **The map's padding is the sheet's height,** so the map's logo and legal notice stay visible. On iOS the collapsed
-  sheet is as tall as its Compose content measures, so it fits larger text.
+- **The map's padding is the collapsed sheet's height, at every height of the sheet,** so the map's logo and legal
+  notice stay visible and the camera doesn't move while the sheet is dragged. The collapsed sheet is as tall as its
+  Compose content measures, so it fits larger text.
 - **The covered area is kept on the device** and checked against the backend's version on each launch, so the map
   dims it at once and offline. Until the first one arrives, the map opens on Czechia's corners, undimmed.
 - **Outside the covered area, the map zooms out once,** when the user's location and the covered area are first both
@@ -58,9 +59,12 @@ picking a point, is still in [design.md](design.md).
   switches it for good.
 - **Once closed, the precise-location note stays closed,** kept on the device: approximate location can be the user's
   choice. Outside the covered area only that area's note shows, as it says more.
-- **The sheet has only its collapsed height** until [Destination search](../destination-search/README.md) adds the half
-  and full heights. On Android it's a fixed surface until then. The search field and the profile button do nothing
-  yet; they open Destination search and Profile once those are built.
+- **The sheet has three heights:** collapsed, with the notes and the search field, then half and full, which add the
+  [Destination search](../destination-search/README.md#design) below the field. On Android the sheet is only as tall
+  as the part that shows, so its list ends at the bottom of the screen at every height, and the locate button hides
+  above collapsed, where the sheet would cover it.
+- **Until [Route planning](../route-planning/README.md) exists, choosing a place drops a pin** and moves the map to the
+  streets around it. The profile button does nothing yet; it opens Profile once that's built.
 
 ## Account
 

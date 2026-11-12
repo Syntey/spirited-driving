@@ -1,5 +1,6 @@
 import KMP
 import Observation
+import SwiftUI
 import UIKit
 
 /// KMP deviation: Conforms to `AnyObject` instead of FuturedKit's `ComponentModel` protocol
@@ -7,8 +8,12 @@ import UIKit
 protocol MapComponentModelProtocol: AnyObject {
     var map: RouteMapState { get }
     var locateButton: LocateButton { get }
+    /// The height of the collapsed sheet, as its Compose content measures it.
+    var collapsedSheetHeight: CGFloat { get }
+    /// The sheet's detent, which the view state owns: focusing the field and closing the search move it, and a drag sets it.
+    var sheetDetent: PresentationDetent { get set }
 
-    func sheetViewController(onHeightChanged: @escaping (CGFloat) -> Void) -> UIViewController
+    func sheetViewController() -> UIViewController
     func onLocateClick()
     func onMapPanned()
     func onProfileClick()
@@ -17,10 +22,37 @@ protocol MapComponentModelProtocol: AnyObject {
 @Observable
 final class MapComponentModel: MapComponentModelProtocol {
 
+    // MARK: Public stored properties
+
+    // Until the sheet's content is measured: the search field and its padding
+    private(set) var collapsedSheetHeight: CGFloat = 82
+
     // MARK: Public computed properties
 
     var map: RouteMapState { viewState.map }
     var locateButton: LocateButton { viewState.locateButton }
+    var sheetDetent: PresentationDetent {
+        get {
+            switch viewState.sheetHeight {
+            case .collapsed:
+                .height(collapsedSheetHeight)
+            case .half:
+                .medium
+            case .full:
+                .large
+            }
+        }
+        set {
+            switch newValue {
+            case .large:
+                screen.actions.onSheetHeightChange(height: .full)
+            case .medium:
+                screen.actions.onSheetHeightChange(height: .half)
+            default:
+                screen.actions.onSheetHeightChange(height: .collapsed)
+            }
+        }
+    }
 
     // MARK: Private stored properties
 
@@ -52,9 +84,9 @@ final class MapComponentModel: MapComponentModelProtocol {
 
     // MARK: Public functions
 
-    func sheetViewController(onHeightChanged: @escaping (CGFloat) -> Void) -> UIViewController {
-        TripPlanSheetUiController(screen: screen) { height in
-            onHeightChanged(CGFloat(height.doubleValue))
+    func sheetViewController() -> UIViewController {
+        TripPlanSheetUiController(screen: screen) { [weak self] height in
+            self?.collapsedSheetHeight = CGFloat(height.doubleValue)
         }
     }
 
@@ -94,11 +126,14 @@ final class MapComponentModelMock: MapComponentModelProtocol {
                 holes: []
             )
         ],
-        overviewRequest: 0
+        overviewRequest: 0,
+        destination: nil
     )
     var locateButton = LocateButton.following
+    var collapsedSheetHeight: CGFloat = 82
+    var sheetDetent: PresentationDetent = .height(82)
 
-    func sheetViewController(onHeightChanged: @escaping (CGFloat) -> Void) -> UIViewController {
+    func sheetViewController() -> UIViewController {
         UIViewController()
     }
 

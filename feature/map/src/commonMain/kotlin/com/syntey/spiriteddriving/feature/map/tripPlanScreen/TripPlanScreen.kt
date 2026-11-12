@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 
+import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -10,8 +11,23 @@ interface TripPlanScreen {
     val actions: Actions
 
     interface Actions {
-        /** Tapped the search field on the collapsed sheet. */
-        fun onSearchClick()
+        /** Focused the search field. */
+        fun onSearchFocus()
+
+        /** Changed the text in the search field. */
+        fun onSearchTextChange(text: String)
+
+        /** Tapped the clear button in the search field. */
+        fun onSearchClear()
+
+        /** Closed the search: X on iOS, the back arrow or Back on Android. */
+        fun onSearchClose()
+
+        /** Dragged the sheet to [height]. */
+        fun onSheetHeightChange(height: SheetHeight)
+
+        /** Tapped a suggestion. */
+        fun onSuggestionClick(suggestion: PlaceSuggestion)
 
         /** Tapped the locate button. */
         fun onLocateClick()
@@ -30,7 +46,12 @@ interface TripPlanScreen {
 
         companion object {
             fun noOpActions(): Actions = object : Actions {
-                override fun onSearchClick() = Unit
+                override fun onSearchFocus() = Unit
+                override fun onSearchTextChange(text: String) = Unit
+                override fun onSearchClear() = Unit
+                override fun onSearchClose() = Unit
+                override fun onSheetHeightChange(height: SheetHeight) = Unit
+                override fun onSuggestionClick(suggestion: PlaceSuggestion) = Unit
                 override fun onLocateClick() = Unit
                 override fun onMapPanned() = Unit
                 override fun onProfileClick() = Unit
