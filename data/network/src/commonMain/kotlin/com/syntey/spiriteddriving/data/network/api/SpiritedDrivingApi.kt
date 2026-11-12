@@ -3,14 +3,24 @@ package com.syntey.spiriteddriving.data.network.api
 import com.syntey.spiriteddriving.data.network.dto.coverage.CoverageDto
 import com.syntey.spiriteddriving.data.network.dto.place.PlaceSearchResultDto
 import com.syntey.spiriteddriving.data.network.dto.place.PlaceSuggestionDto
+import com.syntey.spiriteddriving.data.network.dto.plan.PlanDto
+import com.syntey.spiriteddriving.data.network.dto.plan.PlanRequestDto
 import com.syntey.spiriteddriving.data.network.result.NetworkResult
 import com.syntey.spiriteddriving.data.network.result.Revalidated
+import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Header
+import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.Query
 
 /** The backend's endpoints, in the order of the API spec's paths. */
 internal interface SpiritedDrivingApi {
+
+    /** `POST /plans` (`planTrip`). */
+    @POST("plans")
+    suspend fun planTrip(
+        @Body request: PlanRequestDto,
+    ): NetworkResult<PlanDto>
 
     /** `GET /places/search` (`searchPlaces`). */
     @GET("places/search")

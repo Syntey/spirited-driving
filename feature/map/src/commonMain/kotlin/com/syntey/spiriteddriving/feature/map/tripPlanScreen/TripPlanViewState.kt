@@ -58,7 +58,7 @@ data class TripPlanViewState(
             null
         } else {
             distanceText(
-                metres = from.distanceTo(location),
+                distance = from.distanceTo(location),
                 unit = distanceUnit,
                 isApproximate = locationAccess == LocationAccess.Approximate,
             )
