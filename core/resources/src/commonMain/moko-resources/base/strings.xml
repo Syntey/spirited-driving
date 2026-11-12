@@ -90,6 +90,8 @@
     <!-- Route planning -->
     <string name="planning_from_my_location">From My location</string>
     <string name="planning_fastest">Fastest</string>
+    <string name="planning_route_label">%1$d · %2$s</string>
+    <string name="planning_fastest_label">Fastest · %1$s</string>
     <string name="planning_looking">Looking for the most fun roads…</string>
     <string name="planning_route_facts">%1$s of curvy roads · %2$s climbed</string>
     <string name="planning_save">Save</string>

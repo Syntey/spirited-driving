@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.feature.map.ui.components
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
@@ -25,6 +26,7 @@ import dev.icerock.moko.resources.ImageResource
  *   like the locate button on iOS.
  * @property closesSearchWithBackArrow Closing the search: a back arrow in place of the field's search icon on Android, a
  *   Cancel text button next to the field on iOS.
+ * @property routeList The route list's rows: on a card on iOS, on the sheet on Android.
  */
 @Immutable
 internal data class MapPlatformStyle(
@@ -33,6 +35,7 @@ internal data class MapPlatformStyle(
     val preciseLocationIcon: ImageResource,
     val closesSearchWithBackArrow: Boolean,
     val searchField: SearchFieldStyle,
+    val routeList: RouteListStyle,
 ) {
     companion object {
         /** The values of the platform [AppTheme] shows. */
@@ -56,6 +59,11 @@ internal data class MapPlatformStyle(
                     isTranslucent = false,
                     actionButton = IconButtonStyle(size = Grid.d10, iconSize = Grid.d6, isFilled = false),
                 ),
+                routeList = RouteListStyle(
+                    rowsOnCard = false,
+                    isSelectedRowLifted = false,
+                    rowShape = RoundedCornerShape(Grid.d4),
+                ),
             )
 
             UiPlatform.Ios -> MapPlatformStyle(
@@ -71,6 +79,12 @@ internal data class MapPlatformStyle(
                     textStyle = typography.bodyLarge,
                     isTranslucent = true,
                     actionButton = IconButtonStyle(size = Grid.d6, iconSize = Grid.d4, isFilled = false),
+                ),
+                routeList = RouteListStyle(
+                    rowsOnCard = true,
+                    isSelectedRowLifted = true,
+                    // The card's corners less its 4dp inset, so the rows' corners and the ring stay concentric with it
+                    rowShape = RoundedCornerShape(Grid.d4_5),
                 ),
             )
         }
@@ -92,3 +106,11 @@ internal data class SearchFieldStyle(
     val isTranslucent: Boolean,
     val actionButton: IconButtonStyle,
 )
+
+/**
+ * The route list's rows. [rowsOnCard]: the rows sit on one translucent card, as the cells of an iOS group do; otherwise
+ * they sit on the sheet. [isSelectedRowLifted]: the selected row is a light lift off the card; otherwise a grey fill.
+ * [rowShape] is the corner of each row, which the selection ring follows.
+ */
+@Immutable
+internal data class RouteListStyle(val rowsOnCard: Boolean, val isSelectedRowLifted: Boolean, val rowShape: RoundedCornerShape)
