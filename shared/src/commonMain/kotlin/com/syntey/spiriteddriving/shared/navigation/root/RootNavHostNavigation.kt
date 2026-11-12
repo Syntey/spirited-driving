@@ -1,8 +1,8 @@
 package com.syntey.spiriteddriving.shared.navigation.root
 
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreenNavigation
-import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreen
-import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreenNavigation
+import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreen
+import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreenNavigation
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 

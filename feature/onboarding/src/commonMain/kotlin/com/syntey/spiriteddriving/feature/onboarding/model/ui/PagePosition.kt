@@ -1,7 +1,7 @@
 // Durations, easing and the rubber band are the ones tuned in the First launch prototype
 @file:Suppress("MagicNumber")
 
-package com.syntey.spiriteddriving.feature.onboarding.onboardingScreen
+package com.syntey.spiriteddriving.feature.onboarding.model.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing

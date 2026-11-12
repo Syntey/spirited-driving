@@ -2,7 +2,7 @@
 // Don't edit it: change the generator and run it again.
 @file:Suppress("MagicNumber", "LongMethod", "TooManyFunctions", "LargeClass", "LongParameterList")
 
-package com.syntey.spiriteddriving.feature.onboarding.art
+package com.syntey.spiriteddriving.feature.onboarding.ui.components.art
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope

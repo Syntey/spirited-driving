@@ -1,5 +1,9 @@
-package com.syntey.spiriteddriving.feature.onboarding.onboardingScreen
+package com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen
 
+import com.syntey.spiriteddriving.feature.onboarding.model.ui.OnboardingStep
+import com.syntey.spiriteddriving.feature.onboarding.model.ui.PagePosition
+import com.syntey.spiriteddriving.feature.onboarding.model.ui.OnboardingPreviewStates
+import com.syntey.spiriteddriving.feature.onboarding.ui.components.Panel
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -35,8 +39,8 @@ import com.syntey.spiriteddriving.core.ui.preview.ScreenPreviews
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
-import com.syntey.spiriteddriving.feature.onboarding.art.OnboardingArt
-import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreen.Actions.Companion.noOpActions
+import com.syntey.spiriteddriving.feature.onboarding.ui.components.art.OnboardingArt
+import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreen.Actions.Companion.noOpActions
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
@@ -171,35 +175,35 @@ private fun skipBottom(): Float {
 @ScreenPreviews
 @Composable
 private fun OnboardingScreenPreview() = Showcase {
-    Content(viewState = OnboardingScreenPreviews.viewState(), actions = noOpActions())
+    Content(viewState = OnboardingPreviewStates.viewState(), actions = noOpActions())
 }
 
 @ScreenPreviews
 @Composable
 private fun OnboardingBudgetPreview() = Showcase {
-    Content(viewState = OnboardingScreenPreviews.viewState(step = OnboardingStep.Budget), actions = noOpActions())
+    Content(viewState = OnboardingPreviewStates.viewState(step = OnboardingStep.Budget), actions = noOpActions())
 }
 
 @ScreenPreviews
 @Composable
 private fun OnboardingHandOffPreview() = Showcase {
-    Content(viewState = OnboardingScreenPreviews.viewState(step = OnboardingStep.HandOff), actions = noOpActions())
+    Content(viewState = OnboardingPreviewStates.viewState(step = OnboardingStep.HandOff), actions = noOpActions())
 }
 
 @ScreenPreviews
 @Composable
 private fun OnboardingLocationPreview() = Showcase {
-    Content(viewState = OnboardingScreenPreviews.viewState(step = OnboardingStep.Location), actions = noOpActions())
+    Content(viewState = OnboardingPreviewStates.viewState(step = OnboardingStep.Location), actions = noOpActions())
 }
 
 @ScreenPreviews
 @Composable
 private fun OnboardingVignettePreview() = Showcase {
-    Content(viewState = OnboardingScreenPreviews.viewState(step = OnboardingStep.Vignette), actions = noOpActions())
+    Content(viewState = OnboardingPreviewStates.viewState(step = OnboardingStep.Vignette), actions = noOpActions())
 }
 
 @ScreenPreviews
 @Composable
 private fun OnboardingIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(viewState = OnboardingScreenPreviews.viewState(step = OnboardingStep.Budget), actions = noOpActions())
+    Content(viewState = OnboardingPreviewStates.viewState(step = OnboardingStep.Budget), actions = noOpActions())
 }

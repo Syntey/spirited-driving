@@ -1,7 +1,7 @@
 // The numbers are the coefficients of a cubic Bézier curve and its derivative, and degrees in a half turn
 @file:Suppress("MagicNumber")
 
-package com.syntey.spiriteddriving.feature.onboarding.art
+package com.syntey.spiriteddriving.feature.onboarding.ui.components.art
 
 import kotlin.math.PI
 import kotlin.math.atan2

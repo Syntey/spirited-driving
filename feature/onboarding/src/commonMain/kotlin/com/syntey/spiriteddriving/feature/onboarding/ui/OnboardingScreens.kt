@@ -1,9 +1,9 @@
-package com.syntey.spiriteddriving.feature.onboarding
+package com.syntey.spiriteddriving.feature.onboarding.ui
 
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
-import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingComponentFactory
-import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreen
-import com.syntey.spiriteddriving.feature.onboarding.onboardingScreen.OnboardingScreenNavigation
+import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingComponentFactory
+import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreen
+import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreenNavigation
 
 /**
  * The screens this feature offers to the navigation hosts in `:shared`. Components stay internal, so each screen is

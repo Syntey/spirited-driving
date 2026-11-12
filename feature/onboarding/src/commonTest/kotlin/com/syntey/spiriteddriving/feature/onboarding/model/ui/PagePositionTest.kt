@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.onboarding.onboardingScreen
+package com.syntey.spiriteddriving.feature.onboarding.model.ui
 
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

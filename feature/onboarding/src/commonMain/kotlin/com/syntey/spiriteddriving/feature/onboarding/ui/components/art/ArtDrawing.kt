@@ -1,7 +1,7 @@
 // Each helper takes what its SVG element has, and only the generated scene calls them
 @file:Suppress("LongParameterList")
 
-package com.syntey.spiriteddriving.feature.onboarding.art
+package com.syntey.spiriteddriving.feature.onboarding.ui.components.art
 
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset

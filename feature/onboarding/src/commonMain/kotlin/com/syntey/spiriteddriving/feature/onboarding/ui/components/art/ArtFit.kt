@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.onboarding.art
+package com.syntey.spiriteddriving.feature.onboarding.ui.components.art
 
 /**
  * Where the panorama sits on a screen: [unit] pixels per unit of the panorama, with its top [shiftUp] pixels above the
