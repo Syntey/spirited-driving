@@ -1,9 +1,10 @@
 # Destination search screens
 
-> **Status:** draft, being iterated. Last updated 2026-11-09.
+> **Status:** partly built, being iterated. Last updated 2026-11-12.
 >
-> The design for [Destination search](README.md): the search step of the map's sheet, for the destination and for
-> the start. Uses the [Theme](../../theme.md); the map, its sheet and the sheet's heights are described in the
+> What's left to build of [Destination search](README.md): the search step of the map's sheet, for the destination and
+> for the start. The field, searching and the suggestions' order are built; the decisions behind them are in the
+> README's [Design](README.md#design) section. Uses the [Theme](../../theme.md); the map, its sheet and the sheet's heights are described in the
 > [Map screen](../map/design.md).
 
 ## Two uses of one step
@@ -24,17 +25,6 @@ differ only in these:
 The start step opens with the keyboard up and the field empty. Opened because there was no usable location, it
 comes straight after choosing a destination, with the destination's pin on the map; Close and Back return to the
 destination search as it was.
-
-## Field
-
-- Tapping the field focuses it: the keyboard comes up and the sheet moves to full height. Empty, the sheet shows
-  the first row and the recent places; typing replaces them with suggestions. Dragging the sheet to half height
-  shows the same without the keyboard.
-- A clear button inside the field while it has text.
-- The keyboard's return key reads Search and only hides the keyboard; the list stays. It doesn't choose the first
-  suggestion: a wrong guess would plan a route to the wrong place.
-- Autocorrect is off, so it doesn't change place names.
-- Scrolling the list hides the keyboard.
 
 ## Recent places
 
@@ -84,13 +74,10 @@ approximate location they are whole km or miles. Without location access the dis
 
 ## Searching
 
-- The app searches from 2 characters, after a 300 ms pause in typing. With 1 character, only matching recent
-  places show.
-- A new search cancels the one still running, and only the answer for the current text is shown.
-- While a search runs, the previous suggestions stay, so the list doesn't flash. After 0.5 s without an answer, a
-  small progress indicator replaces the clear button.
-- Best match first. The user's location, precise or approximate, only orders places with the same name, such as
-  "Nádražní" or "Lidl", nearest first; without location access, the centre of the map does.
+- With 1 character, only matching recent places show.
+- After 0.5 s without an answer, a small progress indicator replaces the clear button.
+- Without location access, the centre of the map orders places with the same name, nearest first, as the user's
+  location does.
 
 ## My location
 
@@ -128,21 +115,16 @@ the field:
 
 - Closing route planning returns to the destination search as it was: the text and its suggestions, at full height
   without the keyboard, so choosing the other Karlštejn takes one tap.
-- Closing the search (X on iOS, Back on Android) clears the text and collapses the sheet.
 - Starting a drive clears the text, so the search is empty after the drive.
 
 ## Platforms
 
 |                | iOS                                           | Android                                         |
 |----------------|-----------------------------------------------|-------------------------------------------------|
-| Field          | Capsule, 48 pt, system fill (the sheet's glass shows through) | Search bar, 56 dp, `surfaceContainerHigh` |
-| Close          | X button next to the field                    | Back arrow at the start of the field            |
-| Rows           | Rows on a translucent card, corners 22 pt     | List items, 72 dp, on the sheet                 |
 | Kind icons     | 30 pt circle                                  | 40 dp circle                                    |
 | Not covered tapped | Capsule on `inverseSurface`               | Snackbar                                        |
 
-- **Built with:** shared Compose, styled per platform as above. Swipe to remove is the same Compose code on both
-  ([Architecture](../../architecture.md#shared-and-native-ui)).
+- Swipe to remove is the same Compose code on both ([Architecture](../../architecture.md#shared-and-native-ui)).
 - Matching and bolding ignore diacritics in common code, with unit tests.
 - Screen readers hear a row as "Karlštejn Castle, place of interest, 28 kilometres, Karlštejn, Central Bohemia",
   and a dimmed one with "not covered yet".
@@ -151,7 +133,6 @@ the field:
 
 | Where                  | Text                                                           |
 |------------------------|----------------------------------------------------------------|
-| Field, destination     | Where to?                                                      |
 | Field, start           | Where from?                                                    |
 | Above the start field  | To Karlštejn Castle                                            |
 | Recent header          | Recent                                                         |

@@ -110,6 +110,26 @@ class RouteMapStateTest {
     }
 
     @Test
+    fun `a destination drops its pin and stops following`() {
+        val state = following.withDestination(prague)
+
+        assertEquals(prague, state.destination)
+        assertEquals(false, state.followsUser)
+    }
+
+    @Test
+    fun `a destination moves the map around its pin`() {
+        val before = following.withCoverage(covered)
+        val state = before.withDestination(prague)
+
+        assertTrue(state.overview.southWest.latitude < prague.latitude)
+        assertTrue(state.overview.southWest.longitude < prague.longitude)
+        assertTrue(state.overview.northEast.latitude > prague.latitude)
+        assertTrue(state.overview.northEast.longitude > prague.longitude)
+        assertEquals(before.overviewRequest + 1, state.overviewRequest)
+    }
+
+    @Test
     fun `outside is false until both the covered area and the location are known`() {
         assertFalse(following.withCoverage(covered).isOutsideCoveredArea)
         assertFalse(following.withUserLocation(dresden).isOutsideCoveredArea)

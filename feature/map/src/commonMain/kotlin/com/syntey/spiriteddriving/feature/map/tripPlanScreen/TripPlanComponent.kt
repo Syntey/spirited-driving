@@ -3,7 +3,9 @@ package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnStart
+import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
@@ -17,6 +19,8 @@ import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
@@ -35,6 +39,7 @@ internal class TripPlanComponent(
     private val requestPreciseLocationUseCase: RequestPreciseLocationUseCase,
     private val isNoteClosedUseCase: IsNoteClosedUseCase,
     private val closeNoteUseCase: CloseNoteUseCase,
+    private val searchPlacesUseCase: SearchPlacesUseCase,
 ) : ScreenComponent<TripPlanViewState, Nothing, TripPlanScreenNavigation>(
     componentContext = componentContext,
     defaultState = TripPlanViewState(),
@@ -48,15 +53,37 @@ internal class TripPlanComponent(
     override val viewState: StateFlow<TripPlanViewState> = componentState
     override val actions: TripPlanScreen.Actions = this
 
+    // Back closes the search while the sheet is pulled up
+    private val closeSearchCallback = BackCallback(isEnabled = false) { closeSearch() }
+
     init {
+        backHandler.register(closeSearchCallback)
         // On every start, so access turned on in the system settings shows when the user comes back
         doOnStart(isOneTime = false) { readLocationAccess() }
         loadCoverage()
         readPreciseLocationNote()
     }
 
-    // Destination search, which the field opens, isn't built yet
-    override fun onSearchClick() = Unit
+    override fun onSearchFocus() = setSheetHeight(SheetHeight.Full)
+
+    override fun onSearchTextChange(text: String) {
+        componentState.update { it.copy(search = it.search.copy(text = text)) }
+        search(text)
+    }
+
+    override fun onSearchClear() = clearSearch()
+
+    override fun onSearchClose() = closeSearch()
+
+    override fun onSheetHeightChange(height: SheetHeight) = setSheetHeight(height)
+
+    // Until route planning exists, choosing a place only drops its pin. Places outside the covered area can't be chosen.
+    override fun onSuggestionClick(suggestion: PlaceSuggestion) {
+        if (!suggestion.isCovered) return
+        componentState.update { it.copy(map = it.map.withDestination(suggestion.place.location)) }
+        closeSearch()
+    }
+
     override fun onLocateClick() = locate()
     override fun onMapPanned() = componentState.update { it.copy(map = it.map.copy(followsUser = false)) }
 
@@ -77,6 +104,32 @@ internal class TripPlanComponent(
         LocateButton.Following -> Unit
         LocateButton.NotFollowing -> componentState.update { it.copy(map = it.map.copy(followsUser = true)) }
         LocateButton.NoAccess -> askForLocationAccess()
+    }
+
+    // Each search cancels the one before, which may still wait for the pause in typing, so only the current text's answer shows
+    private fun search(text: String) {
+        val args = SearchPlacesUseCase.Args(text, near = componentState.value.map.userLocation)
+        searchPlacesUseCase.execute(args) {
+            onSuccess { suggestions ->
+                componentState.update { it.copy(search = it.search.copy(suggestions = suggestions.toImmutableList())) }
+            }
+            onError { error -> logger.e(error) { "Place search failed" } }
+        }
+    }
+
+    private fun clearSearch() {
+        useCaseJobPool[searchPlacesUseCase]?.cancel()
+        componentState.update { it.copy(search = SearchState()) }
+    }
+
+    private fun closeSearch() {
+        clearSearch()
+        setSheetHeight(SheetHeight.Collapsed)
+    }
+
+    private fun setSheetHeight(height: SheetHeight) {
+        componentState.update { it.copy(sheetHeight = height) }
+        closeSearchCallback.isEnabled = height != SheetHeight.Collapsed
     }
 
     // The first covered area sets the overview; until it's loaded the map shows the launch region, undimmed

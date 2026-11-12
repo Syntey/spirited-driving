@@ -1,8 +1,10 @@
 package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
+import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -19,6 +21,11 @@ internal object TripPlanScreenPreviews {
 
     fun approximateViewState(): TripPlanViewState =
         viewState(locationAccess = LocationAccess.Approximate).copy(isPreciseLocationNoteClosed = false)
+
+    fun searchViewState(): TripPlanViewState = viewState().copy(
+        sheetHeight = SheetHeight.Full,
+        search = SearchState(text = "karlst", suggestions = FakePlaceSearch.Recorded.toImmutableList()),
+    )
 
     fun outsideViewState(): TripPlanViewState {
         val covered = FakeCoverageSource.Czechia

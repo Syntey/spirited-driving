@@ -17,6 +17,7 @@ import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
  * @property coveredArea The covered area, dimmed outside and with a border along its edge; empty until it's loaded.
  * @property overviewRequest Grows each time the map should move to [overview], even when [overview] itself is unchanged, as when
  *   the user turns out to be outside the covered area.
+ * @property destination The chosen destination's pin.
  */
 data class RouteMapState(
     val showsUserLocation: Boolean = false,
@@ -25,6 +26,7 @@ data class RouteMapState(
     val overview: GeoBounds = CZECHIA,
     val coveredArea: List<GeoPolygon> = emptyList(),
     val overviewRequest: Int = 0,
+    val destination: GeoPoint? = null,
 ) {
     /**
      * The map once location access is [access]: it starts following the user when access is turned on, and stops,
@@ -59,6 +61,17 @@ data class RouteMapState(
     /** The map once the user is at [location]. */
     fun withUserLocation(location: GeoPoint): RouteMapState = copy(userLocation = location).showingOutside(previous = this)
 
+    /** The map with a pin at [point]: it stops following the user and moves to the streets around the pin. */
+    fun withDestination(point: GeoPoint): RouteMapState = copy(
+        destination = point,
+        followsUser = false,
+        overview = GeoBounds(
+            southWest = GeoPoint(latitude = point.latitude - DESTINATION_MARGIN_LAT, longitude = point.longitude - DESTINATION_MARGIN_LON),
+            northEast = GeoPoint(latitude = point.latitude + DESTINATION_MARGIN_LAT, longitude = point.longitude + DESTINATION_MARGIN_LON),
+        ),
+        overviewRequest = overviewRequest + 1,
+    )
+
     // The first time both the covered area and the user's location are known and the user is outside, the map stops following
     // and shows both. Later locations don't move it again.
     private fun showingOutside(previous: RouteMapState): RouteMapState {
@@ -73,6 +86,10 @@ data class RouteMapState(
     }
 
     private companion object {
+        // About a kilometre each way around a destination's pin
+        const val DESTINATION_MARGIN_LAT = 0.01
+        const val DESTINATION_MARGIN_LON = 0.015
+
         // The launch region, by its corners
         @Suppress("MagicNumber")
         val CZECHIA =
