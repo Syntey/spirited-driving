@@ -19,6 +19,7 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
  * @property overviewRequest Grows each time the map should move to [overview], even when [overview] itself is unchanged, as when
  *   the user turns out to be outside the covered area.
  * @property destination The chosen destination's pin.
+ * @property start The pin of a start picked by hand; null while the trip starts from the user's location.
  */
 data class RouteMapState(
     val showsUserLocation: Boolean = false,
@@ -28,6 +29,7 @@ data class RouteMapState(
     val coveredArea: List<GeoPolygon> = emptyList(),
     val overviewRequest: Int = 0,
     val destination: GeoPoint? = null,
+    val start: GeoPoint? = null,
 ) {
     /**
      * The map once location access is [access]: it starts following the user when access is turned on, and stops,

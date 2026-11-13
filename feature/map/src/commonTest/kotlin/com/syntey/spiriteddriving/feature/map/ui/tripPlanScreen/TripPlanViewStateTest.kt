@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen
 
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
+import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.kilometres
 import com.syntey.spiriteddriving.core.domain.place.Place
@@ -13,9 +14,11 @@ import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
+import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.TripPlanPreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.UseBudgetButton
 import com.syntey.spiriteddriving.feature.map.tools.budgetText
@@ -141,22 +144,101 @@ class TripPlanViewStateTest {
     }
 
     @Test
-    fun `a trip can be planned from the user's location with location access`() {
+    fun `a precise location in the covered area is usable`() {
         val state = TripPlanViewState(locationAccess = LocationAccess.Precise, map = RouteMapState(userLocation = origin))
 
-        assertTrue(state.canPlanFromUser)
+        assertTrue(state.hasUsableLocation)
     }
 
     @Test
-    fun `a trip can't be planned before the user's location is known`() {
-        assertFalse(TripPlanViewState(locationAccess = LocationAccess.Precise).canPlanFromUser)
+    fun `a precise location is usable before it is known`() {
+        assertTrue(TripPlanViewState(locationAccess = LocationAccess.Precise).hasUsableLocation)
     }
 
     @Test
-    fun `a trip can't be planned without location access`() {
+    fun `an approximate location isn't usable`() {
+        val state = TripPlanViewState(locationAccess = LocationAccess.Approximate, map = RouteMapState(userLocation = origin))
+
+        assertFalse(state.hasUsableLocation)
+    }
+
+    @Test
+    fun `a location without access isn't usable`() {
         val state = TripPlanViewState(locationAccess = LocationAccess.Denied, map = RouteMapState(userLocation = origin))
 
-        assertFalse(state.canPlanFromUser)
+        assertFalse(state.hasUsableLocation)
+    }
+
+    @Test
+    fun `a precise location outside a loaded covered area isn't usable`() {
+        val state = TripPlanViewState(
+            locationAccess = LocationAccess.Precise,
+            map = RouteMapState(userLocation = dresdenPoint, coveredArea = FakeCoverageSource.Czechia.area),
+        )
+
+        assertFalse(state.hasUsableLocation)
+    }
+
+    @Test
+    fun `the my location row is absent without the start step`() {
+        assertNull(TripPlanViewState(locationAccess = LocationAccess.Precise, map = RouteMapState(userLocation = origin)).myLocationRow)
+    }
+
+    @Test
+    fun `the my location row is absent while the search has text`() {
+        assertNull(startStep(access = LocationAccess.Precise, from = origin, text = "karlst").myLocationRow)
+    }
+
+    @Test
+    fun `the my location row needs location access when it is denied`() {
+        assertEquals(MyLocationRow.NeedsLocationAccess, startStep(access = LocationAccess.Denied, from = origin).myLocationRow)
+    }
+
+    @Test
+    fun `the my location row needs location access before access is read`() {
+        assertEquals(MyLocationRow.NeedsLocationAccess, startStep(access = null, from = origin).myLocationRow)
+    }
+
+    @Test
+    fun `the my location row needs precise location with approximate access`() {
+        assertEquals(
+            MyLocationRow.NeedsPreciseLocation,
+            startStep(access = LocationAccess.Approximate, from = origin).myLocationRow,
+        )
+    }
+
+    @Test
+    fun `the my location row is outside the covered area when the user is outside it`() {
+        val state = startStep(access = LocationAccess.Precise, from = dresdenPoint).let {
+            it.copy(map = it.map.copy(coveredArea = FakeCoverageSource.Czechia.area))
+        }
+
+        assertEquals(MyLocationRow.OutsideCoveredArea, state.myLocationRow)
+    }
+
+    @Test
+    fun `the my location row is available with precise access in the covered area`() {
+        val state = startStep(access = LocationAccess.Precise, from = origin).let {
+            it.copy(map = it.map.copy(coveredArea = FakeCoverageSource.Czechia.area))
+        }
+
+        assertEquals(MyLocationRow.Available, state.myLocationRow)
+    }
+
+    @Test
+    fun `planning from a start picked by hand frames the start and the destination and not the user's location`() {
+        val start = GeoPoint(latitude = 49.0, longitude = 12.0)
+        val state = TripPlanViewState(
+            locationAccess = LocationAccess.Precise,
+            map = RouteMapState(userLocation = origin),
+            planning = RoutePlanningState(
+                destination = dresden,
+                start = Place(name = null, area = null, location = start),
+                budget = Budget.Time(30.minutes),
+            ),
+        )
+
+        assertEquals(GeoBounds(southWest = start, northEast = dresden.location), state.routeBounds)
     }
 
     @Test
@@ -316,6 +398,15 @@ class TripPlanViewStateTest {
     private val dresden = Place(name = "Dresden", area = null, location = GeoPoint(latitude = 51.05, longitude = 13.74))
 
     private val origin = GeoPoint(latitude = 50.0, longitude = 14.0)
+
+    private val dresdenPoint = GeoPoint(latitude = 51.05, longitude = 13.74)
+
+    private fun startStep(access: LocationAccess?, from: GeoPoint?, text: String = "") = TripPlanViewState(
+        locationAccess = access,
+        map = RouteMapState(userLocation = from),
+        search = SearchState(text = text),
+        startSearch = StartSearch(destinationSearch = SearchState(), closesPlanning = false),
+    )
 
     // 4.2 km north of origin
     private val karlstejn = suggestion(name = "Karlštejn", location = GeoPoint(latitude = 50.03777151, longitude = 14.0))

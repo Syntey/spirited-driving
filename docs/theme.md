@@ -154,7 +154,7 @@ budget, is filled with primary; any number out of a set, such as the reasons aft
 ## Segmented switch
 
 `SegmentedSwitch`: a choice of two or three, such as km / mi in [Settings](features/settings/design.md#units) and
-min / km in [Route planning](features/route-planning/design.md#budget). An outlined segmented button on Android; on iOS
+min / km in [Route planning](features/route-planning/README.md#design). An outlined segmented button on Android; on iOS
 a segmented control whose selected segment is a raised pill that slides, or jumps with Reduce Motion. Screen readers
 hear each segment by its full name, such as Kilometres.
 
@@ -190,7 +190,7 @@ instead. Screen readers hear it as in progress.
 
 `SheetHeader` tops every sheet: a title, an optional line below it, and Close. The title is Title 2 on iOS and
 titleLarge on Android, and wraps rather than truncating. A tappable line, such as "From My location" in
-[Route planning](features/route-planning/design.md#layout), gets a chevron and stays grey, since red is kept for main
+[Route planning](features/route-planning/README.md#design), gets a chevron and stays grey, since red is kept for main
 actions. Close sits at the top, level with the title's first line.
 
 ## Drag handle
@@ -257,8 +257,8 @@ One layout for a list or a result with nothing to show, whether it's empty or so
   like one. The error colour is for an action the user took that failed, shown next to it, such as signing in
   ([Account](features/account/design.md#errors)).
 - One shared Compose component. Each feature passes its icon, title, message and whether Try again shows: see
-  [Destination search](features/destination-search/design.md#states),
-  [Route planning](features/route-planning/design.md#states), [Saved routes](features/saved-routes/design.md#list)
+  [Destination search](features/destination-search/README.md#design),
+  [Route planning](features/route-planning/README.md#design), [Saved routes](features/saved-routes/design.md#list)
   and [Trip history](features/trip-history/design.md#states).
 
 ## App icon

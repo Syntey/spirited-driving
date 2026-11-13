@@ -63,7 +63,7 @@ The one-route step of the map's sheet, as for a [saved route](../saved-routes/de
 the route on its own, the same map, notes, sheet heights and attribution, with these differences:
 
 - **Header:** the destination's name, with "Thu 5 Nov, 14:20 · From Smíchov" below it.
-- **Save** (tonal) or **Saved**, and **Drive**. Save works as in [Route planning](../route-planning/design.md#states):
+- **Save** (tonal) or **Saved**, and **Drive**. Save works as in [Route planning](../route-planning/design.md#save):
   the route is saved under the destination's name, and when that name is taken the user names it first
   ([Saved routes](../saved-routes/design.md#saving)). Tapping Saved removes it from saved routes.
 - Driving it records a new drive, which goes to the top of the history.

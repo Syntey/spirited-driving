@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,9 +27,12 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.syntey.spiriteddriving.core.domain.place.Place
+import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.components.MessageHost
@@ -89,6 +94,9 @@ internal fun Content(
     val focusManager = LocalFocusManager.current
     // Read by the size callbacks, which aren't recomposed with the sheet
     val currentSheetHeight by rememberUpdatedState(viewState.sheetHeight)
+    // The start step replaces the planning layout until it closes; the planning height stays measured while planning
+    val planning = viewState.planning?.takeIf { viewState.startSearch == null }
+    val isStartStep = viewState.startSearch != null
     val isPlanning = viewState.planning != null
     val currentIsPlanning by rememberUpdatedState(isPlanning)
     val reportCollapsedHeight by rememberUpdatedState(onCollapsedHeightChange)
@@ -112,7 +120,6 @@ internal fun Content(
                     .clearAndSetSemantics {},
             )
         }
-        val planning = viewState.planning
         if (planning != null && viewState.sheetHeight == SheetHeight.Collapsed) {
             CollapsedRoutePlanning(viewState = viewState, actions = actions)
         } else {
@@ -132,9 +139,13 @@ internal fun Content(
                 verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
             ) {
                 if (planning != null) {
-                    RoutePlanningHeader(destination = planning.destination, actions = actions)
+                    RoutePlanningHeader(planning = planning, actions = actions)
                 } else {
-                    if (viewState.sheetHeight == SheetHeight.Collapsed) CollapsedNotes(viewState, actions)
+                    if (isStartStep) {
+                        StartStepTo(destination = viewState.planning?.destination)
+                    } else if (viewState.sheetHeight == SheetHeight.Collapsed) {
+                        CollapsedNotes(viewState, actions)
+                    }
                     SearchRow(viewState = viewState, actions = actions)
                 }
             }
@@ -148,6 +159,8 @@ internal fun Content(
                     onRecentPlaceClick = actions::onRecentPlaceClick,
                     onRecentPlaceRemove = actions::onRecentPlaceRemove,
                     onSearchRetry = actions::onSearchRetry,
+                    myLocationRow = viewState.myLocationRow,
+                    onMyLocationClick = actions::onMyLocationClick,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -180,6 +193,18 @@ private fun CollapsedNotes(viewState: TripPlanViewState, actions: TripPlanScreen
             ),
         )
     }
+}
+
+// The destination above the start step's field, so the user knows which trip the start is for
+@Composable
+private fun StartStepTo(destination: Place?) {
+    Text(
+        text = stringResource(MR.strings.search_start_to, destination?.name ?: stringResource(MR.strings.search_point_on_map)),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 // Measures the content at the height it needs without placing it, so the collapsed sheet's height is known before the
@@ -394,6 +419,94 @@ private fun TripPlanSheetSearchDistancesPreview() = Showcase {
 private fun TripPlanSheetSearchDistancesIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
         viewState = TripPlanPreviewStates.searchDistancesViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetStartPreview() = Showcase {
+    Content(
+        viewState = TripPlanPreviewStates.startStepViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(
+        viewState = TripPlanPreviewStates.startStepViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetStartApproximatePreview() = Showcase {
+    Content(
+        viewState = TripPlanPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetStartApproximateIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(
+        viewState = TripPlanPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetStartNoAccessPreview() = Showcase {
+    Content(
+        viewState = TripPlanPreviewStates.startStepViewState(locationAccess = null),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetStartNoAccessIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(
+        viewState = TripPlanPreviewStates.startStepViewState(locationAccess = null),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetPlannedFromPickedStartPreview() = Showcase {
+    Content(
+        viewState = TripPlanPreviewStates.plannedFromPickedStartViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetPlannedFromPickedStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(
+        viewState = TripPlanPreviewStates.plannedFromPickedStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),

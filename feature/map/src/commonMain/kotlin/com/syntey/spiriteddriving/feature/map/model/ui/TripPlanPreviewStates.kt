@@ -127,6 +127,23 @@ internal object TripPlanPreviewStates {
         ),
     ).toImmutableList()
 
+    /** The start step over route planning to Karlštejn Castle, with the recent places and the My location row for [locationAccess]. */
+    fun startStepViewState(locationAccess: LocationAccess? = LocationAccess.Precise): TripPlanViewState {
+        val state = viewState(locationAccess = locationAccess)
+        return state.copy(
+            sheetHeight = SheetHeight.Full,
+            map = state.map.copy(userLocation = PRAGUE),
+            planning = RoutePlanningState(destination = DESTINATION, budget = BUDGET),
+            startSearch = StartSearch(destinationSearch = SearchState(), closesPlanning = false),
+            search = SearchState(recentPlaces = recentPlaces),
+        )
+    }
+
+    /** A plan to Karlštejn Castle from a point picked as the start: the header says "From Beroun". */
+    fun plannedFromPickedStartViewState(): TripPlanViewState = planningState(
+        RoutePlanningState(destination = DESTINATION, start = BEROUN, budget = BUDGET).withPlan(plannedPlan),
+    )
+
     /** Route planning to Karlštejn Castle, while the plan is on its way. */
     fun planningViewState(): TripPlanViewState = planningState(RoutePlanningState(destination = DESTINATION, budget = BUDGET))
 
@@ -181,6 +198,11 @@ internal object TripPlanPreviewStates {
 
     private val DESTINATION: Place = FakeRoutePlanner.Recorded.fastest.destination
     private val PRAGUE_START = GeoPoint(latitude = 50.0755, longitude = 14.4378)
+    private val BEROUN = Place(
+        name = "Beroun",
+        area = "Central Bohemia",
+        location = GeoPoint(latitude = 49.96, longitude = 14.07),
+    )
     private val BUDGET = Budget.Time(45.minutes)
 
     // The recorded fun route, copied three times with the fun levels of a plan that has three fun routes

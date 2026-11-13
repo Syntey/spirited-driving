@@ -87,9 +87,16 @@
     <string name="search_recent_header">Recent</string>
     <string name="search_recent_a11y">recent place</string>
     <string name="search_recent_remove">Remove</string>
+    <string name="search_start_placeholder">Where from?</string>
+    <string name="search_start_to">To %1$s</string>
+    <string name="search_my_location">My location</string>
+    <string name="search_my_location_needs_precise">Needs precise location</string>
+    <string name="search_my_location_needs_access">Needs location access</string>
+    <string name="search_my_location_outside">Outside the covered area</string>
 
     <!-- Route planning -->
     <string name="planning_from_my_location">From My location</string>
+    <string name="planning_from">From %1$s</string>
     <string name="planning_fastest">Fastest</string>
     <string name="planning_route_label">%1$d · %2$s</string>
     <string name="planning_fastest_label">Fastest · %1$s</string>

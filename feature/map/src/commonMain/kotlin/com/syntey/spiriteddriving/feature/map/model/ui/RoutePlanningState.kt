@@ -5,9 +5,14 @@ import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
 
-/** The route planning step of the sheet, from the user's location to [destination]. */
+/**
+ * The route planning step of the sheet, from [start], or the user's location, to [destination].
+ *
+ * @property start The start picked by hand; null starts from the user's location.
+ */
 data class RoutePlanningState(
     val destination: Place,
+    val start: Place? = null,
     val budget: Budget,
     val status: PlanningStatus = PlanningStatus.Planning,
     val plan: TripPlan? = null,

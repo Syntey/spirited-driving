@@ -12,6 +12,7 @@ import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.feature.map.model.ui.BudgetChip
+import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.UseBudgetButton
@@ -23,6 +24,7 @@ import com.syntey.spiriteddriving.feature.map.model.ui.RouteLine
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteRow
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
+import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.SuggestionRow
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
 import com.syntey.spiriteddriving.feature.map.tools.budgetText
@@ -48,6 +50,7 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
  * @property sheetHeight How far the sheet is pulled up: by the user, or by focusing or closing the search.
  * @property distanceUnit The unit distances are shown in.
  * @property planning The route planning step; null while the sheet shows the search.
+ * @property startSearch The start step, open over route planning; null otherwise.
  * @property budgetChoice The budget planning starts with, and the last value in each unit.
  */
 data class TripPlanViewState(
@@ -58,6 +61,7 @@ data class TripPlanViewState(
     val search: SearchState = SearchState(),
     val distanceUnit: DistanceUnit = DistanceUnit.Kilometres,
     val planning: RoutePlanningState? = null,
+    val startSearch: StartSearch? = null,
     val budgetChoice: BudgetChoice = Constants.Budgets.DEFAULT_CHOICE,
 ) {
     val locateButton: LocateButton get() = LocateButton.of(locationAccess, map.followsUser)
@@ -95,9 +99,9 @@ data class TripPlanViewState(
     val showsMapButtons: Boolean get() = planning == null
 
     /**
-     * The area the map frames: all the planned routes' lines once they have points; otherwise, and while planning, the user's
-     * location, when known, and the destination. Never smaller than the minimum span, so a single point still shows its streets.
-     * Null without planning.
+     * The area the map frames: all the planned routes' lines once they have points; otherwise, and while planning, the start,
+     * or the user's location when known, and the destination. Never smaller than the minimum span, so a single point still shows
+     * its streets. Null without planning.
      */
     val routeBounds: GeoBounds?
         get() {
@@ -107,11 +111,20 @@ data class TripPlanViewState(
             return bounds.withMinimumSpan()
         }
 
-    /**
-     * Route planning starts from the user's location. Without it, choosing a place only drops its pin until the start can be
-     * searched for.
-     */
-    val canPlanFromUser: Boolean get() = locationAccess.allowsLocation && map.userLocation != null
+    /** The user's location can start a trip: precise, as an approximate start can be kilometres off, and in the covered area. */
+    val hasUsableLocation: Boolean get() = locationAccess == LocationAccess.Precise && !map.isOutsideCoveredArea
+
+    /** The My location row: in the start step while the field is blank; null otherwise. */
+    val myLocationRow: MyLocationRow?
+        get() {
+            if (startSearch == null || search.text.isNotBlank()) return null
+            return when {
+                !locationAccess.allowsLocation -> MyLocationRow.NeedsLocationAccess
+                locationAccess == LocationAccess.Approximate -> MyLocationRow.NeedsPreciseLocation
+                map.isOutsideCoveredArea -> MyLocationRow.OutsideCoveredArea
+                else -> MyLocationRow.Available
+            }
+        }
 
     /**
      * The "Precise location is off" note: with approximate access only, until the user closes it, and not while the user is
@@ -198,7 +211,7 @@ data class TripPlanViewState(
 
     private fun planningBounds(planning: RoutePlanningState): GeoBounds {
         val destination = planning.destination.location
-        val origin = map.userLocation ?: return GeoBounds(destination, destination)
+        val origin = planning.start?.location ?: map.userLocation ?: return GeoBounds(destination, destination)
         return GeoBounds(origin, origin).including(destination)
     }
 
