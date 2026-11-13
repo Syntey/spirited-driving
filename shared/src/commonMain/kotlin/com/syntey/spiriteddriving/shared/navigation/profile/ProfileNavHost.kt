@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.shared.navigation.profile
 
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.Child
+import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreen
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +33,9 @@ sealed interface ProfileConfig {
 
     @Serializable
     data object Settings : ProfileConfig
+
+    @Serializable
+    data object Feedback : ProfileConfig
 }
 
 sealed interface ProfileChild {
@@ -39,4 +43,6 @@ sealed interface ProfileChild {
     data class Profile(val screen: ProfileScreen) : ProfileChild
 
     data class Settings(val screen: SettingsScreen) : ProfileChild
+
+    data class Feedback(val screen: FeedbackScreen) : ProfileChild
 }

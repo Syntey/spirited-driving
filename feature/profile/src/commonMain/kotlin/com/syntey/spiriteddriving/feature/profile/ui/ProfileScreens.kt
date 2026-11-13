@@ -1,6 +1,9 @@
 package com.syntey.spiriteddriving.feature.profile.ui
 
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
+import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackComponentFactory
+import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen
+import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileComponentFactory
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreenNavigation
@@ -19,4 +22,7 @@ object ProfileScreens {
 
     fun settings(componentContext: AppComponentContext, navigation: SettingsScreenNavigation): SettingsScreen =
         SettingsComponentFactory.createComponent(componentContext, navigation)
+
+    fun feedback(componentContext: AppComponentContext, navigation: FeedbackScreenNavigation): FeedbackScreen =
+        FeedbackComponentFactory.createComponent(componentContext, navigation)
 }

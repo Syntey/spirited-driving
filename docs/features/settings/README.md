@@ -1,6 +1,6 @@
 # Settings
 
-> **Status:** draft, MVP. Last updated 2026-11-08.
+> **Status:** draft, MVP. Last updated 2026-11-13.
 
 The user's preferences for planning, plus information about the app. Its screens are in [design.md](design.md).
 
@@ -10,7 +10,7 @@ The user's preferences for planning, plus information about the app. Its screens
 - Mark the countries they have a valid motorway vignette for. In the MVP, that is Czechia.
 - See whether drive reminders are on, and open the phone's settings to change that.
 - Rate the app in the App Store or Google Play.
-- Send feedback by email.
+- Send feedback from the app, anonymously.
 - Read about the app: version, privacy policy, terms, OpenStreetMap attribution and open-source licences.
 
 ## Rules
@@ -40,9 +40,8 @@ Not needed.
 
 ## Backend
 
-None.
+Receives feedback, with the app version, OS version and phone model, and no user.
 
 ## Open questions
 
 1. **Earning money:** how the app earns money is still open. Any in-app purchase goes in Settings.
-2. **Feedback address:** which email address feedback goes to.

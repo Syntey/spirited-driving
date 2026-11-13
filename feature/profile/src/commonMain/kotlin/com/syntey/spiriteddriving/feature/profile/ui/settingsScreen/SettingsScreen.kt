@@ -31,6 +31,9 @@ interface SettingsScreen {
         /** Tapped Rate Spirited Driving. */
         fun onRateClick()
 
+        /** Tapped Send feedback: opens the screen to write it. */
+        fun onSendFeedbackClick()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onPrivacyPolicyClick() = Unit
@@ -39,6 +42,7 @@ interface SettingsScreen {
                 override fun onVignetteToggle(country: CountryCode) = Unit
                 override fun onDriveRemindersClick() = Unit
                 override fun onRateClick() = Unit
+                override fun onSendFeedbackClick() = Unit
             }
         }
     }

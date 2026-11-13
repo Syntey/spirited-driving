@@ -8,4 +8,9 @@ internal object Constants {
         // Asked about until the covered area has loaded, which lists the countries the app covers
         val BUILT_IN: List<CountryCode> = listOf(CountryCode.Czechia)
     }
+
+    object Feedback {
+        // The backend rejects a message longer than this after trimming
+        const val MESSAGE_MAX_LENGTH = 2000
+    }
 }
