@@ -63,6 +63,7 @@ internal class SettingsComponent(
     override fun onTermsClick() = sendUiEvent(SettingsUiEvent.OpenWebPage(LegalPages.TERMS_URL))
     override fun onDriveRemindersClick() = openDriveReminderSettings()
     override fun onRateClick() = sendUiEvent(SettingsUiEvent.OpenWebPage(platform.storeReviewUrl))
+    override fun onSendFeedbackClick() = openFeedback()
     override fun onDistanceUnitSelect(unit: DistanceUnit) = saveDistanceUnit(unit)
 
     override fun onVignetteToggle(country: CountryCode) {

@@ -132,6 +132,14 @@ private fun Content(viewState: SettingsViewState, actions: SettingsScreen.Action
                     position = position,
                 )
             }
+            item { position ->
+                ListRow(
+                    headline = stringResource(MR.strings.settings_send_feedback),
+                    onClick = actions::onSendFeedbackClick,
+                    chevron = painterResource(MR.images.chevron_right),
+                    position = position,
+                )
+            }
         }
         ListGroup(header = stringResource(MR.strings.settings_about)) {
             item { position ->

@@ -1,6 +1,6 @@
 # Settings screens
 
-> **Status:** draft, being iterated. Last updated 2026-11-08.
+> **Status:** draft, being iterated. Last updated 2026-11-13.
 >
 > The design for [Settings](README.md): the Settings screen and Licences. Uses the [Theme](../../theme.md); Settings
 > opens from [Profile](../account/design.md#profile) ([Navigation](../../navigation.md#profile)).
@@ -47,9 +47,7 @@ and tapping it opens the phone's settings for it. The value refreshes when the u
 
 - **Rate Spirited Driving** opens the app's page in the App Store, on its write-a-review action, or in Google Play.
   It isn't the in-app review prompt: the system may decide not to show that, and the user tapped on purpose.
-- **Send feedback** opens the mail app with the address filled in, the subject "Spirited Driving feedback", and
-  a last line with the app version, the OS version and the phone model, which the user can delete before sending.
-- **No mail app:** a dialog shows the address with **Copy address** and **Cancel**.
+- **Send feedback** opens [Send feedback](#send-feedback).
 
 ### About
 
@@ -69,6 +67,21 @@ and tapping it opens the phone's settings for it. The value refreshes when the u
 
 The base maps aren't listed: Google Maps and Apple MapKit show their own legal notices on the map.
 
+## Send feedback
+
+Feedback goes to the backend, so it needs no mail app and stays in one place with the rest of the app's data. It's
+anonymous: no email and no account, even when signed in, so there's nothing to reply to.
+
+- A multi-line field, "What's on your mind?", that grows with the text, up to 2,000 characters. Below it, what is
+  sent along: "Sent with: Spirited Driving 1.0.0 (42) · iOS 26.1 · iPhone 17 Pro".
+- **Send** below, the large primary button, disabled while the field is blank. While sending, a spinner replaces
+  its label and the field takes no input.
+- **Sent:** the form gives way to "Thanks for your feedback" and "Every message is read.", with **Done**, which
+  returns to Settings.
+- **Not sent:** the text stays and a message above Send says why: "You're offline. Send it again once you're
+  back online." or "Couldn't send your feedback. Try again."
+- Back while the field has text leaves without asking; the text is gone.
+
 ## Platforms
 
 |                    | iOS                                                    | Android                                         |
@@ -81,12 +94,12 @@ The base maps aren't listed: Google Maps and Apple MapKit show their own legal n
 | Vignette switch    | iOS-style switch in primary                            | Material 3 switch                               |
 | Web links          | Arrow pointing up and right after the label            | Open-in-new icon after the label                |
 | Browser            | Safari view controller                                 | Custom Tab                                      |
-| No mail app        | Native alert                                           | Material dialog                                 |
+| Send feedback      | Pushed inside the Profile sheet                        | Full screen                                     |
 | Licences           | Pushed inside the Profile sheet                        | Full screen                                     |
 | Licence text       | Pushed, plain text                                     | Full screen, plain text                         |
 
-- **Built with:** shared Compose, styled per platform as above. On iOS only the navigation bar, the alert and the
-  Safari view controller are native ([Architecture](../../architecture.md#shared-and-native-ui)).
+- **Built with:** shared Compose, styled per platform as above. On iOS only the navigation bar and the Safari view
+  controller are native ([Architecture](../../architecture.md#shared-and-native-ui)).
 - **Colours:** as in [Account](../account/design.md#platforms): the iOS sheet on `surfaceContainerLow`, cells on
   `surfaceContainerLowest` in light and `surfaceContainerHigh` in dark.
 
@@ -101,8 +114,9 @@ The base maps aren't listed: Google Maps and Apple MapKit show their own legal n
 | Notifications          | Notifications / Drive reminders / On · Off                            |
 | Notifications footer   | A quiet notification after a drive, asking how the route was.         |
 | Feedback               | Feedback / Rate Spirited Driving / Send feedback                      |
-| Feedback email         | Spirited Driving feedback / Spirited Driving 1.0.0 (42) · iOS 26.1 · iPhone 16 |
-| No mail app            | Send feedback / Write to us at {address}. / Copy address · Cancel     |
+| Send feedback          | Send feedback / What's on your mind? / Sent with: Spirited Driving 1.0.0 (42) · iOS 26.1 · iPhone 17 Pro / Send |
+| Feedback sent          | Thanks for your feedback / Every message is read. / Done              |
+| Feedback not sent      | You're offline. Send it again once you're back online. / Couldn't send your feedback. Try again. |
 | About                  | About / Privacy policy / Terms / Licences / Version                   |
 | Licences, route data   | Route data and place search / © OpenStreetMap contributors / Available under the Open Database License. |
 | Licences, libraries    | Open-source libraries                                                 |

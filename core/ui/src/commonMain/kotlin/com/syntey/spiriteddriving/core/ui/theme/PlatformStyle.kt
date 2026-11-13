@@ -22,6 +22,7 @@ data class PlatformStyle(
     val chip: ChipStyle,
     val segmented: SegmentedStyle,
     val switch: SwitchStyle,
+    val textArea: TextAreaStyle,
     val glassButton: GlassButtonStyle,
     val bottomPanel: BottomPanelStyle,
     val closeButton: IconButtonStyle,
@@ -83,6 +84,7 @@ data class PlatformStyle(
                 selectedFontWeight = FontWeight.Medium,
             ),
             switch = SwitchStyle(isIosStyle = false),
+            textArea = androidTextArea(typography),
             glassButton = GlassButtonStyle(height = Grid.d12, horizontalPadding = Grid.d5, textStyle = typography.labelLarge),
             bottomPanel = BottomPanelStyle(
                 inset = Grid.d0,
@@ -100,6 +102,12 @@ data class PlatformStyle(
             list = androidList(typography),
             menu = MenuStyle(iconsAfterLabels = false),
             minTouchTarget = Grid.d12,
+        )
+
+        private fun androidTextArea(typography: Typography) = TextAreaStyle(
+            isOutlined = true,
+            contentPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d4),
+            textStyle = typography.bodyLarge,
         )
 
         private fun androidList(typography: Typography) = ListStyle(
@@ -152,6 +160,7 @@ data class PlatformStyle(
             ),
             segmented = iosSegmented(typography),
             switch = SwitchStyle(isIosStyle = true),
+            textArea = iosTextArea(typography),
             glassButton = GlassButtonStyle(height = Grid.d11, horizontalPadding = Grid.d4_5, textStyle = typography.titleSmall),
             bottomPanel = BottomPanelStyle(
                 inset = Grid.d3,
@@ -169,6 +178,12 @@ data class PlatformStyle(
             list = iosList(typography),
             menu = MenuStyle(iconsAfterLabels = true),
             minTouchTarget = Grid.d11,
+        )
+
+        private fun iosTextArea(typography: Typography) = TextAreaStyle(
+            isOutlined = false,
+            contentPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d3),
+            textStyle = typography.bodyLarge,
         )
 
         private fun iosSegmented(typography: Typography) = SegmentedStyle(
@@ -223,6 +238,13 @@ data class SegmentedStyle(val isOutlined: Boolean, val height: Dp, val textStyle
 /** An on/off switch. [isIosStyle]: the iOS-style switch drawn in primary; otherwise Material 3's switch. */
 @Immutable
 data class SwitchStyle(val isIosStyle: Boolean)
+
+/**
+ * A multi-line text field. [isOutlined]: Material's outlined field, as on Android; otherwise a filled card on the grouped
+ * card's colour, as iOS forms have it.
+ */
+@Immutable
+data class TextAreaStyle(val isOutlined: Boolean, val contentPadding: PaddingValues, val textStyle: TextStyle)
 
 /**
  * A capsule button on glass, over an illustration or a scrolling list.

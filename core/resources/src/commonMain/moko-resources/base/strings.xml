@@ -158,4 +158,16 @@
     <string name="settings_terms">Terms</string>
     <string name="settings_version">Version</string>
     <string name="settings_version_value">%1$s (%2$s)</string>
+
+    <!-- Send feedback -->
+    <string name="settings_send_feedback">Send feedback</string>
+    <string name="feedback_screen_title">Send feedback</string>
+    <string name="feedback_placeholder">What\'s on your mind?</string>
+    <string name="feedback_sent_with">Sent with: %1$s %2$s (%3$s) · %4$s · %5$s</string>
+    <string name="feedback_send">Send</string>
+    <string name="feedback_sent_title">Thanks for your feedback</string>
+    <string name="feedback_sent_text">Every message is read.</string>
+    <string name="feedback_done">Done</string>
+    <string name="feedback_offline">You\'re offline. Send it again once you\'re back online.</string>
+    <string name="feedback_failed">Couldn\'t send your feedback. Try again.</string>
 </resources>

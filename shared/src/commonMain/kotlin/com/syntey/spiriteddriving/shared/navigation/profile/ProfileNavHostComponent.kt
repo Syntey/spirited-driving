@@ -31,6 +31,7 @@ internal class ProfileNavHostComponent(
             when (config) {
                 ProfileConfig.Profile -> ProfileChild.Profile(ProfileScreens.profile(childCtx, navigator))
                 ProfileConfig.Settings -> ProfileChild.Settings(ProfileScreens.settings(childCtx, navigator))
+                ProfileConfig.Feedback -> ProfileChild.Feedback(ProfileScreens.feedback(childCtx, navigator))
             }
         },
     ).asStateFlow()
