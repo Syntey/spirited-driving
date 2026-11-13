@@ -5,6 +5,7 @@ import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.GeoPolygon
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
+import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 /**
  * What the map shows. Each platform's map draws it: Google Maps on Android, MapKit on iOS.
@@ -23,7 +24,7 @@ data class RouteMapState(
     val showsUserLocation: Boolean = false,
     val followsUser: Boolean = false,
     val userLocation: GeoPoint? = null,
-    val overview: GeoBounds = CZECHIA,
+    val overview: GeoBounds = Constants.Map.LAUNCH_REGION,
     val coveredArea: List<GeoPolygon> = emptyList(),
     val overviewRequest: Int = 0,
     val destination: GeoPoint? = null,
@@ -72,8 +73,16 @@ data class RouteMapState(
         destination = point,
         followsUser = false,
         overview = GeoBounds(
-            southWest = GeoPoint(latitude = point.latitude - DESTINATION_MARGIN_LAT, longitude = point.longitude - DESTINATION_MARGIN_LON),
-            northEast = GeoPoint(latitude = point.latitude + DESTINATION_MARGIN_LAT, longitude = point.longitude + DESTINATION_MARGIN_LON),
+            southWest = GeoPoint(
+                latitude = point.latitude - Constants.Map.DESTINATION_MARGIN_LAT,
+                longitude =
+                    point.longitude - Constants.Map.DESTINATION_MARGIN_LON,
+            ),
+            northEast = GeoPoint(
+                latitude = point.latitude + Constants.Map.DESTINATION_MARGIN_LAT,
+                longitude =
+                    point.longitude + Constants.Map.DESTINATION_MARGIN_LON,
+            ),
         ),
         overviewRequest = overviewRequest + 1,
     )
@@ -95,16 +104,5 @@ data class RouteMapState(
             overview = overview.including(location),
             overviewRequest = overviewRequest + 1,
         )
-    }
-
-    private companion object {
-        // About a kilometre each way around a destination's pin
-        const val DESTINATION_MARGIN_LAT = 0.01
-        const val DESTINATION_MARGIN_LON = 0.015
-
-        // The launch region, by its corners
-        @Suppress("MagicNumber")
-        val CZECHIA =
-            GeoBounds(southWest = GeoPoint(latitude = 48.55, longitude = 12.09), northEast = GeoPoint(latitude = 51.06, longitude = 18.86))
     }
 }

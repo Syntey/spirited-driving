@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.minutes
 class RoutePlanningStateTest {
 
     @Test
-    fun `listed routes are the fun routes in plan order, then the fastest`() {
+    fun `listed routes are the fun routes in plan order and then the fastest`() {
         val plan = recorded.copy(funRoutes = listOf(funRoute("fun-1"), funRoute("fun-2"), funRoute("fun-3")), fastest = fastest)
 
         val listed = planning().withPlan(plan).listedRoutes

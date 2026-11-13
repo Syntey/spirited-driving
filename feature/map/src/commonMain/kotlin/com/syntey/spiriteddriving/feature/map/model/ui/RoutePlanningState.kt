@@ -40,6 +40,9 @@ enum class PlanningStatus {
     /** The plan is shown. */
     Planned,
 
+    /** The start or destination is outside the covered area. */
+    NotCovered,
+
     /** Planning failed without a connection. */
     Offline,
 

@@ -4,6 +4,7 @@ import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.metres
 import com.syntey.spiriteddriving.core.domain.geo.decodePolyline
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Budget
+import com.syntey.spiriteddriving.core.domain.route.OutsideCoverageException
 import com.syntey.spiriteddriving.core.domain.route.HandOff
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.route.RouteKind
@@ -22,8 +23,15 @@ import com.syntey.spiriteddriving.data.network.dto.plan.RouteStatsDto
 import com.syntey.spiriteddriving.data.network.dto.plan.TimeBudgetDto
 import com.syntey.spiriteddriving.data.network.geo.toDomain
 import com.syntey.spiriteddriving.data.network.geo.toDto
+import com.syntey.spiriteddriving.data.network.result.NetworkError
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
+import com.syntey.spiriteddriving.data.network.tools.Constants
+
+internal fun NetworkError.HttpError.toPlanError(): Throwable? = when (code) {
+    Constants.ProblemCode.OUTSIDE_COVERAGE -> OutsideCoverageException(this)
+    else -> null
+}
 
 internal fun TripRequest.toDto(): PlanRequestDto = PlanRequestDto(
     start = start.toDto(),
@@ -70,7 +78,7 @@ internal fun RouteDto.toDomain(): Route = Route(
 
 // A kind the app doesn't know yet is shown as a fun route, so a new backend kind doesn't fail the whole plan
 private fun String.toRouteKind(): RouteKind = when (this) {
-    "FASTEST" -> RouteKind.Fastest
+    Constants.RouteKindCode.FASTEST -> RouteKind.Fastest
     else -> RouteKind.Fun
 }
 

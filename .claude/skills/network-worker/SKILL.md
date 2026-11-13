@@ -57,6 +57,8 @@ internal data class PlanRequestDto(
   config ignores the rest.
 - A value set the backend may extend, like the problem `code`, is a `String` mapped in code: an unknown enum value
   fails the whole response.
+- The codes it's mapped from (`Constants.ProblemCode`, `Constants.RouteKindCode`) live in `tools/Constants.kt`, with the
+  HTTP timeouts. Tests keep the literal codes, so a wrong constant fails them.
 - The constructor mirrors the wire. Derived values are `get()` properties in the class body, which kotlinx.serialization
   skips; a body property with an initializer would be serialized too.
 - KDoc names the method, path and schema, and nothing the types already say.
@@ -98,9 +100,11 @@ internal class ApiRoutePlanner(private val api: SpiritedDrivingApi) : RoutePlann
 - Koin binds it to the interface, so there's nothing else to wire.
 - Mapping lives in pure extension functions (`toDomain()`, `toDto()`) next to the implementation, so tests cover it
   without HTTP.
-- Map `NetworkError` to domain errors here: `ConnectionError` means offline, a problem `code` means its specific
-  error. Mapping several calls share is written once in `result/`. Errors the UI doesn't tell apart propagate as
-  they are, and features show them as a generic failure. Nothing outside `:data:network` branches on `NetworkError`.
+- Map `NetworkError` to domain errors here: `ConnectionError` means offline. `NetworkResultConverterFactory` reads the
+  Problem body's `code` into `HttpError.code`, and the implementation passes `getOrThrowDomainError` a function that
+  turns the codes it knows into domain errors (as `ApiRoutePlanner` does with `OUTSIDE_COVERAGE`). Mapping several
+  calls share is written once in `result/`. Errors the UI doesn't tell apart propagate as they are, and features show
+  them as a generic failure. Nothing outside `:data:network` branches on `NetworkError`.
 - Don't catch `CancellationException`, or a broad `Exception` that includes it: it's how coroutines cancel, which is
   why `NetworkErrorParser` rethrows it.
 
@@ -115,8 +119,6 @@ internal class ApiRoutePlanner(private val api: SpiritedDrivingApi) : RoutePlann
 
 The first network change that needs one of these sets it up, then updates this section:
 
-- **Problem codes**: `NetworkError.HttpError` has the status, not the response body. Parse the `Problem` body once
-  in `NetworkResultConverterFactory` and add its `code` to `HttpError`.
 - **Auth headers**: an `HttpClientPlugin` that adds `X-Firebase-AppCheck` to every call and
   `Authorization: Bearer <ID token>` while signed in.
 

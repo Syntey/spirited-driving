@@ -4,12 +4,14 @@ import de.jensklingenberg.ktorfit.Ktorfit
 import de.jensklingenberg.ktorfit.converter.Converter
 import de.jensklingenberg.ktorfit.converter.KtorfitResult
 import de.jensklingenberg.ktorfit.converter.TypeData
+import com.syntey.spiriteddriving.data.network.dto.problem.ProblemDto
 import io.ktor.client.call.body
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.util.reflect.TypeInfo
 import org.koin.core.annotation.Single
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.cast
 import io.ktor.client.statement.HttpResponse as KtorHttpResponse
 
@@ -54,9 +56,19 @@ class NetworkResultConverterFactory internal constructor(private val errorParser
         return toNetworkResult(expectedType).map { Revalidated.Modified(it, etag = headers[HttpHeaders.ETag]) }
     }
 
+    // The Problem body's code; a body that isn't a Problem just has none, so the status still says what failed.
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
+    private suspend fun KtorHttpResponse.problemCode(): String? = try {
+        body<ProblemDto>().code
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        null
+    }
+
     private suspend inline fun KtorHttpResponse.toNetworkResult(expectedType: TypeInfo): NetworkResult<Any> {
         if (!status.isSuccess()) {
-            return NetworkResult.error(errorParser.parse(status))
+            return NetworkResult.error(errorParser.parse(status, problemCode()))
         }
 
         return runCatching {

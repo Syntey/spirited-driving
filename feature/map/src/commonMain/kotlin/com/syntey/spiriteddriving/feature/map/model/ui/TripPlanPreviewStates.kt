@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.feature.map.model.ui
 
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
+import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.kilometres
 import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Budget
@@ -18,7 +19,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 
-/** Sample view states that the previews share. */
+/** Sample view states that the previews share: one per sheet state, so the object has more functions than the limit. */
+@Suppress("TooManyFunctions")
 internal object TripPlanPreviewStates {
     fun screen(state: TripPlanViewState = viewState()): TripPlanScreen = object : TripPlanScreen {
         override val viewState: StateFlow<TripPlanViewState> = MutableStateFlow(state)
@@ -133,14 +135,38 @@ internal object TripPlanPreviewStates {
         RoutePlanningState(destination = DESTINATION, budget = BUDGET).withPlan(plannedPlan),
     )
 
-    /** A plan without a fun route that fits: only the fastest route is listed, and it is selected. */
+    /** [plannedViewState] with the sheet collapsed: the selected route and the actions. */
+    fun plannedCollapsedViewState(): TripPlanViewState = plannedViewState().copy(sheetHeight = SheetHeight.Collapsed)
+
+    /** [planningViewState] with the sheet collapsed: the spinner and the actions. */
+    fun planningCollapsedViewState(): TripPlanViewState = planningViewState().copy(sheetHeight = SheetHeight.Collapsed)
+
+    /** The plan of [plannedViewState] with a distance budget, so the picker shows the km chips. */
+    fun plannedDistanceViewState(): TripPlanViewState = planningState(
+        RoutePlanningState(destination = DESTINATION, budget = Budget.Distance(50.kilometres)).withPlan(plannedPlan),
+    )
+
+    /**
+     * A plan without a fun route that fits +15 min, where the closest one needs +22 min: only the fastest route is listed, and
+     * it is selected. The message offers the +30 min chip.
+     */
     fun noFunRouteViewState(): TripPlanViewState = planningState(
         RoutePlanningState(destination = DESTINATION, budget = Budget.Time(15.minutes))
-            .withPlan(FakeRoutePlanner.Recorded.copy(funRoutes = emptyList())),
+            .withPlan(FakeRoutePlanner.Recorded.copy(funRoutes = emptyList(), closestFunRouteBudget = Budget.Time(22.minutes))),
+    )
+
+    /** A plan without a fun route within +2 h, the largest chip: the message has no button. */
+    fun noFunRouteBeyondViewState(): TripPlanViewState = planningState(
+        RoutePlanningState(destination = DESTINATION, budget = Budget.Time(15.minutes))
+            .withPlan(FakeRoutePlanner.Recorded.copy(funRoutes = emptyList(), closestFunRouteBudget = null)),
     )
 
     fun planningOfflineViewState(): TripPlanViewState = planningState(
         RoutePlanningState(destination = DESTINATION, budget = BUDGET, status = PlanningStatus.Offline),
+    )
+
+    fun planningNotCoveredViewState(): TripPlanViewState = planningState(
+        RoutePlanningState(destination = DESTINATION, budget = BUDGET, status = PlanningStatus.NotCovered),
     )
 
     fun planningFailedViewState(): TripPlanViewState = planningState(

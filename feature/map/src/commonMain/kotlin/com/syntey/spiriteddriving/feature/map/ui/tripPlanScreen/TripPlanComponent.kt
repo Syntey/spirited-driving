@@ -10,6 +10,9 @@ import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.core.domain.route.Budget
+import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
+import com.syntey.spiriteddriving.core.domain.route.BudgetKind
+import com.syntey.spiriteddriving.core.domain.route.OutsideCoverageException
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
@@ -17,17 +20,18 @@ import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.core.ui.base.executeWithLifecycle
 import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.GetBudgetChoiceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetRecentPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
-import com.syntey.spiriteddriving.feature.map.domain.MIN_SEARCH_LENGTH
 import com.syntey.spiriteddriving.feature.map.domain.NamePointUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
 import com.syntey.spiriteddriving.feature.map.domain.PlanTripUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RemoveRecentPlaceUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SaveBudgetChoiceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
@@ -40,17 +44,17 @@ import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
-import kotlin.time.Duration.Companion.minutes
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
+import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 @Factory
 @GenerateFactory
-// Each action of the sheet is a function here, and route planning adds six to the search's thirty
+// Each action of the sheet and each read on start is a function here, for both the search and route planning
 @Suppress("TooManyFunctions")
 internal class TripPlanComponent(
     @InjectedParam componentContext: AppComponentContext,
@@ -70,6 +74,8 @@ internal class TripPlanComponent(
     private val removeRecentPlaceUseCase: RemoveRecentPlaceUseCase,
     private val namePointUseCase: NamePointUseCase,
     private val planTripUseCase: PlanTripUseCase,
+    private val getBudgetChoiceUseCase: GetBudgetChoiceUseCase,
+    private val saveBudgetChoiceUseCase: SaveBudgetChoiceUseCase,
 ) : ScreenComponent<TripPlanViewState, TripPlanUiEvent, TripPlanScreenNavigation>(
     componentContext = componentContext,
     defaultState = TripPlanViewState(),
@@ -94,15 +100,25 @@ internal class TripPlanComponent(
         doOnStart(isOneTime = false) { readLocationAccess() }
         loadCoverage()
         readPreciseLocationNote()
-        // From the phone's region, so it's known before the first distance shows
-        getDistanceUnitUseCase.execute {
-            onSuccess { unit -> componentState.update { it.copy(distanceUnit = unit) } }
-            onError { error -> logger.e(error) { "Distance unit not read" } }
-        }
-        getRecentPlacesUseCase.execute {
-            onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
-            onError { error -> logger.e(error) { "Recent places not read" } }
-        }
+        readDistanceUnit()
+        readRecentPlaces()
+        readBudgetChoice()
+    }
+
+    // From the phone's region, so it's known before the first distance shows
+    private fun readDistanceUnit() = getDistanceUnitUseCase.execute {
+        onSuccess { unit -> componentState.update { it.copy(distanceUnit = unit) } }
+        onError { error -> logger.e(error) { "Distance unit not read" } }
+    }
+
+    private fun readRecentPlaces() = getRecentPlacesUseCase.execute {
+        onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
+        onError { error -> logger.e(error) { "Recent places not read" } }
+    }
+
+    private fun readBudgetChoice() = getBudgetChoiceUseCase.execute {
+        onSuccess { choice -> componentState.update { it.copy(budgetChoice = choice) } }
+        onError { error -> logger.e(error) { "Budget choice not read" } }
     }
 
     override fun onSearchFocus() = setSheetHeight(SheetHeight.Full)
@@ -157,7 +173,9 @@ internal class TripPlanComponent(
     }
 
     private fun startPlanning(destination: Place) {
-        componentState.update { it.copy(planning = RoutePlanningState(destination = destination, budget = DEFAULT_BUDGET)) }
+        componentState.update {
+            it.copy(planning = RoutePlanningState(destination = destination, budget = it.budgetChoice.budget))
+        }
         setSheetHeight(SheetHeight.Half)
         plan()
     }
@@ -184,9 +202,17 @@ internal class TripPlanComponent(
                 componentState.update { it.copy(planning = it.planning?.withPlan(tripPlan)) }
             }
             onError { error ->
-                val isOffline = error is OfflineException
-                if (!isOffline) logger.e(error) { "Trip not planned" }
-                val status = if (isOffline) PlanningStatus.Offline else PlanningStatus.Failed
+                // Offline and outside the covered area are answers the user can act on, so they aren't logged
+                val status = when (error) {
+                    is OfflineException -> PlanningStatus.Offline
+
+                    is OutsideCoverageException -> PlanningStatus.NotCovered
+
+                    else -> {
+                        logger.e(error) { "Trip not planned" }
+                        PlanningStatus.Failed
+                    }
+                }
                 componentState.update { it.copy(planning = it.planning?.copy(status = status)) }
             }
         }
@@ -233,6 +259,22 @@ internal class TripPlanComponent(
         }
     }
 
+    override fun onBudgetClick(budget: Budget) = chooseBudget(componentState.value.budgetChoice.with(budget))
+
+    override fun onBudgetKindChange(kind: BudgetKind) = chooseBudget(componentState.value.budgetChoice.copy(kind = kind))
+
+    // Kept at once, so the next plan starts with it even when this one is cancelled
+    private fun chooseBudget(choice: BudgetChoice) {
+        componentState.update { it.copy(budgetChoice = choice) }
+        saveBudgetChoiceUseCase.execute(choice) {
+            onError { error -> logger.e(error) { "Budget choice not kept" } }
+        }
+        val planning = componentState.value.planning ?: return
+        if (planning.budget == choice.budget) return
+        componentState.update { it.copy(planning = planning.copy(budget = choice.budget)) }
+        plan()
+    }
+
     override fun onRoutePlanningClose() {
         useCaseJobPool[planTripUseCase]?.cancel()
         componentState.update { it.copy(planning = null, map = it.map.copy(destination = null)) }
@@ -263,7 +305,7 @@ internal class TripPlanComponent(
 
     // Each search cancels the one before, which may still wait for the pause in typing, so only the current text's answer shows
     private fun search(text: String) {
-        val isLongEnough = text.trim().length >= MIN_SEARCH_LENGTH
+        val isLongEnough = text.trim().length >= Constants.Search.MIN_LENGTH
         componentState.update { state ->
             state.copy(
                 search = if (isLongEnough) {
@@ -379,6 +421,3 @@ internal class TripPlanComponent(
 // The recent places as the search keeps them, with the rest of the search state kept as it is
 private fun TripPlanViewState.withRecentPlaces(places: List<Place>): TripPlanViewState =
     copy(search = search.copy(recentPlaces = places.toImmutableList()))
-
-// The budget chips come later; until then every plan uses this fixed budget in time
-private val DEFAULT_BUDGET: Budget = Budget.Time(30.minutes)
