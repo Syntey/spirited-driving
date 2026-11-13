@@ -59,4 +59,6 @@ private object FakePlatform : Platform {
     override val deviceModel = "Model"
     override val preferredLanguages = listOf("cs-CZ", "en")
     override val regionCode: String? = "CZ"
+
+    override fun countryName(code: String): String? = null
 }

@@ -10,6 +10,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.uikit.OnFocusBehavior
 import androidx.compose.ui.window.ComposeUIViewController
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
@@ -25,9 +26,25 @@ import kotlin.native.HiddenFromObjC
  */
 @OptIn(ExperimentalObjCRefinement::class)
 @HiddenFromObjC
-fun screenViewController(content: @Composable () -> Unit): UIViewController = themedViewController {
+fun screenViewController(content: @Composable () -> Unit): UIViewController = themedViewController(
+    background = { MaterialTheme.colorScheme.background },
+) {
     // SwiftUI lays the screen out under native bars (see `composeScreen()` in Swift), so that the background reaches
     // behind them. The bars, together with the keyboard, are then kept clear of content here.
+    Box(Modifier.windowInsetsPadding(WindowInsets.safeDrawing)) {
+        content()
+    }
+}
+
+/**
+ * Like [screenViewController], for a screen in a native sheet's navigation stack, such as Profile: the sheet's colour is
+ * `surfaceContainerLow`.
+ */
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
+fun sheetScreenViewController(content: @Composable () -> Unit): UIViewController = themedViewController(
+    background = { MaterialTheme.colorScheme.surfaceContainerLow },
+) {
     Box(Modifier.windowInsetsPadding(WindowInsets.safeDrawing)) {
         content()
     }
@@ -39,7 +56,10 @@ fun screenViewController(content: @Composable () -> Unit): UIViewController = th
  */
 @OptIn(ExperimentalObjCRefinement::class)
 @HiddenFromObjC
-fun fullScreenViewController(content: @Composable () -> Unit): UIViewController = themedViewController(content)
+fun fullScreenViewController(content: @Composable () -> Unit): UIViewController = themedViewController(
+    background = { MaterialTheme.colorScheme.background },
+    content = content,
+)
 
 /**
  * Hosts Compose content on a native sheet, such as the map's. The background stays clear, so the sheet's glass shows
@@ -54,11 +74,14 @@ fun sheetViewController(content: @Composable () -> Unit): UIViewController = com
 }.also { it.view.backgroundColor = UIColor.clearColor }
 
 @OptIn(ExperimentalComposeUiApi::class)
-private fun themedViewController(content: @Composable () -> Unit): UIViewController = composeViewController(opaque = true) {
+private fun themedViewController(
+    background: @Composable () -> Color,
+    content: @Composable () -> Unit,
+): UIViewController = composeViewController(opaque = true) {
     AppTheme {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background,
+            color = background(),
         ) {
             content()
         }

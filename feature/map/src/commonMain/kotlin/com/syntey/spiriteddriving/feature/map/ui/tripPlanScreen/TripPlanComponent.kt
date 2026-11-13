@@ -13,6 +13,7 @@ import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
 import com.syntey.spiriteddriving.core.domain.route.OutsideCoverageException
+import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
@@ -21,13 +22,14 @@ import com.syntey.spiriteddriving.core.ui.base.executeWithLifecycle
 import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetBudgetChoiceUseCase
-import com.syntey.spiriteddriving.feature.map.domain.GetDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetRecentPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
 import com.syntey.spiriteddriving.feature.map.domain.NamePointUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveVignettesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
 import com.syntey.spiriteddriving.feature.map.domain.PlanTripUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RemoveRecentPlaceUseCase
@@ -46,13 +48,14 @@ import com.syntey.spiriteddriving.feature.map.model.ui.SearchStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
+import com.syntey.spiriteddriving.feature.map.tools.Constants
+import com.syntey.spiriteddriving.feature.map.tools.inUnit
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
-import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 @Factory
 @GenerateFactory
@@ -70,7 +73,8 @@ internal class TripPlanComponent(
     private val isNoteClosedUseCase: IsNoteClosedUseCase,
     private val closeNoteUseCase: CloseNoteUseCase,
     private val searchPlacesUseCase: SearchPlacesUseCase,
-    private val getDistanceUnitUseCase: GetDistanceUnitUseCase,
+    private val observeDistanceUnitUseCase: ObserveDistanceUnitUseCase,
+    private val observeVignettesUseCase: ObserveVignettesUseCase,
     private val getRecentPlacesUseCase: GetRecentPlacesUseCase,
     private val addRecentPlaceUseCase: AddRecentPlaceUseCase,
     private val removeRecentPlaceUseCase: RemoveRecentPlaceUseCase,
@@ -109,15 +113,42 @@ internal class TripPlanComponent(
         doOnStart(isOneTime = false) { readLocationAccess() }
         loadCoverage()
         readPreciseLocationNote()
-        readDistanceUnit()
+        observeDistanceUnit()
+        observeVignettes()
         readRecentPlaces()
         readBudgetChoice()
     }
 
-    // From the phone's region, so it's known before the first distance shows
-    private fun readDistanceUnit() = getDistanceUnitUseCase.execute {
-        onSuccess { unit -> componentState.update { it.copy(distanceUnit = unit) } }
-        onError { error -> logger.e(error) { "Distance unit not read" } }
+    // Observed, so a unit picked in Settings applies while the map is under the Profile sheet
+    private fun observeDistanceUnit() = observeDistanceUnitUseCase.execute {
+        onNext { unit -> applyDistanceUnit(unit) }
+        onError { error -> logger.e(error) { "Distance unit not observed" } }
+    }
+
+    // A kept distance moves to the chip nearest to it in the new unit. A planned distance budget moves too, and plans again.
+    private fun applyDistanceUnit(unit: DistanceUnit) {
+        componentState.update { it.copy(distanceUnit = unit, budgetChoice = it.budgetChoice.inUnit(unit)) }
+        val state = componentState.value
+        val planning = state.planning ?: return
+        // While planning, the choice's budget is the planning's, so the choice's distance is the one to move to
+        if (planning.budget !is Budget.Distance || planning.budget == state.budgetChoice.distance) return
+        componentState.update { it.copy(planning = planning.copy(budget = state.budgetChoice.distance)) }
+        plan()
+    }
+
+    // The first value is the vignettes at start, which the trip plans with already; each change after it plans again
+    private fun observeVignettes() {
+        var isFirst = true
+        observeVignettesUseCase.execute {
+            onNext {
+                if (isFirst) {
+                    isFirst = false
+                } else if (componentState.value.planning != null) {
+                    plan()
+                }
+            }
+            onError { error -> logger.e(error) { "Vignettes not observed" } }
+        }
     }
 
     private fun readRecentPlaces() = getRecentPlacesUseCase.execute {
@@ -126,7 +157,8 @@ internal class TripPlanComponent(
     }
 
     private fun readBudgetChoice() = getBudgetChoiceUseCase.execute {
-        onSuccess { choice -> componentState.update { it.copy(budgetChoice = choice) } }
+        // Snapped to the unit in use, and not saved again: the kept choice is snapped on each read
+        onSuccess { choice -> componentState.update { it.copy(budgetChoice = choice.inUnit(it.distanceUnit)) } }
         onError { error -> logger.e(error) { "Budget choice not read" } }
     }
 
@@ -367,8 +399,7 @@ internal class TripPlanComponent(
 
     override fun onPlanningRetry() = plan()
 
-    // Profile isn't built yet
-    override fun onProfileClick() = Unit
+    override fun onProfileClick() = openProfile()
 
     override fun onPreciseLocationClick() = askForPreciseLocation()
 

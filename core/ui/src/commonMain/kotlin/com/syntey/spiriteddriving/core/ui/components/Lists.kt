@@ -33,7 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
@@ -709,7 +708,7 @@ private fun ListExamples() {
             item { position ->
                 ListRow(
                     "Czechia",
-                    trailing = { Switch(checked = true, onCheckedChange = null) },
+                    trailing = { ToggleSwitch(checked = true, onCheckedChange = null) },
                     onClick = {},
                     position = position,
                 )

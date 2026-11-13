@@ -17,6 +17,8 @@ import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.Onboard
 import com.syntey.spiriteddriving.shared.navigation.root.RootChild
 import com.syntey.spiriteddriving.shared.navigation.root.RootConfig
 import com.syntey.spiriteddriving.shared.navigation.root.RootNavHost
+import com.syntey.spiriteddriving.shared.navigation.root.RootSheetChild
+import com.syntey.spiriteddriving.shared.navigation.root.RootSheetConfig
 import com.arkivanov.decompose.router.slot.ChildSlot
 
 @Composable
@@ -25,12 +27,17 @@ fun RootNavHostUi(
     modifier: Modifier = Modifier,
 ) {
     val slot: ChildSlot<RootConfig, RootChild> by navHost.slot.collectAsStateWithLifecycle()
+    val sheet: ChildSlot<RootSheetConfig, RootSheetChild> by navHost.sheet.collectAsStateWithLifecycle()
 
     Box(modifier.background(MaterialTheme.colorScheme.background)) {
         when (val childInstance = slot.child?.instance) {
             is RootChild.Onboarding -> OnboardingScreenUi(screen = childInstance.screen, modifier = Modifier.fillMaxSize())
             is RootChild.Map -> MapScreenUi(screen = childInstance.screen, modifier = Modifier.fillMaxSize())
             null -> ApplicationLoading(Modifier.fillMaxSize())
+        }
+        when (val sheetInstance = sheet.child?.instance) {
+            is RootSheetChild.Profile -> ProfileNavHostUi(navHost = sheetInstance.navHost, modifier = Modifier.fillMaxSize())
+            null -> Unit
         }
     }
 }

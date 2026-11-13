@@ -117,6 +117,8 @@ class ObserveCoverageUseCaseTest {
 
         override suspend fun get(): VersionedCoverage? = stored
 
+        override suspend fun vignetteCountries(): List<CountryCode>? = stored?.coverage?.vignetteCountries
+
         override suspend fun save(coverage: VersionedCoverage) {
             saves++
             stored = coverage

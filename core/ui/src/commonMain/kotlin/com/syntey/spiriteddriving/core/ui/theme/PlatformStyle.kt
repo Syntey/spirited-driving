@@ -21,6 +21,7 @@ data class PlatformStyle(
     val buttonToggle: ButtonStyle,
     val chip: ChipStyle,
     val segmented: SegmentedStyle,
+    val switch: SwitchStyle,
     val glassButton: GlassButtonStyle,
     val bottomPanel: BottomPanelStyle,
     val closeButton: IconButtonStyle,
@@ -81,6 +82,7 @@ data class PlatformStyle(
                 textStyle = typography.labelLarge,
                 selectedFontWeight = FontWeight.Medium,
             ),
+            switch = SwitchStyle(isIosStyle = false),
             glassButton = GlassButtonStyle(height = Grid.d12, horizontalPadding = Grid.d5, textStyle = typography.labelLarge),
             bottomPanel = BottomPanelStyle(
                 inset = Grid.d0,
@@ -149,6 +151,7 @@ data class PlatformStyle(
                 isOutlined = false,
             ),
             segmented = iosSegmented(typography),
+            switch = SwitchStyle(isIosStyle = true),
             glassButton = GlassButtonStyle(height = Grid.d11, horizontalPadding = Grid.d4_5, textStyle = typography.titleSmall),
             bottomPanel = BottomPanelStyle(
                 inset = Grid.d3,
@@ -216,6 +219,10 @@ data class ChipStyle(
  */
 @Immutable
 data class SegmentedStyle(val isOutlined: Boolean, val height: Dp, val textStyle: TextStyle, val selectedFontWeight: FontWeight)
+
+/** An on/off switch. [isIosStyle]: the iOS-style switch drawn in primary; otherwise Material 3's switch. */
+@Immutable
+data class SwitchStyle(val isIosStyle: Boolean)
 
 /**
  * A capsule button on glass, over an illustration or a scrolling list.

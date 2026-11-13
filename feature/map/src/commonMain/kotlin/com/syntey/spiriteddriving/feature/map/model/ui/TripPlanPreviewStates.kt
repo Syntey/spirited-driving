@@ -3,11 +3,13 @@ package com.syntey.spiriteddriving.feature.map.model.ui
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.kilometres
+import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.miles
 import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
+import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanUiEvent
@@ -162,6 +164,11 @@ internal object TripPlanPreviewStates {
     fun plannedDistanceViewState(): TripPlanViewState = planningState(
         RoutePlanningState(destination = DESTINATION, budget = Budget.Distance(50.kilometres)).withPlan(plannedPlan),
     )
+
+    /** The plan of [plannedViewState] with a distance budget in miles, so the picker shows the mile chips. */
+    fun plannedMilesViewState(): TripPlanViewState = planningState(
+        RoutePlanningState(destination = DESTINATION, budget = Budget.Distance(20.miles)).withPlan(plannedPlan),
+    ).copy(distanceUnit = DistanceUnit.Miles)
 
     /**
      * A plan without a fun route that fits +15 min, where the closest one needs +22 min: only the fastest route is listed, and

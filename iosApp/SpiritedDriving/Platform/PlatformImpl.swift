@@ -38,4 +38,8 @@ final class PlatformImpl: Platform {
     nonisolated var regionCode: String? {
         Locale.current.region?.identifier
     }
+
+    nonisolated func countryName(code: String) -> String? {
+        Locale(identifier: "en").localizedString(forRegionCode: code)
+    }
 }
