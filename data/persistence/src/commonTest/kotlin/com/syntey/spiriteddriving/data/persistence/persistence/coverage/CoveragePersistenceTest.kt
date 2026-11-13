@@ -14,9 +14,11 @@ import com.syntey.spiriteddriving.data.persistence.injection.PersistenceModule
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class CoveragePersistenceTest {
@@ -44,6 +46,31 @@ class CoveragePersistenceTest {
         persistence.save(newer)
 
         assertEquals(newer, persistence.get())
+    }
+
+    @Test
+    fun `nothing kept has no vignette countries`() = runTest {
+        assertNull(coveragePersistence().vignetteCountries())
+    }
+
+    @Test
+    fun `the vignette countries read back in the saved order`() = runTest {
+        val persistence = coveragePersistence()
+
+        persistence.save(sampleCoverage())
+
+        assertEquals(listOf(CountryCode.Czechia, CountryCode("SK")), persistence.vignetteCountries())
+    }
+
+    @Test
+    fun `a kept copy without its vignette countries key reads the countries from the copy and keeps them`() = runTest {
+        val dataStore = InMemoryDataStore()
+        val persistence = coveragePersistence(dataStore)
+        persistence.save(sampleCoverage())
+        dataStore.edit { it.remove(VIGNETTE_COUNTRIES_KEY) }
+
+        assertEquals(listOf(CountryCode.Czechia, CountryCode("SK")), persistence.vignetteCountries())
+        assertNotNull(dataStore.data.first()[VIGNETTE_COUNTRIES_KEY])
     }
 
     @Test
@@ -80,6 +107,7 @@ class CoveragePersistenceTest {
 
     private companion object {
         val COVERAGE_KEY = stringPreferencesKey("COVERAGE")
+        val VIGNETTE_COUNTRIES_KEY = stringPreferencesKey("VIGNETTE_COUNTRIES")
     }
 
     private class InMemoryDataStore : DataStore<Preferences> {

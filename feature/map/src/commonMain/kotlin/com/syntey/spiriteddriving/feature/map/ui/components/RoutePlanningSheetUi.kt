@@ -112,6 +112,7 @@ internal fun RoutePlanningBody(viewState: TripPlanViewState, actions: TripPlanSc
     ) {
         BudgetPicker(
             kind = viewState.budgetKind,
+            unit = viewState.distanceUnit,
             chips = viewState.budgetChips,
             onKindChange = actions::onBudgetKindChange,
             onBudgetClick = actions::onBudgetClick,
@@ -454,6 +455,17 @@ private fun RoutePlanningPlannedDistancePreview() = Showcase {
 private fun RoutePlanningPlannedDistanceIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
         viewState = TripPlanPreviewStates.plannedDistanceViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun RoutePlanningPlannedMilesPreview() = Showcase {
+    Content(
+        viewState = TripPlanPreviewStates.plannedMilesViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),

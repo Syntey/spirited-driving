@@ -43,4 +43,7 @@ interface Platform {
 
     /** The phone's region as an ISO 3166-1 alpha-2 code, such as "CZ"; null when it has none. */
     val regionCode: String?
+
+    /** The English name of the country with ISO 3166-1 alpha-2 [code], such as "Czechia" for "CZ"; null when the OS doesn't know it. */
+    fun countryName(code: String): String?
 }

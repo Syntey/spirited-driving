@@ -63,6 +63,7 @@ kotlin {
             export(projects.core.ui)
             export(projects.feature.onboarding)
             export(projects.feature.map)
+            export(projects.feature.profile)
             export(libs.futured.arkitekt.decompose)
 
             export(libs.decompose)
@@ -87,6 +88,7 @@ kotlin {
 
                 implementation(projects.feature.onboarding)
                 implementation(projects.feature.map)
+                implementation(projects.feature.profile)
 
                 implementation(libs.logging.kermitCrashlytics)
 
@@ -108,6 +110,7 @@ kotlin {
                 api(projects.core.ui)
                 api(projects.feature.onboarding)
                 api(projects.feature.map)
+                api(projects.feature.profile)
                 api(libs.futured.arkitekt.decompose)
 
                 api(libs.decompose)

@@ -11,7 +11,8 @@ struct RootNavigationComponent<Model: RootNavigationComponentModelProtocol>: Vie
                 case let .onboarding(entry):
                     OnboardingComponent(entry.screen).id(entry.iosViewId)
                 case let .map(entry):
-                    MapComponent(model: MapComponentModel(entry.screen)).id(entry.iosViewId)
+                    MapComponent(model: MapComponentModel(entry.screen), profile: $model.profileSheetItem)
+                        .id(entry.iosViewId)
                 }
             }
         }

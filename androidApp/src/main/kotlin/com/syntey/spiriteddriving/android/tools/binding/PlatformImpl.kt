@@ -6,6 +6,7 @@ import android.os.LocaleList
 import com.syntey.spiriteddriving.android.BuildConfig
 import com.syntey.spiriteddriving.core.platform.binding.Platform
 import com.syntey.spiriteddriving.core.resources.*
+import java.util.IllformedLocaleException
 import java.util.Locale
 
 class PlatformImpl(applicationContext: Context) : Platform {
@@ -19,4 +20,13 @@ class PlatformImpl(applicationContext: Context) : Platform {
         get() = LocaleList.getDefault().toLanguageTags().split(',').filter { it.isNotBlank() }
     override val regionCode: String?
         get() = Locale.getDefault().country.takeIf { it.isNotEmpty() }
+
+    override fun countryName(code: String): String? {
+        val name = try {
+            Locale.Builder().setRegion(code).build().getDisplayCountry(Locale.ENGLISH)
+        } catch (_: IllformedLocaleException) {
+            null
+        }
+        return name?.takeIf { it.isNotBlank() && it != code }
+    }
 }
