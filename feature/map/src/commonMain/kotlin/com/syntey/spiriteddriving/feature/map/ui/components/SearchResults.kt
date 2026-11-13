@@ -30,6 +30,7 @@ import com.syntey.spiriteddriving.core.ui.components.ListRowIcon
 import com.syntey.spiriteddriving.core.ui.components.StateMessage
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
+import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.RecentPlaceRow
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchFailure
 import com.syntey.spiriteddriving.feature.map.model.ui.SuggestionRow
@@ -49,18 +50,15 @@ internal fun SearchResults(
     onRecentPlaceClick: (Place) -> Unit,
     onRecentPlaceRemove: (Place) -> Unit,
     onSearchRetry: () -> Unit,
+    myLocationRow: MyLocationRow?,
+    onMyLocationClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val search = viewState.search
     val recentRows = viewState.recentRows
+    // With the My location row above it, the hint goes below the row in the list
     when {
-        search.showsHint -> Text(
-            text = stringResource(MR.strings.search_hint),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = modifier.fillMaxWidth().padding(horizontal = Grid.d6, vertical = Grid.d4),
-        )
+        search.showsHint && myLocationRow == null -> SearchHint(modifier = modifier.fillMaxWidth())
 
         search.showsFailureAlone -> search.failure?.let { failure ->
             FailureMessage(
@@ -81,16 +79,34 @@ internal fun SearchResults(
             recentRows = recentRows,
             suggestionRows = viewState.suggestionRows,
             showsHeader = search.showsRecentHeader,
+            myLocationRow = myLocationRow,
+            onMyLocationClick = onMyLocationClick,
             onRecentPlaceClick = onRecentPlaceClick,
             onRecentPlaceRemove = onRecentPlaceRemove,
             onSuggestionClick = onSuggestionClick,
-            // Below the matching recent places, which stay while the search has failed
-            footer = search.failure?.let { failure ->
-                { FailureMessage(failure = failure, onSearchRetry = onSearchRetry, modifier = Modifier.fillMaxWidth()) }
+            // The hint takes the failure's place below the list, as the hint only shows with no places to list. The failure
+            // stays below the matching recent places, which stay while the search has failed.
+            footer = if (search.showsHint) {
+                { SearchHint(modifier = Modifier.fillMaxWidth()) }
+            } else {
+                search.failure?.let { failure ->
+                    { FailureMessage(failure = failure, onSearchRetry = onSearchRetry, modifier = Modifier.fillMaxWidth()) }
+                }
             },
             modifier = modifier,
         )
     }
+}
+
+@Composable
+private fun SearchHint(modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(MR.strings.search_hint),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = modifier.padding(horizontal = Grid.d6, vertical = Grid.d4),
+    )
 }
 
 @Composable
@@ -115,6 +131,8 @@ private fun PlaceList(
     recentRows: ImmutableList<RecentPlaceRow>,
     suggestionRows: ImmutableList<SuggestionRow>,
     showsHeader: Boolean,
+    myLocationRow: MyLocationRow?,
+    onMyLocationClick: () -> Unit,
     onRecentPlaceClick: (Place) -> Unit,
     onRecentPlaceRemove: (Place) -> Unit,
     onSuggestionClick: (PlaceSuggestion) -> Unit,
@@ -129,6 +147,10 @@ private fun PlaceList(
     }
     val count = recentRows.size + suggestionRows.size
     LazyColumn(state = listState, modifier = modifier.fillMaxWidth().imePadding()) {
+        // Its own group, so the Recent header can sit between it and the places
+        if (myLocationRow != null) {
+            item { MyLocationItem(row = myLocationRow, onClick = onMyLocationClick) }
+        }
         if (showsHeader) {
             item { ListHeader(text = stringResource(MR.strings.search_recent_header)) }
         }
@@ -183,6 +205,27 @@ private fun boldHeadline(name: String, boldRanges: List<IntRange>): AnnotatedStr
     boldRanges.forEach { range ->
         addStyle(SpanStyle(fontWeight = FontWeight.SemiBold), range.first, range.last + 1)
     }
+}
+
+// The user's location as the start: its supporting line says why it's not usable yet, and it's dimmed outside the covered area
+@Composable
+private fun MyLocationItem(row: MyLocationRow, onClick: () -> Unit) {
+    val headline = stringResource(MR.strings.search_my_location)
+    val supporting = when (row) {
+        MyLocationRow.Available -> null
+        MyLocationRow.NeedsPreciseLocation -> stringResource(MR.strings.search_my_location_needs_precise)
+        MyLocationRow.NeedsLocationAccess -> stringResource(MR.strings.search_my_location_needs_access)
+        MyLocationRow.OutsideCoveredArea -> stringResource(MR.strings.search_my_location_outside)
+    }
+    ListRow(
+        headline = headline,
+        supporting = supporting,
+        leading = { ListRowIcon(icon = painterResource(MR.images.locate_arrow)) },
+        onClick = onClick,
+        groupColors = ListGroupDefaultColors.translucent(),
+        isDimmed = row == MyLocationRow.OutsideCoveredArea,
+        contentDescription = listOfNotNull(headline, supporting).joinToString(", "),
+    )
 }
 
 // A place outside the covered area says so in place of its distance, which routes can't reach anyway

@@ -1,6 +1,6 @@
 # Destination search
 
-> **Status:** partly built, MVP. Last updated 2026-11-12.
+> **Status:** partly built, MVP. Last updated 2026-11-13.
 
 Finding a place by typing, as the destination or the start of a trip. Its field is part of the
 [Map](../map/README.md), and [Route planning](../route-planning/README.md) uses the same search to change the start.
@@ -43,7 +43,7 @@ Most searches are for a place the user already knows, so search is built to find
 
 The search is a step of the map's sheet: `TripPlanComponent` in `:feature:map` holds it, and `TripPlanSheetUi` draws
 the field, recent places and the suggestions on both platforms. The code holds its layout and copy; these are the
-decisions behind it. What isn't built yet, the start, is still in [design.md](design.md).
+decisions behind it. What isn't built yet is still in [design.md](design.md).
 
 - **Tapping the field moves the sheet to full height,** with the keyboard. Dragging the sheet lower or scrolling the
   list hides the keyboard and keeps the text. Close (Cancel on iOS, the back arrow or Back on Android) clears the text and
@@ -85,8 +85,17 @@ decisions behind it. What isn't built yet, the start, is still in [design.md](de
 - **A slow search shows the car spinner** in place of the clear button after 0.5 s, so nothing in the field moves.
 - **Offline and failed searches say which it is,** each with Try again, below the recent places that match; no results has no button, as searching again
   means changing the text.
-- **Until Route planning exists, choosing a place or picking a point only drops its pin** on the [Map](../map/README.md#design). A place
-  outside the covered area is dimmed, and tapping it explains that routes start and end in Czechia for now.
+- **A place outside the covered area is dimmed,** and tapping it explains that routes start and end in Czechia for now.
+- **The start is searched in the same step,** opened from "From" in [Route planning](../route-planning/README.md#design),
+  or right after choosing a destination without a usable location. "To" and the destination's name sit above the field,
+  which reads "Where from?", opens empty with the keyboard up, and keeps the destination search's text aside. Close and
+  Back return to where it opened, with the start unchanged; dragging the sheet down closes it too, as the start step
+  has no collapsed layout.
+- **My location is the start step's first row while the field is blank,** with what keeps it from being the start:
+  "Needs precise location" asks for precise location, "Needs location access" asks for access or opens the system
+  settings, and outside the covered area it's dimmed and explains why. Once access is given, it becomes the start.
+- **Touching and holding the map picks the start while the start step is open,** and starts are kept among the recent
+  places, as destinations are.
 - **Ordering places with the same name by the map's centre,** without location access, comes in a later slice; the
   user's location already orders them.
 

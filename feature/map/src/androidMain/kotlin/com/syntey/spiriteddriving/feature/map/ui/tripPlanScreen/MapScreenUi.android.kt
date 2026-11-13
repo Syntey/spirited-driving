@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
@@ -43,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
@@ -106,6 +108,10 @@ private const val UNSELECTED_ALPHA = 0.5f
 
 // The selected line's casing is its line with a border on each side, which has no Grid token
 private val SELECTED_CASING_WIDTH = Grid.d1_5 + Grid.d0_375 * 2
+
+// The start ring is centred on its point, and drawn under the destination's pin
+private val START_ANCHOR = Offset(0.5f, 0.5f)
+private const val START_Z_INDEX = -1f
 
 // A route label is centred on its point, so the pill sits on the line
 private val LABEL_ANCHOR = Offset(0.5f, 0.5f)
@@ -367,6 +373,7 @@ private fun Map(
         content = {
             CoveredArea(area = map.coveredArea)
             RouteLines(lines = routeLines, onClick = onRouteClick)
+            map.start?.let { Start(point = it) }
             map.destination?.let { Destination(point = it) }
         },
         onMapLongClick = { latLng ->
@@ -525,6 +532,28 @@ private fun RoutePolyline(points: List<LatLng>, color: Color, width: Float, zInd
         startCap = RoundCap(),
         endCap = RoundCap(),
     )
+}
+
+/**
+ * The pin of a start picked by hand: a ring, so it reads apart from the destination's pin and the user's location dot.
+ */
+@Composable
+private fun Start(point: GeoPoint) {
+    MarkerComposable(
+        point,
+        state = rememberUpdatedMarkerState(position = point.toLatLng()),
+        anchor = START_ANCHOR,
+        zIndex = START_Z_INDEX,
+        onClick = { true },
+    ) {
+        Box(
+            Modifier
+                .size(Grid.d4)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surface)
+                .border(Grid.d0_75, MaterialTheme.colorScheme.onSurface, CircleShape),
+        )
+    }
 }
 
 /** The chosen destination's pin. */

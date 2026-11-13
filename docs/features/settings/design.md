@@ -20,7 +20,7 @@ One list in five groups, top to bottom. It looks and works the same signed in or
 ### Units
 
 - **Distance** has a km / mi switch in the row, the same component as the min / km switch in
-  [Route planning](../route-planning/design.md#budget). Screen readers hear "Kilometres" and "Miles".
+  [Route planning](../route-planning/README.md#design). Screen readers hear "Kilometres" and "Miles".
 - At the largest text sizes, the switch moves below the label.
 - Until the user picks, the selected unit follows the phone's region ([README](README.md#rules)).
 - The unit changes every distance in the app: search results, route summaries, saved routes, trip history and the

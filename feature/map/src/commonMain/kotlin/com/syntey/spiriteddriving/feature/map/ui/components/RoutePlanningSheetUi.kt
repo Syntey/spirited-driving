@@ -37,7 +37,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.AppButton
@@ -60,18 +59,29 @@ import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
 import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
+import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteRow
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.collections.immutable.ImmutableList
 
-/** The top of route planning in the sheet: where the trip goes, where it starts, and a Cancel text button. */
+/**
+ * The top of route planning in the sheet: where the trip goes, where it starts, and a Cancel text button. The start is
+ * tappable: it opens the start step, where the user changes it.
+ */
 @Composable
-internal fun RoutePlanningHeader(destination: Place, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+internal fun RoutePlanningHeader(planning: RoutePlanningState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+    val start = planning.start
     SheetHeader(
-        title = destination.name ?: stringResource(MR.strings.search_point_on_map),
-        subtitle = stringResource(MR.strings.planning_from_my_location),
+        title = planning.destination.name ?: stringResource(MR.strings.search_point_on_map),
+        subtitle = if (start == null) {
+            stringResource(MR.strings.planning_from_my_location)
+        } else {
+            stringResource(MR.strings.planning_from, start.name ?: stringResource(MR.strings.search_point_on_map))
+        },
+        onSubtitleClick = actions::onStartClick,
+        subtitleChevron = painterResource(MR.images.chevron_right),
         // Cancel, not an X: the sheet stays, and planning steps back to the search
         trailing = {
             SheetHeaderTextButton(text = stringResource(MR.strings.generic_cancel), onClick = actions::onRoutePlanningClose)
@@ -192,7 +202,7 @@ internal fun CollapsedRoutePlanning(viewState: TripPlanViewState, actions: TripP
         modifier = modifier.fillMaxWidth().padding(style.sheetContentPadding),
         verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
     ) {
-        RoutePlanningHeader(destination = planning.destination, actions = actions)
+        RoutePlanningHeader(planning = planning, actions = actions)
         RoutePlanningSummary(viewState = viewState)
         RoutePlanningActions()
     }
