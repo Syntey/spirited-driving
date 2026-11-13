@@ -55,6 +55,7 @@ private object FakePlatform : Platform {
     override val appVersionName = "1.0"
     override val appBuildNumber = "1"
     override val applicationId = "app.id"
+    override val storeReviewUrl = "https://store.test/app"
     override val osNameWithVersion = "OS 1"
     override val deviceModel = "Model"
     override val preferredLanguages = listOf("cs-CZ", "en")

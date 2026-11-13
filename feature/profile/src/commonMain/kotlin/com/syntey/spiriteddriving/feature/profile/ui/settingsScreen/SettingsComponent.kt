@@ -4,14 +4,17 @@ import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.lifecycle.doOnCreate
+import com.arkivanov.essenty.lifecycle.doOnResume
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.Platform
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
+import com.syntey.spiriteddriving.feature.profile.domain.IsDriveRemindersOnUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.ObserveDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.ObserveVignetteCountriesUseCase
+import com.syntey.spiriteddriving.feature.profile.domain.OpenDriveReminderSettingsUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.SetDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.SetVignetteUseCase
 import dev.icerock.moko.resources.desc.ResourceFormatted
@@ -33,6 +36,8 @@ internal class SettingsComponent(
     private val setDistanceUnitUseCase: SetDistanceUnitUseCase,
     private val observeVignetteCountriesUseCase: ObserveVignetteCountriesUseCase,
     private val setVignetteUseCase: SetVignetteUseCase,
+    private val isDriveRemindersOnUseCase: IsDriveRemindersOnUseCase,
+    private val openDriveReminderSettingsUseCase: OpenDriveReminderSettingsUseCase,
 ) : ScreenComponent<SettingsViewState, SettingsUiEvent, SettingsScreenNavigation>(
     componentContext = componentContext,
     defaultState = SettingsViewState(),
@@ -48,12 +53,16 @@ internal class SettingsComponent(
 
     init {
         doOnCreate { showVersion() }
+        // Read again on each return, as the user may have changed the notification in the system settings
+        doOnResume(isOneTime = false) { readDriveReminders() }
         observeDistanceUnit()
         observeVignetteCountries()
     }
 
     override fun onPrivacyPolicyClick() = sendUiEvent(SettingsUiEvent.OpenWebPage(LegalPages.PRIVACY_POLICY_URL))
     override fun onTermsClick() = sendUiEvent(SettingsUiEvent.OpenWebPage(LegalPages.TERMS_URL))
+    override fun onDriveRemindersClick() = openDriveReminderSettings()
+    override fun onRateClick() = sendUiEvent(SettingsUiEvent.OpenWebPage(platform.storeReviewUrl))
     override fun onDistanceUnitSelect(unit: DistanceUnit) = saveDistanceUnit(unit)
 
     override fun onVignetteToggle(country: CountryCode) {
@@ -82,6 +91,15 @@ internal class SettingsComponent(
     private fun observeVignetteCountries() = observeVignetteCountriesUseCase.execute {
         onNext { countries -> componentState.update { it.copy(vignettes = countries.toImmutableList()) } }
         onError { error -> logger.e(error) { "Vignette countries not observed" } }
+    }
+
+    private fun readDriveReminders() = isDriveRemindersOnUseCase.execute {
+        onSuccess { isOn -> componentState.update { it.copy(driveRemindersOn = isOn) } }
+        onError { error -> logger.e(error) { "Drive reminders not read" } }
+    }
+
+    private fun openDriveReminderSettings() = openDriveReminderSettingsUseCase.execute {
+        onError { error -> logger.e(error) { "Drive reminder settings not opened" } }
     }
 
     private fun saveVignette(country: CountryCode, hasVignette: Boolean) =

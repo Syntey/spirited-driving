@@ -25,12 +25,20 @@ interface SettingsScreen {
         /** Tapped the row of [country]: flips whether the user has its motorway vignette. */
         fun onVignetteToggle(country: CountryCode)
 
+        /** Tapped Drive reminders: opens the phone's settings for the notification. */
+        fun onDriveRemindersClick()
+
+        /** Tapped Rate Spirited Driving. */
+        fun onRateClick()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onPrivacyPolicyClick() = Unit
                 override fun onTermsClick() = Unit
                 override fun onDistanceUnitSelect(unit: DistanceUnit) = Unit
                 override fun onVignetteToggle(country: CountryCode) = Unit
+                override fun onDriveRemindersClick() = Unit
+                override fun onRateClick() = Unit
             }
         }
     }

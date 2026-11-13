@@ -146,6 +146,13 @@
     <string name="settings_distance">Distance</string>
     <string name="settings_vignettes">Motorway vignettes</string>
     <string name="settings_vignettes_footer">Without a vignette, routes avoid motorways that need one.</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_drive_reminders">Drive reminders</string>
+    <string name="settings_notifications_footer">A quiet notification after a drive, asking how the route was.</string>
+    <string name="settings_on">On</string>
+    <string name="settings_off">Off</string>
+    <string name="settings_feedback">Feedback</string>
+    <string name="settings_rate">Rate Spirited Driving</string>
     <string name="settings_about">About</string>
     <string name="settings_privacy_policy">Privacy policy</string>
     <string name="settings_terms">Terms</string>

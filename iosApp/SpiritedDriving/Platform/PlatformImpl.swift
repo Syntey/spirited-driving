@@ -25,6 +25,10 @@ final class PlatformImpl: Platform {
         return String(bytes: Data(bytes: &sysinfo.machine, count: Int(_SYS_NAMELEN)), encoding: .ascii)?.trimmingCharacters(in: .controlCharacters) ?? "Unknown"
     }
 
+    nonisolated var storeReviewUrl: String {
+        "https://apps.apple.com/app/id\(AppStore.appId)?action=write-review"
+    }
+
     var osNameWithVersion: String {
         let currentDevice = UIDevice.current
         return "\(currentDevice.systemName) \(currentDevice.systemVersion)"

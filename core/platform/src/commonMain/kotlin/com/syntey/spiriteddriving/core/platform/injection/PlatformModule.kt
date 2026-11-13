@@ -1,9 +1,11 @@
 package com.syntey.spiriteddriving.core.platform.injection
 
+import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
 import com.syntey.spiriteddriving.core.platform.binding.LocationPermission
 import com.syntey.spiriteddriving.core.platform.binding.Platform
 import com.syntey.spiriteddriving.core.platform.binding.PlatformLocation
 import com.syntey.spiriteddriving.core.platform.binding.PlatformBindings
+import com.syntey.spiriteddriving.core.platform.binding.PlatformDriveReminders
 import com.syntey.spiriteddriving.core.platform.binding.PlatformLocationPermission
 import com.syntey.spiriteddriving.core.platform.binding.UserLocation
 import org.koin.core.module.dsl.bind
@@ -18,4 +20,6 @@ fun platformModule(
     factory { LocationPermission(get()) }
     single<PlatformLocation> { platformBindings.location() }
     factory { UserLocation(get()) }
+    single<PlatformDriveReminders> { platformBindings.driveReminders() }
+    factory { DriveReminders(get()) }
 }

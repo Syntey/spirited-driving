@@ -9,6 +9,8 @@ final class PlatformBindingsImpl: PlatformBindings {
     // Created here, on the main thread, as `CLLocationManager` must be
     private let locationImpl = PlatformLocationImpl()
 
+    private let driveRemindersImpl = PlatformDriveRemindersImpl()
+
     func platform() -> any Platform {
         PlatformImpl()
     }
@@ -23,5 +25,9 @@ final class PlatformBindingsImpl: PlatformBindings {
 
     func location() -> any PlatformLocation {
         locationImpl
+    }
+
+    func driveReminders() -> any PlatformDriveReminders {
+        driveRemindersImpl
     }
 }

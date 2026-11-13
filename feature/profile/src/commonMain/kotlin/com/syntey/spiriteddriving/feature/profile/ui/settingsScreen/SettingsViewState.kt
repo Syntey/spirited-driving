@@ -11,4 +11,5 @@ data class SettingsViewState(
     val version: StringDesc = "".desc(),
     val distanceUnit: DistanceUnit = DistanceUnit.Kilometres,
     val vignettes: ImmutableList<VignetteCountry> = persistentListOf(),
+    val driveRemindersOn: Boolean = false,
 )
