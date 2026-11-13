@@ -41,6 +41,9 @@ interface Platform {
      */
     val preferredLanguages: List<String>
 
+    /** The page where the user writes a review of the app: its store listing. */
+    val storeReviewUrl: String
+
     /** The phone's region as an ISO 3166-1 alpha-2 code, such as "CZ"; null when it has none. */
     val regionCode: String?
 

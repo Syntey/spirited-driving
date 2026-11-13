@@ -14,6 +14,7 @@ class PlatformImpl(applicationContext: Context) : Platform {
     override val appVersionName: String = BuildConfig.VERSION_NAME
     override val appBuildNumber: String = BuildConfig.VERSION_CODE.toString()
     override val applicationId: String = BuildConfig.APPLICATION_ID
+    override val storeReviewUrl: String = "https://play.google.com/store/apps/details?id=$applicationId"
     override val osNameWithVersion: String = "Android ${Build.VERSION.RELEASE}"
     override val deviceModel: String = Build.MODEL
     override val preferredLanguages: List<String>

@@ -8,9 +8,10 @@ import dev.icerock.moko.resources.desc.desc
 import kotlinx.collections.immutable.persistentListOf
 
 internal object SettingsPreviewStates {
-    fun viewState(distanceUnit: DistanceUnit = DistanceUnit.Kilometres) = SettingsViewState(
+    fun viewState(distanceUnit: DistanceUnit = DistanceUnit.Kilometres, driveRemindersOn: Boolean = true) = SettingsViewState(
         version = "1.0.0 (42)".desc(),
         distanceUnit = distanceUnit,
+        driveRemindersOn = driveRemindersOn,
         vignettes = persistentListOf(
             VignetteCountry(code = CountryCode.Czechia, name = "Czechia", hasVignette = true),
             VignetteCountry(code = CountryCode("SK"), name = "Slovakia", hasVignette = false),

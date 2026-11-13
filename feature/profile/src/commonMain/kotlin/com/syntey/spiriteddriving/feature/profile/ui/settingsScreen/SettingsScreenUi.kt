@@ -109,6 +109,30 @@ private fun Content(viewState: SettingsViewState, actions: SettingsScreen.Action
                 }
             }
         }
+        ListGroup(
+            header = stringResource(MR.strings.settings_notifications),
+            footer = stringResource(MR.strings.settings_notifications_footer),
+        ) {
+            item { position ->
+                ListRow(
+                    headline = stringResource(MR.strings.settings_drive_reminders),
+                    value = stringResource(if (viewState.driveRemindersOn) MR.strings.settings_on else MR.strings.settings_off),
+                    onClick = actions::onDriveRemindersClick,
+                    chevron = painterResource(MR.images.chevron_right),
+                    position = position,
+                )
+            }
+        }
+        ListGroup(header = stringResource(MR.strings.settings_feedback)) {
+            item { position ->
+                ListRow(
+                    headline = stringResource(MR.strings.settings_rate),
+                    trailing = webLink,
+                    onClick = actions::onRateClick,
+                    position = position,
+                )
+            }
+        }
         ListGroup(header = stringResource(MR.strings.settings_about)) {
             item { position ->
                 ListRow(
@@ -140,11 +164,14 @@ private fun Content(viewState: SettingsViewState, actions: SettingsScreen.Action
 @ScreenPreviews
 @Composable
 private fun SettingsScreenPreview() = Showcase {
-    Content(viewState = SettingsPreviewStates.viewState(), actions = noOpActions())
+    Content(viewState = SettingsPreviewStates.viewState(driveRemindersOn = true), actions = noOpActions())
 }
 
 @DarkLightPreviews
 @Composable
 private fun SettingsScreenIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(viewState = SettingsPreviewStates.viewState(distanceUnit = DistanceUnit.Miles), actions = noOpActions())
+    Content(
+        viewState = SettingsPreviewStates.viewState(distanceUnit = DistanceUnit.Miles, driveRemindersOn = false),
+        actions = noOpActions(),
+    )
 }
