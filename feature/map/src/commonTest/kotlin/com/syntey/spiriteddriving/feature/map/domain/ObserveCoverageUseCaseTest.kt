@@ -63,7 +63,7 @@ class ObserveCoverageUseCaseTest {
     }
 
     @Test
-    fun `an outdated kept copy is emitted first, then the backend's`() = runTest {
+    fun `an outdated kept copy is emitted before the backend's`() = runTest {
         val cache = InMemoryCoverageCache(kept)
 
         assertEquals(

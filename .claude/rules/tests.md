@@ -16,5 +16,5 @@ paths:
 - Hand-written fakes of `:core:domain` interfaces, no mocking library. Reuse the `Fake*` in `:core:domain` when it
   fits.
 - Names are backticked sentences about behavior: `` fun `plan without a fun route keeps the fastest one`() ``. Plain
-  words only: Kotlin/Native rejects some punctuation in names.
+  words; apostrophes and hyphens are fine, but no commas or `. ; : / \ < > [ ]`, which Android Studio or Kotlin/Native reject.
 - One behavior per test. Build inputs inline or with a small helper in the test file, not a shared fixture class.

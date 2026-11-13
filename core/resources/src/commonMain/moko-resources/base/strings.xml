@@ -28,6 +28,7 @@
     <!-- Budget chips -->
     <string name="budget_minutes">+%1$d min</string>
     <string name="budget_hours">+%1$s h</string>
+    <string name="budget_kilometres">+%1$d km</string>
 
     <!-- First launch. Where the copy names the platform's maps app or its location prompt, it has an Android and an iOS version. -->
     <string name="onboarding_skip">Skip</string>
@@ -101,6 +102,11 @@
     <string name="planning_offline_text">Planning needs a connection.</string>
     <string name="planning_failed_title">Planning isn’t working right now</string>
     <string name="planning_failed_text">The problem is on our side, not your connection.</string>
+    <string name="planning_outside_title">Outside the covered area</string>
+    <string name="planning_outside_text">Routes start and end in Czechia for now.</string>
+    <string name="planning_no_fun_route">No fun route fits within %1$s. The closest fun route needs %2$s.</string>
+    <string name="planning_no_fun_route_beyond">No fun route fits within %1$s. The closest fun route needs more than %2$s.</string>
+    <string name="planning_use_budget">Use %1$s</string>
 
     <!-- Units. The number is an argument; the unit is in the string. -->
     <string name="unit_minutes">%1$d min</string>
@@ -111,4 +117,10 @@
     <string name="unit_miles">%1$s mi</string>
     <string name="unit_feet">%1$s ft</string>
     <string name="planning_extra">+%1$s</string>
+    <string name="planning_budget_time">Extra time</string>
+    <string name="planning_budget_distance">Extra distance</string>
+    <string name="planning_budget_minutes">min</string>
+    <string name="planning_budget_minutes_description">Minutes</string>
+    <string name="planning_budget_kilometres">km</string>
+    <string name="planning_budget_kilometres_description">Kilometres</string>
 </resources>

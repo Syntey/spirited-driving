@@ -42,7 +42,7 @@ class RouteMapStateTest {
     }
 
     @Test
-    fun `denied hides the dot, stops following and forgets the location`() {
+    fun `denied hides the dot and stops following and forgets the location`() {
         val state = RouteMapState(
             showsUserLocation = true,
             followsUser = true,
@@ -119,7 +119,7 @@ class RouteMapStateTest {
     }
 
     @Test
-    fun `a picked point drops its pin, stops following and keeps the camera`() {
+    fun `a picked point drops its pin and stops following but keeps the camera`() {
         val before = following.withCoverage(covered).withUserLocation(prague)
         val state = before.withPickedPoint(dresden)
 

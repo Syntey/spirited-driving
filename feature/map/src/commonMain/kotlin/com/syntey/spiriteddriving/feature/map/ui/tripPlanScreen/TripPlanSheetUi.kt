@@ -13,14 +13,19 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.core.resources.*
@@ -35,6 +40,7 @@ import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.core.ui.tools.EventsEffect
 import com.syntey.spiriteddriving.core.ui.tools.onEvent
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen.Actions.Companion.noOpActions
+import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedRoutePlanning
 import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningBody
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningHeader
@@ -48,8 +54,8 @@ import kotlinx.coroutines.launch
 
 /**
  * The content of the map's sheet, shared by both platforms: the Android bottom sheet and the native iOS sheet host it. It
- * fills the sheet. [onCollapsedHeightChange] gets the height of its top part, the notes and the search field, while the
- * sheet is collapsed: that's the sheet's collapsed height.
+ * fills the sheet. [onCollapsedHeightChange] gets the sheet's collapsed height: that of the notes and the search field, or
+ * while planning, that of the collapsed planning layout.
  */
 @Composable
 fun TripPlanSheetUi(screen: TripPlanScreen, onCollapsedHeightChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
@@ -81,70 +87,107 @@ internal fun Content(
     val style = MapPlatformStyle.current
     val density = LocalDensity.current
     val focusManager = LocalFocusManager.current
-    // Read by the size callback, which isn't recomposed with the sheet
+    // Read by the size callbacks, which aren't recomposed with the sheet
     val currentSheetHeight by rememberUpdatedState(viewState.sheetHeight)
+    val isPlanning = viewState.planning != null
+    val currentIsPlanning by rememberUpdatedState(isPlanning)
+    val reportCollapsedHeight by rememberUpdatedState(onCollapsedHeightChange)
+    var searchCollapsedHeight by remember { mutableStateOf<Dp?>(null) }
+    var planningCollapsedHeight by remember { mutableStateOf<Dp?>(null) }
+    // Each layout keeps its own collapsed height, so starting or cancelling planning moves the sheet to the right one at once
+    LaunchedEffect(isPlanning, searchCollapsedHeight, planningCollapsedHeight) {
+        (if (isPlanning) planningCollapsedHeight else searchCollapsedHeight)?.let(reportCollapsedHeight)
+    }
     // The keyboard comes with the full height: dragging the sheet lower or closing the search hides it
     LaunchedEffect(viewState.sheetHeight) {
         if (viewState.sheetHeight != SheetHeight.Full) focusManager.clearFocus()
     }
     Column(modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                // Unbounded, so the top part reports the height it needs even while the sheet is still shorter
-                .wrapContentHeight(align = Alignment.Top, unbounded = true)
-                // The notes hide above collapsed, which makes the top part shorter there: only the collapsed layout reports
-                // its height, or the sheet's collapsed height would shrink along with the notes
-                .onSizeChanged { size ->
-                    if (currentSheetHeight == SheetHeight.Collapsed) onCollapsedHeightChange(with(density) { size.height.toDp() })
-                }
-                .padding(style.sheetContentPadding),
-            verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
-        ) {
-            val planning = viewState.planning
-            if (planning != null) {
-                RoutePlanningHeader(destination = planning.destination, actions = actions)
-            } else {
-                if (viewState.sheetHeight == SheetHeight.Collapsed) {
-                    if (viewState.map.isOutsideCoveredArea) {
-                        NoteCard(
-                            title = stringResource(MR.strings.map_outside_title),
-                            text = stringResource(MR.strings.map_outside_text),
-                            icon = painterResource(MR.images.map),
-                        )
-                    }
-                    if (viewState.showsPreciseLocationNote) {
-                        NoteCard(
-                            title = stringResource(MR.strings.map_precise_title),
-                            text = stringResource(MR.strings.map_precise_text),
-                            icon = painterResource(style.preciseLocationIcon),
-                            actionLabel = stringResource(MR.strings.map_precise_action),
-                            onAction = actions::onPreciseLocationClick,
-                            close = IconAction(
-                                icon = painterResource(MR.images.close),
-                                label = stringResource(MR.strings.generic_close),
-                                onClick = actions::onPreciseLocationNoteClose,
-                            ),
-                        )
-                    }
-                }
-                SearchRow(viewState = viewState, actions = actions)
-            }
-        }
-        if (viewState.planning != null) {
-            RoutePlanningBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
-        } else {
-            // Always there below the top part, so pulling the sheet up reveals it as it grows
-            SearchResults(
+        if (isPlanning) {
+            CollapsedRoutePlanning(
                 viewState = viewState,
-                onSuggestionClick = actions::onSuggestionClick,
-                onRecentPlaceClick = actions::onRecentPlaceClick,
-                onRecentPlaceRemove = actions::onRecentPlaceRemove,
-                onSearchRetry = actions::onSearchRetry,
-                modifier = Modifier.weight(1f),
+                actions = actions,
+                modifier = Modifier
+                    .measureOnly { height -> planningCollapsedHeight = with(density) { height.toDp() } }
+                    .clearAndSetSemantics {},
             )
         }
+        val planning = viewState.planning
+        if (planning != null && viewState.sheetHeight == SheetHeight.Collapsed) {
+            CollapsedRoutePlanning(viewState = viewState, actions = actions)
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // Unbounded, so the top part reports the height it needs even while the sheet is still shorter
+                    .wrapContentHeight(align = Alignment.Top, unbounded = true)
+                    // The notes hide above collapsed, which makes the top part shorter there: only the collapsed layout reports
+                    // its height, or the sheet's collapsed height would shrink along with the notes. Planning reports its own.
+                    .onSizeChanged { size ->
+                        if (currentSheetHeight == SheetHeight.Collapsed && !currentIsPlanning) {
+                            searchCollapsedHeight = with(density) { size.height.toDp() }
+                        }
+                    }
+                    .padding(style.sheetContentPadding),
+                verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
+            ) {
+                if (planning != null) {
+                    RoutePlanningHeader(destination = planning.destination, actions = actions)
+                } else {
+                    if (viewState.sheetHeight == SheetHeight.Collapsed) CollapsedNotes(viewState, actions)
+                    SearchRow(viewState = viewState, actions = actions)
+                }
+            }
+            if (planning != null) {
+                RoutePlanningBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
+            } else {
+                // Always there below the top part, so pulling the sheet up reveals it as it grows
+                SearchResults(
+                    viewState = viewState,
+                    onSuggestionClick = actions::onSuggestionClick,
+                    onRecentPlaceClick = actions::onRecentPlaceClick,
+                    onRecentPlaceRemove = actions::onRecentPlaceRemove,
+                    onSearchRetry = actions::onSearchRetry,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
     }
+}
+
+// The notes above the search field, shown while the sheet is collapsed
+@Composable
+private fun CollapsedNotes(viewState: TripPlanViewState, actions: TripPlanScreen.Actions) {
+    val style = MapPlatformStyle.current
+    if (viewState.map.isOutsideCoveredArea) {
+        NoteCard(
+            title = stringResource(MR.strings.map_outside_title),
+            text = stringResource(MR.strings.map_outside_text),
+            icon = painterResource(MR.images.map),
+        )
+    }
+    if (viewState.showsPreciseLocationNote) {
+        NoteCard(
+            title = stringResource(MR.strings.map_precise_title),
+            text = stringResource(MR.strings.map_precise_text),
+            icon = painterResource(style.preciseLocationIcon),
+            actionLabel = stringResource(MR.strings.map_precise_action),
+            onAction = actions::onPreciseLocationClick,
+            close = IconAction(
+                icon = painterResource(MR.images.close),
+                label = stringResource(MR.strings.generic_close),
+                onClick = actions::onPreciseLocationNoteClose,
+            ),
+        )
+    }
+}
+
+// Measures the content at the height it needs without placing it, so the collapsed sheet's height is known before the
+// sheet gets there. Unplaced, it isn't drawn and takes no space.
+private fun Modifier.measureOnly(onHeight: (Int) -> Unit): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity))
+    onHeight(placeable.height)
+    layout(0, 0) {}
 }
 
 @ComponentPreviews

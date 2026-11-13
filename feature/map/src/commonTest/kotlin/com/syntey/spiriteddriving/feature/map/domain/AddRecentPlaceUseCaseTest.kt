@@ -20,7 +20,7 @@ class AddRecentPlaceUseCaseTest {
     }
 
     @Test
-    fun `a place kept already moves to the top, replaced by the new one`() = runTest {
+    fun `a place kept already is replaced by the new one at the top`() = runTest {
         val old = place("Karlštejn", 49.9338)
         val recentPlaces = FakeRecentPlaces(listOf(place("Dresden", 51.0504), old))
         val newer = place("Karlštejn", 49.9338 + 0.00045)
@@ -31,7 +31,7 @@ class AddRecentPlaceUseCaseTest {
     }
 
     @Test
-    fun `keeps at most 15 places, dropping the oldest`() = runTest {
+    fun `keeps at most 15 places and drops the oldest`() = runTest {
         val kept = (1..15).map { place("Town $it", 49.0 + it) }
         val recentPlaces = FakeRecentPlaces(kept)
 

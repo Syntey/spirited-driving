@@ -24,6 +24,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 class RouteLineTest {
 
@@ -104,8 +105,8 @@ class RouteLineTest {
         val state = TripPlanViewState(planning = RoutePlanningState(destination = place(destination), budget = Budget.Time(45.minutes)))
 
         val bounds = assertNotNull(state.routeBounds)
-        assertTrue(bounds.northEast.latitude - bounds.southWest.latitude >= MIN_LAT_SPAN - TOLERANCE)
-        assertTrue(bounds.northEast.longitude - bounds.southWest.longitude >= MIN_LON_SPAN - TOLERANCE)
+        assertTrue(bounds.northEast.latitude - bounds.southWest.latitude >= Constants.Map.MIN_ROUTE_LAT_SPAN - TOLERANCE)
+        assertTrue(bounds.northEast.longitude - bounds.southWest.longitude >= Constants.Map.MIN_ROUTE_LON_SPAN - TOLERANCE)
         assertEquals(destination.latitude, (bounds.northEast.latitude + bounds.southWest.latitude) / 2, TOLERANCE)
         assertEquals(destination.longitude, (bounds.northEast.longitude + bounds.southWest.longitude) / 2, TOLERANCE)
     }
@@ -153,8 +154,6 @@ class RouteLineTest {
     private fun place(location: GeoPoint) = Place(name = null, area = null, location = location)
 
     private companion object {
-        const val MIN_LAT_SPAN = 0.02
-        const val MIN_LON_SPAN = 0.03
         const val TOLERANCE = 1e-9
     }
 
