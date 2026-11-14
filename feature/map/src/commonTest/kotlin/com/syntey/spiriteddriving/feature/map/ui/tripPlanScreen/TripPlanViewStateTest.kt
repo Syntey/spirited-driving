@@ -27,9 +27,11 @@ import com.syntey.spiriteddriving.feature.map.tools.durationText
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.toImmutableList
@@ -243,6 +245,47 @@ class TripPlanViewStateTest {
     }
 
     @Test
+    fun `drive is disabled without a selected route`() {
+        assertFalse(planning(Budget.Time(30.minutes)).isDriveEnabled)
+    }
+
+    @Test
+    fun `drive is enabled with a selected route`() {
+        assertTrue(stateStartingAt(start = origin, from = null).isDriveEnabled)
+    }
+
+    @Test
+    fun `the start distance is null without a selected route`() {
+        val state = planning(Budget.Time(30.minutes)).let { it.copy(map = RouteMapState(userLocation = origin)) }
+
+        assertNull(state.startDistance)
+    }
+
+    @Test
+    fun `the start distance is null when the route starts near the user`() {
+        val near = GeoPoint(latitude = origin.latitude + 0.001, longitude = origin.longitude)
+
+        assertNull(stateStartingAt(start = near, from = origin).startDistance)
+    }
+
+    @Test
+    fun `the start distance is null without the user's location`() {
+        val far = GeoPoint(latitude = origin.latitude + 0.045, longitude = origin.longitude)
+
+        assertNull(stateStartingAt(start = far, from = null).startDistance)
+    }
+
+    @Test
+    fun `the start distance is the distance to the route's start when it's far`() {
+        // About 5 km north of the origin
+        val far = GeoPoint(latitude = origin.latitude + 0.045, longitude = origin.longitude)
+
+        val distance = assertNotNull(stateStartingAt(start = far, from = origin).startDistance)
+
+        assertTrue(abs(distance.inKilometres - 5.0) < 0.05)
+    }
+
+    @Test
     fun `no budget chips without planning`() {
         assertTrue(TripPlanViewState().budgetChips.isEmpty())
     }
@@ -403,6 +446,17 @@ class TripPlanViewStateTest {
             FakeRoutePlanner.Recorded.copy(funRoutes = emptyList(), closestFunRouteBudget = closest),
         ),
     )
+
+    // The selected route starts at [start]; the user is at [from]
+    private fun stateStartingAt(start: GeoPoint, from: GeoPoint?): TripPlanViewState {
+        val recorded = FakeRoutePlanner.Recorded
+        val movedStart = Place(name = null, area = null, location = start)
+        val plan = recorded.copy(funRoutes = recorded.funRoutes.map { it.copy(start = movedStart) })
+        return TripPlanViewState(
+            map = RouteMapState(userLocation = from),
+            planning = RoutePlanningState(destination = dresden, budget = Budget.Time(30.minutes)).withPlan(plan),
+        )
+    }
 
     private fun planning(budget: Budget) = TripPlanViewState(
         planning = RoutePlanningState(destination = dresden, budget = budget),

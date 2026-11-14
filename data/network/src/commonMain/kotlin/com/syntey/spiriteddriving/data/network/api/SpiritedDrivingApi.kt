@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.data.network.api
 
 import com.syntey.spiriteddriving.data.network.dto.coverage.CoverageDto
+import com.syntey.spiriteddriving.data.network.dto.drive.RecordDriveRequestDto
 import com.syntey.spiriteddriving.data.network.dto.feedback.FeedbackRequestDto
 import com.syntey.spiriteddriving.data.network.dto.place.PlaceSearchResultDto
 import com.syntey.spiriteddriving.data.network.dto.place.PlaceSuggestionDto
@@ -11,6 +12,8 @@ import com.syntey.spiriteddriving.data.network.result.Revalidated
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Header
+import de.jensklingenberg.ktorfit.http.PUT
+import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.POST
 import de.jensklingenberg.ktorfit.http.Query
 
@@ -48,5 +51,12 @@ internal interface SpiritedDrivingApi {
     @POST("feedback")
     suspend fun sendFeedback(
         @Body request: FeedbackRequestDto,
+    ): NetworkResult<Unit>
+
+    /** `PUT /drives/{driveId}` (`recordDrive`). */
+    @PUT("drives/{driveId}")
+    suspend fun recordDrive(
+        @Path("driveId") driveId: String,
+        @Body request: RecordDriveRequestDto,
     ): NetworkResult<Unit>
 }

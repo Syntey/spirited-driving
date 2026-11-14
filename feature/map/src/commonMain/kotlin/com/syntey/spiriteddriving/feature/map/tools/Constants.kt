@@ -41,8 +41,13 @@ internal object Constants {
     }
 
     object Trip {
-        // Google Maps takes 9 waypoints; the Apple Maps limit is settled with Drive
+        // Google Maps takes 9 waypoints; Apple Maps' limit isn't documented, so it gets the same until measured on a device
         const val HAND_OFF_WAYPOINTS = 9
+    }
+
+    object Drive {
+        /** Farther than this from the user, the sheet says how far away the route starts. */
+        val START_ELSEWHERE_DISTANCE = 1.kilometres
     }
 
     object Map {

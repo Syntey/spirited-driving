@@ -139,6 +139,7 @@ fun MapScreenUi(screen: TripPlanScreen, modifier: Modifier = Modifier) {
     Content(viewState = viewState, actions = screen.actions, sheet = { onCollapsedHeightChange ->
         TripPlanSheetUi(screen = screen, onCollapsedHeightChange = onCollapsedHeightChange)
     }, modifier = modifier)
+    DriveDialog(dialog = viewState.driveDialog, actions = screen.actions)
 }
 
 @Composable

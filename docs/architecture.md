@@ -131,11 +131,16 @@ The app opens the platform's maps app with the route's hand-off waypoints.
 |----------------|-------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
 | Maps app       | Google Maps                                                                                     | Apple Maps                                                                   |
 | Link           | `google.com/maps/dir/?api=1&destination=…&waypoints=a\|b&travelmode=driving&dir_action=navigate` | `maps.apple.com/directions?destination=…&waypoint=a&waypoint=b&mode=driving` |
-| Waypoint limit | 9                                                                                               | Not documented; to measure                                                   |
+| Waypoint limit | 9                                                                                               | Not documented; 9 until measured                                             |
 
 - The maps app takes its own fastest path between waypoints, so the backend places them to keep it on the chosen
   roads. The app passes the target app's waypoint limit in the plan request.
-- Building the link is common code in `:core:domain`, with unit tests. Opening it is a small platform call.
+- Building the link is common code in `:core:domain`, with unit tests. Opening it is a small platform call, the
+  `PlatformMapsApp` binding: Android pins the link to Google Maps and iOS opens it as a universal link only, so a
+  deleted or turned off maps app is reported instead of the link opening in a browser.
+- Apple Maps links can't start navigation: Apple Maps opens with the directions, and the user taps Go.
+- Each hand-off records a drive. The app makes the drive's ID and keeps the drive on the device (`StartedDrives` in
+  `:data:persistence`), so one started offline is recorded on the next start of the map.
 - Location permission is "while using" only: guidance runs in the maps app.
 - The app isn't told when a drive ends. [Drive feedback](features/drive-feedback/README.md) works from the hand-off
   time and the route's planned duration, and a local notification scheduled at the hand-off, with no push server.

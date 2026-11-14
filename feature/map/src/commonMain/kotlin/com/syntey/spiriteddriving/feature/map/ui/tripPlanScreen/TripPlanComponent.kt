@@ -13,9 +13,11 @@ import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
 import com.syntey.spiriteddriving.core.domain.route.OutsideCoverageException
+import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
+import com.syntey.spiriteddriving.core.platform.binding.MapsAppResult
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.core.ui.base.executeWithLifecycle
@@ -24,6 +26,7 @@ import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetBudgetChoiceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetRecentPlacesUseCase
+import com.syntey.spiriteddriving.feature.map.domain.HandOffUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
 import com.syntey.spiriteddriving.feature.map.domain.NamePointUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
@@ -31,14 +34,18 @@ import com.syntey.spiriteddriving.feature.map.domain.ObserveDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveVignettesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
+import com.syntey.spiriteddriving.feature.map.domain.OpenMapsAppStoreUseCase
 import com.syntey.spiriteddriving.feature.map.domain.PlanTripUseCase
+import com.syntey.spiriteddriving.feature.map.domain.RecordPendingDrivesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RemoveRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SaveBudgetChoiceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase.SearchUpdate
+import com.syntey.spiriteddriving.feature.map.domain.StartDriveUseCase
 import com.syntey.spiriteddriving.feature.map.domain.unnamedPlace
+import com.syntey.spiriteddriving.feature.map.model.ui.DriveDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
@@ -56,6 +63,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
+import kotlin.time.Clock
 
 @Factory
 @GenerateFactory
@@ -82,6 +90,10 @@ internal class TripPlanComponent(
     private val planTripUseCase: PlanTripUseCase,
     private val getBudgetChoiceUseCase: GetBudgetChoiceUseCase,
     private val saveBudgetChoiceUseCase: SaveBudgetChoiceUseCase,
+    private val handOffUseCase: HandOffUseCase,
+    private val startDriveUseCase: StartDriveUseCase,
+    private val recordPendingDrivesUseCase: RecordPendingDrivesUseCase,
+    private val openMapsAppStoreUseCase: OpenMapsAppStoreUseCase,
 ) : ScreenComponent<TripPlanViewState, TripPlanUiEvent, TripPlanScreenNavigation>(
     componentContext = componentContext,
     defaultState = TripPlanViewState(),
@@ -117,6 +129,8 @@ internal class TripPlanComponent(
         observeVignettes()
         readRecentPlaces()
         readBudgetChoice()
+        readFirstDriveNote()
+        recordPendingDrives()
     }
 
     // Observed, so a unit picked in Settings applies while the map is under the Profile sheet
@@ -409,6 +423,64 @@ internal class TripPlanComponent(
         closeNoteUseCase.execute(Note.PreciseLocation) {
             onError { error -> logger.e(error) { "Precise location note not closed" } }
         }
+    }
+
+    override fun onDriveClick() {
+        val state = componentState.value
+        val route = state.planning?.selectedRoute ?: return
+        if (state.isFirstDriveExplained) {
+            handOff(route)
+        } else {
+            componentState.update { it.copy(driveDialog = DriveDialog.FirstDrive) }
+        }
+    }
+
+    // Closing the note comes before the hand-off, so the dialog doesn't come back when the maps app turns out to be missing
+    override fun onFirstDriveConfirm() {
+        val route = componentState.value.planning?.selectedRoute
+        componentState.update { it.copy(driveDialog = null, isFirstDriveExplained = true) }
+        closeNoteUseCase.execute(Note.FirstDrive) {
+            onError { error -> logger.e(error) { "First drive note not closed" } }
+        }
+        route?.let(::handOff)
+    }
+
+    override fun onDriveDialogDismiss() = componentState.update { it.copy(driveDialog = null) }
+
+    override fun onMapsAppStoreClick() {
+        componentState.update { it.copy(driveDialog = null) }
+        openMapsAppStoreUseCase.execute {
+            onError { error -> logger.e(error) { "Maps app store not opened" } }
+        }
+    }
+
+    private fun handOff(route: Route) {
+        handOffUseCase.execute(route) {
+            onSuccess { result ->
+                when (result) {
+                    MapsAppResult.Opened -> startDrive(route)
+                    MapsAppResult.Missing -> componentState.update { it.copy(driveDialog = DriveDialog.MapsAppMissing) }
+                }
+            }
+            onError { error -> logger.e(error) { "Route not handed off" } }
+        }
+    }
+
+    // Errors are only logged: the drive stays stored and is recorded on a later try
+    private fun startDrive(route: Route) {
+        startDriveUseCase.execute(StartDriveUseCase.Args(route = route, at = Clock.System.now())) {
+            onError { error -> if (error !is OfflineException) logger.e(error) { "Drive not started" } }
+        }
+    }
+
+    private fun readFirstDriveNote() = isNoteClosedUseCase.execute(Note.FirstDrive) {
+        onSuccess { isClosed -> componentState.update { it.copy(isFirstDriveExplained = isClosed) } }
+        onError { error -> logger.e(error) { "First drive note not read" } }
+    }
+
+    // Drives from an earlier start without a connection; offline is expected here, so it isn't logged
+    private fun recordPendingDrives() = recordPendingDrivesUseCase.execute {
+        onError { error -> if (error !is OfflineException) logger.e(error) { "Pending drives not recorded" } }
     }
 
     override fun onMyLocationClick() = useMyLocation()

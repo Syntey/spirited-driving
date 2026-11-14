@@ -10,6 +10,7 @@ final class PlatformBindingsImpl: PlatformBindings {
     private let locationImpl = PlatformLocationImpl()
 
     private let driveRemindersImpl = PlatformDriveRemindersImpl()
+    private let mapsAppImpl = PlatformMapsAppImpl()
 
     func platform() -> any Platform {
         PlatformImpl()
@@ -29,5 +30,9 @@ final class PlatformBindingsImpl: PlatformBindings {
 
     func driveReminders() -> any PlatformDriveReminders {
         driveRemindersImpl
+    }
+
+    func mapsApp() -> any PlatformMapsApp {
+        mapsAppImpl
     }
 }
