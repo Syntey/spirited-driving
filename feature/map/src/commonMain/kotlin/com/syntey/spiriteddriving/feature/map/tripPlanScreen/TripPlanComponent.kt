@@ -6,13 +6,16 @@ import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnStart
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
+import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.core.ui.base.executeWithLifecycle
+import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.GetRecentPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
@@ -20,6 +23,7 @@ import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
+import com.syntey.spiriteddriving.feature.map.domain.RemoveRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.MIN_SEARCH_LENGTH
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
@@ -46,6 +50,9 @@ internal class TripPlanComponent(
     private val closeNoteUseCase: CloseNoteUseCase,
     private val searchPlacesUseCase: SearchPlacesUseCase,
     private val getDistanceUnitUseCase: GetDistanceUnitUseCase,
+    private val getRecentPlacesUseCase: GetRecentPlacesUseCase,
+    private val addRecentPlaceUseCase: AddRecentPlaceUseCase,
+    private val removeRecentPlaceUseCase: RemoveRecentPlaceUseCase,
 ) : ScreenComponent<TripPlanViewState, TripPlanUiEvent, TripPlanScreenNavigation>(
     componentContext = componentContext,
     defaultState = TripPlanViewState(),
@@ -73,6 +80,10 @@ internal class TripPlanComponent(
             onSuccess { unit -> componentState.update { it.copy(distanceUnit = unit) } }
             onError { error -> logger.e(error) { "Distance unit not read" } }
         }
+        getRecentPlacesUseCase.execute {
+            onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
+            onError { error -> logger.e(error) { "Recent places not read" } }
+        }
     }
 
     override fun onSearchFocus() = setSheetHeight(SheetHeight.Full)
@@ -96,7 +107,33 @@ internal class TripPlanComponent(
             sendUiEvent(TripPlanUiEvent.NotCovered)
             return
         }
-        componentState.update { it.copy(map = it.map.withDestination(suggestion.place.location)) }
+        choose(suggestion.place)
+    }
+
+    // A recent place counts as covered until the covered area is loaded, as it was covered when chosen
+    override fun onRecentPlaceClick(place: Place) {
+        if (!componentState.value.map.covers(place.location)) {
+            sendUiEvent(TripPlanUiEvent.NotCovered)
+            return
+        }
+        choose(place)
+    }
+
+    // Hidden at once, so the row doesn't wait for the removal to be saved
+    override fun onRecentPlaceRemove(place: Place) {
+        componentState.update { it.withRecentPlaces(it.search.recentPlaces.filterNot { recent -> recent == place }) }
+        removeRecentPlaceUseCase.execute(place) {
+            onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
+            onError { error -> logger.e(error) { "Recent place not removed" } }
+        }
+    }
+
+    private fun choose(place: Place) {
+        addRecentPlaceUseCase.execute(place) {
+            onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
+            onError { error -> logger.e(error) { "Recent place not kept" } }
+        }
+        componentState.update { it.copy(map = it.map.withDestination(place.location)) }
         closeSearch()
     }
 
@@ -165,7 +202,7 @@ internal class TripPlanComponent(
 
     private fun clearSearch() {
         useCaseJobPool[searchPlacesUseCase]?.cancel()
-        componentState.update { it.copy(search = SearchState()) }
+        componentState.update { it.copy(search = SearchState(recentPlaces = it.search.recentPlaces)) }
     }
 
     private fun closeSearch() {
@@ -230,3 +267,7 @@ internal class TripPlanComponent(
         useCaseJobPool[observeUserLocationUseCase]?.cancel()
     }
 }
+
+// The recent places as the search keeps them, with the rest of the search state kept as it is
+private fun TripPlanViewState.withRecentPlaces(places: List<Place>): TripPlanViewState =
+    copy(search = search.copy(recentPlaces = places.toImmutableList()))

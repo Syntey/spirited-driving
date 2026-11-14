@@ -93,6 +93,36 @@ class TripPlanViewStateTest {
         assertEquals(listOf("Karlštejn", "Karlštejnská"), rows.map { it.suggestion.place.name })
     }
 
+    @Test
+    fun `a recent row shows its distance`() {
+        val state = TripPlanViewState(
+            locationAccess = LocationAccess.Precise,
+            map = RouteMapState(userLocation = origin),
+            search = SearchState(recentPlaces = listOf(karlstejn.place).toImmutableList()),
+        )
+
+        assertEquals("4.2 km", state.recentRows.single().distance)
+    }
+
+    @Test
+    fun `a recent row outside a loaded covered area is not covered`() {
+        val state = TripPlanViewState(
+            map = RouteMapState(coveredArea = FakeCoverageSource.Czechia.area),
+            search = SearchState(recentPlaces = listOf(dresden).toImmutableList()),
+        )
+
+        assertFalse(state.recentRows.single().isCovered)
+    }
+
+    @Test
+    fun `a recent row is covered while the covered area isn't loaded`() {
+        val state = TripPlanViewState(search = SearchState(recentPlaces = listOf(dresden).toImmutableList()))
+
+        assertTrue(state.recentRows.single().isCovered)
+    }
+
+    private val dresden = Place(name = "Dresden", area = null, location = GeoPoint(latitude = 51.05, longitude = 13.74))
+
     private val origin = GeoPoint(latitude = 50.0, longitude = 14.0)
 
     // 4.2 km north of origin

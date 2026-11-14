@@ -1,8 +1,9 @@
 package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
-import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
+import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
+import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -57,14 +58,59 @@ internal object TripPlanScreenPreviews {
 
     /** Prague as the user's location, so the rows show distances, and one place is not covered. */
     fun searchDistancesViewState(): TripPlanViewState {
-        val prague = GeoPoint(latitude = 50.0755, longitude = 14.4378)
         val state = viewState()
         return state.copy(
             sheetHeight = SheetHeight.Full,
-            map = state.map.copy(userLocation = prague),
+            map = state.map.copy(userLocation = PRAGUE),
             search = SearchState(text = "karlst", suggestions = FakePlaceSearch.Recorded.toImmutableList()),
         )
     }
+
+    /** The field is blank: the recent places, with Prague as the user's location. */
+    fun recentViewState(): TripPlanViewState {
+        val state = viewState()
+        return state.copy(
+            sheetHeight = SheetHeight.Half,
+            map = state.map.copy(userLocation = PRAGUE),
+            search = SearchState(recentPlaces = recentPlaces),
+        )
+    }
+
+    /** A search that matches a recent place: the castle shows once, as a recent row. */
+    fun recentSearchViewState(): TripPlanViewState {
+        val state = viewState()
+        return state.copy(
+            sheetHeight = SheetHeight.Full,
+            map = state.map.copy(userLocation = PRAGUE),
+            search = SearchState(
+                text = "karlst",
+                suggestions = FakePlaceSearch.Recorded.toImmutableList(),
+                status = SearchStatus.Found,
+                recentPlaces = recentPlaces,
+            ),
+        )
+    }
+
+    fun recentOfflineViewState(): TripPlanViewState = viewState().copy(
+        sheetHeight = SheetHeight.Full,
+        search = SearchState(text = "karlst", status = SearchStatus.Offline, recentPlaces = recentPlaces),
+    )
+
+    private val PRAGUE = GeoPoint(latitude = 50.0755, longitude = 14.4378)
+
+    private val recentPlaces = listOf(
+        FakePlaceSearch.Recorded[1].place,
+        Place(
+            name = "Křivoklát",
+            area = "Rakovník, Central Bohemian Region",
+            location = GeoPoint(latitude = 50.0378, longitude = 13.8717),
+        ),
+        Place(
+            name = "Václavské náměstí",
+            area = "Prague",
+            location = GeoPoint(latitude = 50.0810, longitude = 14.4280),
+        ),
+    ).toImmutableList()
 
     fun outsideViewState(): TripPlanViewState {
         val covered = FakeCoverageSource.Czechia

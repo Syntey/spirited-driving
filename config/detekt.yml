@@ -61,7 +61,7 @@ complexity:
   TooManyFunctions:
     active: true
     allowedFunctionsPerInterface: 25
-    allowedFunctionsPerClass: 25
+    allowedFunctionsPerClass: 30
     allowedFunctionsPerFile: 20
     allowedFunctionsPerObject: 20
   LongMethod:

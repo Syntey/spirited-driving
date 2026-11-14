@@ -118,3 +118,69 @@ private fun TripPlanSheetSearchDistancesIosPreview() = Showcase(platform = UiPla
         modifier = Modifier.height(Grid.d100),
     )
 }
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetRecentPreview() = Showcase {
+    Content(
+        viewState = TripPlanScreenPreviews.recentViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetRecentIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(
+        viewState = TripPlanScreenPreviews.recentViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetRecentSearchPreview() = Showcase {
+    Content(
+        viewState = TripPlanScreenPreviews.recentSearchViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetRecentSearchIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(
+        viewState = TripPlanScreenPreviews.recentSearchViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetRecentOfflinePreview() = Showcase {
+    Content(
+        viewState = TripPlanScreenPreviews.recentOfflineViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun TripPlanSheetRecentOfflineIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(
+        viewState = TripPlanScreenPreviews.recentOfflineViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
