@@ -19,6 +19,8 @@ interface TripPlanScreen {
     /** One-time events for the screen, such as an explanation after a tap. */
     val events: Flow<TripPlanUiEvent>
 
+    // Each tap and drag on the screen is a function here
+    @Suppress("TooManyFunctions")
     interface Actions {
         /** Focused the search field. */
         fun onSearchFocus()
@@ -86,6 +88,18 @@ interface TripPlanScreen {
         /** Closed the "Precise location is off" note. */
         fun onPreciseLocationNoteClose()
 
+        /** Tapped Drive. */
+        fun onDriveClick()
+
+        /** Tapped Open Apple Maps or Open Google Maps in the first-drive dialog. */
+        fun onFirstDriveConfirm()
+
+        /** Tapped Cancel in a drive dialog, or dismissed it. */
+        fun onDriveDialogDismiss()
+
+        /** Tapped Get Apple Maps or Open Play Store in the maps-app-missing dialog. */
+        fun onMapsAppStoreClick()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onSearchFocus() = Unit
@@ -110,6 +124,10 @@ interface TripPlanScreen {
                 override fun onProfileClick() = Unit
                 override fun onPreciseLocationClick() = Unit
                 override fun onPreciseLocationNoteClose() = Unit
+                override fun onDriveClick() = Unit
+                override fun onFirstDriveConfirm() = Unit
+                override fun onDriveDialogDismiss() = Unit
+                override fun onMapsAppStoreClick() = Unit
             }
         }
     }

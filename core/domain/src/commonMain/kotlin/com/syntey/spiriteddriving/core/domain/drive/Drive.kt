@@ -1,0 +1,20 @@
+package com.syntey.spiriteddriving.core.domain.drive
+
+import kotlin.time.Duration
+import kotlin.time.Instant
+
+/**
+ * A route handed off to the maps app.
+ *
+ * @property id Made by the app (a random UUID), so the drive can be referred to before the backend has it.
+ * @property startedAt When the route was handed off, by the phone's clock.
+ * @property plannedDuration The route's duration, from which the app tells when the drive is likely over.
+ * @property isRecorded Whether the backend has the drive.
+ */
+data class Drive(
+    val id: String,
+    val routeId: String,
+    val startedAt: Instant,
+    val plannedDuration: Duration,
+    val isRecorded: Boolean = false,
+)

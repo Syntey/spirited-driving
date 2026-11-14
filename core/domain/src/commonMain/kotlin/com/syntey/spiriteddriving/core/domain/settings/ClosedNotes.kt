@@ -10,4 +10,7 @@ interface ClosedNotes {
 enum class Note {
     /** "Precise location is off" on the map. */
     PreciseLocation,
+
+    /** The dialog before the first hand-off to the maps app. */
+    FirstDrive,
 }

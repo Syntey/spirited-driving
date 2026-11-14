@@ -26,6 +26,8 @@ import dev.icerock.moko.resources.ImageResource
  *   like the locate button on iOS.
  * @property closesSearchWithBackArrow Closing the search: a back arrow in place of the field's search icon on Android, a
  *   Cancel text button next to the field on iOS.
+ * @property showsRoutingProvider Routing provided by Spirited Driving under Drive: Google's EEA terms ask for it before navigation
+ *   when routes not made by Google are shown on a Google map.
  * @property routeList The route list's rows: on a card on iOS, on the sheet on Android.
  */
 @Immutable
@@ -34,6 +36,7 @@ internal data class MapPlatformStyle(
     val sheetSpacing: Dp,
     val preciseLocationIcon: ImageResource,
     val closesSearchWithBackArrow: Boolean,
+    val showsRoutingProvider: Boolean,
     val searchField: SearchFieldStyle,
     val routeList: RouteListStyle,
 ) {
@@ -50,6 +53,7 @@ internal data class MapPlatformStyle(
                 sheetSpacing = Grid.d3,
                 preciseLocationIcon = MR.images.locate,
                 closesSearchWithBackArrow = true,
+                showsRoutingProvider = true,
                 searchField = SearchFieldStyle(
                     height = Grid.d14,
                     iconSize = Grid.d6,
@@ -71,6 +75,7 @@ internal data class MapPlatformStyle(
                 sheetSpacing = Grid.d2_5,
                 preciseLocationIcon = MR.images.locate_arrow,
                 closesSearchWithBackArrow = false,
+                showsRoutingProvider = false,
                 searchField = SearchFieldStyle(
                     height = Grid.d12,
                     iconSize = Grid.d5,
