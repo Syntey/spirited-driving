@@ -18,6 +18,9 @@ protocol MapComponentModelProtocol: AnyObject {
     var routeLines: [RouteLine] { get }
     var routeBounds: DomainGeoBounds? { get }
     var showsMapButtons: Bool { get }
+    var driveDialog: DriveDialog? { get }
+    /// Whether the drive dialog's alert is shown. SwiftUI sets it to false when the alert goes away; that dismisses the dialog.
+    var isDriveDialogPresented: Bool { get set }
 
     func sheetViewController() -> UIViewController
     func onLocateClick()
@@ -25,6 +28,8 @@ protocol MapComponentModelProtocol: AnyObject {
     func onMapLongPress(_ point: DomainGeoPoint)
     func onProfileClick()
     func onRouteClick(_ id: String)
+    func onFirstDriveConfirm()
+    func onMapsAppStoreClick()
 }
 
 @Observable
@@ -43,6 +48,15 @@ final class MapComponentModel: MapComponentModelProtocol {
     var routeLines: [RouteLine] { Array(viewState.routeLines) }
     var routeBounds: DomainGeoBounds? { viewState.routeBounds }
     var showsMapButtons: Bool { viewState.showsMapButtons }
+    var driveDialog: DriveDialog? { viewState.driveDialog }
+    var isDriveDialogPresented: Bool {
+        get { viewState.driveDialog != nil }
+        set {
+            if !newValue, viewState.driveDialog != nil {
+                screen.actions.onDriveDialogDismiss()
+            }
+        }
+    }
     var sheetDetent: PresentationDetent {
         get {
             switch viewState.sheetHeight {
@@ -121,6 +135,14 @@ final class MapComponentModel: MapComponentModelProtocol {
     func onRouteClick(_ id: String) {
         screen.actions.onRouteClick(routeId: id)
     }
+
+    func onFirstDriveConfirm() {
+        screen.actions.onFirstDriveConfirm()
+    }
+
+    func onMapsAppStoreClick() {
+        screen.actions.onMapsAppStoreClick()
+    }
 }
 
 #if DEBUG
@@ -157,6 +179,8 @@ final class MapComponentModelMock: MapComponentModelProtocol {
     var routeLines: [RouteLine] = []
     var routeBounds: DomainGeoBounds?
     var showsMapButtons = true
+    var driveDialog: DriveDialog?
+    var isDriveDialogPresented = false
 
     func sheetViewController() -> UIViewController {
         UIViewController()
@@ -167,5 +191,7 @@ final class MapComponentModelMock: MapComponentModelProtocol {
     func onMapLongPress(_ point: DomainGeoPoint) {}
     func onProfileClick() {}
     func onRouteClick(_ id: String) {}
+    func onFirstDriveConfirm() {}
+    func onMapsAppStoreClick() {}
 }
 #endif

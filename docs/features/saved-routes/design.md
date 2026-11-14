@@ -70,13 +70,13 @@ the route isn't planned again.
 2. **Summary:** the total time and distance, the facts line and the fun meter.
 3. **Notes**, when they apply:
     - "Starts 12 km from you. Apple Maps takes you there first." (Google Maps on Android), when the start is more
-      than about 1 km from the user ([Drive](../drive/design.md#route-that-starts-elsewhere)). Without location
+      than about 1 km from the user ([Drive](../drive/README.md#design)). Without location
       access: "Starts in Smíchov."
     - "Needs a motorway vignette", when the route uses motorways that need one, whatever Settings say.
 4. **Saved** (tonal) and **Drive** (filled, wider). Tapping Saved removes the route from saved routes; the sheet
    stays, and the button reads Save again.
 5. **Attribution:** "Route data © OpenStreetMap contributors". On Android, "Routing provided by Spirited Driving"
-   comes first ([Drive](../drive/design.md#routing-provided-by-android)).
+   comes first ([Drive](../drive/README.md#design)).
 
 Close and Back (Android) go to the search step.
 
