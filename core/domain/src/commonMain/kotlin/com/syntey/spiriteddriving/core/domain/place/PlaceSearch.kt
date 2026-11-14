@@ -4,7 +4,7 @@ import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 
 /**
- * Finds places by what the user typed, from the backend.
+ * Finds places by what the user typed, and names points on the map, from the backend.
  */
 interface PlaceSearch {
 
@@ -13,4 +13,10 @@ interface PlaceSearch {
      * with the same name, nearest first. Throws [OfflineException] without a connection.
      */
     suspend fun search(text: String, near: GeoPoint?): List<PlaceSuggestion>
+
+    /**
+     * The nearest named place or address to [point], with [point] as its location; null when no place is near it. Throws
+     * [OfflineException] without a connection.
+     */
+    suspend fun placeAt(point: GeoPoint): Place?
 }

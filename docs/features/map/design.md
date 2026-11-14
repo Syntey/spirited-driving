@@ -2,8 +2,8 @@
 
 > **Status:** partly built, being iterated. Last updated 2026-11-12.
 >
-> What's left to build of the [Map](README.md) screen: the content of the half-height sheet, and picking a point. The
-> rest is built; the decisions behind it are in the README's [Design](README.md#design) section.
+> What's left to build of the [Map](README.md) screen: the content of the half-height sheet, and what picking a point
+> leads to. The rest is built; the decisions behind it are in the README's [Design](README.md#design) section.
 > The search step of the sheet is designed in [Destination search](../destination-search/design.md). Uses the
 > [Theme](../../theme.md); how the screen is built per platform is in
 > [Architecture](../../architecture.md#how-the-map-screen-is-built).
@@ -21,10 +21,10 @@ Dragged up to half height with the field empty, the sheet shows:
 
 ## Picking a point
 
-**Long-press** a point: haptic tap, a pin drops, and the sheet moves to
-[Route planning](../route-planning/README.md) for that point. While the user is choosing the start, it becomes the
-start instead. Its label comes from a reverse lookup
-([Destination search](../destination-search/design.md#points-picked-on-the-map)).
+Touching and holding the map is built: a haptic tap, a pin, and the point's name from a reverse lookup
+([Destination search](../destination-search/README.md#design)). Still to come: the sheet moves to
+[Route planning](../route-planning/README.md) for that point, and while the user is choosing the start, it becomes the
+start instead.
 
 ## Copy
 

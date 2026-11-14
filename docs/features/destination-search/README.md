@@ -43,7 +43,7 @@ Most searches are for a place the user already knows, so search is built to find
 
 The search is a step of the map's sheet: `TripPlanComponent` in `:feature:map` holds it, and `TripPlanSheetUi` draws
 the field, recent places and the suggestions on both platforms. The code holds its layout and copy; these are the
-decisions behind it. What isn't built yet, the start and points picked on the map, is still in [design.md](design.md).
+decisions behind it. What isn't built yet, the start, is still in [design.md](design.md).
 
 - **Tapping the field moves the sheet to full height,** with the keyboard. Dragging the sheet lower or scrolling the
   list hides the keyboard and keeps the text. Close (X on iOS, the back arrow or Back on Android) clears the text and
@@ -66,8 +66,15 @@ decisions behind it. What isn't built yet, the start and points picked on the ma
   waiting for the list to be saved.
 - **A recent place outside the covered area is dimmed,** as a suggestion is, in case the area shrinks; while the
   covered area isn't loaded, every recent place counts as covered, since it was when it was chosen.
-- **Until picking a point exists, the empty field without recent places shows "Search for a place."** The designed
-  hint also teaches touching and holding the map, which comes with [Route planning](../route-planning/README.md).
+- **The empty field without recent places teaches touching and holding the map,** the gesture the map doesn't show.
+  The no-results text says it too.
+- **A point picked on the map is named by the backend's reverse lookup,** after its pin drops, so the pin never waits
+  for the network. The pin goes where the finger was, and the camera stays, as the user is already looking there.
+- **A point with no address nearby, or whose lookup failed, is kept unnamed:** its row reads "Point on the map", with
+  its coordinates as the area. It's kept without a name, not with that label, so the label isn't saved in one language,
+  and planning can leave the name out for the backend to fill in.
+- **Whether a picked point is covered is checked on the device,** against the covered area kept there, so a point
+  outside it is explained at once and offline, without a pin.
 - **Matching ignores case and diacritics,** with one character folded to one, so the bold parts of a name line up with
   what was typed: "karlst" bolds "Karlšt". A word matches from its start only.
 - **Distances are straight lines from the user** in the units of the phone's region, miles in the US and the UK, until
@@ -77,8 +84,8 @@ decisions behind it. What isn't built yet, the start and points picked on the ma
   language where the map data has it.
 - **A slow search shows the car spinner** in place of the clear button after 0.5 s, so nothing in the field moves.
 - **Offline and failed searches say which it is,** each with Try again, below the recent places that match; no results has no button, as searching again
-  means changing the text. Until picking a point exists, its text doesn't mention touching and holding the map.
-- **Until Route planning exists, choosing a place only drops its pin** on the [Map](../map/README.md#design). A place
+  means changing the text.
+- **Until Route planning exists, choosing a place or picking a point only drops its pin** on the [Map](../map/README.md#design). A place
   outside the covered area is dimmed, and tapping it explains that routes start and end in Czechia for now.
 - **Ordering places with the same name by the map's centre,** without location access, comes in a later slice; the
   user's location already orders them.

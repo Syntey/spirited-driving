@@ -3,6 +3,7 @@ import MapKit
 import SwiftUI
 
 /// The map's MapKit view. It follows the user's location while `map.followsUser` is set, and reports when the user pans it.
+/// Touching and holding it picks a point, with a haptic tap.
 struct MapView: UIViewRepresentable {
     // Businesses and transit, as the Android map hides them
     private static let hiddenCategories: [MKPointOfInterestCategory] = [
@@ -22,15 +23,22 @@ struct MapView: UIViewRepresentable {
     private let map: RouteMapState
     private let bottomMargin: CGFloat
     private let onPanned: () -> Void
+    private let onLongPress: (DomainGeoPoint) -> Void
 
-    init(map: RouteMapState, bottomMargin: CGFloat, onPanned: @escaping () -> Void) {
+    init(
+        map: RouteMapState,
+        bottomMargin: CGFloat,
+        onPanned: @escaping () -> Void,
+        onLongPress: @escaping (DomainGeoPoint) -> Void
+    ) {
         self.map = map
         self.bottomMargin = bottomMargin
         self.onPanned = onPanned
+        self.onLongPress = onLongPress
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onPanned: onPanned)
+        Coordinator(onPanned: onPanned, onLongPress: onLongPress)
     }
 
     func makeUIView(context: Context) -> MKMapView {
@@ -39,6 +47,8 @@ struct MapView: UIViewRepresentable {
         configuration.pointOfInterestFilter = MKPointOfInterestFilter(excluding: Self.hiddenCategories)
         mapView.preferredConfiguration = configuration
         mapView.delegate = context.coordinator
+        let longPress = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleLongPress(_:)))
+        mapView.addGestureRecognizer(longPress)
         // Its own margins only: inherited ones grow while the sheet is at full height, and MapKit fits regions inside the
         // margins, so a destination chosen then would show zoomed out at the bottom edge
         mapView.preservesSuperviewLayoutMargins = false
@@ -58,6 +68,7 @@ struct MapView: UIViewRepresentable {
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
         context.coordinator.onPanned = onPanned
+        context.coordinator.onLongPress = onLongPress
         mapView.showsUserLocation = map.showsUserLocation
         mapView.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: bottomMargin, right: 0)
         if map.coveredArea != context.coordinator.coveredArea {
@@ -102,14 +113,18 @@ struct MapView: UIViewRepresentable {
 
     final class Coordinator: NSObject, MKMapViewDelegate {
         var onPanned: () -> Void
+        var onLongPress: (DomainGeoPoint) -> Void
+        // Kept between presses, so the first tap is not late
+        private let impact = UIImpactFeedbackGenerator(style: .medium)
         var isChangingMode = false
         var shownOverviewRequest: Int32 = 0
         var coveredArea: [DomainGeoPolygon] = []
         private var coveredOverlays: [MKOverlay] = []
         private var destination: (point: DomainGeoPoint, annotation: MKPointAnnotation)?
 
-        init(onPanned: @escaping () -> Void) {
+        init(onPanned: @escaping () -> Void, onLongPress: @escaping (DomainGeoPoint) -> Void) {
             self.onPanned = onPanned
+            self.onLongPress = onLongPress
         }
 
         func mapView(_ mapView: MKMapView, didChange mode: MKUserTrackingMode, animated: Bool) {
@@ -117,6 +132,18 @@ struct MapView: UIViewRepresentable {
             if mode == .none, !isChangingMode {
                 onPanned()
             }
+        }
+
+        // MARK: Gestures
+
+        @objc
+        func handleLongPress(_ recognizer: UILongPressGestureRecognizer) {
+            guard recognizer.state == .began, let mapView = recognizer.view as? MKMapView else {
+                return
+            }
+            let coordinate = mapView.convert(recognizer.location(in: mapView), toCoordinateFrom: mapView)
+            impact.impactOccurred()
+            onLongPress(DomainGeoPoint(latitude: coordinate.latitude, longitude: coordinate.longitude))
         }
 
         func showCoveredArea(_ area: [DomainGeoPolygon], on mapView: MKMapView) {

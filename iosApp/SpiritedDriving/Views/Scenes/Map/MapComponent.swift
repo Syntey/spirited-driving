@@ -19,8 +19,13 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            MapView(map: model.map, bottomMargin: model.collapsedSheetHeight + Layout.sheetBottomInset, onPanned: model.onMapPanned)
-                .ignoresSafeArea()
+            MapView(
+                map: model.map,
+                bottomMargin: model.collapsedSheetHeight + Layout.sheetBottomInset,
+                onPanned: model.onMapPanned,
+                onLongPress: model.onMapLongPress
+            )
+            .ignoresSafeArea()
             buttons
         }
         .sheet(isPresented: .constant(true)) {

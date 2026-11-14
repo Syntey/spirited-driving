@@ -6,6 +6,7 @@ import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnStart
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
+import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.core.domain.settings.Note
@@ -19,6 +20,7 @@ import com.syntey.spiriteddriving.feature.map.domain.GetRecentPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
+import com.syntey.spiriteddriving.feature.map.domain.NamePointUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
@@ -28,6 +30,7 @@ import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCa
 import com.syntey.spiriteddriving.feature.map.domain.MIN_SEARCH_LENGTH
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase.SearchUpdate
+import com.syntey.spiriteddriving.feature.map.domain.unnamedPlace
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
@@ -53,6 +56,7 @@ internal class TripPlanComponent(
     private val getRecentPlacesUseCase: GetRecentPlacesUseCase,
     private val addRecentPlaceUseCase: AddRecentPlaceUseCase,
     private val removeRecentPlaceUseCase: RemoveRecentPlaceUseCase,
+    private val namePointUseCase: NamePointUseCase,
 ) : ScreenComponent<TripPlanViewState, TripPlanUiEvent, TripPlanScreenNavigation>(
     componentContext = componentContext,
     defaultState = TripPlanViewState(),
@@ -129,16 +133,39 @@ internal class TripPlanComponent(
     }
 
     private fun choose(place: Place) {
-        addRecentPlaceUseCase.execute(place) {
-            onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
-            onError { error -> logger.e(error) { "Recent place not kept" } }
-        }
+        // A point still being named would otherwise land on top of the recent places after this one
+        useCaseJobPool[namePointUseCase]?.cancel()
+        keep(place)
         componentState.update { it.copy(map = it.map.withDestination(place.location)) }
         closeSearch()
     }
 
+    private fun keep(place: Place) {
+        addRecentPlaceUseCase.execute(place) {
+            onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
+            onError { error -> logger.e(error) { "Recent place not kept" } }
+        }
+    }
+
     override fun onLocateClick() = locate()
     override fun onMapPanned() = componentState.update { it.copy(map = it.map.copy(followsUser = false)) }
+
+    // The pin drops at once; the name comes later and only reaches the recent places
+    override fun onMapLongPress(point: GeoPoint) {
+        if (!componentState.value.map.covers(point)) {
+            sendUiEvent(TripPlanUiEvent.NotCovered)
+            return
+        }
+        componentState.update { it.copy(map = it.map.withPickedPoint(point)) }
+        closeSearch()
+        namePointUseCase.execute(point) {
+            onSuccess { place -> keep(place) }
+            onError { error ->
+                if (error !is OfflineException) logger.e(error) { "Point not named" }
+                keep(unnamedPlace(point))
+            }
+        }
+    }
 
     // Profile isn't built yet
     override fun onProfileClick() = Unit

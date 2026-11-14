@@ -16,6 +16,7 @@ protocol MapComponentModelProtocol: AnyObject {
     func sheetViewController() -> UIViewController
     func onLocateClick()
     func onMapPanned()
+    func onMapLongPress(_ point: DomainGeoPoint)
     func onProfileClick()
 }
 
@@ -98,6 +99,10 @@ final class MapComponentModel: MapComponentModelProtocol {
         screen.actions.onMapPanned()
     }
 
+    func onMapLongPress(_ point: DomainGeoPoint) {
+        screen.actions.onMapLongPress(point: point)
+    }
+
     func onProfileClick() {
         screen.actions.onProfileClick()
     }
@@ -139,6 +144,7 @@ final class MapComponentModelMock: MapComponentModelProtocol {
 
     func onLocateClick() {}
     func onMapPanned() {}
+    func onMapLongPress(_ point: DomainGeoPoint) {}
     func onProfileClick() {}
 }
 #endif
