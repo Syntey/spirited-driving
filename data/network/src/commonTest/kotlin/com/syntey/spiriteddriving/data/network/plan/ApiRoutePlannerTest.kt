@@ -5,12 +5,14 @@ import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.metres
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Budget
+import com.syntey.spiriteddriving.core.domain.route.OutsideCoverageException
 import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.route.TripRequest
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
 import com.syntey.spiriteddriving.data.network.api.createSpiritedDrivingApi
 import com.syntey.spiriteddriving.data.network.injection.NetworkModule
 import com.syntey.spiriteddriving.data.network.plugin.ContentNegotiationPlugin
+import com.syntey.spiriteddriving.data.network.result.NetworkError
 import com.syntey.spiriteddriving.data.network.result.NetworkErrorParser
 import com.syntey.spiriteddriving.data.network.result.NetworkResultConverterFactory
 import de.jensklingenberg.ktorfit.Ktorfit
@@ -30,6 +32,7 @@ import kotlinx.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -114,11 +117,46 @@ class ApiRoutePlannerTest {
     fun `server error is thrown as an HTTP error with its status`() = runTest {
         val planner = planner { respond(content = "", status = HttpStatusCode.ServiceUnavailable) }
 
-        val error = assertFailsWith<com.syntey.spiriteddriving.data.network.result.NetworkError.HttpError> {
+        val error = assertFailsWith<NetworkError.HttpError> {
             planner.plan(request())
         }
 
         assertEquals(503, error.statusCode)
+    }
+
+    @Test
+    fun `outside the covered area is thrown as outside coverage with the HTTP error as its cause`() = runTest {
+        val planner = planner { respondProblem(RECORDED_OUTSIDE_COVERAGE, HttpStatusCode.UnprocessableEntity) }
+
+        val error = assertFailsWith<OutsideCoverageException> { planner.plan(request()) }
+
+        val cause = assertIs<NetworkError.HttpError>(error.cause)
+        assertEquals(422, cause.statusCode)
+        assertEquals("OUTSIDE_COVERAGE", cause.code)
+    }
+
+    @Test
+    fun `no route is thrown as the HTTP error with its problem code`() = runTest {
+        val planner = planner {
+            respondProblem(
+                content = PROBLEM_NO_ROUTE,
+                status = HttpStatusCode.UnprocessableEntity,
+            )
+        }
+
+        val error = assertFailsWith<NetworkError.HttpError> { planner.plan(request()) }
+
+        assertEquals("NO_ROUTE", error.code)
+    }
+
+    @Test
+    fun `server error with an empty body is thrown as the HTTP error without a code`() = runTest {
+        val planner = planner { respond(content = "", status = HttpStatusCode.InternalServerError) }
+
+        val error = assertFailsWith<NetworkError.HttpError> { planner.plan(request()) }
+
+        assertEquals(500, error.statusCode)
+        assertNull(error.code)
     }
 
     @Test
@@ -166,7 +204,19 @@ class ApiRoutePlannerTest {
         headers = headersOf(HttpHeaders.ContentType to listOf("application/json")),
     )
 
+    private fun MockRequestHandleScope.respondProblem(content: String, status: HttpStatusCode) = respond(
+        content = content,
+        status = status,
+        headers = headersOf(HttpHeaders.ContentType to listOf("application/problem+json")),
+    )
+
     private companion object {
+        // Recorded from the local backend
+        const val RECORDED_OUTSIDE_COVERAGE =
+            """{"title":"Outside the covered area","status":422,"code":"OUTSIDE_COVERAGE","outside":["DESTINATION"],"type":"about:blank"}"""
+
+        const val PROBLEM_NO_ROUTE = """{"type":"about:blank","title":"No route","status":422,"code":"NO_ROUTE"}"""
+
         // Recorded from the local backend. The polylines and the hand-off waypoints are trimmed, so the lines are
         // shorter than the real routes; the ids, durations and stats are as the backend sent them.
         const val RECORDED_RESPONSE =

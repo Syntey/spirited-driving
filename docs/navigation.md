@@ -32,7 +32,7 @@ The map stays on screen while the user searches and plans. A sheet at the bottom
    [Route planning](features/route-planning/README.md) in the sheet, with the routes drawn on the map.
    Without a usable location (precise, inside the covered area), the search for the start comes first.
    "From" in route planning opens the same search for the start
-   ([design](features/destination-search/design.md#two-uses-of-one-step)).
+   ([design](features/destination-search/README.md#design)).
 3. **One route.** A route chosen from Saved routes or Trip history shows on its own, with its details and Drive.
    There is no budget: the route isn't planned again
    ([design](features/saved-routes/design.md#a-saved-route-on-the-map)).

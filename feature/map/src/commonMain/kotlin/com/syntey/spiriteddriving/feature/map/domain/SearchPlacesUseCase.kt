@@ -9,11 +9,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.launch
 import org.koin.core.annotation.Factory
-import kotlin.time.Duration.Companion.milliseconds
+import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 /**
  * Suggestions for what the user typed. The search waits for a pause in typing, so each keystroke doesn't search. Text
- * shorter than [MIN_SEARCH_LENGTH] characters finds nothing, at once. A search that takes longer than 0.5 s first emits
+ * shorter than [Constants.Search.MIN_LENGTH] characters finds nothing, at once. A search that takes longer than 0.5 s first emits
  * [SearchUpdate.Slow], so the sheet can show that it's still working.
  */
 @Factory
@@ -22,13 +22,13 @@ internal class SearchPlacesUseCase(private val placeSearch: PlaceSearch) :
 
     override fun build(args: Args): Flow<SearchUpdate> = channelFlow {
         val text = args.text.trim()
-        if (text.length < MIN_SEARCH_LENGTH) {
+        if (text.length < Constants.Search.MIN_LENGTH) {
             send(SearchUpdate.Found(emptyList()))
             return@channelFlow
         }
-        delay(TYPING_PAUSE)
+        delay(Constants.Search.TYPING_PAUSE)
         val slowNotice = launch {
-            delay(SLOW_AFTER)
+            delay(Constants.Search.SLOW_AFTER)
             send(SearchUpdate.Slow)
         }
         val suggestions = placeSearch.search(text, args.near)
@@ -48,12 +48,4 @@ internal class SearchPlacesUseCase(private val placeSearch: PlaceSearch) :
         /** The answer for the text: [suggestions], best match first. */
         data class Found(val suggestions: List<PlaceSuggestion>) : SearchUpdate
     }
-
-    private companion object {
-        val TYPING_PAUSE = 300.milliseconds
-        val SLOW_AFTER = 500.milliseconds
-    }
 }
-
-/** The shortest text that is searched for. */
-internal const val MIN_SEARCH_LENGTH = 2

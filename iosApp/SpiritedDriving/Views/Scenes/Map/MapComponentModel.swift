@@ -147,7 +147,8 @@ final class MapComponentModelMock: MapComponentModelProtocol {
             )
         ],
         overviewRequest: 0,
-        destination: nil
+        destination: nil,
+        start: nil
     )
     var locateButton = LocateButton.following
     var collapsedSheetHeight: CGFloat = 82

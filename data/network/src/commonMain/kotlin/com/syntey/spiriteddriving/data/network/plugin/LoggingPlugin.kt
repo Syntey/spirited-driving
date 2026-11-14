@@ -1,21 +1,17 @@
 package com.syntey.spiriteddriving.data.network.plugin
 
 import io.ktor.client.HttpClientConfig
-import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import org.koin.core.annotation.Single
+import com.syntey.spiriteddriving.data.network.tools.Constants
 
 @Single
 internal class LoggingPlugin : HttpClientPlugin {
 
-    companion object {
-        private val LOG_LEVEL = LogLevel.ALL
-    }
-
     override fun install(config: HttpClientConfig<*>) {
         config.install(Logging) {
-            this.level = LOG_LEVEL
+            this.level = Constants.Http.LOG_LEVEL
             this.logger = KtorKermitLogger()
         }
     }

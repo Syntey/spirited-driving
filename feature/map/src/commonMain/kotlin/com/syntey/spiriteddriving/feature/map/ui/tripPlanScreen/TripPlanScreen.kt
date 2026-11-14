@@ -3,6 +3,8 @@ package com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
+import com.syntey.spiriteddriving.core.domain.route.Budget
+import com.syntey.spiriteddriving.core.domain.route.BudgetKind
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +29,7 @@ interface TripPlanScreen {
         /** Tapped the clear button in the search field. */
         fun onSearchClear()
 
-        /** Closed the search: Cancel on iOS, the back arrow or Back on Android. */
+        /** Closed the search or the start step: Cancel on iOS, the back arrow or Back on Android. */
         fun onSearchClose()
 
         /** Dragged the sheet to [height]. */
@@ -42,6 +44,12 @@ interface TripPlanScreen {
         /** Swiped a recent place away. */
         fun onRecentPlaceRemove(place: Place)
 
+        /** Tapped "From" in route planning's header. */
+        fun onStartClick()
+
+        /** Tapped My location in the start step. */
+        fun onMyLocationClick()
+
         /** Tapped Try again after a failed search. */
         fun onSearchRetry()
 
@@ -51,11 +59,17 @@ interface TripPlanScreen {
         /** Moved the map by hand, so it stops following the user. */
         fun onMapPanned()
 
-        /** Touched and held the map at [point]. */
+        /** Touched and held the map at [point]: the start while the start step is open, else the destination. */
         fun onMapLongPress(point: GeoPoint)
 
         /** Tapped a route in the list or its line on the map. */
         fun onRouteClick(routeId: String)
+
+        /** Tapped a budget chip. */
+        fun onBudgetClick(budget: Budget)
+
+        /** Switched the budget's unit. */
+        fun onBudgetKindChange(kind: BudgetKind)
 
         /** Closed route planning: Cancel, or Back on Android. */
         fun onRoutePlanningClose()
@@ -82,11 +96,15 @@ interface TripPlanScreen {
                 override fun onSuggestionClick(suggestion: PlaceSuggestion) = Unit
                 override fun onRecentPlaceClick(place: Place) = Unit
                 override fun onRecentPlaceRemove(place: Place) = Unit
+                override fun onStartClick() = Unit
+                override fun onMyLocationClick() = Unit
                 override fun onSearchRetry() = Unit
                 override fun onLocateClick() = Unit
                 override fun onMapPanned() = Unit
                 override fun onMapLongPress(point: GeoPoint) = Unit
                 override fun onRouteClick(routeId: String) = Unit
+                override fun onBudgetClick(budget: Budget) = Unit
+                override fun onBudgetKindChange(kind: BudgetKind) = Unit
                 override fun onRoutePlanningClose() = Unit
                 override fun onPlanningRetry() = Unit
                 override fun onProfileClick() = Unit

@@ -10,9 +10,18 @@ sealed class NetworkError(message: String?, cause: Throwable?) : RuntimeExceptio
     /**
      * Represents an error that occurred on the cloud but the HTTP response code was not successful.
      */
-    class HttpError(val statusCode: Int, message: String?) : NetworkError(message = message, cause = null) {
+    class HttpError(
+        val statusCode: Int,
+        message: String?,
+        /**
+         * The Problem `code` the backend sent, or null when the body has none. An unknown code counts as a failure of its
+         * status.
+         */
+        val code: String? = null,
+    ) : NetworkError(message = message, cause = null) {
 
-        internal constructor(statusCode: HttpStatusCode) : this(statusCode = statusCode.value, message = statusCode.description)
+        internal constructor(statusCode: HttpStatusCode, code: String? = null) :
+            this(statusCode = statusCode.value, message = statusCode.description, code = code)
     }
 
     class SerializationError(cause: Throwable?) : NetworkError(message = cause?.message, cause = cause)

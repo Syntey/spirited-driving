@@ -121,7 +121,7 @@ class DistanceTextTest {
     }
 
     @Test
-    fun `a climb in miles is in feet, rounded to 10 feet`() {
+    fun `a climb in miles is in feet rounded to 10 feet`() {
         assertEquals(ft("2,660"), heightText(811.0.metres, DistanceUnit.Miles))
     }
 

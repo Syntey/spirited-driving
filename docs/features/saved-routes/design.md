@@ -28,7 +28,7 @@ Opens from the Saved routes row on the map ([Navigation](../../navigation.md#sav
 - **Each row:**
     - the name
     - "From Smíchov · 1 h 05 · 58 km": the start's area, the total time and the distance
-    - the fun meter, as in the [route list](../route-planning/design.md#route-list)
+    - the fun meter, as in the [route list](../route-planning/README.md#design)
     - a more button with **Rename** and **Delete**
 - The extra over the fastest route isn't shown: it was measured from that start, on that day.
 - Tapping a row closes the list and shows the route on the map ([below](#a-saved-route-on-the-map)).

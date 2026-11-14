@@ -130,16 +130,24 @@ enum MapRouteLabels {
 }
 
 extension MapView.Coordinator {
-    // MARK: Route labels
+    // MARK: Annotation views
 
+    // The start ring and the route labels have views of their own; the destination keeps MapKit's default pin
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        guard annotation is RouteLabelAnnotation else {
+        switch annotation {
+        case is StartAnnotation:
+            let view = mapView.dequeueReusableAnnotationView(withIdentifier: StartPinView.reuseIdentifier)
+                ?? StartPinView(annotation: annotation, reuseIdentifier: StartPinView.reuseIdentifier)
+            view.annotation = annotation
+            return view
+        case is RouteLabelAnnotation:
+            let view = mapView.dequeueReusableAnnotationView(withIdentifier: RouteLabelView.reuseIdentifier)
+                as? RouteLabelView
+                ?? RouteLabelView(annotation: annotation, reuseIdentifier: RouteLabelView.reuseIdentifier)
+            view.annotation = annotation
+            return view
+        default:
             return nil
         }
-        let view = mapView.dequeueReusableAnnotationView(withIdentifier: RouteLabelView.reuseIdentifier)
-            as? RouteLabelView
-            ?? RouteLabelView(annotation: annotation, reuseIdentifier: RouteLabelView.reuseIdentifier)
-        view.annotation = annotation
-        return view
     }
 }
