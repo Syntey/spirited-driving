@@ -1,5 +1,11 @@
 package com.syntey.spiriteddriving.android.ui.navigation
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,9 +41,23 @@ fun RootNavHostUi(
             is RootChild.Map -> MapScreenUi(screen = childInstance.screen, modifier = Modifier.fillMaxSize())
             null -> ApplicationLoading(Modifier.fillMaxSize())
         }
-        when (val sheetInstance = sheet.child?.instance) {
-            is RootSheetChild.Profile -> ProfileNavHostUi(navHost = sheetInstance.navHost, modifier = Modifier.fillMaxSize())
-            null -> Unit
+        // Slides in over the map like a pushed screen, and keeps the last child on screen while it slides out
+        AnimatedContent(
+            targetState = sheet.child?.instance,
+            transitionSpec = {
+                if (targetState != null) {
+                    slideInHorizontally { it } togetherWith ExitTransition.None
+                } else {
+                    EnterTransition.None togetherWith slideOutHorizontally { it }
+                }
+            },
+            contentKey = { it?.let { instance -> instance::class } },
+            label = "RootSheet",
+        ) { sheetInstance ->
+            when (sheetInstance) {
+                is RootSheetChild.Profile -> ProfileNavHostUi(navHost = sheetInstance.navHost, modifier = Modifier.fillMaxSize())
+                null -> Box(Modifier.fillMaxSize())
+            }
         }
     }
 }
