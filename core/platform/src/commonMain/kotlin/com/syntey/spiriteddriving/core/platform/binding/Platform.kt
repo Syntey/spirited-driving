@@ -34,4 +34,13 @@ interface Platform {
      * Get device model eg. Pixel 5, or iPhone 15 Pro, etc.
      */
     val deviceModel: String
+
+    /**
+     * The languages the user prefers, most preferred first, as BCP 47 tags such as "cs-CZ". Read each time, so a change in
+     * the system settings applies at once.
+     */
+    val preferredLanguages: List<String>
+
+    /** The phone's region as an ISO 3166-1 alpha-2 code, such as "CZ"; null when it has none. */
+    val regionCode: String?
 }
