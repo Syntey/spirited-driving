@@ -1,8 +1,9 @@
 # Settings
 
-> **Status:** draft, MVP. Last updated 2026-11-13.
+> **Status:** draft, MVP. Last updated 2026-11-14.
 
-The user's preferences for planning, plus information about the app. Its screens are in [design.md](design.md).
+The user's preferences for planning, plus feedback and information about the app. Its screens are in
+[design.md](design.md).
 
 ## What the user can do
 
@@ -44,4 +45,4 @@ Receives feedback, with the app version, OS version and phone model, and no user
 
 ## Open questions
 
-1. **Earning money:** how the app earns money is still open. Any in-app purchase goes in Settings.
+1. **Earning money:** how the app earns money is still open. Any in-app purchase goes on Profile, not in Settings.

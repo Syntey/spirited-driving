@@ -18,6 +18,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreenUi
@@ -38,6 +39,7 @@ fun ProfileNavHostUi(
         is ProfileChild.Profile -> MR.strings.profile_screen_title
         is ProfileChild.Settings -> MR.strings.settings_screen_title
         is ProfileChild.Feedback -> MR.strings.feedback_screen_title
+        is ProfileChild.About -> MR.strings.about_screen_title
     }
 
     Scaffold(
@@ -69,6 +71,7 @@ fun ProfileNavHostUi(
                 is ProfileChild.Profile -> ProfileScreenUi(screen = instance.screen, modifier = Modifier.fillMaxSize())
                 is ProfileChild.Settings -> SettingsScreenUi(screen = instance.screen, modifier = Modifier.fillMaxSize())
                 is ProfileChild.Feedback -> FeedbackScreenUi(screen = instance.screen, modifier = Modifier.fillMaxSize())
+                is ProfileChild.About -> AboutScreenUi(screen = instance.screen, modifier = Modifier.fillMaxSize())
             }
         }
     }

@@ -153,7 +153,18 @@
     <!-- Profile -->
     <string name="profile_screen_title">Profile</string>
     <string name="profile_settings">Settings</string>
-    <string name="profile_settings_supporting">Units, vignettes, about the app</string>
+    <string name="profile_settings_supporting">Units, vignettes, reminders</string>
+    <string name="profile_feedback">Feedback</string>
+    <string name="profile_rate">Rate Spirited Driving</string>
+    <string name="profile_send_feedback">Send feedback</string>
+    <string name="profile_about">About Spirited Driving</string>
+
+    <!-- About -->
+    <string name="about_screen_title">About</string>
+    <string name="about_privacy_policy">Privacy policy</string>
+    <string name="about_terms">Terms</string>
+    <string name="about_version">Version</string>
+    <string name="about_version_value">%1$s (%2$s)</string>
 
     <!-- Settings -->
     <string name="settings_screen_title">Settings</string>
@@ -166,16 +177,8 @@
     <string name="settings_notifications_footer">A quiet notification after a drive, asking how the route was.</string>
     <string name="settings_on">On</string>
     <string name="settings_off">Off</string>
-    <string name="settings_feedback">Feedback</string>
-    <string name="settings_rate">Rate Spirited Driving</string>
-    <string name="settings_about">About</string>
-    <string name="settings_privacy_policy">Privacy policy</string>
-    <string name="settings_terms">Terms</string>
-    <string name="settings_version">Version</string>
-    <string name="settings_version_value">%1$s (%2$s)</string>
 
     <!-- Send feedback -->
-    <string name="settings_send_feedback">Send feedback</string>
     <string name="feedback_screen_title">Send feedback</string>
     <string name="feedback_placeholder">What\'s on your mind?</string>
     <string name="feedback_sent_with">Sent with: %1$s %2$s (%3$s) · %4$s · %5$s</string>

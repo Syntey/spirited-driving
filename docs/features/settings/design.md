@@ -1,21 +1,21 @@
 # Settings screens
 
-> **Status:** draft, being iterated. Last updated 2026-11-13.
+> **Status:** draft, being iterated. Last updated 2026-11-14.
 >
-> The design for [Settings](README.md): the Settings screen and Licences. Uses the [Theme](../../theme.md); Settings
-> opens from [Profile](../account/design.md#profile) ([Navigation](../../navigation.md#profile)).
+> The design for [Settings](README.md): the Settings screen, the Feedback rows, About, Licences and Send feedback.
+> Uses the [Theme](../../theme.md). Settings, the Feedback rows and About are on
+> [Profile](../account/design.md#profile) ([Navigation](../../navigation.md#profile)).
 
 ## Settings
 
-One list in five groups, top to bottom. It looks and works the same signed in or out.
+Only the user's preferences, in three groups, top to bottom. It looks and works the same signed in or out. Feedback
+and About are on Profile.
 
 | Group              | Rows                                      | Footer                                                        |
 |--------------------|-------------------------------------------|---------------------------------------------------------------|
 | Units              | Distance: km / mi                         |                                                               |
 | Motorway vignettes | One switch per country: Czechia           | Without a vignette, routes avoid motorways that need one.     |
 | Notifications      | Drive reminders: On or Off                | A quiet notification after a drive, asking how the route was. |
-| Feedback           | Rate Spirited Driving, Send feedback      |                                                               |
-| About              | Privacy policy, Terms, Licences, Version  |                                                               |
 
 ### Units
 
@@ -43,13 +43,18 @@ and tapping it opens the phone's settings for it. The value refreshes when the u
 | Android 12 and earlier | App notifications and the "Drive reminders" channel are on | The "Drive reminders" channel's settings                 |
 | Android 13 and later   | The same, and the notification permission is granted      | Without the permission: the system prompt while Android still shows it, the app's notification settings after that. With it: the channel's settings |
 
-### Feedback
+## Feedback
+
+The Feedback group on [Profile](../account/design.md#profile).
 
 - **Rate Spirited Driving** opens the app's page in the App Store, on its write-a-review action, or in Google Play.
   It isn't the in-app review prompt: the system may decide not to show that, and the user tapped on purpose.
 - **Send feedback** opens [Send feedback](#send-feedback).
 
-### About
+## About
+
+Opens from About Spirited Driving on [Profile](../account/design.md#profile). One group: Privacy policy, Terms,
+Licences, Version.
 
 - **Privacy policy** and **Terms** open the same web pages as [First launch](../first-launch/README.md), in the
   in-app browser.
@@ -77,7 +82,7 @@ anonymous: no email and no account, even when signed in, so there's nothing to r
 - **Send** below, the large primary button, disabled while the field is blank. While sending, a spinner replaces
   its label and the field takes no input.
 - **Sent:** the form gives way to "Thanks for your feedback" and "Every message is read.", with **Done**, which
-  returns to Settings.
+  returns to Profile.
 - **Not sent:** the text stays and a message above Send says why: "You're offline. Send it again once you're
   back online." or "Couldn't send your feedback. Try again."
 - Back while the field has text leaves without asking; the text is gone.
@@ -95,6 +100,7 @@ anonymous: no email and no account, even when signed in, so there's nothing to r
 | Web links          | Arrow pointing up and right after the label            | Open-in-new icon after the label                |
 | Browser            | Safari view controller                                 | Custom Tab                                      |
 | Send feedback      | Pushed inside the Profile sheet                        | Full screen                                     |
+| About              | Pushed inside the Profile sheet                        | Full screen                                     |
 | Licences           | Pushed inside the Profile sheet                        | Full screen                                     |
 | Licence text       | Pushed, plain text                                     | Full screen, plain text                         |
 
@@ -113,7 +119,8 @@ anonymous: no email and no account, even when signed in, so there's nothing to r
 | Vignettes footer       | Without a vignette, routes avoid motorways that need one.             |
 | Notifications          | Notifications / Drive reminders / On · Off                            |
 | Notifications footer   | A quiet notification after a drive, asking how the route was.         |
-| Feedback               | Feedback / Rate Spirited Driving / Send feedback                      |
+| Feedback (Profile)     | Feedback / Rate Spirited Driving / Send feedback                      |
+| About row (Profile)    | About Spirited Driving                                                |
 | Send feedback          | Send feedback / What's on your mind? / Sent with: Spirited Driving 1.0.0 (42) · iOS 26.1 · iPhone 17 Pro / Send |
 | Feedback sent          | Thanks for your feedback / Every message is read. / Done              |
 | Feedback not sent      | You're offline. Send it again once you're back online. / Couldn't send your feedback. Try again. |
