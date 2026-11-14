@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +48,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
@@ -122,7 +120,7 @@ object ListRowDefaultColors {
     )
 }
 
-/** The card behind grouped rows, taken from [ListGroupDefaultColors]. Used on iOS only; Android rows sit on the sheet. */
+/** The card behind grouped rows, taken from [ListGroupDefaultColors]: on both platforms, rows sit on it. */
 @Immutable
 data class ListGroupColors(val containerColor: Color)
 
@@ -143,7 +141,8 @@ object ListGroupDefaultColors {
 
 /**
  * A row of a list: an optional leading icon or image, the headline, an optional supporting line and value, and an
- * optional trailing control. On iOS it's a cell of an inset grouped card at [position]; on Android a Material list item.
+ * optional trailing control. It sits on the grouped card at [position] on both platforms: iOS separates rows with
+ * hairlines, Android with small gaps.
  *
  * This overload takes a plain [headline]; see the [AnnotatedString] overload for a styled one.
  */
@@ -188,7 +187,8 @@ fun ListRow(
 
 /**
  * A row of a list: an optional leading icon or image, the headline, an optional supporting line and value, and an
- * optional trailing control. On iOS it's a cell of an inset grouped card at [position]; on Android a Material list item.
+ * optional trailing control. It sits on the grouped card at [position] on both platforms: iOS separates rows with
+ * hairlines, Android with small gaps.
  *
  * @param headline The headline, possibly with styled spans, such as the matched part of a place's name in bold.
  * @param value A setting's current value, such as "km": after the label on iOS, below it on Android.
@@ -246,13 +246,8 @@ fun ListRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = style.groupInset)
-            .then(
-                if (style.isInsetGrouped) {
-                    Modifier.clip(position.shape(AppTheme.platformStyle.cardShape.topStart))
-                } else {
-                    Modifier
-                },
-            ),
+            .padding(bottom = if (position == GroupPosition.First || position == GroupPosition.Middle) style.rowGap else Grid.d0)
+            .clip(position.shape(style.outerCorner, style.innerCorner)),
     ) {
         if (swipeDelete != null) {
             SwipeDeleteBox(delete = swipeDelete, content = row)
@@ -495,13 +490,8 @@ fun PlaceholderRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = style.groupInset)
-            .then(
-                if (style.isInsetGrouped) {
-                    Modifier.clip(position.shape(AppTheme.platformStyle.cardShape.topStart))
-                } else {
-                    Modifier
-                },
-            ),
+            .padding(bottom = if (position == GroupPosition.First || position == GroupPosition.Middle) style.rowGap else Grid.d0)
+            .clip(position.shape(style.outerCorner, style.innerCorner)),
     ) {
         // The card stays solid while the content pulses, so only the placeholder shapes fade
         Row(
@@ -536,7 +526,7 @@ fun PlaceholderRow(
     }
 }
 
-// The group's card and separators on iOS; Android rows have neither and sit on the sheet
+// The group's card, and on iOS the separators between rows
 @Composable
 private fun Modifier.rowSurface(
     style: ListStyle,
@@ -547,17 +537,11 @@ private fun Modifier.rowSurface(
     swipeDelete: IconAction?,
     isLoading: Boolean,
 ): Modifier {
-    val showsSeparator = style.isInsetGrouped && (position == GroupPosition.First || position == GroupPosition.Middle)
+    val showsSeparator = style.showsSeparators && (position == GroupPosition.First || position == GroupPosition.Middle)
     val separatorColor = MaterialTheme.colorScheme.outlineVariant
     return this
         .fillMaxWidth()
-        .then(
-            if (style.isInsetGrouped) {
-                Modifier.background(groupColors.containerColor)
-            } else {
-                Modifier
-            },
-        )
+        .background(groupColors.containerColor)
         .then(
             if (showsSeparator) {
                 Modifier.drawBehind {
@@ -642,14 +626,11 @@ private fun ListRowText(
     }
 }
 
-private fun GroupPosition.shape(corner: CornerSize): Shape {
-    val none = CornerSize(Grid.d0)
-    return when (this) {
-        GroupPosition.Alone -> RoundedCornerShape(corner)
-        GroupPosition.First -> RoundedCornerShape(topStart = corner, topEnd = corner, bottomEnd = none, bottomStart = none)
-        GroupPosition.Middle -> RectangleShape
-        GroupPosition.Last -> RoundedCornerShape(topStart = none, topEnd = none, bottomEnd = corner, bottomStart = corner)
-    }
+private fun GroupPosition.shape(outer: Dp, inner: Dp): Shape = when (this) {
+    GroupPosition.Alone -> RoundedCornerShape(outer)
+    GroupPosition.First -> RoundedCornerShape(topStart = outer, topEnd = outer, bottomEnd = inner, bottomStart = inner)
+    GroupPosition.Middle -> RoundedCornerShape(inner)
+    GroupPosition.Last -> RoundedCornerShape(topStart = inner, topEnd = inner, bottomEnd = outer, bottomStart = outer)
 }
 
 // A row faded out keeps its place and taps, so it reads as unavailable rather than missing

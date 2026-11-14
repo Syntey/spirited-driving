@@ -175,8 +175,6 @@
     <string name="settings_notifications">Notifications</string>
     <string name="settings_drive_reminders">Drive reminders</string>
     <string name="settings_notifications_footer">A quiet notification after a drive, asking how the route was.</string>
-    <string name="settings_on">On</string>
-    <string name="settings_off">Off</string>
 
     <!-- Send feedback -->
     <string name="feedback_screen_title">Send feedback</string>

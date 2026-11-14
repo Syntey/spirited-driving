@@ -51,6 +51,17 @@ fun sheetScreenViewController(content: @Composable () -> Unit): UIViewController
 }
 
 /**
+ * Like [sheetScreenViewController], for a sheet screen whose image reaches behind the sheet's navigation bar, such as
+ * Profile's header. The screen keeps the rest of its content clear of the bars itself, through `WindowInsets.safeDrawing`.
+ */
+@OptIn(ExperimentalObjCRefinement::class)
+@HiddenFromObjC
+fun sheetFullScreenViewController(content: @Composable () -> Unit): UIViewController = themedViewController(
+    background = { MaterialTheme.colorScheme.surfaceContainerLow },
+    content = content,
+)
+
+/**
  * Like [screenViewController], for a screen that draws behind the status bar and the home indicator, such as one with a
  * full-screen illustration. The screen keeps its own controls clear of them, through `WindowInsets.safeDrawing`.
  */

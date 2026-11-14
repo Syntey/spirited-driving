@@ -5,6 +5,7 @@ package com.syntey.spiriteddriving.feature.profile.ui
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import com.syntey.spiriteddriving.core.ui.sheetFullScreenViewController
 import com.syntey.spiriteddriving.core.ui.sheetScreenViewController
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreen
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenUi
@@ -16,7 +17,7 @@ import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScre
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreenUi
 import platform.UIKit.UIViewController
 
-fun ProfileScreenUiController(screen: ProfileScreen): UIViewController = sheetScreenViewController {
+fun ProfileScreenUiController(screen: ProfileScreen): UIViewController = sheetFullScreenViewController {
     ProfileScreenUi(screen = screen, modifier = Modifier.fillMaxSize())
 }
 

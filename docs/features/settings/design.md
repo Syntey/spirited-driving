@@ -15,7 +15,7 @@ and About are on Profile.
 |--------------------|-------------------------------------------|---------------------------------------------------------------|
 | Units              | Distance: km / mi                         |                                                               |
 | Motorway vignettes | One switch per country: Czechia           | Without a vignette, routes avoid motorways that need one.     |
-| Notifications      | Drive reminders: On or Off                | A quiet notification after a drive, asking how the route was. |
+| Notifications      | Drive reminders, with a switch            | A quiet notification after a drive, asking how the route was. |
 
 ### Units
 
@@ -34,8 +34,10 @@ and About are on Profile.
 
 ### Drive reminders
 
-The row shows whether the phone delivers the [drive feedback notification](../drive-feedback/design.md#notification),
-and tapping it opens the phone's settings for it. The value refreshes when the user comes back to the app.
+The row's switch shows whether the phone delivers the
+[drive feedback notification](../drive-feedback/design.md#notification); it mirrors the phone and has no state of
+its own. Tapping the row or the switch opens the phone's settings for it, or asks for permission first, as below. The
+switch refreshes when the user comes back to the app.
 
 | Platform        | On when                                                  | Tapping opens                                                     |
 |-----------------|----------------------------------------------------------|-------------------------------------------------------------------|
@@ -93,10 +95,10 @@ anonymous: no email and no account, even when signed in, so there's nothing to r
 |--------------------|--------------------------------------------------------|-------------------------------------------------|
 | Settings           | Pushed inside the Profile sheet (native navigation)    | Full screen                                     |
 | Title, back        | Native navigation bar                                  | Compose top app bar, titleLarge 22 / 28, Back   |
-| Groups             | Inset grouped, corners 22 pt, header and footer text as in iOS Settings | Group headers in titleSmall, `onSurfaceVariant`; footers in bodySmall |
+| Groups             | Inset grouped, corners 22 pt, header and footer text as in iOS Settings | A card per row, 2 dp apart, group corners 20 dp and 4 dp between rows; headers in titleSmall, `onSurfaceVariant`; footers in bodySmall |
 | Rows               | 44 pt, the value after the label, chevrons on rows that open a screen | List items 56 dp, or 72 dp with the value as supporting text; no chevrons |
-| Units switch       | Segmented control                                      | Outlined segmented button                       |
-| Vignette switch    | iOS-style switch in primary                            | Material 3 switch                               |
+| Units switch       | Pill segmented switch, the iOS control's size          | Pill segmented switch, 40 dp, labelLarge        |
+| Vignette and reminder switches | iOS-style switch in primary                | Material 3 switch                               |
 | Web links          | Arrow pointing up and right after the label            | Open-in-new icon after the label                |
 | Browser            | Safari view controller                                 | Custom Tab                                      |
 | Send feedback      | Pushed inside the Profile sheet                        | Full screen                                     |
@@ -117,7 +119,7 @@ anonymous: no email and no account, even when signed in, so there's nothing to r
 | Units                  | Units / Distance / km · mi                                            |
 | Vignettes              | Motorway vignettes / Czechia                                          |
 | Vignettes footer       | Without a vignette, routes avoid motorways that need one.             |
-| Notifications          | Notifications / Drive reminders / On · Off                            |
+| Notifications          | Notifications / Drive reminders                                       |
 | Notifications footer   | A quiet notification after a drive, asking how the route was.         |
 | Feedback (Profile)     | Feedback / Rate Spirited Driving / Send feedback                      |
 | About row (Profile)    | About Spirited Driving                                                |

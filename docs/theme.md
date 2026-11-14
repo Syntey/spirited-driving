@@ -2,7 +2,7 @@
 
 > **Status:** colours, type, shapes, glass, buttons, chips, segmented switch, rating, progress, icon buttons, menus,
 > sheet header, drag handle, the empty and error layout, notes, messages, lists, route badge, fun meter, placeholder rows and the app icon
-> built. Last updated 2026-11-11.
+> built. Last updated 2026-11-14.
 >
 > Colours, type, shapes, glass materials and the empty and error layout shared by every screen. Screen design builds
 > on this.
@@ -154,8 +154,9 @@ budget, is filled with primary; any number out of a set, such as the reasons aft
 ## Segmented switch
 
 `SegmentedSwitch`: a choice of two or three, such as km / mi in [Settings](features/settings/design.md#units) and
-min / km in [Route planning](features/route-planning/README.md#design). An outlined segmented button on Android; on iOS
-a segmented control whose selected segment is a raised pill that slides, or jumps with Reduce Motion. Screen readers
+min / km in [Route planning](features/route-planning/README.md#design). The same on both platforms: a faint
+capsule track whose selected segment is a raised pill that slides, or jumps with Reduce Motion. 40 dp high on
+Android with labelLarge, the iOS segmented control's size on iOS. Screen readers
 hear each segment by its full name, such as Kilometres.
 
 ## Rating
@@ -217,12 +218,14 @@ reach it. Screen readers read it when it appears.
 
 `ListRow` and `ListGroup` in `:core:ui`, one component styled per platform:
 
-- **iOS:** inset grouped, as in iOS Settings: rows on a card with 22 pt corners, inset 16 pt from the edges, with
-  hairline separators that start at the text. Rows are 44 pt, a value sits after the label, and rows that open a
-  screen end in a chevron. The card is white in light and `surfaceContainerHigh` in dark; over the map's glass sheet
-  it's translucent.
-- **Android:** Material list items on the sheet, 56 dp or 72 dp with a second line, with the value as that line and
-  no chevrons. Group headers in titleSmall.
+Rows always sit on cards inset 16 from the edges, white in light and `surfaceContainerHigh` in dark; over the map's
+glass sheet they're translucent.
+
+- **iOS:** inset grouped, as in iOS Settings: one card with 22 pt corners, with hairline separators that start at the
+  text. Rows are 44 pt, a value sits after the label, and rows that open a screen end in a chevron.
+- **Android:** each row is its own card, 2 dp apart, with no separators. The group's outer corners are 20 dp and the
+  corners between rows 4 dp. Rows are 56 dp, or 72 dp with the value as the second line, and have no chevrons. Group
+  headers in titleSmall.
 - Leading icons sit in a circle on `secondaryContainer`: 30 pt on iOS, 40 dp on Android.
 - A dimmed row, such as a place outside the covered area, stays tappable. A loading row shows the
   [spinner](#progress) in place of its label.

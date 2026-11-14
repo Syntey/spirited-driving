@@ -24,7 +24,6 @@ import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.feature.profile.model.ui.SettingsPreviewStates
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreen.Actions.Companion.noOpActions
-import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 
 // The order of the Units switch's segments: kilometres, then miles
@@ -91,9 +90,8 @@ private fun Content(viewState: SettingsViewState, actions: SettingsScreen.Action
             item { position ->
                 ListRow(
                     headline = stringResource(MR.strings.settings_drive_reminders),
-                    value = stringResource(if (viewState.driveRemindersOn) MR.strings.settings_on else MR.strings.settings_off),
+                    trailing = { ToggleSwitch(checked = viewState.driveRemindersOn, onCheckedChange = null) },
                     onClick = actions::onDriveRemindersClick,
-                    chevron = painterResource(MR.images.chevron_right),
                     position = position,
                 )
             }
