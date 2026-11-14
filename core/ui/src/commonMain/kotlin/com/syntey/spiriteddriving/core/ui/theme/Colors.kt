@@ -98,6 +98,8 @@ internal val DarkColors: ColorScheme = darkColorScheme(
  * the goal. Blue, green and yellow are left out, since the base maps use them for the user's location, water, parks and
  * major roads.
  *
+ * [routeCasing] is the casing around a route line on the map, so the line reads over any road colour.
+ *
  * [listGroup] is the card behind grouped rows on iOS, white in light and raised in dark, as in iOS Settings.
  * [segmentSelected] is the raised pill of the selected segment in an iOS segmented control: white in light, a light grey
  * in dark, so it stands out from the track.
@@ -109,6 +111,7 @@ data class CustomColors(
     val routeFun1: Color,
     val routeFun2: Color,
     val routeFun3: Color,
+    val routeCasing: Color,
     val listGroup: Color,
     val segmentSelected: Color,
     val systemFill: Color,
@@ -119,6 +122,7 @@ internal val LightCustomColors = CustomColors(
     routeFun1 = Color(0xFFBD162C),
     routeFun2 = Color(0xFF6E37DD),
     routeFun3 = Color(0xFF008488),
+    routeCasing = Color(0xFFFFFFFF),
     listGroup = Color(0xFFFFFFFF),
     segmentSelected = Color(0xFFFFFFFF),
     systemFill = Color(0x1F767680),
@@ -129,6 +133,7 @@ internal val DarkCustomColors = CustomColors(
     routeFun1 = Color(0xFFFC4952),
     routeFun2 = Color(0xFFAC8AFF),
     routeFun3 = Color(0xFF00BEC3),
+    routeCasing = Color(0xFF121212),
     listGroup = Color(0xFF282A2D),
     segmentSelected = Color(0xFF5B5F66),
     systemFill = Color(0x42767680),

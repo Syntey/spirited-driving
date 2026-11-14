@@ -3,7 +3,8 @@ import MapKit
 import SwiftUI
 
 /// The map's MapKit view. It follows the user's location while `map.followsUser` is set, and reports when the user pans it.
-/// Touching and holding it picks a point, with a haptic tap.
+/// Touching and holding it picks a point, with a haptic tap. While planning, it frames the routes above the sheet, and a tap
+/// on a route line picks that route.
 struct MapView: UIViewRepresentable {
     // Businesses and transit, as the Android map hides them
     private static let hiddenCategories: [MKPointOfInterestCategory] = [
@@ -21,24 +22,39 @@ struct MapView: UIViewRepresentable {
     private static let borderWidth: CGFloat = 1.5
 
     private let map: RouteMapState
+    private let routeLines: [RouteLine]
+    private let routeBounds: DomainGeoBounds?
     private let bottomMargin: CGFloat
+    private let sheetTop: CGFloat
+    private let isSheetLarge: Bool
     private let onPanned: () -> Void
     private let onLongPress: (DomainGeoPoint) -> Void
+    private let onRouteClick: (String) -> Void
 
     init(
         map: RouteMapState,
+        routeLines: [RouteLine],
+        routeBounds: DomainGeoBounds?,
         bottomMargin: CGFloat,
+        sheetTop: CGFloat,
+        isSheetLarge: Bool,
         onPanned: @escaping () -> Void,
-        onLongPress: @escaping (DomainGeoPoint) -> Void
+        onLongPress: @escaping (DomainGeoPoint) -> Void,
+        onRouteClick: @escaping (String) -> Void
     ) {
         self.map = map
+        self.routeLines = routeLines
+        self.routeBounds = routeBounds
         self.bottomMargin = bottomMargin
+        self.sheetTop = sheetTop
+        self.isSheetLarge = isSheetLarge
         self.onPanned = onPanned
         self.onLongPress = onLongPress
+        self.onRouteClick = onRouteClick
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onPanned: onPanned, onLongPress: onLongPress)
+        Coordinator(onPanned: onPanned, onLongPress: onLongPress, onRouteClick: onRouteClick)
     }
 
     func makeUIView(context: Context) -> MKMapView {
@@ -49,6 +65,9 @@ struct MapView: UIViewRepresentable {
         mapView.delegate = context.coordinator
         let longPress = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleLongPress(_:)))
         mapView.addGestureRecognizer(longPress)
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+        tap.delegate = context.coordinator
+        mapView.addGestureRecognizer(tap)
         // Its own margins only: inherited ones grow while the sheet is at full height, and MapKit fits regions inside the
         // margins, so a destination chosen then would show zoomed out at the bottom edge
         mapView.preservesSuperviewLayoutMargins = false
@@ -67,34 +86,52 @@ struct MapView: UIViewRepresentable {
     }
 
     func updateUIView(_ mapView: MKMapView, context: Context) {
-        context.coordinator.onPanned = onPanned
-        context.coordinator.onLongPress = onLongPress
+        let coordinator = context.coordinator
+        coordinator.onPanned = onPanned
+        coordinator.onLongPress = onLongPress
+        coordinator.onRouteClick = onRouteClick
         mapView.showsUserLocation = map.showsUserLocation
         mapView.layoutMargins = UIEdgeInsets(top: 0, left: 0, bottom: bottomMargin, right: 0)
-        if map.coveredArea != context.coordinator.coveredArea {
-            context.coordinator.showCoveredArea(map.coveredArea, on: mapView)
+        if map.coveredArea != coordinator.coveredArea {
+            coordinator.showCoveredArea(map.coveredArea, on: mapView)
         }
-        context.coordinator.showDestination(map.destination, on: mapView)
+        coordinator.showRouteLines(routeLines, on: mapView)
+        coordinator.showDestination(map.destination, on: mapView)
 
         // The map doesn't rotate with the heading: `.follow`, not `.followWithHeading`
         let mode: MKUserTrackingMode = map.followsUser && map.showsUserLocation ? .follow : .none
         if mode != mapView.userTrackingMode {
-            context.coordinator.isChangingMode = true
+            coordinator.isChangingMode = true
             mapView.setUserTrackingMode(mode, animated: true)
-            context.coordinator.isChangingMode = false
+            coordinator.isChangingMode = false
         }
 
-        // A request moves the map to the overview when it isn't following; following, the tracking mode keeps it on the user
-        if map.overviewRequest != context.coordinator.shownOverviewRequest {
-            context.coordinator.shownOverviewRequest = map.overviewRequest
-            if mode == .none {
+        // A request moves the map to the overview when it isn't following; following, the tracking mode keeps it on the user.
+        // While planning, the routes' frame takes over.
+        if map.overviewRequest != coordinator.shownOverviewRequest {
+            coordinator.shownOverviewRequest = map.overviewRequest
+            if mode == .none, routeBounds == nil {
                 mapView.setRegion(Self.region(for: map.overview), animated: true)
             }
         }
+
+        // The routes are framed when their bounds change, and again when the sheet moves, once it has settled
+        let boundsChanged = routeBounds != coordinator.routeBounds
+        let sheetMoved = sheetTop != coordinator.sheetTop
+        coordinator.routeBounds = routeBounds
+        coordinator.sheetTop = sheetTop
+        coordinator.isSheetLarge = isSheetLarge
+        if boundsChanged || sheetMoved {
+            coordinator.fitRoutesAfterSheetSettles(on: mapView)
+        }
+    }
+
+    static func coordinate(_ point: DomainGeoPoint) -> CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: point.latitude, longitude: point.longitude)
     }
 
     private static func coordinates(_ points: [DomainGeoPoint]) -> [CLLocationCoordinate2D] {
-        points.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }
+        points.map(coordinate)
     }
 
     private static func region(for overview: DomainGeoBounds) -> MKCoordinateRegion {
@@ -111,9 +148,10 @@ struct MapView: UIViewRepresentable {
         return MKCoordinateRegion(center: center, span: span)
     }
 
-    final class Coordinator: NSObject, MKMapViewDelegate {
+    final class Coordinator: NSObject, MKMapViewDelegate, UIGestureRecognizerDelegate {
         var onPanned: () -> Void
         var onLongPress: (DomainGeoPoint) -> Void
+        var onRouteClick: (String) -> Void
         // Kept between presses, so the first tap is not late
         private let impact = UIImpactFeedbackGenerator(style: .medium)
         var isChangingMode = false
@@ -121,10 +159,18 @@ struct MapView: UIViewRepresentable {
         var coveredArea: [DomainGeoPolygon] = []
         private var coveredOverlays: [MKOverlay] = []
         private var destination: (point: DomainGeoPoint, annotation: MKPointAnnotation)?
+        var shownRouteLines: [RouteLine] = []
+        var routeOverlays: [MKOverlay] = []
+        var routeLabels: [RouteLabelAnnotation] = []
+        var routeBounds: DomainGeoBounds?
+        var pendingFit: DispatchWorkItem?
+        var sheetTop: CGFloat = 0
+        var isSheetLarge = false
 
-        init(onPanned: @escaping () -> Void, onLongPress: @escaping (DomainGeoPoint) -> Void) {
+        init(onPanned: @escaping () -> Void, onLongPress: @escaping (DomainGeoPoint) -> Void, onRouteClick: @escaping (String) -> Void) {
             self.onPanned = onPanned
             self.onLongPress = onLongPress
+            self.onRouteClick = onRouteClick
         }
 
         func mapView(_ mapView: MKMapView, didChange mode: MKUserTrackingMode, animated: Bool) {
@@ -146,11 +192,23 @@ struct MapView: UIViewRepresentable {
             onLongPress(DomainGeoPoint(latitude: coordinate.latitude, longitude: coordinate.longitude))
         }
 
+        func gestureRecognizer(
+            _ gestureRecognizer: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+        ) -> Bool {
+            true
+        }
+
+        // MARK: Overlays
+
         func showCoveredArea(_ area: [DomainGeoPolygon], on mapView: MKMapView) {
             coveredArea = area
             mapView.removeOverlays(coveredOverlays)
             coveredOverlays = area.isEmpty ? [] : makeCoveredOverlays(area)
             mapView.addOverlays(coveredOverlays, level: .aboveRoads)
+            // The routes stay above the dim, and this also re-adds them on a trait change
+            mapView.removeOverlays(routeOverlays)
+            mapView.addOverlays(routeOverlays, level: .aboveRoads)
         }
 
         // The chosen destination's pin, replaced only when the destination changes
@@ -171,12 +229,16 @@ struct MapView: UIViewRepresentable {
             }
         }
 
+        // MARK: Renderers
+
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             switch overlay {
             case let polygon as MKPolygon:
                 let renderer = MKPolygonRenderer(polygon: polygon)
                 renderer.fillColor = MapView.dimColor.resolvedColor(with: mapView.traitCollection)
                 return renderer
+            case let route as RoutePolyline:
+                return MapRoutes.renderer(for: route, traitCollection: mapView.traitCollection)
             case let polyline as MKPolyline:
                 let renderer = MKPolylineRenderer(polyline: polyline)
                 renderer.strokeColor = MapView.borderColor.resolvedColor(with: mapView.traitCollection)

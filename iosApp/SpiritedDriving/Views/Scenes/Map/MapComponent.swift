@@ -21,15 +21,21 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
         ZStack(alignment: .topTrailing) {
             MapView(
                 map: model.map,
+                routeLines: model.routeLines,
+                routeBounds: model.routeBounds,
                 bottomMargin: model.collapsedSheetHeight + Layout.sheetBottomInset,
+                sheetTop: model.sheetTop,
+                isSheetLarge: model.sheetDetent == .large,
                 onPanned: model.onMapPanned,
-                onLongPress: model.onMapLongPress
+                onLongPress: model.onMapLongPress,
+                onRouteClick: model.onRouteClick
             )
             .ignoresSafeArea()
             buttons
         }
         .sheet(isPresented: .constant(true)) {
             ComposeView { model.sheetViewController() }
+                .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { model.sheetTop = $0 }
                 .presentationDetents([.height(model.collapsedSheetHeight), .medium, .large], selection: $model.sheetDetent)
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled)
@@ -56,6 +62,9 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
         }
         .padding(.top, Layout.buttonTopPadding)
         .padding(.trailing, Layout.buttonTrailingPadding)
+        .opacity(model.showsMapButtons ? 1 : 0)
+        .allowsHitTesting(model.showsMapButtons)
+        .animation(.easeInOut, value: model.showsMapButtons)
     }
 
     private func glassButton(
