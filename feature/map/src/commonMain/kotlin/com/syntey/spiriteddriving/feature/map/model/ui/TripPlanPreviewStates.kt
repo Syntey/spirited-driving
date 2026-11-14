@@ -170,6 +170,11 @@ internal object TripPlanPreviewStates {
         RoutePlanningState(destination = DESTINATION, budget = Budget.Distance(20.miles)).withPlan(plannedPlan),
     ).copy(distanceUnit = DistanceUnit.Miles)
 
+    /** [plannedViewState] with the user about 12 km north of the start, so Drive says the maps app takes them there first. */
+    fun plannedFarStartViewState(): TripPlanViewState = plannedViewState().let { state ->
+        state.copy(map = state.map.copy(userLocation = FAR_FROM_START))
+    }
+
     /**
      * A plan without a fun route that fits +15 min, where the closest one needs +22 min: only the fastest route is listed, and
      * it is selected. The message offers the +30 min chip.
@@ -205,6 +210,7 @@ internal object TripPlanPreviewStates {
 
     private val DESTINATION: Place = FakeRoutePlanner.Recorded.fastest.destination
     private val PRAGUE_START = GeoPoint(latitude = 50.0755, longitude = 14.4378)
+    private val FAR_FROM_START = GeoPoint(latitude = 50.1835, longitude = 14.4378)
     private val BEROUN = Place(
         name = "Beroun",
         area = "Central Bohemia",

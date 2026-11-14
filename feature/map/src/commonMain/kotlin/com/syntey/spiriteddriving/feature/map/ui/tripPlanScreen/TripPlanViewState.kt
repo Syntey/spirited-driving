@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen
 
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
+import com.syntey.spiriteddriving.core.domain.geo.Length
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
@@ -12,6 +13,7 @@ import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.feature.map.model.ui.BudgetChip
+import com.syntey.spiriteddriving.feature.map.model.ui.DriveDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
@@ -53,6 +55,8 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
  * @property planning The route planning step; null while the sheet shows the search.
  * @property startSearch The start step, open over route planning; null otherwise.
  * @property budgetChoice The budget planning starts with, and the last value in each unit.
+ * @property driveDialog The dialog about a drive shown over the trip; null when none is.
+ * @property isFirstDriveExplained Whether the user went past the first-drive dialog.
  */
 data class TripPlanViewState(
     val locationAccess: LocationAccess? = null,
@@ -64,6 +68,8 @@ data class TripPlanViewState(
     val planning: RoutePlanningState? = null,
     val startSearch: StartSearch? = null,
     val budgetChoice: BudgetChoice = Constants.Budgets.DEFAULT_CHOICE,
+    val driveDialog: DriveDialog? = null,
+    val isFirstDriveExplained: Boolean = false,
 ) {
     val locateButton: LocateButton get() = LocateButton.of(locationAccess, map.followsUser)
 
@@ -177,6 +183,20 @@ data class TripPlanViewState(
 
     /** The selected route as the route list shows it; null without a plan. */
     val selectedRouteRow: RouteRow? get() = routeRows.firstOrNull { it.isSelected }
+
+    /** Drive is offered once a route is selected. */
+    val isDriveEnabled: Boolean get() = planning?.selectedRoute != null
+
+    /**
+     * How far the selected route starts from the user, when that's more than [Constants.Drive.START_ELSEWHERE_DISTANCE]; null
+     * otherwise, and without a selected route or the user's location.
+     */
+    val startDistance: Length?
+        get() {
+            val start = planning?.selectedRoute?.start?.location ?: return null
+            val from = map.userLocation ?: return null
+            return from.distanceTo(start).takeIf { it > Constants.Drive.START_ELSEWHERE_DISTANCE }
+        }
 
     /**
      * The routes' lines as the map draws them, each with its label; empty without a plan. The selected line is last, so it

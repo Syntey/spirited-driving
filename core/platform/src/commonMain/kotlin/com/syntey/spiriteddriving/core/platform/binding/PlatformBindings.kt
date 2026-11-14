@@ -26,4 +26,7 @@ interface PlatformBindings {
 
     /** Provides the phone's drive feedback notification, see [DriveReminders]. */
     fun driveReminders(): PlatformDriveReminders
+
+    /** Provides the phone's maps app that drives are handed to, see [MapsApp]. */
+    fun mapsApp(): PlatformMapsApp
 }
