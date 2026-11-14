@@ -84,7 +84,7 @@ MVP, for the [launch](#launch) region:
 | [Route planning](features/route-planning/README.md)         | From a budget to a list of available routes         | No      |
 | [Drive](features/drive/README.md)                           | Hand the route to Google Maps or Apple Maps         | No      |
 | [Drive feedback](features/drive-feedback/README.md)         | Rate the route after driving it                     | No      |
-| [Settings](features/settings/README.md)                     | Units, vignettes, about the app                     | No      |
+| [Settings](features/settings/README.md)                     | Units, vignettes, feedback, about the app           | No      |
 | [Account](features/account/README.md)                       | Sign in with Google or Apple                        | —       |
 | [First launch](features/first-launch/README.md)             | Intro, location permission, vignette                | No      |
 | [Saved routes](features/saved-routes/README.md)             | Keep routes to drive later                          | Yes     |

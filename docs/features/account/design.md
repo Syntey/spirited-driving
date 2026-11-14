@@ -1,6 +1,6 @@
 # Account screens
 
-> **Status:** draft, being iterated. Last updated 2026-11-08.
+> **Status:** draft, being iterated. Last updated 2026-11-14.
 >
 > The design for [Account](README.md): Profile, the sign-in sheet, the Account screen and deleting the account.
 > Profile is here because its first row is the account. Uses the [Theme](../../theme.md); where Profile opens is in
@@ -13,16 +13,22 @@ app is about the roads, not about the user.
 
 Opens from the profile button on the map, signed in or not.
 
-| Row          | Signed out                                        | Signed in                    |
-|--------------|---------------------------------------------------|------------------------------|
-| First        | Sign-in card                                      | Account, with the email      |
-| Trip history | Drives from this phone show up when you sign in   | The number of drives         |
-| Settings     | Units, vignettes, about the app                   | Units, vignettes, about the app |
+Four groups, top to bottom. Only Feedback has a header.
+
+| Group | Signed out                                                       | Signed in                          |
+|-------|------------------------------------------------------------------|------------------------------------|
+| 1     | Sign-in card                                                     | Account, with the email            |
+| 2     | Trip history: "Drives from this phone show up when you sign in"; Settings: "Units, vignettes, reminders" | Trip history: the number of drives; Settings as signed out |
+| 3     | Feedback: Rate Spirited Driving, Send feedback                   | The same                           |
+| 4     | About Spirited Driving                                           | The same                           |
 
 - **Sign-in card:** "Sign in", what the account keeps, and the [sign-in buttons](#sign-in-buttons) in the card
   itself, so signing in from Profile takes one tap.
 - **Not a sign-in wall:** signed out, Settings works as when signed in, and the card stays compact.
 - **Trip history**, signed out, opens the [sign-in sheet](#sign-in-sheet).
+- **Feedback and About** are on Profile, not in Settings, so Settings holds only preferences. Their rows work as in
+  [Settings design](../settings/design.md#feedback); About Spirited Driving opens
+  [About](../settings/design.md#about).
 - **Account row:** the second line is the email. For an Apple Hide My Email address it reads "Signed in with Apple"
   instead, since the relay address means nothing to the user.
 
@@ -131,7 +137,7 @@ Opens from the Account row in Profile.
 | Profile card                 | Sign in / Your saved routes and trip history stay with your account, on any phone. Drives from this phone come along. |
 | Trip history, signed out     | Drives from this phone show up when you sign in                                        |
 | Trip history, signed in      | 24 drives                                                                              |
-| Settings row                 | Units, vignettes, about the app                                                        |
+| Settings row                 | Units, vignettes, reminders                                                            |
 | Account row, Hide My Email   | Signed in with Apple                                                                   |
 | Buttons                      | Continue with Apple / Continue with Google                                             |
 | Sign-in failed               | Couldn't sign in. Check your connection and try again.                                 |

@@ -27,6 +27,8 @@ struct ProfileNavigationComponent: View {
                     SettingsComponent(entry.screen)
                 case let .feedback(entry):
                     FeedbackComponent(entry.screen)
+                case let .about(entry):
+                    AboutComponent(entry.screen)
                 }
             }
         )
