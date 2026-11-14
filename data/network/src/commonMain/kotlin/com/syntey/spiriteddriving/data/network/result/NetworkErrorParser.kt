@@ -26,11 +26,11 @@ internal class NetworkErrorParser {
     }
 
     /**
-     * Parses provided [code] as [NetworkError.HttpError]
+     * Parses provided [status] and the Problem [problemCode] of its body, if any, as [NetworkError.HttpError]
      */
-    fun parse(code: HttpStatusCode): NetworkError = if (!code.isSuccess()) {
-        NetworkError.HttpError(statusCode = code)
+    fun parse(status: HttpStatusCode, problemCode: String? = null): NetworkError = if (!status.isSuccess()) {
+        NetworkError.HttpError(statusCode = status, code = problemCode)
     } else {
-        error("The provided code: $code is successful and cannot be parsed as error")
+        error("The provided status: $status is successful and cannot be parsed as error")
     }
 }

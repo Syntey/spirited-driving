@@ -181,7 +181,7 @@ A feature is split by layer, not by screen. Under `com.syntey.spiriteddriving.fe
 domain/            use cases
 injection/         the Koin module
 model/ui/          types view states are built from (row models, sub-states), and {Name}PreviewStates
-tools/             pure helpers, such as text formatting
+tools/             pure helpers, such as text formatting, and Constants.kt
 ui/                <Feature>Screens, and ViewControllers.ios.kt in iosMain
 ui/components/     composables beyond a screen's entry one, shared by the feature's screens
 ui/<name>Screen/   the contract, component, view state, navigation, UI events and entry composable

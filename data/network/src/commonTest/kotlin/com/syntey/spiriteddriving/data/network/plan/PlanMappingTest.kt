@@ -7,6 +7,7 @@ import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.miles
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.HandOff
+import com.syntey.spiriteddriving.core.domain.route.OutsideCoverageException
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.route.RouteStats
@@ -23,15 +24,20 @@ import com.syntey.spiriteddriving.data.network.dto.plan.PlanDto
 import com.syntey.spiriteddriving.data.network.dto.plan.RouteDto
 import com.syntey.spiriteddriving.data.network.dto.plan.RouteStatsDto
 import com.syntey.spiriteddriving.data.network.dto.plan.TimeBudgetDto
+import com.syntey.spiriteddriving.data.network.result.NetworkError
+import io.ktor.http.HttpStatusCode
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 class PlanMappingTest {
 
     private val prague = GeoPoint(latitude = 50.0755, longitude = 14.4378)
+
     private val karlstejn = GeoPoint(latitude = 49.9394, longitude = 14.1882)
 
     @Test
@@ -208,4 +214,18 @@ class PlanMappingTest {
         ),
         attribution = "© OpenStreetMap contributors",
     )
+
+    @Test
+    fun `OUTSIDE_COVERAGE maps to outside coverage with the HTTP error as its cause`() {
+        val httpError = NetworkError.HttpError(HttpStatusCode.UnprocessableEntity, code = "OUTSIDE_COVERAGE")
+
+        val error = assertIs<OutsideCoverageException>(httpError.toPlanError())
+
+        assertSame(httpError, error.cause)
+    }
+
+    @Test
+    fun `an unknown problem code maps to no plan error`() {
+        assertNull(NetworkError.HttpError(HttpStatusCode.UnprocessableEntity, code = "SOMETHING_NEW").toPlanError())
+    }
 }

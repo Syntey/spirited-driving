@@ -75,6 +75,7 @@ struct MapView: UIViewRepresentable {
         mapView.setRegion(Self.region(for: map.overview), animated: false)
         context.coordinator.shownOverviewRequest = map.overviewRequest
         context.coordinator.showCoveredArea(map.coveredArea, on: mapView)
+        context.coordinator.showStart(map.start, on: mapView)
         context.coordinator.showDestination(map.destination, on: mapView)
 
         // The renderers take their colours from the trait collection when created, so the overlays are re-added on change
@@ -96,6 +97,7 @@ struct MapView: UIViewRepresentable {
             coordinator.showCoveredArea(map.coveredArea, on: mapView)
         }
         coordinator.showRouteLines(routeLines, on: mapView)
+        coordinator.showStart(map.start, on: mapView)
         coordinator.showDestination(map.destination, on: mapView)
 
         // The map doesn't rotate with the heading: `.follow`, not `.followWithHeading`
@@ -158,6 +160,7 @@ struct MapView: UIViewRepresentable {
         var shownOverviewRequest: Int32 = 0
         var coveredArea: [DomainGeoPolygon] = []
         private var coveredOverlays: [MKOverlay] = []
+        private var start: (point: DomainGeoPoint, annotation: StartAnnotation)?
         private var destination: (point: DomainGeoPoint, annotation: MKPointAnnotation)?
         var shownRouteLines: [RouteLine] = []
         var routeOverlays: [MKOverlay] = []
@@ -209,6 +212,22 @@ struct MapView: UIViewRepresentable {
             // The routes stay above the dim, and this also re-adds them on a trait change
             mapView.removeOverlays(routeOverlays)
             mapView.addOverlays(routeOverlays, level: .aboveRoads)
+        }
+
+        // The start picked by hand, replaced only when it changes; nil while the trip starts from the user's location
+        func showStart(_ point: DomainGeoPoint?, on mapView: MKMapView) {
+            if point == start?.point {
+                return
+            }
+            if let shown = start {
+                mapView.removeAnnotation(shown.annotation)
+            }
+            start = point.map { point in
+                (point, StartAnnotation(coordinate: MapView.coordinate(point)))
+            }
+            if let shown = start {
+                mapView.addAnnotation(shown.annotation)
+            }
         }
 
         // The chosen destination's pin, replaced only when the destination changes

@@ -17,6 +17,7 @@ internal class ContentNegotiationPlugin(@Named("restApiJson") private val json: 
     override fun install(config: HttpClientConfig<*>) {
         config.install(ContentNegotiation) {
             json(json = json, contentType = ContentType.Application.Json)
+            json(json = json, contentType = ContentType.Application.ProblemJson)
         }
 
         // https://github.com/Foso/Ktorfit/issues/94

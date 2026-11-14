@@ -10,6 +10,9 @@ import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.core.domain.route.Budget
+import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
+import com.syntey.spiriteddriving.core.domain.route.BudgetKind
+import com.syntey.spiriteddriving.core.domain.route.OutsideCoverageException
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
@@ -17,40 +20,43 @@ import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.core.ui.base.executeWithLifecycle
 import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.GetBudgetChoiceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetRecentPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
-import com.syntey.spiriteddriving.feature.map.domain.MIN_SEARCH_LENGTH
 import com.syntey.spiriteddriving.feature.map.domain.NamePointUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
 import com.syntey.spiriteddriving.feature.map.domain.PlanTripUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RemoveRecentPlaceUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SaveBudgetChoiceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase.SearchUpdate
 import com.syntey.spiriteddriving.feature.map.domain.unnamedPlace
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
+import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
+import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
-import kotlin.time.Duration.Companion.minutes
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
+import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 @Factory
 @GenerateFactory
-// Each action of the sheet is a function here, and route planning adds six to the search's thirty
+// Each action of the sheet and each read on start is a function here, for both the search and route planning
 @Suppress("TooManyFunctions")
 internal class TripPlanComponent(
     @InjectedParam componentContext: AppComponentContext,
@@ -70,6 +76,8 @@ internal class TripPlanComponent(
     private val removeRecentPlaceUseCase: RemoveRecentPlaceUseCase,
     private val namePointUseCase: NamePointUseCase,
     private val planTripUseCase: PlanTripUseCase,
+    private val getBudgetChoiceUseCase: GetBudgetChoiceUseCase,
+    private val saveBudgetChoiceUseCase: SaveBudgetChoiceUseCase,
 ) : ScreenComponent<TripPlanViewState, TripPlanUiEvent, TripPlanScreenNavigation>(
     componentContext = componentContext,
     defaultState = TripPlanViewState(),
@@ -83,9 +91,16 @@ internal class TripPlanComponent(
     override val viewState: StateFlow<TripPlanViewState> = componentState
     override val actions: TripPlanScreen.Actions = this
 
-    // Back closes route planning, or the search while the sheet is pulled up
+    // Back closes the innermost step first: the start step, then route planning, then the search while the sheet is pulled up
     private val backCallback = BackCallback(isEnabled = false) {
-        if (componentState.value.planning != null) onRoutePlanningClose() else closeSearch()
+        val state = componentState.value
+        if (state.startSearch != null) {
+            closeStartSearch()
+        } else if (state.planning != null) {
+            onRoutePlanningClose()
+        } else {
+            closeSearch()
+        }
     }
 
     init {
@@ -94,15 +109,25 @@ internal class TripPlanComponent(
         doOnStart(isOneTime = false) { readLocationAccess() }
         loadCoverage()
         readPreciseLocationNote()
-        // From the phone's region, so it's known before the first distance shows
-        getDistanceUnitUseCase.execute {
-            onSuccess { unit -> componentState.update { it.copy(distanceUnit = unit) } }
-            onError { error -> logger.e(error) { "Distance unit not read" } }
-        }
-        getRecentPlacesUseCase.execute {
-            onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
-            onError { error -> logger.e(error) { "Recent places not read" } }
-        }
+        readDistanceUnit()
+        readRecentPlaces()
+        readBudgetChoice()
+    }
+
+    // From the phone's region, so it's known before the first distance shows
+    private fun readDistanceUnit() = getDistanceUnitUseCase.execute {
+        onSuccess { unit -> componentState.update { it.copy(distanceUnit = unit) } }
+        onError { error -> logger.e(error) { "Distance unit not read" } }
+    }
+
+    private fun readRecentPlaces() = getRecentPlacesUseCase.execute {
+        onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
+        onError { error -> logger.e(error) { "Recent places not read" } }
+    }
+
+    private fun readBudgetChoice() = getBudgetChoiceUseCase.execute {
+        onSuccess { choice -> componentState.update { it.copy(budgetChoice = choice) } }
+        onError { error -> logger.e(error) { "Budget choice not read" } }
     }
 
     override fun onSearchFocus() = setSheetHeight(SheetHeight.Full)
@@ -116,11 +141,14 @@ internal class TripPlanComponent(
 
     override fun onSearchRetry() = search(componentState.value.search.text)
 
-    override fun onSearchClose() = closeSearch()
+    override fun onSearchClose() = closeSearchStep()
 
-    override fun onSheetHeightChange(height: SheetHeight) = setSheetHeight(height)
+    // The start step has no collapsed layout, so dragging it down closes it
+    override fun onSheetHeightChange(height: SheetHeight) {
+        if (componentState.value.startSearch != null && height == SheetHeight.Collapsed) closeStartSearch()
+        setSheetHeight(height)
+    }
 
-    // Without the user's location there's no start to plan from, so choosing a place only drops its pin
     override fun onSuggestionClick(suggestion: PlaceSuggestion) {
         if (!suggestion.isCovered) {
             sendUiEvent(TripPlanUiEvent.NotCovered)
@@ -151,32 +179,42 @@ internal class TripPlanComponent(
         // A point still being named would otherwise land on top of the recent places after this one
         useCaseJobPool[namePointUseCase]?.cancel()
         keep(place)
+        if (componentState.value.startSearch != null) {
+            useStart(place)
+            return
+        }
         componentState.update { it.copy(map = it.map.withDestination(place.location)) }
-        // The search stays as it was, so closing route planning returns to it
-        if (componentState.value.canPlanFromUser) startPlanning(place) else closeSearch()
+        startPlanning(place)
     }
 
+    // Without a usable location the trip waits for a start, so the start step opens and closing it closes planning
     private fun startPlanning(destination: Place) {
-        componentState.update { it.copy(planning = RoutePlanningState(destination = destination, budget = DEFAULT_BUDGET)) }
-        setSheetHeight(SheetHeight.Half)
-        plan()
+        val usable = componentState.value.hasUsableLocation
+        componentState.update {
+            it.copy(planning = RoutePlanningState(destination = destination, budget = it.budgetChoice.budget))
+        }
+        if (usable) {
+            setSheetHeight(SheetHeight.Half)
+            plan()
+        } else {
+            openStartSearch(closesPlanning = true)
+        }
     }
 
     // Each plan cancels the one before, so a retry or a new budget never shows an older answer
     private fun plan() {
         val state = componentState.value
-        val planning = state.planning ?: return
-        val userLocation = state.map.userLocation ?: return
+        // The step plans when it closes, so there's nothing to show the plan in until then
+        val planning = state.planning?.takeIf { state.startSearch == null } ?: return
+        // Reset before waiting for the user's location, so an earlier plan doesn't stay up meanwhile
         componentState.update {
-            it.copy(planning = RoutePlanningState(destination = planning.destination, budget = planning.budget))
+            it.copy(planning = planning.copy(status = PlanningStatus.Planning, plan = null, selectedRouteId = null))
         }
+        val start = planning.start?.let(::forBackend)
+            ?: Place(name = null, area = null, location = state.map.userLocation ?: return)
         val args = PlanTripUseCase.Args(
-            start = Place(name = null, area = null, location = userLocation),
-            // An unnamed point's area is only its coordinates for the header; without both, the backend names it
-            destination =
-                planning.destination.takeIf {
-                    it.name != null
-                } ?: Place(name = null, area = null, location = planning.destination.location),
+            start = start,
+            destination = forBackend(planning.destination),
             budget = planning.budget,
         )
         planTripUseCase.execute(args) {
@@ -184,12 +222,63 @@ internal class TripPlanComponent(
                 componentState.update { it.copy(planning = it.planning?.withPlan(tripPlan)) }
             }
             onError { error ->
-                val isOffline = error is OfflineException
-                if (!isOffline) logger.e(error) { "Trip not planned" }
-                val status = if (isOffline) PlanningStatus.Offline else PlanningStatus.Failed
+                // Offline and outside the covered area are answers the user can act on, so they aren't logged
+                val status = when (error) {
+                    is OfflineException -> PlanningStatus.Offline
+
+                    is OutsideCoverageException -> PlanningStatus.NotCovered
+
+                    else -> {
+                        logger.e(error) { "Trip not planned" }
+                        PlanningStatus.Failed
+                    }
+                }
                 componentState.update { it.copy(planning = it.planning?.copy(status = status)) }
             }
         }
+    }
+
+    override fun onStartClick() = openStartSearch(closesPlanning = false)
+
+    // The destination search is kept, so closing the step brings it back as it was
+    private fun openStartSearch(closesPlanning: Boolean) {
+        useCaseJobPool[searchPlacesUseCase]?.cancel()
+        componentState.update {
+            it.copy(
+                startSearch = StartSearch(destinationSearch = it.search, closesPlanning = closesPlanning),
+                search = SearchState(recentPlaces = it.search.recentPlaces),
+            )
+        }
+        setSheetHeight(SheetHeight.Full)
+    }
+
+    // Returns the step that was open, or null; recent places may have changed meanwhile, so the current ones stay
+    private fun restoreDestinationSearch(): StartSearch? {
+        val closed = componentState.value.startSearch ?: return null
+        useCaseJobPool[searchPlacesUseCase]?.cancel()
+        componentState.update {
+            it.copy(startSearch = null, search = closed.destinationSearch.copy(recentPlaces = it.search.recentPlaces))
+        }
+        return closed
+    }
+
+    private fun closeStartSearch() {
+        val closed = restoreDestinationSearch() ?: return
+        if (closed.closesPlanning) onRoutePlanningClose() else setSheetHeight(SheetHeight.Half)
+    }
+
+    private fun closeSearchStep() {
+        if (componentState.value.startSearch != null) closeStartSearch() else closeSearch()
+    }
+
+    // A null start is the user's location
+    private fun useStart(start: Place?) {
+        restoreDestinationSearch()
+        componentState.update {
+            it.copy(planning = it.planning?.copy(start = start), map = it.map.copy(start = start?.location))
+        }
+        setSheetHeight(SheetHeight.Half)
+        plan()
     }
 
     private fun keep(place: Place) {
@@ -208,16 +297,36 @@ internal class TripPlanComponent(
             sendUiEvent(TripPlanUiEvent.NotCovered)
             return
         }
-        val canPlan = componentState.value.canPlanFromUser
+        if (componentState.value.startSearch != null) {
+            pickStart(point)
+            return
+        }
         componentState.update { it.copy(map = it.map.withPickedPoint(point)) }
-        if (canPlan) startPlanning(unnamedPlace(point)) else closeSearch()
+        startPlanning(unnamedPlace(point))
+        namePoint(point) { place ->
+            componentState.update { state ->
+                val planning = state.planning
+                if (planning?.destination?.location == point) state.copy(planning = planning.copy(destination = place)) else state
+            }
+        }
+    }
+
+    private fun pickStart(point: GeoPoint) {
+        useStart(unnamedPlace(point))
+        // Same point, so the name only swaps in the start and doesn't plan again
+        namePoint(point) { place ->
+            componentState.update { state ->
+                val planning = state.planning
+                if (planning?.start?.location == point) state.copy(planning = planning.copy(start = place)) else state
+            }
+        }
+    }
+
+    private fun namePoint(point: GeoPoint, onNamed: (Place) -> Unit) {
         namePointUseCase.execute(point) {
             onSuccess { place ->
                 keep(place)
-                componentState.update { state ->
-                    val planning = state.planning
-                    if (planning?.destination?.location == point) state.copy(planning = planning.copy(destination = place)) else state
-                }
+                onNamed(place)
             }
             onError { error ->
                 if (error !is OfflineException) logger.e(error) { "Point not named" }
@@ -233,9 +342,25 @@ internal class TripPlanComponent(
         }
     }
 
+    override fun onBudgetClick(budget: Budget) = chooseBudget(componentState.value.budgetChoice.with(budget))
+
+    override fun onBudgetKindChange(kind: BudgetKind) = chooseBudget(componentState.value.budgetChoice.copy(kind = kind))
+
+    // Kept at once, so the next plan starts with it even when this one is cancelled
+    private fun chooseBudget(choice: BudgetChoice) {
+        componentState.update { it.copy(budgetChoice = choice) }
+        saveBudgetChoiceUseCase.execute(choice) {
+            onError { error -> logger.e(error) { "Budget choice not kept" } }
+        }
+        val planning = componentState.value.planning ?: return
+        if (planning.budget == choice.budget) return
+        componentState.update { it.copy(planning = planning.copy(budget = choice.budget)) }
+        plan()
+    }
+
     override fun onRoutePlanningClose() {
         useCaseJobPool[planTripUseCase]?.cancel()
-        componentState.update { it.copy(planning = null, map = it.map.copy(destination = null)) }
+        componentState.update { it.copy(planning = null, startSearch = null, map = it.map.copy(destination = null, start = null)) }
         // Full brings the search back as it was, without the keyboard: the keyboard only comes from focusing the field
         setSheetHeight(SheetHeight.Full)
     }
@@ -255,6 +380,24 @@ internal class TripPlanComponent(
         }
     }
 
+    override fun onMyLocationClick() = useMyLocation()
+
+    private fun useMyLocation() {
+        when (componentState.value.myLocationRow) {
+            MyLocationRow.Available -> useStart(null)
+            MyLocationRow.NeedsPreciseLocation -> askForPreciseLocation(then = ::useMyLocationOnceUsable)
+            MyLocationRow.NeedsLocationAccess -> askForLocationAccess(then = ::useMyLocationOnceUsable)
+            MyLocationRow.OutsideCoveredArea -> sendUiEvent(TripPlanUiEvent.NotCovered)
+            null -> Unit
+        }
+    }
+
+    // Access given in the prompt makes the user's location the start, unless it's still not usable or the step has closed
+    private fun useMyLocationOnceUsable() {
+        val state = componentState.value
+        if (state.startSearch != null && state.hasUsableLocation) useStart(null)
+    }
+
     private fun locate() = when (componentState.value.locateButton) {
         LocateButton.Following -> Unit
         LocateButton.NotFollowing -> componentState.update { it.copy(map = it.map.copy(followsUser = true)) }
@@ -263,7 +406,7 @@ internal class TripPlanComponent(
 
     // Each search cancels the one before, which may still wait for the pause in typing, so only the current text's answer shows
     private fun search(text: String) {
-        val isLongEnough = text.trim().length >= MIN_SEARCH_LENGTH
+        val isLongEnough = text.trim().length >= Constants.Search.MIN_LENGTH
         componentState.update { state ->
             state.copy(
                 search = if (isLongEnough) {
@@ -334,13 +477,16 @@ internal class TripPlanComponent(
         onError { error -> logger.e(error) { "Location access not read" } }
     }
 
-    private fun askForLocationAccess() {
+    private fun askForLocationAccess(then: () -> Unit = {}) {
         // iOS asks only once, so on iOS a denial is always for good and this opens the settings
         if (componentState.value.locationAccess == LocationAccess.DeniedForGood) {
             openLocationSettingsUseCase.execute { onError { error -> logger.e(error) { "System settings not opened" } } }
         } else {
             requestLocationAccessUseCase.execute {
-                onSuccess(::applyLocationAccess)
+                onSuccess { access ->
+                    applyLocationAccess(access)
+                    then()
+                }
                 onError { error -> logger.e(error) { "Location prompt failed" } }
             }
         }
@@ -351,8 +497,11 @@ internal class TripPlanComponent(
         onError { error -> logger.e(error) { "Precise location note not read" } }
     }
 
-    private fun askForPreciseLocation() = requestPreciseLocationUseCase.execute {
-        onSuccess(::applyLocationAccess)
+    private fun askForPreciseLocation(then: () -> Unit = {}) = requestPreciseLocationUseCase.execute {
+        onSuccess { access ->
+            applyLocationAccess(access)
+            then()
+        }
         onError { error -> logger.e(error) { "Precise location prompt failed" } }
     }
 
@@ -365,9 +514,22 @@ internal class TripPlanComponent(
     private fun startLocationUpdates() {
         if (useCaseJobPool[observeUserLocationUseCase]?.isActive == true) return
         observeUserLocationUseCase.executeWithLifecycle {
-            onNext { point -> componentState.update { it.copy(map = it.map.withUserLocation(point)) } }
+            onNext { point ->
+                val wasUnknown = componentState.value.map.userLocation == null
+                componentState.update { it.copy(map = it.map.withUserLocation(point)) }
+                if (wasUnknown) planWaitingForLocation()
+            }
             onError { error -> logger.e(error) { "Location updates failed" } }
         }
+    }
+
+    // My location can be chosen as the start before the first location arrives, as right after access is given, so the trip
+    // waits for it here. A start picked by hand doesn't wait.
+    private fun planWaitingForLocation() {
+        val state = componentState.value
+        val planning = state.planning ?: return
+        val waits = planning.start == null && state.startSearch == null && planning.status == PlanningStatus.Planning
+        if (waits && planning.plan == null) plan()
     }
 
     // Running flow use cases are kept in the job pool, by use case
@@ -380,5 +542,6 @@ internal class TripPlanComponent(
 private fun TripPlanViewState.withRecentPlaces(places: List<Place>): TripPlanViewState =
     copy(search = search.copy(recentPlaces = places.toImmutableList()))
 
-// The budget chips come later; until then every plan uses this fixed budget in time
-private val DEFAULT_BUDGET: Budget = Budget.Time(30.minutes)
+// An unnamed point's area is only its coordinates for the header; without both, the backend names it
+private fun forBackend(place: Place): Place =
+    place.takeIf { it.name != null } ?: Place(name = null, area = null, location = place.location)

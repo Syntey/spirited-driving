@@ -2,12 +2,10 @@ package com.syntey.spiriteddriving.feature.map.model.ui
 
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
-import com.syntey.spiriteddriving.feature.map.domain.MIN_SEARCH_LENGTH
 import com.syntey.spiriteddriving.feature.map.tools.placeMatches
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-
-private const val MAX_MATCHING_RECENT_PLACES = 3
+import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 /**
  * The destination search in the map's sheet.
@@ -31,7 +29,9 @@ data class SearchState(
         get() = if (text.isBlank()) {
             recentPlaces
         } else {
-            recentPlaces.filter { placeMatches(name = it.name, area = it.area, text = text) }.take(MAX_MATCHING_RECENT_PLACES)
+            recentPlaces.filter {
+                placeMatches(name = it.name, area = it.area, text = text)
+            }.take(Constants.Search.MAX_MATCHING_RECENT_PLACES)
         }
 
     /** The suggestions the sheet shows, without those that are the same place as a [shownRecentPlaces] row. */
@@ -52,7 +52,7 @@ data class SearchState(
         get() = status == SearchStatus.Found &&
             shownSuggestions.isEmpty() &&
             shownRecentPlaces.isEmpty() &&
-            text.trim().length >= MIN_SEARCH_LENGTH
+            text.trim().length >= Constants.Search.MIN_LENGTH
 
     /** A progress indicator shows while a search is slow to answer. */
     val showsProgress: Boolean get() = status == SearchStatus.Searching && isSlow

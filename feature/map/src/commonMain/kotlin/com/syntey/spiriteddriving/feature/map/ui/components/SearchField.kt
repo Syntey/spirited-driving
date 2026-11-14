@@ -27,6 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.painter.Painter
@@ -50,7 +52,8 @@ import dev.icerock.moko.resources.compose.stringResource
 /**
  * The search field, such as "Where to?" on the map's sheet: a capsule with a translucent fill on iOS, a Material search
  * bar on Android. [back], on Android while the search is open, takes the search icon's place. [clear] shows while there's
- * text, and [onFocus] runs each time the field gets focus. [isLoading] shows progress in the clear button's place.
+ * text, and [onFocus] runs each time the field gets focus. [isLoading] shows progress in the clear button's place, and
+ * [requestsFocus] focuses the field as it appears.
  */
 @Composable
 internal fun SearchField(
@@ -63,9 +66,14 @@ internal fun SearchField(
     modifier: Modifier = Modifier,
     back: IconAction? = null,
     isLoading: Boolean = false,
+    requestsFocus: Boolean = false,
 ) {
     val style = MapPlatformStyle.current.searchField
     val keyboard = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(requestsFocus) {
+        if (requestsFocus) focusRequester.requestFocus()
+    }
     // Typing goes into this copy at once, so it never waits for the view state. The only change from outside is clearing the
     // text, by Clear, Close or choosing a place.
     var value by remember { mutableStateOf(TextFieldValue(text, selection = TextRange(text.length))) }
@@ -108,7 +116,7 @@ internal fun SearchField(
                 if (new.text != value.text) onTextChange(new.text)
                 value = new
             },
-            modifier = Modifier.weight(1f).onFocusChanged { if (it.isFocused) onFocus() },
+            modifier = Modifier.weight(1f).focusRequester(focusRequester).onFocusChanged { if (it.isFocused) onFocus() },
             textStyle = style.textStyle.copy(color = MaterialTheme.colorScheme.onSurface),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             singleLine = true,
