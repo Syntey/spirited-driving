@@ -423,14 +423,7 @@ fun ListGroup(
     val textPadding = Modifier.padding(start = style.groupInset + Grid.d4, end = style.groupInset + Grid.d4)
     Column(modifier.fillMaxWidth()) {
         if (header != null) {
-            Text(
-                text = header,
-                style = style.headerStyle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = textPadding
-                    .padding(top = Grid.d2, bottom = Grid.d1_5)
-                    .semantics { heading() },
-            )
+            ListHeader(text = header)
         }
         items.forEachIndexed { index, item ->
             item(GroupPosition.of(index, items.size))
@@ -444,6 +437,22 @@ fun ListGroup(
             )
         }
     }
+}
+
+/**
+ * A group's header, also for a header item in a lazy list, such as the "Recent" above the places on the map's sheet.
+ */
+@Composable
+fun ListHeader(text: String, modifier: Modifier = Modifier) {
+    val style = AppTheme.platformStyle.list
+    Text(
+        text = text,
+        style = style.headerStyle,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
+            .padding(start = style.groupInset + Grid.d4, end = style.groupInset + Grid.d4, top = Grid.d2, bottom = Grid.d1_5)
+            .semantics { heading() },
+    )
 }
 
 /**

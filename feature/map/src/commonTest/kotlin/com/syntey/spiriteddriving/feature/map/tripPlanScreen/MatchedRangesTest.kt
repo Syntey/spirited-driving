@@ -2,6 +2,8 @@ package com.syntey.spiriteddriving.feature.map.tripPlanScreen
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class MatchedRangesTest {
 
@@ -43,5 +45,35 @@ class MatchedRangesTest {
     @Test
     fun `overlapping matches are merged into one range`() {
         assertEquals(listOf(0..4), matchedRanges(name = "ab-cd", text = "ab-c cd"))
+    }
+
+    @Test
+    fun `a name that starts with the typed text matches`() {
+        assertTrue(placeMatches(name = "Karlštejn", area = null, text = "karlst"))
+    }
+
+    @Test
+    fun `a word of the area matches`() {
+        assertTrue(placeMatches(name = "Karlštejn", area = "Central Bohemian Region", text = "bohem"))
+    }
+
+    @Test
+    fun `diacritics don't count when placing matches`() {
+        assertTrue(placeMatches(name = "Křivoklát", area = null, text = "krivok"))
+    }
+
+    @Test
+    fun `every typed word has to match`() {
+        assertFalse(placeMatches(name = "Karlštejn", area = "Beroun", text = "karlst xyz"))
+    }
+
+    @Test
+    fun `a match inside a word does not count`() {
+        assertFalse(placeMatches(name = "Karlštejn", area = null, text = "stejn"))
+    }
+
+    @Test
+    fun `blank text matches nothing`() {
+        assertFalse(placeMatches(name = "Karlštejn", area = null, text = "  "))
     }
 }
