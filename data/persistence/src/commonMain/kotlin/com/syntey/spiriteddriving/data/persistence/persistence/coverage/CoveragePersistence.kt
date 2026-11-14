@@ -5,6 +5,9 @@ import com.syntey.spiriteddriving.core.domain.coverage.CoverageCache
 import com.syntey.spiriteddriving.core.domain.coverage.VersionedCoverage
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import org.koin.core.annotation.Single
 
 /**
@@ -17,9 +20,10 @@ internal class CoveragePersistence(private val jsonPersistence: JsonPersistence)
 
     override suspend fun get(): VersionedCoverage? = jsonPersistence.getCatching<StoredCoverage>(KEY)?.toDomain()
 
-    override suspend fun vignetteCountries(): List<CountryCode>? =
-        jsonPersistence.getCatching<List<String>>(VIGNETTE_COUNTRIES_KEY)?.map(::CountryCode)
-            ?: countriesFromCoverage()
+    override fun observeVignetteCountries(): Flow<List<CountryCode>?> =
+        jsonPersistence.observeCatching<List<String>>(VIGNETTE_COUNTRIES_KEY)
+            .map { stored -> stored?.map(::CountryCode) ?: countriesFromCoverage() }
+            .distinctUntilChanged()
 
     /**
      * Installs from before the countries had their own key keep their copy until the backend's covered area changes (it

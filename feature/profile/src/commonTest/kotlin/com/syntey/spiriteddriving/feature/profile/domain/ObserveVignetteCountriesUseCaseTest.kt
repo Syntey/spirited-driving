@@ -8,7 +8,10 @@ import com.syntey.spiriteddriving.core.domain.settings.FakeVignetteSettings
 import com.syntey.spiriteddriving.core.platform.binding.Platform
 import com.syntey.spiriteddriving.feature.profile.model.VignetteCountry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
@@ -83,19 +86,39 @@ class ObserveVignetteCountriesUseCaseTest {
         assertEquals(listOf(false, true), slovakiaAnswers)
     }
 
+    @Test
+    fun `a covered area that arrives later replaces Czechia alone`() = runTest {
+        val cache = InMemoryCoverageCache(null)
+        val codes = mutableListOf<List<CountryCode>>()
+        val collecting = launch(UnconfinedTestDispatcher(testScheduler)) {
+            ObserveVignetteCountriesUseCase(cache, FakeVignetteSettings(), names).build(Unit).collect { countries ->
+                codes += countries.map { it.code }
+            }
+        }
+
+        cache.save(coveredWith(listOf(CountryCode.Czechia, slovakia)))
+        runCurrent()
+        collecting.cancel()
+
+        assertEquals(listOf(listOf(CountryCode.Czechia), listOf(CountryCode.Czechia, slovakia)), codes)
+    }
+
     private fun coveredWith(countries: List<CountryCode> = emptyList()) = VersionedCoverage(
         coverage = FakeCoverageSource.Czechia.copy(vignetteCountries = countries),
         version = "\"test\"",
     )
 }
 
-private class InMemoryCoverageCache(private var kept: VersionedCoverage?) : CoverageCache {
-    override suspend fun get(): VersionedCoverage? = kept
+private class InMemoryCoverageCache(initial: VersionedCoverage?) : CoverageCache {
+    private val kept = MutableStateFlow(initial)
 
-    override suspend fun vignetteCountries(): List<CountryCode>? = kept?.coverage?.vignetteCountries
+    override suspend fun get(): VersionedCoverage? = kept.value
+
+    override fun observeVignetteCountries(): Flow<List<CountryCode>?> =
+        kept.map { it?.coverage?.vignetteCountries }
 
     override suspend fun save(coverage: VersionedCoverage) {
-        kept = coverage
+        kept.value = coverage
     }
 }
 

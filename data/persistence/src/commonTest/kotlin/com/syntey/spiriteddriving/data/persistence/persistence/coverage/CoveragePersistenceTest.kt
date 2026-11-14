@@ -12,9 +12,13 @@ import com.syntey.spiriteddriving.core.domain.geo.GeoPolygon
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
 import com.syntey.spiriteddriving.data.persistence.injection.PersistenceModule
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -50,7 +54,7 @@ class CoveragePersistenceTest {
 
     @Test
     fun `nothing kept has no vignette countries`() = runTest {
-        assertNull(coveragePersistence().vignetteCountries())
+        assertNull(coveragePersistence().observeVignetteCountries().first())
     }
 
     @Test
@@ -59,7 +63,23 @@ class CoveragePersistenceTest {
 
         persistence.save(sampleCoverage())
 
-        assertEquals(listOf(CountryCode.Czechia, CountryCode("SK")), persistence.vignetteCountries())
+        assertEquals(listOf(CountryCode.Czechia, CountryCode("SK")), persistence.observeVignetteCountries().first())
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `saving a copy emits its vignette countries to an observer`() = runTest {
+        val persistence = coveragePersistence()
+        val emissions = mutableListOf<List<CountryCode>?>()
+        val collecting = launch(UnconfinedTestDispatcher(testScheduler)) {
+            persistence.observeVignetteCountries().collect { emissions += it }
+        }
+
+        persistence.save(sampleCoverage())
+        runCurrent()
+        collecting.cancel()
+
+        assertEquals(listOf(null, listOf(CountryCode.Czechia, CountryCode("SK"))), emissions)
     }
 
     @Test
@@ -69,7 +89,7 @@ class CoveragePersistenceTest {
         persistence.save(sampleCoverage())
         dataStore.edit { it.remove(VIGNETTE_COUNTRIES_KEY) }
 
-        assertEquals(listOf(CountryCode.Czechia, CountryCode("SK")), persistence.vignetteCountries())
+        assertEquals(listOf(CountryCode.Czechia, CountryCode("SK")), persistence.observeVignetteCountries().first())
         assertNotNull(dataStore.data.first()[VIGNETTE_COUNTRIES_KEY])
     }
 
