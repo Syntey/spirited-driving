@@ -3,16 +3,26 @@ package com.syntey.spiriteddriving.core.domain.place
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 
 /**
- * [PlaceSearch] that answers every search with [suggestions]. Records the searches it got.
+ * [PlaceSearch] that answers every search with [suggestions] and every point with [placeAt]. Records the searches and
+ * points it got.
  */
-class FakePlaceSearch(private val suggestions: List<PlaceSuggestion> = Recorded) : PlaceSearch {
+class FakePlaceSearch(private val suggestions: List<PlaceSuggestion> = Recorded, private val placeAt: Place? = RecordedPlaceAt) :
+    PlaceSearch {
 
     val searches: List<Search>
         field = mutableListOf<Search>()
 
+    val lookups: List<GeoPoint>
+        field = mutableListOf<GeoPoint>()
+
     override suspend fun search(text: String, near: GeoPoint?): List<PlaceSuggestion> {
         searches += Search(text, near)
         return suggestions
+    }
+
+    override suspend fun placeAt(point: GeoPoint): Place? {
+        lookups += point
+        return placeAt
     }
 
     /** A search [FakePlaceSearch] got. */
@@ -57,6 +67,13 @@ class FakePlaceSearch(private val suggestions: List<PlaceSuggestion> = Recorded)
                 isCovered = false,
                 kind = PlaceKind.Town,
             ),
+        )
+
+        /** The backend's name for a point at Karlštejn Castle. */
+        val RecordedPlaceAt: Place = Place(
+            name = "Karlštejn",
+            area = "Budňany, Středočeský kraj",
+            location = GeoPoint(latitude = 49.9394, longitude = 14.1882),
         )
     }
 }

@@ -65,7 +65,7 @@
     <string name="map_precise_title">Precise location is off</string>
     <string name="map_precise_text">Turn it on to start routes where you are.</string>
     <string name="map_precise_action">Turn on</string>
-    <string name="search_hint">Search for a place.</string>
+    <string name="search_hint">Search for a place, or touch and hold the map to pick a point.</string>
     <string name="search_clear">Clear</string>
     <string name="search_not_covered">Not covered yet</string>
     <string name="search_not_covered_a11y">not covered yet</string>
@@ -80,7 +80,8 @@
     <string name="search_failed_title">Search isn’t working right now</string>
     <string name="search_failed_text">The problem is on our side, not your connection.</string>
     <string name="search_no_results_title">No places match “%1$s”</string>
-    <string name="search_no_results_text">Check the spelling.</string>
+    <string name="search_no_results_text">Check the spelling, or touch and hold the map to pick a point.</string>
+    <string name="search_point_on_map">Point on the map</string>
     <string name="search_recent_header">Recent</string>
     <string name="search_recent_a11y">recent place</string>
     <string name="search_recent_remove">Remove</string>
