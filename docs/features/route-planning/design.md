@@ -16,12 +16,13 @@
 
 **Sheet**, top to bottom:
 
-1. **Header:** the destination's name, "From My location" (or the start's name) below it, and a close button.
+1. **Header:** the destination's name, "From My location" (or the start's name) below it, and a Cancel text button.
    A point picked on the map is called "Point on the map" until its address arrives
    ([Destination search](../destination-search/design.md#points-picked-on-the-map)).
    "From" opens the search for the start
-   ([Destination search](../destination-search/design.md#two-uses-of-one-step)). Close goes back to the search
-   step as it was.
+   ([Destination search](../destination-search/design.md#two-uses-of-one-step)). Cancel goes back to the search
+   step as it was. It's Cancel, not an X: an X on a sheet reads as dismissing it, but the map's sheet stays and only
+   steps back.
 2. **Budget:** "Extra time" (or "Extra distance") with a min / km switch, and a row of chips that scrolls sideways.
 3. **Route list.**
 4. **Save** (tonal) and **Drive** (filled, wider), with "Route data © OpenStreetMap contributors" below them. On
@@ -96,6 +97,7 @@ colour, in the budget's unit.
 | Where                  | Text                                          |
 |------------------------|-----------------------------------------------|
 | Start                  | From My location                              |
+| Cancel                 | Cancel                                        |
 | Budget label           | Extra time / Extra distance                   |
 | Fastest route          | Fastest                                       |
 | Fun meter              | Fun                                           |

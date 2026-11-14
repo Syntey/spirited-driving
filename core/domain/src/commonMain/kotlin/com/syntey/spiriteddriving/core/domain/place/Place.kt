@@ -1,6 +1,8 @@
 package com.syntey.spiriteddriving.core.domain.place
 
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
+import com.syntey.spiriteddriving.core.domain.geo.Length
+import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.metres
 
 /**
  * A place a trip can start or end at.
@@ -11,9 +13,9 @@ import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 data class Place(val name: String?, val area: String?, val location: GeoPoint) {
 
     /** Whether [other] is the same place: the same name within 100 m, as when the backend moves its point a little. */
-    fun isSameAs(other: Place): Boolean = name == other.name && location.distanceTo(other.location) <= SAME_PLACE_METRES
+    fun isSameAs(other: Place): Boolean = name == other.name && location.distanceTo(other.location) <= SAME_PLACE_DISTANCE
 
     private companion object {
-        const val SAME_PLACE_METRES = 100.0
+        val SAME_PLACE_DISTANCE: Length = 100.metres
     }
 }
