@@ -15,6 +15,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.AppIconButton
+import com.syntey.spiriteddriving.core.ui.components.CarSpinner
 import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.components.Showcase
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
@@ -48,7 +50,7 @@ import dev.icerock.moko.resources.compose.stringResource
 /**
  * The search field, such as "Where to?" on the map's sheet: a capsule with a translucent fill on iOS, a Material search
  * bar on Android. [back], on Android while the search is open, takes the search icon's place. [clear] shows while there's
- * text, and [onFocus] runs each time the field gets focus.
+ * text, and [onFocus] runs each time the field gets focus. [isLoading] shows progress in the clear button's place.
  */
 @Composable
 internal fun SearchField(
@@ -60,6 +62,7 @@ internal fun SearchField(
     onFocus: () -> Unit,
     modifier: Modifier = Modifier,
     back: IconAction? = null,
+    isLoading: Boolean = false,
 ) {
     val style = MapPlatformStyle.current.searchField
     val keyboard = LocalSoftwareKeyboardController.current
@@ -128,15 +131,25 @@ internal fun SearchField(
             },
         )
         if (value.text.isNotEmpty()) {
-            AppIconButton(
-                icon = clear.icon,
-                contentDescription = clear.label,
-                onClick = {
-                    value = TextFieldValue()
-                    clear.onClick()
-                },
-                style = style.actionButton,
-            )
+            // The spinner sits in the clear button's box, so the field doesn't move while a search is slow
+            if (isLoading) {
+                Box(
+                    Modifier.minimumInteractiveComponentSize().size(style.actionButton.size),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CarSpinner(Modifier.size(style.actionButton.iconSize))
+                }
+            } else {
+                AppIconButton(
+                    icon = clear.icon,
+                    contentDescription = clear.label,
+                    onClick = {
+                        value = TextFieldValue()
+                        clear.onClick()
+                    },
+                    style = style.actionButton,
+                )
+            }
         }
     }
 }

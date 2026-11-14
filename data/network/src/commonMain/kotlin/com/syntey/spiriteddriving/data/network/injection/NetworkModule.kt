@@ -3,6 +3,7 @@ package com.syntey.spiriteddriving.data.network.injection
 import com.syntey.spiriteddriving.data.network.FlavorConstants
 import com.syntey.spiriteddriving.data.network.api.SpiritedDrivingApi
 import com.syntey.spiriteddriving.data.network.api.createSpiritedDrivingApi
+import com.syntey.spiriteddriving.data.network.plugin.AcceptLanguagePlugin
 import com.syntey.spiriteddriving.data.network.plugin.ContentNegotiationPlugin
 import com.syntey.spiriteddriving.data.network.plugin.HttpTimeoutPlugin
 import com.syntey.spiriteddriving.data.network.plugin.LoggingPlugin
@@ -40,11 +41,13 @@ class NetworkModule {
         contentNegotiationPlugin: ContentNegotiationPlugin,
         httpTimeoutPlugin: HttpTimeoutPlugin,
         userAgentPlugin: UserAgentPlugin,
+        acceptLanguagePlugin: AcceptLanguagePlugin,
         loggingPlugin: LoggingPlugin,
     ): HttpClient = getNativeHttpClient {
         contentNegotiationPlugin.install(this)
         httpTimeoutPlugin.install(this)
         userAgentPlugin.install(this)
+        acceptLanguagePlugin.install(this)
         loggingPlugin.install(this)
     }
 
