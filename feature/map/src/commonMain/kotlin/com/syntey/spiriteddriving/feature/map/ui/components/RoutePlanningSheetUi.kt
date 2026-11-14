@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import com.syntey.spiriteddriving.core.domain.route.Budget
+import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.AppButton
 import com.syntey.spiriteddriving.core.ui.components.ButtonDefaultColors
@@ -61,9 +62,12 @@ import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteRow
+import com.syntey.spiriteddriving.feature.map.tools.distanceText
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
+import dev.icerock.moko.resources.desc.ResourceFormatted
+import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -159,16 +163,40 @@ internal fun RoutePlanningBody(viewState: TripPlanViewState, actions: TripPlanSc
                 )
             }
         }
-        RoutePlanningActions()
+        RoutePlanningActions(viewState = viewState, actions = actions)
     }
 }
 
-/** Save and Drive, with the attribution under them. */
+/**
+ * Save and Drive, with the attribution under them. When the route starts far from the user, the line above them says how far
+ * and that the maps app takes the user there first.
+ */
 @Composable
-internal fun RoutePlanningActions(modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(MapPlatformStyle.current.sheetSpacing)) {
+internal fun RoutePlanningActions(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+    val style = MapPlatformStyle.current
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(style.sheetSpacing)) {
+        viewState.startDistance?.let { distance ->
+            Text(
+                text = StringDesc.ResourceFormatted(
+                    if (AppTheme.platform == UiPlatform.Android) {
+                        MR.strings.drive_starts_elsewhere_google
+                    } else {
+                        MR.strings.drive_starts_elsewhere_apple
+                    },
+                    distanceText(
+                        distance = distance,
+                        unit = viewState.distanceUnit,
+                        isApproximate = viewState.locationAccess == LocationAccess.Approximate,
+                    ),
+                ).localized(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(Grid.d2)) {
-            // Save waits for Account, the sign-in it needs; Drive waits for the Drive feature
+            // Save waits for Account, the sign-in it needs
             AppButton(
                 text = stringResource(MR.strings.planning_save),
                 onClick = {},
@@ -178,9 +206,18 @@ internal fun RoutePlanningActions(modifier: Modifier = Modifier) {
             )
             AppButton(
                 text = stringResource(MR.strings.planning_drive),
-                onClick = {},
-                enabled = false,
+                onClick = actions::onDriveClick,
+                enabled = viewState.isDriveEnabled,
                 modifier = Modifier.weight(2f),
+            )
+        }
+        if (style.showsRoutingProvider) {
+            Text(
+                text = stringResource(MR.strings.drive_routing_provider),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
         Text(
@@ -204,7 +241,7 @@ internal fun CollapsedRoutePlanning(viewState: TripPlanViewState, actions: TripP
     ) {
         RoutePlanningHeader(planning = planning, actions = actions)
         RoutePlanningSummary(viewState = viewState)
-        RoutePlanningActions()
+        RoutePlanningActions(viewState = viewState, actions = actions)
     }
 }
 
@@ -454,6 +491,28 @@ private fun RoutePlanningPlannedDistancePreview() = Showcase {
 private fun RoutePlanningPlannedDistanceIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
         viewState = TripPlanPreviewStates.plannedDistanceViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun RoutePlanningPlannedFarStartPreview() = Showcase {
+    Content(
+        viewState = TripPlanPreviewStates.plannedFarStartViewState(),
+        actions = noOpActions(),
+        onCollapsedHeightChange = {},
+        modifier = Modifier.height(Grid.d100),
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun RoutePlanningPlannedFarStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(
+        viewState = TripPlanPreviewStates.plannedFarStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),

@@ -40,10 +40,40 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled)
                 .interactiveDismissDisabled()
+                // Inside the sheet: an alert on the view under a presented sheet wouldn't show
+                .alert(driveDialogTitle,
+                       isPresented: $model.isDriveDialogPresented,
+                       presenting: model.driveDialog) { dialog in
+                    driveDialogButtons(dialog)
+                } message: { dialog in
+                    Text(driveDialogMessage(dialog))
+                }
         }
     }
 
     // MARK: Private views
+
+    @ViewBuilder
+    private func driveDialogButtons(_ dialog: DriveDialog) -> some View {
+        Button(Localizable.generic_cancel.localized, role: .cancel) {}
+        switch dialog {
+        case .firstDrive:
+            Button(Localizable.drive_first_open_apple.localized) { model.onFirstDriveConfirm() }
+                .keyboardShortcut(.defaultAction)
+        case .mapsAppMissing:
+            Button(Localizable.drive_missing_store_apple.localized) { model.onMapsAppStoreClick() }
+                .keyboardShortcut(.defaultAction)
+        }
+    }
+
+    private func driveDialogMessage(_ dialog: DriveDialog) -> String {
+        switch dialog {
+        case .firstDrive:
+            Localizable.drive_first_message_apple.localized
+        case .mapsAppMissing:
+            Localizable.drive_missing_message_apple.localized
+        }
+    }
 
     private var buttons: some View {
         VStack(spacing: Layout.buttonSpacing) {
@@ -84,6 +114,16 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
     }
 
     // MARK: Private computed properties
+
+    // Without a dialog the alert isn't shown, so its title is only read while one is
+    private var driveDialogTitle: String {
+        switch model.driveDialog {
+        case .mapsAppMissing:
+            Localizable.drive_missing_title_apple.localized
+        case .firstDrive, nil:
+            Localizable.drive_first_title_apple.localized
+        }
+    }
 
     private var locateSystemName: String {
         switch model.locateButton {

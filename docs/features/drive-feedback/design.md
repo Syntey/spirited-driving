@@ -10,7 +10,7 @@
 
 | The user comes back…                       | They see                                                                      |
 |--------------------------------------------|-------------------------------------------------------------------------------|
-| Before half the route's duration           | The route, still in the sheet and ready to drive ([Drive](../drive/design.md#drive-button)) |
+| Before half the route's duration           | The route, still in the sheet and ready to drive ([Drive](../drive/README.md#design)) |
 | Soon after the drive                       | The rating step in the sheet                                                  |
 | Later                                      | The search step, with the reminder bubble on the map                          |
 | From the notification                      | The rating step                                                               |
@@ -37,7 +37,7 @@ it closes.
 4. **After a thumb is picked:** a thanks line, the reason chips for that thumb, and **Done**.
 5. **Attribution:** "Route data © OpenStreetMap contributors". On Android, "Routing provided by Spirited Driving"
    comes first, as on every Android sheet that shows a route
-   ([Drive](../drive/design.md#routing-provided-by-android)).
+   ([Drive](../drive/README.md#design)).
 
 **Behaviour**
 
