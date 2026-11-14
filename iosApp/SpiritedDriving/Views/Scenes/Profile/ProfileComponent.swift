@@ -13,5 +13,12 @@ struct ProfileComponent: View {
             .composeScreen()
             .navigationTitle(Localizable.profile_screen_title.localized)
             .navigationBarTitleDisplayMode(.inline)
+            // The header illustration reaches behind the bar, so the bar shows only its buttons
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Color.clear.frame(width: 0, height: 0)
+                }
+            }
     }
 }

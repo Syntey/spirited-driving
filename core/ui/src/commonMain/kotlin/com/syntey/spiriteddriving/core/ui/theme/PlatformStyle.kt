@@ -78,7 +78,6 @@ data class PlatformStyle(
                 isOutlined = true,
             ),
             segmented = SegmentedStyle(
-                isOutlined = true,
                 height = Grid.d10,
                 textStyle = typography.labelLarge,
                 selectedFontWeight = FontWeight.Medium,
@@ -111,8 +110,11 @@ data class PlatformStyle(
         )
 
         private fun androidList(typography: Typography) = ListStyle(
-            isInsetGrouped = false,
-            groupInset = Grid.d0,
+            groupInset = Grid.d4,
+            outerCorner = Grid.d5,
+            innerCorner = Grid.d1,
+            rowGap = Grid.d0_5,
+            showsSeparators = false,
             rowPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d2),
             oneLineHeight = Grid.d14,
             twoLineHeight = Grid.d18,
@@ -187,15 +189,17 @@ data class PlatformStyle(
         )
 
         private fun iosSegmented(typography: Typography) = SegmentedStyle(
-            isOutlined = false,
             height = Grid.d8,
             textStyle = typography.bodySmall,
             selectedFontWeight = FontWeight.SemiBold,
         )
 
         private fun iosList(typography: Typography) = ListStyle(
-            isInsetGrouped = true,
             groupInset = Grid.d4,
+            outerCorner = Grid.d5_5,
+            innerCorner = Grid.d0,
+            rowGap = Grid.d0,
+            showsSeparators = true,
             rowPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d2_5),
             oneLineHeight = Grid.d11,
             twoLineHeight = Grid.d15,
@@ -228,12 +232,9 @@ data class ChipStyle(
     val isOutlined: Boolean,
 )
 
-/**
- * A segmented switch. [isOutlined]: Material's outlined segmented button, as on Android; otherwise an iOS segmented
- * control, a raised pill on a track.
- */
+/** A segmented switch: a raised pill on a track that slides to the selected segment. */
 @Immutable
-data class SegmentedStyle(val isOutlined: Boolean, val height: Dp, val textStyle: TextStyle, val selectedFontWeight: FontWeight)
+data class SegmentedStyle(val height: Dp, val textStyle: TextStyle, val selectedFontWeight: FontWeight)
 
 /** An on/off switch. [isIosStyle]: the iOS-style switch drawn in primary; otherwise Material 3's switch. */
 @Immutable
@@ -268,14 +269,18 @@ data class SheetHeaderStyle(val titleStyle: TextStyle, val subtitleStyle: TextSt
 data class MessageStyle(val isCapsule: Boolean)
 
 /**
- * Rows and groups. [isInsetGrouped]: rows on a rounded card inset by [groupInset], with separators, as iOS lists;
- * otherwise Material list items on the sheet. [showsChevrons]: rows that open a screen end in a chevron.
+ * Rows and groups. Rows sit on rounded cards inset by [groupInset] on both platforms; [outerCorner] rounds the group's
+ * outer corners and [innerCorner] the corners between rows; [rowGap] is the space between rows; [showsSeparators]:
+ * hairlines between rows, as iOS lists have. [showsChevrons]: rows that open a screen end in a chevron.
  * [valueAfterLabel]: a row's value sits at its end, as on iOS, rather than below the label.
  */
 @Immutable
 data class ListStyle(
-    val isInsetGrouped: Boolean,
     val groupInset: Dp,
+    val outerCorner: Dp,
+    val innerCorner: Dp,
+    val rowGap: Dp,
+    val showsSeparators: Boolean,
     val rowPadding: PaddingValues,
     val oneLineHeight: Dp,
     val twoLineHeight: Dp,

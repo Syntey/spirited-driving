@@ -13,7 +13,11 @@ app is about the roads, not about the user.
 
 Opens from the profile button on the map, signed in or not.
 
-Four groups, top to bottom. Only Feedback has a header.
+A picture of a hairpin road with two cars, from the [First launch](../first-launch/README.md) art, fills the top
+of the screen behind the status bar and the close button, and fades into the background at its bottom. Day art in
+light, dusk art in dark. The first group's card overlaps the faded part, so the road runs on behind it.
+
+Below it, four groups, top to bottom. Only Feedback has a header. Each row has an icon.
 
 | Group | Signed out                                                       | Signed in                          |
 |-------|------------------------------------------------------------------|------------------------------------|
@@ -110,8 +114,8 @@ Opens from the Account row in Profile.
 |                    | iOS                                                    | Android                                       |
 |--------------------|--------------------------------------------------------|-----------------------------------------------|
 | Profile            | Native sheet at large height                           | Full screen                                   |
-| Title, close, back | Native navigation bar in the sheet                     | Compose top app bar, titleLarge 22 / 28, Back |
-| Rows               | Inset grouped, corners 22 pt, chevrons                 | List items, 72 dp, no chevrons                |
+| Title, close, back | Native navigation bar in the sheet; on Profile, no title and a transparent bar over the picture | Compose top app bar, titleLarge 22 / 28, Back; on Profile, no title and a transparent bar, Back on a round `surfaceContainerLow` backing |
+| Rows               | Inset grouped, corners 22 pt, chevrons                 | A card per row, 72 dp, no chevrons            |
 | Sign-in card       | A grouped cell, corners 22 pt                          | `surfaceContainerHigh`, corners 16 dp         |
 | Sign-in buttons    | 50 pt, 17 semibold                                     | 48 dp, Roboto Medium 14                       |
 | Sign-in sheet      | Native sheet, inset, Liquid Glass, close button        | Modal bottom sheet with scrim, `surfaceContainerLow`, top corners 32 dp |
