@@ -494,7 +494,7 @@ class Component extends DCLogic {
 // Compose's vector images can't draw the road's dashed centre line, so the app draws the scene in code. This turns the
 // scene's markup (the small part of SVG used above) into calls to the helpers in ArtDrawing.kt, with the palette as `p`.
 {
-  const PACKAGE = 'com.syntey.spiriteddriving.feature.onboarding.art';
+  const PACKAGE = 'com.syntey.spiriteddriving.feature.onboarding.ui.components.art';
   const KT = path.join(HERE, '../../feature/onboarding/src/commonMain/kotlin', ...PACKAGE.split('.'), 'OnboardingArtScene.kt');
 
   const num = (v) => {

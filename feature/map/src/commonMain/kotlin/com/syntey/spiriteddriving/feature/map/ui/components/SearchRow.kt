@@ -1,0 +1,55 @@
+package com.syntey.spiriteddriving.feature.map.ui.components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.core.ui.components.AppButton
+import com.syntey.spiriteddriving.core.ui.components.ButtonDefaultColors
+import com.syntey.spiriteddriving.core.ui.components.ButtonDefaultStyles
+import com.syntey.spiriteddriving.core.ui.components.IconAction
+import com.syntey.spiriteddriving.core.ui.theme.Grid
+import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
+import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
+import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
+import dev.icerock.moko.resources.compose.painterResource
+import dev.icerock.moko.resources.compose.stringResource
+
+@Composable
+internal fun SearchRow(viewState: TripPlanViewState, actions: TripPlanScreen.Actions) {
+    val style = MapPlatformStyle.current
+    val isOpen = viewState.sheetHeight != SheetHeight.Collapsed
+    val back = IconAction(
+        icon = painterResource(MR.images.back),
+        label = stringResource(MR.strings.generic_close),
+        onClick = actions::onSearchClose,
+    )
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Grid.d2)) {
+        SearchField(
+            text = viewState.search.text,
+            onTextChange = actions::onSearchTextChange,
+            placeholder = stringResource(MR.strings.map_search_placeholder),
+            icon = painterResource(MR.images.search),
+            clear = IconAction(
+                icon = painterResource(MR.images.close),
+                label = stringResource(MR.strings.search_clear),
+                onClick = actions::onSearchClear,
+            ),
+            onFocus = actions::onSearchFocus,
+            back = back.takeIf { isOpen && style.closesSearchWithBackArrow },
+            isLoading = viewState.search.showsProgress,
+            modifier = Modifier.weight(1f),
+        )
+        // Cancel, not an X: the sheet stays and only collapses, and Cancel is how search fields close on iOS
+        if (isOpen && !style.closesSearchWithBackArrow) {
+            AppButton(
+                text = stringResource(MR.strings.generic_cancel),
+                onClick = actions::onSearchClose,
+                colors = ButtonDefaultColors.text(),
+                style = ButtonDefaultStyles.small(),
+            )
+        }
+    }
+}

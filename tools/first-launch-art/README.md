@@ -22,7 +22,7 @@ Needs Node 18 or newer and nothing else. The scenery is seeded, so every run dra
 | `OnboardingArt.dc.html`                | The illustration artboard for the design canvas                            |
 | `prototype.html`                       | The interactive prototype: `prototype.template.html` with the artwork filled in |
 
-It also writes the scene for the app, `feature/onboarding/.../art/OnboardingArtScene.kt`, which is checked in. Run the
+It also writes the scene for the app, `feature/onboarding/.../ui/components/art/OnboardingArtScene.kt`, which is checked in. Run the
 generator after every change, so the app and the canvas show the same picture.
 
 ## How it fits together

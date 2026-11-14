@@ -46,8 +46,8 @@ the field, recent places and the suggestions on both platforms. The code holds i
 decisions behind it. What isn't built yet, the start, is still in [design.md](design.md).
 
 - **Tapping the field moves the sheet to full height,** with the keyboard. Dragging the sheet lower or scrolling the
-  list hides the keyboard and keeps the text. Close (X on iOS, the back arrow or Back on Android) clears the text and
-  collapses the sheet.
+  list hides the keyboard and keeps the text. Close (Cancel on iOS, the back arrow or Back on Android) clears the text and
+  collapses the sheet. On iOS it's Cancel, not an X: an X on a sheet reads as dismissing it, but the map's sheet stays.
 - **Search on the keyboard only hides it.** Choosing the first suggestion for the user could plan a route to the
   wrong place.
 - **Autocorrect is off,** so it doesn't change place names.
