@@ -34,6 +34,8 @@ data class PlatformStyle(
     val cardShape: RoundedCornerShape,
     val message: MessageStyle,
     val list: ListStyle,
+    /** Rows on a sheet over the map: flat on the sheet on Android, on the grouped card as [list] on iOS. */
+    val sheetList: ListStyle,
     val menu: MenuStyle,
     /** Least size of anything tappable: 48dp on Android, 44pt on iOS. */
     val minTouchTarget: Dp,
@@ -99,6 +101,7 @@ data class PlatformStyle(
             cardShape = RoundedCornerShape(Grid.d4),
             message = MessageStyle(isCapsule = false),
             list = androidList(typography),
+            sheetList = androidSheetList(typography),
             menu = MenuStyle(iconsAfterLabels = false),
             minTouchTarget = Grid.d12,
         )
@@ -110,6 +113,7 @@ data class PlatformStyle(
         )
 
         private fun androidList(typography: Typography) = ListStyle(
+            isOnCard = true,
             groupInset = Grid.d4,
             outerCorner = Grid.d5,
             innerCorner = Grid.d1,
@@ -125,6 +129,15 @@ data class PlatformStyle(
             supportingStyle = typography.bodyMedium,
             headerStyle = typography.titleSmall,
             footerStyle = typography.bodySmall,
+        )
+
+        // Material list items straight on the sheet, without a card
+        private fun androidSheetList(typography: Typography) = androidList(typography).copy(
+            isOnCard = false,
+            groupInset = Grid.d0,
+            outerCorner = Grid.d0,
+            innerCorner = Grid.d0,
+            rowGap = Grid.d0,
         )
 
         private fun ios(typography: Typography) = PlatformStyle(
@@ -178,6 +191,7 @@ data class PlatformStyle(
             cardShape = RoundedCornerShape(Grid.d5_5),
             message = MessageStyle(isCapsule = true),
             list = iosList(typography),
+            sheetList = iosList(typography),
             menu = MenuStyle(iconsAfterLabels = true),
             minTouchTarget = Grid.d11,
         )
@@ -195,6 +209,7 @@ data class PlatformStyle(
         )
 
         private fun iosList(typography: Typography) = ListStyle(
+            isOnCard = true,
             groupInset = Grid.d4,
             outerCorner = Grid.d5_5,
             innerCorner = Grid.d0,
@@ -269,13 +284,15 @@ data class SheetHeaderStyle(val titleStyle: TextStyle, val subtitleStyle: TextSt
 data class MessageStyle(val isCapsule: Boolean)
 
 /**
- * Rows and groups. Rows sit on rounded cards inset by [groupInset] on both platforms; [outerCorner] rounds the group's
- * outer corners and [innerCorner] the corners between rows; [rowGap] is the space between rows; [showsSeparators]:
- * hairlines between rows, as iOS lists have. [showsChevrons]: rows that open a screen end in a chevron.
- * [valueAfterLabel]: a row's value sits at its end, as on iOS, rather than below the label.
+ * Rows and groups. [isOnCard]: rows sit on a rounded card inset by [groupInset]; otherwise straight on what's behind
+ * them, as Material list items on a sheet. [outerCorner] rounds the group's outer corners and [innerCorner] the corners
+ * between rows; [rowGap] is the space between rows; [showsSeparators]: hairlines between rows, as iOS lists have.
+ * [showsChevrons]: rows that open a screen end in a chevron. [valueAfterLabel]: a row's value sits at its end, as on
+ * iOS, rather than below the label.
  */
 @Immutable
 data class ListStyle(
+    val isOnCard: Boolean,
     val groupInset: Dp,
     val outerCorner: Dp,
     val innerCorner: Dp,
