@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.androidx.baselineprofile)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.distribution)
+    alias(libs.plugins.google.firebase.crashlytics)
     alias(libs.plugins.aboutlibraries.android)
 
     id(libs.plugins.conventions.lint.get().pluginId)
@@ -72,6 +73,7 @@ android {
             applicationIdSuffix = ".debug"
             isMinifyEnabled = false
             isShrinkResources = false
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = false
         }
         create(ProjectSettings.Android.BuildTypes.Enterprise) {
             isMinifyEnabled = true
@@ -84,6 +86,7 @@ android {
             matchingFallbacks.add(ProjectSettings.Android.BuildTypes.Release)
 
             applicationIdSuffix = ".enterprise"
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = true
         }
         getByName(ProjectSettings.Android.BuildTypes.Release) {
             isMinifyEnabled = true
@@ -93,6 +96,7 @@ android {
             proguardFile(file("proguard-rules.pro"))
 
             signingConfig = signingConfigs.getByName(ProjectSettings.Android.BuildTypes.Release)
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = true
         }
     }
 
@@ -152,6 +156,7 @@ dependencies {
     implementation(libs.google.firebase.appCheck.playIntegrity)
     debugImplementation(libs.google.firebase.appCheck.debug)
     "enterpriseImplementation"(libs.google.firebase.appCheck.debug)
+    implementation(libs.google.firebase.crashlytics)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.playServicesAuth)
     implementation(libs.google.identity.googleId)
