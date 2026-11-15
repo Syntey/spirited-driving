@@ -22,6 +22,11 @@ internal object Constants {
         const val FASTEST = "FASTEST"
     }
 
+    object AuthHeaders {
+        const val APP_CHECK = "X-Firebase-AppCheck"
+        const val BEARER_PREFIX = "Bearer "
+    }
+
     object PlaceKindCode {
         const val TOWN = "TOWN"
         const val STREET = "STREET"

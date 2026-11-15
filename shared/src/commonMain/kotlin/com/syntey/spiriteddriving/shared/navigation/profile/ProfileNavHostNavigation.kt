@@ -3,6 +3,8 @@ package com.syntey.spiriteddriving.shared.navigation.profile
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreen
+import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreen
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen
@@ -20,6 +22,7 @@ internal interface ProfileNavHostNavigation :
     SettingsScreenNavigation,
     FeedbackScreenNavigation,
     AboutScreenNavigation,
+    AccountScreenNavigation,
     LicencesScreenNavigation,
     LicenceTextScreenNavigation {
     val stackNavigator: StackNavigation<ProfileConfig>
@@ -34,7 +37,11 @@ internal class ProfileNavHostNavigator : ProfileNavHostNavigation {
 
     override fun ProfileScreen.openAbout() = stackNavigator.pushNew(ProfileConfig.About)
 
+    override fun ProfileScreen.openAccount() = stackNavigator.pushNew(ProfileConfig.Account)
+
     override fun AboutScreen.openLicences() = stackNavigator.pushNew(ProfileConfig.Licences)
+
+    override fun AccountScreen.pop() = stackNavigator.pop()
 
     override fun LicencesScreen.openLicenceText(args: LicenceTextArgs) =
         stackNavigator.pushNew(ProfileConfig.LicenceText(args))

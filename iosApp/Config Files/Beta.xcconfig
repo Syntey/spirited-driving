@@ -5,3 +5,7 @@ KMP_FRAMEWORK_BUILD_TYPE = release
 KMP_FRAMEWORK_TARGETS = device
 // Static framework is used for beta (TestFlight) and release builds.
 KMP_IS_STATIC = true
+
+// Google sign-in URL scheme, from the gitignored Firebase.xcconfig
+#include? "Firebase.xcconfig"
+GOOGLE_REVERSED_CLIENT_ID = $(GOOGLE_REVERSED_CLIENT_ID_BETA)

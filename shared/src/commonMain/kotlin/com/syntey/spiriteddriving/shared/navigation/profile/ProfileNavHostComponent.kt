@@ -37,6 +37,8 @@ internal class ProfileNavHostComponent(
 
                 ProfileConfig.About -> ProfileChild.About(ProfileScreens.about(childCtx, navigator))
 
+                ProfileConfig.Account -> ProfileChild.Account(ProfileScreens.account(childCtx, navigator))
+
                 ProfileConfig.Licences -> ProfileChild.Licences(ProfileScreens.licences(childCtx, navigator))
 
                 is ProfileConfig.LicenceText ->

@@ -1,10 +1,14 @@
 package com.syntey.spiriteddriving.core.platform.injection
 
+import com.syntey.spiriteddriving.core.platform.binding.AppCheck
+import com.syntey.spiriteddriving.core.platform.binding.Auth
 import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
 import com.syntey.spiriteddriving.core.platform.binding.LocationPermission
 import com.syntey.spiriteddriving.core.platform.binding.MapsApp
 import com.syntey.spiriteddriving.core.platform.binding.Platform
 import com.syntey.spiriteddriving.core.platform.binding.PlatformLocation
+import com.syntey.spiriteddriving.core.platform.binding.PlatformAppCheck
+import com.syntey.spiriteddriving.core.platform.binding.PlatformAuth
 import com.syntey.spiriteddriving.core.platform.binding.PlatformBindings
 import com.syntey.spiriteddriving.core.platform.binding.PlatformDriveReminders
 import com.syntey.spiriteddriving.core.platform.binding.PlatformLocationPermission
@@ -28,4 +32,8 @@ fun platformModule(
     single<PlatformMapsApp> { platformBindings.mapsApp() }
     factory { MapsApp(get()) }
     single<PlatformWebBrowser> { platformBindings.webBrowser() }
+    single<PlatformAuth> { platformBindings.auth() }
+    single { Auth(get()) }
+    single<PlatformAppCheck> { platformBindings.appCheck() }
+    single { AppCheck(get()) }
 }

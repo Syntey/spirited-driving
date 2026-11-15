@@ -146,6 +146,15 @@ dependencies {
 
     implementation(libs.koin.android)
     implementation(libs.google.playServices.location)
+
+    implementation(platform(libs.google.firebase.bom))
+    implementation(libs.google.firebase.auth)
+    implementation(libs.google.firebase.appCheck.playIntegrity)
+    debugImplementation(libs.google.firebase.appCheck.debug)
+    "enterpriseImplementation"(libs.google.firebase.appCheck.debug)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.playServicesAuth)
+    implementation(libs.google.identity.googleId)
     implementation(libs.logging.timber)
 
     implementation(libs.androidx.profileinstaller)
