@@ -20,6 +20,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreenUi
@@ -103,6 +104,11 @@ fun ProfileNavHostUi(
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
                 )
 
+                is ProfileChild.Account -> AccountScreenUi(
+                    screen = instance.screen,
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
+                )
+
                 is ProfileChild.Licences -> LicencesScreenUi(
                     screen = instance.screen,
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
@@ -124,6 +130,7 @@ private fun ProfileChild.title(): String = when (this) {
     is ProfileChild.Settings -> stringResource(MR.strings.settings_screen_title)
     is ProfileChild.Feedback -> stringResource(MR.strings.feedback_screen_title)
     is ProfileChild.About -> stringResource(MR.strings.about_screen_title)
+    is ProfileChild.Account -> stringResource(MR.strings.account_screen_title)
     is ProfileChild.Licences -> stringResource(MR.strings.licences_screen_title)
     is ProfileChild.LicenceText -> screen.title
 }

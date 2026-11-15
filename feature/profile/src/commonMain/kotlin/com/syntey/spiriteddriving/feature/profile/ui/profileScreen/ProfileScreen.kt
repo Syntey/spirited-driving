@@ -23,12 +23,20 @@ interface ProfileScreen {
         /** Tapped About Spirited Driving. */
         fun onAboutClick()
 
+        /** Tapped Continue with Google on the sign-in card. */
+        fun onSignInWithGoogleClick()
+
+        /** Tapped the Account row, which shows the signed-in user. */
+        fun onAccountClick()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onSettingsClick() = Unit
                 override fun onRateClick() = Unit
                 override fun onSendFeedbackClick() = Unit
                 override fun onAboutClick() = Unit
+                override fun onSignInWithGoogleClick() = Unit
+                override fun onAccountClick() = Unit
             }
         }
     }

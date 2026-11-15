@@ -3,6 +3,9 @@ package com.syntey.spiriteddriving.feature.profile.ui
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutComponentFactory
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreen
+import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountComponentFactory
+import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreen
+import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackComponentFactory
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen
@@ -38,6 +41,9 @@ object ProfileScreens {
 
     fun about(componentContext: AppComponentContext, navigation: AboutScreenNavigation): AboutScreen =
         AboutComponentFactory.createComponent(componentContext, navigation)
+
+    fun account(componentContext: AppComponentContext, navigation: AccountScreenNavigation): AccountScreen =
+        AccountComponentFactory.createComponent(componentContext, navigation)
 
     fun licences(componentContext: AppComponentContext, navigation: LicencesScreenNavigation): LicencesScreen =
         LicencesComponentFactory.createComponent(componentContext, navigation)

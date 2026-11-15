@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import com.syntey.spiriteddriving.core.ui.sheetFullScreenViewController
 import com.syntey.spiriteddriving.core.ui.sheetScreenViewController
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreen
+import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreen
+import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreenUi
@@ -35,6 +37,10 @@ fun FeedbackScreenUiController(screen: FeedbackScreen): UIViewController = sheet
 
 fun AboutScreenUiController(screen: AboutScreen): UIViewController = sheetScreenViewController {
     AboutScreenUi(screen = screen, modifier = Modifier.fillMaxSize())
+}
+
+fun AccountScreenUiController(screen: AccountScreen): UIViewController = sheetScreenViewController {
+    AccountScreenUi(screen = screen, modifier = Modifier.fillMaxSize())
 }
 
 fun LicencesScreenUiController(screen: LicencesScreen): UIViewController = sheetScreenViewController {

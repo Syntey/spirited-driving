@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.ListGroup
 import com.syntey.spiriteddriving.core.ui.components.ListRow
@@ -26,24 +28,28 @@ import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.core.ui.tools.EventsEffect
 import com.syntey.spiriteddriving.core.ui.tools.onEvent
+import com.syntey.spiriteddriving.feature.profile.model.ui.ProfilePreviewStates
 import com.syntey.spiriteddriving.feature.profile.ui.components.ProfileHeader
+import com.syntey.spiriteddriving.feature.profile.ui.components.SignInCard
 import com.syntey.spiriteddriving.feature.profile.ui.components.WebLinkIcon
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen.Actions.Companion.noOpActions
+import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 
 @Composable
 fun ProfileScreenUi(screen: ProfileScreen, modifier: Modifier = Modifier) {
     val uriHandler = LocalUriHandler.current
+    val viewState by screen.viewState.collectAsStateWithLifecycle()
     EventsEffect(screen.events) {
         // Rate opens the store app, not a web page, so it stays with the phone's handler and not the in-app browser
         onEvent<ProfileUiEvent.OpenWebPage> { uriHandler.openUri(it.url) }
     }
-    Content(actions = screen.actions, modifier = modifier)
+    Content(viewState = viewState, actions = screen.actions, modifier = modifier)
 }
 
 @Composable
-private fun Content(actions: ProfileScreen.Actions, modifier: Modifier = Modifier) {
+private fun Content(viewState: ProfileViewState, actions: ProfileScreen.Actions, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -58,6 +64,27 @@ private fun Content(actions: ProfileScreen.Actions, modifier: Modifier = Modifie
                 .padding(bottom = Grid.d4),
             verticalArrangement = Arrangement.spacedBy(Grid.d6),
         ) {
+            val account = viewState.account
+            if (account == null) {
+                SignInCard(
+                    signInError = viewState.signInError,
+                    isSigningIn = viewState.isSigningIn,
+                    onGoogleClick = actions::onSignInWithGoogleClick,
+                )
+            } else {
+                ListGroup {
+                    item { position ->
+                        ListRow(
+                            headline = stringResource(MR.strings.profile_account),
+                            supporting = account.supporting.localized(),
+                            leading = { ListRowIcon(painterResource(MR.images.account)) },
+                            chevron = painterResource(MR.images.chevron_right),
+                            onClick = actions::onAccountClick,
+                            position = position,
+                        )
+                    }
+                }
+            }
             ListGroup {
                 item { position ->
                     ListRow(
@@ -108,11 +135,47 @@ private fun Content(actions: ProfileScreen.Actions, modifier: Modifier = Modifie
 @ScreenPreviews
 @Composable
 private fun ProfileScreenPreview() = Showcase {
-    Content(actions = noOpActions())
+    Content(viewState = ProfilePreviewStates.viewState(), actions = noOpActions())
+}
+
+@ScreenPreviews
+@Composable
+private fun ProfileScreenSigningInPreview() = Showcase {
+    Content(viewState = ProfilePreviewStates.viewState(isSigningIn = true), actions = noOpActions())
+}
+
+@ScreenPreviews
+@Composable
+private fun ProfileScreenSignInErrorPreview() = Showcase {
+    Content(viewState = ProfilePreviewStates.viewState(signInError = ProfilePreviewStates.signInError()), actions = noOpActions())
+}
+
+@ScreenPreviews
+@Composable
+private fun ProfileScreenSignedInPreview() = Showcase {
+    Content(viewState = ProfilePreviewStates.viewState(account = ProfilePreviewStates.signedInAccount()), actions = noOpActions())
 }
 
 @DarkLightPreviews
 @Composable
 private fun ProfileScreenIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(actions = noOpActions())
+    Content(viewState = ProfilePreviewStates.viewState(), actions = noOpActions())
+}
+
+@DarkLightPreviews
+@Composable
+private fun ProfileScreenIosSigningInPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(viewState = ProfilePreviewStates.viewState(isSigningIn = true), actions = noOpActions())
+}
+
+@DarkLightPreviews
+@Composable
+private fun ProfileScreenIosSignInErrorPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(viewState = ProfilePreviewStates.viewState(signInError = ProfilePreviewStates.signInError()), actions = noOpActions())
+}
+
+@DarkLightPreviews
+@Composable
+private fun ProfileScreenIosSignedInPreview() = Showcase(platform = UiPlatform.Ios) {
+    Content(viewState = ProfilePreviewStates.viewState(account = ProfilePreviewStates.signedInAccount()), actions = noOpActions())
 }

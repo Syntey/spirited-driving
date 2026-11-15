@@ -12,6 +12,8 @@ final class PlatformBindingsImpl: PlatformBindings {
     private let driveRemindersImpl = PlatformDriveRemindersImpl()
     private let mapsAppImpl = PlatformMapsAppImpl()
     private let webBrowserImpl = PlatformWebBrowserImpl()
+    private let authImpl = PlatformAuthImpl()
+    private let appCheckImpl = PlatformAppCheckImpl()
 
     func platform() -> any Platform {
         PlatformImpl()
@@ -39,5 +41,13 @@ final class PlatformBindingsImpl: PlatformBindings {
 
     func webBrowser() -> any PlatformWebBrowser {
         webBrowserImpl
+    }
+
+    func auth() -> any PlatformAuth {
+        authImpl
+    }
+
+    func appCheck() -> any PlatformAppCheck {
+        appCheckImpl
     }
 }

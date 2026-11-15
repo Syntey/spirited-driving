@@ -4,6 +4,7 @@ import com.syntey.spiriteddriving.data.network.FlavorConstants
 import com.syntey.spiriteddriving.data.network.api.SpiritedDrivingApi
 import com.syntey.spiriteddriving.data.network.api.createSpiritedDrivingApi
 import com.syntey.spiriteddriving.data.network.plugin.AcceptLanguagePlugin
+import com.syntey.spiriteddriving.data.network.plugin.AuthTokensPlugin
 import com.syntey.spiriteddriving.data.network.plugin.ContentNegotiationPlugin
 import com.syntey.spiriteddriving.data.network.plugin.HttpTimeoutPlugin
 import com.syntey.spiriteddriving.data.network.plugin.LoggingPlugin
@@ -36,17 +37,21 @@ class NetworkModule {
         encodeDefaults = true
     }
 
+    // One parameter per plugin, which is the list of what the client installs.
+    @Suppress("LongParameterList")
     @Single
     internal fun httpClient(
         contentNegotiationPlugin: ContentNegotiationPlugin,
         httpTimeoutPlugin: HttpTimeoutPlugin,
         userAgentPlugin: UserAgentPlugin,
+        authTokensPlugin: AuthTokensPlugin,
         acceptLanguagePlugin: AcceptLanguagePlugin,
         loggingPlugin: LoggingPlugin,
     ): HttpClient = getNativeHttpClient {
         contentNegotiationPlugin.install(this)
         httpTimeoutPlugin.install(this)
         userAgentPlugin.install(this)
+        authTokensPlugin.install(this)
         acceptLanguagePlugin.install(this)
         loggingPlugin.install(this)
     }
