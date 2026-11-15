@@ -3,6 +3,7 @@ package com.syntey.spiriteddriving.shared.navigation.root
 import app.futured.arkitekt.crusecases.execute
 import app.futured.arkitekt.decompose.ext.asStateFlow
 import co.touchlab.kermit.Logger
+import com.syntey.spiriteddriving.shared.domain.ClaimDrivesOnSignInUseCase
 import com.syntey.spiriteddriving.shared.domain.IsOnboardingDoneUseCase
 import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
@@ -23,6 +24,7 @@ import org.koin.core.annotation.InjectedParam
 internal class RootNavHostComponent(
     @InjectedParam componentContext: AppComponentContext,
     private val isOnboardingDoneUseCase: IsOnboardingDoneUseCase,
+    private val claimDrivesOnSignInUseCase: ClaimDrivesOnSignInUseCase,
 ) : AppComponent<RootNavHostViewState, Nothing>(componentContext, RootNavHostViewState),
     RootNavHost {
 
@@ -64,6 +66,7 @@ internal class RootNavHostComponent(
     init {
         doOnCreate {
             checkOnboardingDone()
+            claimDrivesOnSignIn()
         }
     }
 
@@ -80,6 +83,12 @@ internal class RootNavHostComponent(
                 logger.e(error) { "First launch state not read" }
                 rootNavigator.slotNavigator.activate(RootConfig.Map)
             }
+        }
+    }
+
+    private fun claimDrivesOnSignIn() {
+        claimDrivesOnSignInUseCase.execute {
+            onError { error -> logger.e(error) { "Drives not claimed on sign-in" } }
         }
     }
 }

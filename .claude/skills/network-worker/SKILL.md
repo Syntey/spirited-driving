@@ -83,8 +83,8 @@ internal interface SpiritedDrivingApi {
 - `injection/NetworkModule.kt` provides it (`ktorFit.createSpiritedDrivingApi()`), so a new endpoint needs no wiring.
 - A call that sends `If-None-Match` returns `NetworkResult<Revalidated<…>>`, which carries the `ETag` or says the copy
   is current (304).
-- Headers every call needs (App Check, the signed-in user's ID token) come from an `HttpClientPlugin`, not from
-  method parameters, so no call can forget one.
+- Headers every call needs (App Check, the signed-in user's ID token) come from `plugin/AuthTokensPlugin`, an
+  `HttpClientPlugin`, not from method parameters, so no call can forget one.
 
 ## `:data:network`: the implementation
 
@@ -114,13 +114,6 @@ internal class ApiRoutePlanner(private val api: SpiritedDrivingApi) : RoutePlann
 - Decoding a response recorded from the local backend with the app's JSON config (`NetworkModule().restApiJson()`).
   This catches nullability that doesn't match the backend.
 - `SpiritedDrivingApi` with the converter is tested over Ktor's `MockEngine`, as in `ApiCoverageSourceTest`.
-
-## Not set up yet
-
-The first network change that needs one of these sets it up, then updates this section:
-
-- **Auth headers**: an `HttpClientPlugin` that adds `X-Firebase-AppCheck` to every call and
-  `Authorization: Bearer <ID token>` while signed in.
 
 ## Before you call it done
 
