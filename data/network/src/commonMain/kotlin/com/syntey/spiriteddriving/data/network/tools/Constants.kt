@@ -16,6 +16,7 @@ internal object Constants {
     object ProblemCode {
         // NO_ROUTE is left a generic failure: the UI doesn't explain it differently yet
         const val OUTSIDE_COVERAGE = "OUTSIDE_COVERAGE"
+        const val ID_TOKEN_INVALID = "ID_TOKEN_INVALID"
     }
 
     object RouteKindCode {

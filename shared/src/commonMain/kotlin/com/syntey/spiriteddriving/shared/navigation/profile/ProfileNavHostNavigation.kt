@@ -28,7 +28,7 @@ internal interface ProfileNavHostNavigation :
     val stackNavigator: StackNavigation<ProfileConfig>
 }
 
-internal class ProfileNavHostNavigator : ProfileNavHostNavigation {
+internal class ProfileNavHostNavigator(private val onAccountDeleted: () -> Unit) : ProfileNavHostNavigation {
     override val stackNavigator: StackNavigation<ProfileConfig> = StackNavigation()
 
     override fun ProfileScreen.openSettings() = stackNavigator.pushNew(ProfileConfig.Settings)
@@ -42,6 +42,8 @@ internal class ProfileNavHostNavigator : ProfileNavHostNavigation {
     override fun AboutScreen.openLicences() = stackNavigator.pushNew(ProfileConfig.Licences)
 
     override fun AccountScreen.pop() = stackNavigator.pop()
+
+    override fun AccountScreen.popAccountDeleted() = stackNavigator.pop { onAccountDeleted() }
 
     override fun LicencesScreen.openLicenceText(args: LicenceTextArgs) =
         stackNavigator.pushNew(ProfileConfig.LicenceText(args))

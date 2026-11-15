@@ -11,6 +11,7 @@ import com.syntey.spiriteddriving.data.network.dto.plan.PlanRequestDto
 import com.syntey.spiriteddriving.data.network.result.NetworkResult
 import com.syntey.spiriteddriving.data.network.result.Revalidated
 import de.jensklingenberg.ktorfit.http.Body
+import de.jensklingenberg.ktorfit.http.DELETE
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Header
 import de.jensklingenberg.ktorfit.http.PUT
@@ -60,6 +61,10 @@ internal interface SpiritedDrivingApi {
         @Path("driveId") driveId: String,
         @Body request: RecordDriveRequestDto,
     ): NetworkResult<Unit>
+
+    /** `DELETE /me` (`deleteAccount`). */
+    @DELETE("me")
+    suspend fun deleteAccount(): NetworkResult<Unit>
 
     /** `POST /me/drives/claim` (`claimDrives`). */
     @POST("me/drives/claim")
