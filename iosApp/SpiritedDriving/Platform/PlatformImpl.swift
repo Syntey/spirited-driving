@@ -50,4 +50,12 @@ final class PlatformImpl: Platform {
     nonisolated func countryName(code: String) -> String? {
         Locale(identifier: "en").localizedString(forRegionCode: code)
     }
+
+    nonisolated func openSourceLibrariesJson() -> String {
+        guard let url = Bundle.main.url(forResource: "aboutlibraries", withExtension: "json"),
+              let json = try? String(contentsOf: url, encoding: .utf8) else {
+            return ""
+        }
+        return json
+    }
 }

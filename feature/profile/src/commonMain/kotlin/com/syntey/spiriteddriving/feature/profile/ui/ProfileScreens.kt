@@ -7,6 +7,13 @@ import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenNavi
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackComponentFactory
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreenNavigation
+import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesComponentFactory
+import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesScreen
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextArgs
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextComponentFactory
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreen
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreenNavigation
+import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileComponentFactory
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreenNavigation
@@ -31,4 +38,13 @@ object ProfileScreens {
 
     fun about(componentContext: AppComponentContext, navigation: AboutScreenNavigation): AboutScreen =
         AboutComponentFactory.createComponent(componentContext, navigation)
+
+    fun licences(componentContext: AppComponentContext, navigation: LicencesScreenNavigation): LicencesScreen =
+        LicencesComponentFactory.createComponent(componentContext, navigation)
+
+    fun licenceText(
+        componentContext: AppComponentContext,
+        navigation: LicenceTextScreenNavigation,
+        args: LicenceTextArgs,
+    ): LicenceTextScreen = LicenceTextComponentFactory.createComponent(componentContext, navigation, args)
 }

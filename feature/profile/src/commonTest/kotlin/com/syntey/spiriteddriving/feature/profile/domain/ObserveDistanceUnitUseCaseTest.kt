@@ -63,4 +63,6 @@ private class FakePlatform(override val regionCode: String?) : Platform {
     override val preferredLanguages = listOf("en")
 
     override fun countryName(code: String): String? = null
+
+    override fun openSourceLibrariesJson(): String = ""
 }

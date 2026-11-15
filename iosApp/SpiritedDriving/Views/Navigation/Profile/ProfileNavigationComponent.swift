@@ -29,6 +29,10 @@ struct ProfileNavigationComponent: View {
                     FeedbackComponent(entry.screen)
                 case let .about(entry):
                     AboutComponent(entry.screen)
+                case let .licences(entry):
+                    LicencesComponent(entry.screen)
+                case let .licenceText(entry):
+                    LicenceTextComponent(entry.screen)
                 }
             }
         )

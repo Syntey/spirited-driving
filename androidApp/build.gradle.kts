@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.androidx.baselineprofile)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.distribution)
+    alias(libs.plugins.aboutlibraries.android)
 
     id(libs.plugins.conventions.lint.get().pluginId)
 }
@@ -135,6 +136,7 @@ dependencies {
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.compose)
+    implementation(libs.androidx.browser)
 
     implementation(libs.decompose)
     implementation(libs.decompose.compose.ext)

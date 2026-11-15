@@ -20,6 +20,20 @@ plugins {
     alias(libs.plugins.moko.resources)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.aboutlibraries)
+}
+
+// The iOS app bundles the JSON for the Licences screen, so every iOS framework build regenerates it.
+aboutLibraries {
+    collect {
+        fetchRemoteLicense = false
+        // Kotlin/Native targets have no `*CompileClasspath`, so the export names the iOS configuration itself
+        all = true
+    }
+    export {
+        outputFile = rootProject.layout.projectDirectory.file("iosApp/SpiritedDriving/Resources/aboutlibraries.json")
+        variant = "iosArm64CompileKlibraries"
+    }
 }
 
 kotlin {
@@ -177,8 +191,10 @@ private fun Copy.assembleAndCopySwiftPackageForBuildType(buildType: NativeBuildT
 
 tasks.register<Copy>("assembleAndCopyDebugSwiftPackage") {
     assembleAndCopySwiftPackageForBuildType(NativeBuildType.DEBUG)
+    dependsOn("exportLibraryDefinitions")
 }
 
 tasks.register<Copy>("assembleAndCopyReleaseSwiftPackage") {
     assembleAndCopySwiftPackageForBuildType(NativeBuildType.RELEASE)
+    dependsOn("exportLibraryDefinitions")
 }

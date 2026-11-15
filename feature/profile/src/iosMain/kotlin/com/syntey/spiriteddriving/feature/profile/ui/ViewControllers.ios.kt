@@ -11,6 +11,10 @@ import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreen
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreenUi
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreen
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreenUi
+import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesScreen
+import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreen
@@ -31,4 +35,12 @@ fun FeedbackScreenUiController(screen: FeedbackScreen): UIViewController = sheet
 
 fun AboutScreenUiController(screen: AboutScreen): UIViewController = sheetScreenViewController {
     AboutScreenUi(screen = screen, modifier = Modifier.fillMaxSize())
+}
+
+fun LicencesScreenUiController(screen: LicencesScreen): UIViewController = sheetScreenViewController {
+    LicencesScreenUi(screen = screen, modifier = Modifier.fillMaxSize())
+}
+
+fun LicenceTextScreenUiController(screen: LicenceTextScreen): UIViewController = sheetScreenViewController {
+    LicenceTextScreenUi(screen = screen, modifier = Modifier.fillMaxSize())
 }

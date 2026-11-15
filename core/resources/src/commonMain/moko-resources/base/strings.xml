@@ -165,6 +165,17 @@
     <string name="about_terms">Terms</string>
     <string name="about_version">Version</string>
     <string name="about_version_value">%1$s (%2$s)</string>
+    <string name="about_licences">Licences</string>
+
+    <!-- Licences -->
+    <string name="licences_screen_title">Licences</string>
+    <string name="licences_route_data">Route data and place search</string>
+    <string name="licences_osm">© OpenStreetMap contributors</string>
+    <string name="licences_osm_supporting">Available under the Open Database License.</string>
+    <string name="licences_libraries">Open-source libraries</string>
+    <string name="licences_icons">Icons</string>
+    <string name="licences_phosphor">Phosphor Icons</string>
+    <string name="licences_mit">MIT License</string>
 
     <!-- Settings -->
     <string name="settings_screen_title">Settings</string>

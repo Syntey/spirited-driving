@@ -22,6 +22,8 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreenUi
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreenUi
+import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreenUi
 import com.syntey.spiriteddriving.shared.navigation.profile.ProfileChild
@@ -41,12 +43,7 @@ fun ProfileNavHostUi(
 ) {
     val stack by navHost.stack.collectAsStateWithLifecycle()
     val isProfile = stack.active.instance is ProfileChild.Profile
-    val title = when (stack.active.instance) {
-        is ProfileChild.Profile -> MR.strings.profile_screen_title
-        is ProfileChild.Settings -> MR.strings.settings_screen_title
-        is ProfileChild.Feedback -> MR.strings.feedback_screen_title
-        is ProfileChild.About -> MR.strings.about_screen_title
-    }
+    val title = stack.active.instance.title()
     val barColor = if (isProfile) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow
 
     Scaffold(
@@ -56,7 +53,7 @@ fun ProfileNavHostUi(
             TopAppBar(
                 title = {
                     // The picture at the top of Profile is its only heading
-                    if (!isProfile) Text(text = stringResource(title), style = MaterialTheme.typography.titleLarge)
+                    if (!isProfile) Text(text = title, style = MaterialTheme.typography.titleLarge)
                 },
                 navigationIcon = {
                     IconButton(
@@ -105,7 +102,28 @@ fun ProfileNavHostUi(
                     screen = instance.screen,
                     modifier = Modifier.fillMaxSize().padding(innerPadding),
                 )
+
+                is ProfileChild.Licences -> LicencesScreenUi(
+                    screen = instance.screen,
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
+                )
+
+                is ProfileChild.LicenceText -> LicenceTextScreenUi(
+                    screen = instance.screen,
+                    modifier = Modifier.fillMaxSize().padding(innerPadding),
+                )
             }
         }
     }
+}
+
+/** The licence text screen is titled with its library's name, the other screens with a string resource. */
+@Composable
+private fun ProfileChild.title(): String = when (this) {
+    is ProfileChild.Profile -> stringResource(MR.strings.profile_screen_title)
+    is ProfileChild.Settings -> stringResource(MR.strings.settings_screen_title)
+    is ProfileChild.Feedback -> stringResource(MR.strings.feedback_screen_title)
+    is ProfileChild.About -> stringResource(MR.strings.about_screen_title)
+    is ProfileChild.Licences -> stringResource(MR.strings.licences_screen_title)
+    is ProfileChild.LicenceText -> screen.title
 }

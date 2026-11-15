@@ -9,6 +9,7 @@ import com.syntey.spiriteddriving.core.platform.binding.PlatformFirebaseCrashlyt
 import com.syntey.spiriteddriving.core.platform.binding.PlatformLocation
 import com.syntey.spiriteddriving.core.platform.binding.PlatformLocationPermission
 import com.syntey.spiriteddriving.core.platform.binding.PlatformMapsApp
+import com.syntey.spiriteddriving.core.platform.binding.PlatformWebBrowser
 
 class PlatformBindingsImpl(private val applicationContext: Context) : PlatformBindings {
 
@@ -16,6 +17,7 @@ class PlatformBindingsImpl(private val applicationContext: Context) : PlatformBi
     private val location = PlatformLocationImpl(applicationContext)
     private val driveReminders = PlatformDriveRemindersImpl(applicationContext)
     private val mapsApp = PlatformMapsAppImpl(applicationContext)
+    private val webBrowser = PlatformWebBrowserImpl()
 
     override fun platform(): Platform = PlatformImpl(applicationContext)
     override fun firebaseCrashlytics(): PlatformFirebaseCrashlytics = PlatformFirebaseCrashlyticsImpl()
@@ -23,6 +25,7 @@ class PlatformBindingsImpl(private val applicationContext: Context) : PlatformBi
     override fun location(): PlatformLocation = location
     override fun driveReminders(): PlatformDriveReminders = driveReminders
     override fun mapsApp(): PlatformMapsApp = mapsApp
+    override fun webBrowser(): PlatformWebBrowser = webBrowser
 
     /**
      * Connects the bindings that show system UI, such as a permission prompt, to [activity]. Call it from `onCreate`.
@@ -30,5 +33,6 @@ class PlatformBindingsImpl(private val applicationContext: Context) : PlatformBi
     fun attach(activity: ComponentActivity) {
         locationPermission.attach(activity)
         driveReminders.attach(activity)
+        webBrowser.attach(activity)
     }
 }

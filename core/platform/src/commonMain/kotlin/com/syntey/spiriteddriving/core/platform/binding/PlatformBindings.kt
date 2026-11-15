@@ -29,4 +29,7 @@ interface PlatformBindings {
 
     /** Provides the phone's maps app that drives are handed to, see [MapsApp]. */
     fun mapsApp(): PlatformMapsApp
+
+    /** Provides the in-app browser, see [PlatformWebBrowser]. */
+    fun webBrowser(): PlatformWebBrowser
 }
