@@ -22,9 +22,10 @@ class PlatformBindingsImpl(private val applicationContext: Context) : PlatformBi
     private val webBrowser = PlatformWebBrowserImpl()
     private val auth = PlatformAuthImpl(applicationContext)
     private val appCheck = PlatformAppCheckImpl(applicationContext)
+    private val firebaseCrashlytics = PlatformFirebaseCrashlyticsImpl(applicationContext)
 
     override fun platform(): Platform = PlatformImpl(applicationContext)
-    override fun firebaseCrashlytics(): PlatformFirebaseCrashlytics = PlatformFirebaseCrashlyticsImpl()
+    override fun firebaseCrashlytics(): PlatformFirebaseCrashlytics = firebaseCrashlytics
     override fun locationPermission(): PlatformLocationPermission = locationPermission
     override fun location(): PlatformLocation = location
     override fun driveReminders(): PlatformDriveReminders = driveReminders
