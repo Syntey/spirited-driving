@@ -134,4 +134,6 @@ private class NamingPlatform(private val names: Map<String, String>) : Platform 
     override val regionCode: String? = null
 
     override fun countryName(code: String): String? = names[code]
+
+    override fun openSourceLibrariesJson(): String = ""
 }

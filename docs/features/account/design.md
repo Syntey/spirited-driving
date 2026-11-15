@@ -31,8 +31,8 @@ Below it, four groups, top to bottom. Only Feedback has a header. Each row has a
 - **Not a sign-in wall:** signed out, Settings works as when signed in, and the card stays compact.
 - **Trip history**, signed out, opens the [sign-in sheet](#sign-in-sheet).
 - **Feedback and About** are on Profile, not in Settings, so Settings holds only preferences. Their rows work as in
-  [Settings design](../settings/design.md#feedback); About Spirited Driving opens
-  [About](../settings/design.md#about).
+  [Settings](../settings/README.md#design); About Spirited Driving opens About, with the legal pages, licences and
+  version.
 - **Account row:** the second line is the email. For an Apple Hide My Email address it reads "Signed in with Apple"
   instead, since the relay address means nothing to the user.
 

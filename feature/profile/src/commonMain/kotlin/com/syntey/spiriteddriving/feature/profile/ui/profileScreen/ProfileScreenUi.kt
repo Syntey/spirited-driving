@@ -36,6 +36,7 @@ import dev.icerock.moko.resources.compose.stringResource
 fun ProfileScreenUi(screen: ProfileScreen, modifier: Modifier = Modifier) {
     val uriHandler = LocalUriHandler.current
     EventsEffect(screen.events) {
+        // Rate opens the store app, not a web page, so it stays with the phone's handler and not the in-app browser
         onEvent<ProfileUiEvent.OpenWebPage> { uriHandler.openUri(it.url) }
     }
     Content(actions = screen.actions, modifier = modifier)

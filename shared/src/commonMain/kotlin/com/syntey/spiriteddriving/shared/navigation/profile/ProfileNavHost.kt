@@ -4,6 +4,9 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.Child
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreen
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextArgs
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreen
+import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesScreen
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreen
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +43,12 @@ sealed interface ProfileConfig {
 
     @Serializable
     data object About : ProfileConfig
+
+    @Serializable
+    data object Licences : ProfileConfig
+
+    @Serializable
+    data class LicenceText(val args: LicenceTextArgs) : ProfileConfig
 }
 
 sealed interface ProfileChild {
@@ -51,4 +60,8 @@ sealed interface ProfileChild {
     data class Feedback(val screen: FeedbackScreen) : ProfileChild
 
     data class About(val screen: AboutScreen) : ProfileChild
+
+    data class Licences(val screen: LicencesScreen) : ProfileChild
+
+    data class LicenceText(val screen: LicenceTextScreen) : ProfileChild
 }

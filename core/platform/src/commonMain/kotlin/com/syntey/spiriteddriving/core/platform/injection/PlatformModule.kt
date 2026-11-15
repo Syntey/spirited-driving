@@ -9,6 +9,7 @@ import com.syntey.spiriteddriving.core.platform.binding.PlatformBindings
 import com.syntey.spiriteddriving.core.platform.binding.PlatformDriveReminders
 import com.syntey.spiriteddriving.core.platform.binding.PlatformLocationPermission
 import com.syntey.spiriteddriving.core.platform.binding.PlatformMapsApp
+import com.syntey.spiriteddriving.core.platform.binding.PlatformWebBrowser
 import com.syntey.spiriteddriving.core.platform.binding.UserLocation
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.withOptions
@@ -26,4 +27,5 @@ fun platformModule(
     factory { DriveReminders(get()) }
     single<PlatformMapsApp> { platformBindings.mapsApp() }
     factory { MapsApp(get()) }
+    single<PlatformWebBrowser> { platformBindings.webBrowser() }
 }

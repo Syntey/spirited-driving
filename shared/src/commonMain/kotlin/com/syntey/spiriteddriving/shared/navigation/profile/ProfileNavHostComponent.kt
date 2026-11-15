@@ -30,9 +30,17 @@ internal class ProfileNavHostComponent(
         childFactory = { config, childCtx ->
             when (config) {
                 ProfileConfig.Profile -> ProfileChild.Profile(ProfileScreens.profile(childCtx, navigator))
+
                 ProfileConfig.Settings -> ProfileChild.Settings(ProfileScreens.settings(childCtx, navigator))
+
                 ProfileConfig.Feedback -> ProfileChild.Feedback(ProfileScreens.feedback(childCtx, navigator))
+
                 ProfileConfig.About -> ProfileChild.About(ProfileScreens.about(childCtx, navigator))
+
+                ProfileConfig.Licences -> ProfileChild.Licences(ProfileScreens.licences(childCtx, navigator))
+
+                is ProfileConfig.LicenceText ->
+                    ProfileChild.LicenceText(ProfileScreens.licenceText(childCtx, navigator, config.args))
             }
         },
     ).asStateFlow()

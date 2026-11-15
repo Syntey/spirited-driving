@@ -4,12 +4,13 @@ import android.content.Context
 import android.os.Build
 import android.os.LocaleList
 import com.syntey.spiriteddriving.android.BuildConfig
+import com.syntey.spiriteddriving.android.R
 import com.syntey.spiriteddriving.core.platform.binding.Platform
 import com.syntey.spiriteddriving.core.resources.*
 import java.util.IllformedLocaleException
 import java.util.Locale
 
-class PlatformImpl(applicationContext: Context) : Platform {
+class PlatformImpl(private val applicationContext: Context) : Platform {
     override val appName: String = MR.strings.app_name.getString(applicationContext)
     override val appVersionName: String = BuildConfig.VERSION_NAME
     override val appBuildNumber: String = BuildConfig.VERSION_CODE.toString()
@@ -30,4 +31,7 @@ class PlatformImpl(applicationContext: Context) : Platform {
         }
         return name?.takeIf { it.isNotBlank() && it != code }
     }
+
+    override fun openSourceLibrariesJson(): String =
+        applicationContext.resources.openRawResource(R.raw.aboutlibraries).bufferedReader().use { it.readText() }
 }

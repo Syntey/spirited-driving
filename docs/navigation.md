@@ -74,7 +74,7 @@ The profile button in the top right corner of the map opens Profile, signed in o
   ([design](features/trip-history/design.md#rating-sheet)).
 - [Settings](features/settings/README.md): units, vignettes and drive reminders. It works the same signed in or out.
 - Rate Spirited Driving and Send feedback, and About with the legal pages, licences and version
-  ([Settings design](features/settings/design.md#feedback)).
+  ([Settings design](features/settings/README.md#design)).
 
 ## Sign-in
 

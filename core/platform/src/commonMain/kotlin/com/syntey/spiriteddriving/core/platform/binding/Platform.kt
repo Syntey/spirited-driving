@@ -49,4 +49,7 @@ interface Platform {
 
     /** The English name of the country with ISO 3166-1 alpha-2 [code], such as "Czechia" for "CZ"; null when the OS doesn't know it. */
     fun countryName(code: String): String?
+
+    /** The open-source libraries the app ships, as the JSON AboutLibraries generates from the dependencies at build time. */
+    fun openSourceLibrariesJson(): String
 }

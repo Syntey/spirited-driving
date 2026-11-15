@@ -52,5 +52,7 @@ class SendFeedbackUseCaseTest {
         override val regionCode: String? = null
 
         override fun countryName(code: String): String? = null
+
+        override fun openSourceLibrariesJson(): String = ""
     }
 }

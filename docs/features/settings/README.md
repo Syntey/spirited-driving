@@ -1,9 +1,8 @@
 # Settings
 
-> **Status:** draft, MVP. Last updated 2026-11-14.
+> **Status:** built, MVP. Last updated 2026-11-15.
 
-The user's preferences for planning, plus feedback and information about the app. Its screens are in
-[design.md](design.md).
+The user's preferences for planning, plus feedback and information about the app.
 
 ## What the user can do
 
@@ -34,6 +33,32 @@ The user's preferences for planning, plus feedback and information about the app
   [Map](../map/README.md) loads; the reminder from [Drive feedback](../drive-feedback/README.md).
 - **Provides:** units and vignettes for [Route planning](../route-planning/README.md); units for every screen that
   shows a distance.
+
+## Design
+
+The screens are in `:feature:profile`: Settings, Send feedback, About, Licences and Licence text, pushed inside the
+Profile sheet on iOS and full screen on Android. The code holds their layout, sizes and copy; these are the decisions
+behind them.
+
+- **Settings holds only preferences:** Units, Motorway vignettes and Notifications. Rate, Send feedback and About are
+  on [Profile](../account/design.md#profile), so Settings stays short and looks the same signed in or out.
+- **The units switch** is the segmented switch from [Route planning](../route-planning/README.md#design), so km / mi
+  looks like min / km. A remembered distance budget moves to the closest chip in the new unit.
+- **Vignettes come with the covered area,** one row per country, with Czechia built in until the covered area has
+  loaded. Changing one while a trip is planned plans it again when the user is back on the map.
+- **Drive reminders mirror the phone.** Tapping the row opens the phone's notification settings for the app, or the
+  "Drive reminders" channel on Android, asking for permission first where the phone still lets the app ask (iOS
+  provisional authorization, the Android 13 prompt). The switch refreshes when the user comes back.
+- **Rate opens the store page,** on its write-a-review action, not the in-app review prompt: the system may decide
+  not to show that, and the user tapped on purpose.
+- **Send feedback** shows what is sent along with the message (app version, OS, phone), so anonymous means something
+  the user can check. A failed send keeps the text. Back leaves without asking.
+- **Web pages open in the in-app browser,** a Safari view controller on iOS and a Custom Tab on Android, so the user
+  stays in the app. Rate is the exception, since it opens the store app.
+- **Licences are generated, not kept by hand.** The build lists each platform's own dependencies with
+  AboutLibraries, so a new library shows up by itself and each platform lists only what it ships. The base maps
+  aren't listed: Google Maps and MapKit show their own legal notices on the map. Phosphor Icons is listed by hand,
+  since the app copies the icons instead of depending on the library.
 
 ## Account
 

@@ -153,7 +153,7 @@ budget, is filled with primary; any number out of a set, such as the reasons aft
 
 ## Segmented switch
 
-`SegmentedSwitch`: a choice of two or three, such as km / mi in [Settings](features/settings/design.md#units) and
+`SegmentedSwitch`: a choice of two or three, such as km / mi in [Settings](features/settings/README.md#design) and
 min / km in [Route planning](features/route-planning/README.md#design). The same on both platforms: a faint
 capsule track whose selected segment is a raised pill that slides, or jumps with Reduce Motion. 40 dp high on
 Android with labelLarge, the iOS segmented control's size on iOS. Screen readers
