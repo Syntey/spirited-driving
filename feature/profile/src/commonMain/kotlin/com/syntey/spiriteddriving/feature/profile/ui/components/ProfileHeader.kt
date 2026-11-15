@@ -12,11 +12,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.Showcase
 import com.syntey.spiriteddriving.core.ui.preview.DarkLightPreviews
+import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import dev.icerock.moko.resources.compose.painterResource
 
 /**
@@ -25,14 +25,13 @@ import dev.icerock.moko.resources.compose.painterResource
  */
 @Composable
 internal fun ProfileHeader(modifier: Modifier = Modifier) {
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     Box(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(HEADER_ASPECT_RATIO),
     ) {
         Image(
-            painter = painterResource(if (isDark) MR.images.profile_header_dusk else MR.images.profile_header_day),
+            painter = painterResource(if (AppTheme.customColors.isDark) MR.images.profile_header_dusk else MR.images.profile_header_day),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
