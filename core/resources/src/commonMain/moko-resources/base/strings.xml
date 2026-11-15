@@ -172,6 +172,12 @@
     <string name="account_footer_google">Your name and email come from your Google account.</string>
     <string name="account_footer_apple">Your name and email come from your Apple account.</string>
     <string name="account_sign_out">Sign out</string>
+    <string name="account_delete">Delete account</string>
+    <string name="account_delete_footer">Deletes your saved routes, trip history and ratings for good.</string>
+    <string name="account_delete_dialog_title">Delete your account?</string>
+    <string name="account_delete_dialog_message">Your saved routes, trip history and ratings are deleted for good.</string>
+    <string name="account_deleted">Account deleted</string>
+    <string name="account_delete_failed">Couldn\'t delete your account. Check your connection and try again.</string>
     <string name="sign_in_continue_google">Continue with Google</string>
     <string name="sign_in_failed">Couldn\'t sign in. Check your connection and try again.</string>
     <string name="sign_in_other_provider_apple">This email already has an account that uses Apple. Continue with Apple to sign in.</string>

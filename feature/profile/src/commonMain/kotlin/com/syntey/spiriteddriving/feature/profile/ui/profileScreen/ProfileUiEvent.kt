@@ -7,4 +7,7 @@ sealed interface ProfileUiEvent : UiEvent {
 
     /** Open [url] in the browser. */
     data class OpenWebPage(val url: String) : ProfileUiEvent
+
+    /** The account was deleted, so the screen says so. */
+    data object AccountDeleted : ProfileUiEvent
 }

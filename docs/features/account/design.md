@@ -1,6 +1,6 @@
 # Account screens
 
-> **Status:** draft, being iterated. Last updated 2026-11-14.
+> **Status:** draft, being iterated. Last updated 2026-11-15.
 >
 > The design for [Account](README.md): Profile, the sign-in sheet, the Account screen and deleting the account.
 > Profile is here because its first row is the account. Uses the [Theme](../../theme.md); where Profile opens is in
@@ -99,15 +99,16 @@ Opens from the Account row in Profile.
 ## Deleting the account
 
 1. **Delete account** asks first: "Delete your account?", "Your saved routes, trip history and ratings are
-   deleted for good. To confirm, you'll sign in with Google once more." (or Apple), with **Delete
-   account** and **Cancel**.
-2. The provider's sign-in sheet opens. Firebase deletes only a user who signed in recently, and Apple requires the
-   app to revoke its Sign in with Apple token, which needs a fresh authorization. It's also a deliberate second step
-   before something that can't be undone. Cancelling it cancels the deletion.
-3. While deleting, a spinner replaces the Delete account label and the screen takes no input.
+   deleted for good.", with **Delete account** and **Cancel**.
+2. Google users need no second sign-in: the backend deletes the Firebase user itself, which needs no recent sign-in,
+   and a second account picker could hand back a different account than the one being deleted. Apple users will sign
+   in once more after the dialog, because the app has to revoke its Sign in with Apple token, which needs a fresh
+   authorization; cancelling that cancels the deletion.
+3. While deleting, the spinner takes the place of Delete account's icon, as on buttons, and the screen takes no input.
 4. Done: back to Profile, signed out, with "Account deleted". Settings and recent places stay on the device,
    as after signing out.
-5. If it fails, nothing is deleted: "Couldn't delete your account. Check your connection and try again."
+5. If it fails, the user stays on Account with the message "Couldn't delete your account. Check your connection and
+   try again.", and can try again. If the backend deleted the data but not the sign-in, trying again finishes it.
 
 ## Platforms
 
@@ -148,7 +149,7 @@ Opens from the Account row in Profile.
 | Other provider               | This email already has an account that uses Google. Continue with Google to sign in.   |
 | Account footer               | Your name and email come from your Google account.                                     |
 | Delete account row           | Deletes your saved routes, trip history and ratings for good.                          |
-| Confirmation                 | Delete your account? / Your saved routes, trip history and ratings are deleted for good. To confirm, you'll sign in with Google once more. |
+| Confirmation                 | Delete your account? / Your saved routes, trip history and ratings are deleted for good. |
 | Deleted                      | Account deleted                                                                        |
 | Delete failed                | Couldn't delete your account. Check your connection and try again.                     |
 

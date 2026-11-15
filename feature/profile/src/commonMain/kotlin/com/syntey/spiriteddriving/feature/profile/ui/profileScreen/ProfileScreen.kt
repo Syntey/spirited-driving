@@ -10,6 +10,9 @@ interface ProfileScreen {
     /** One-time events for the screen, such as opening a web page. */
     val events: Flow<ProfileUiEvent>
 
+    /** Called by navigation when Account was left because the account was deleted. */
+    fun onAccountDeleted()
+
     interface Actions {
         /** Tapped Settings. */
         fun onSettingsClick()

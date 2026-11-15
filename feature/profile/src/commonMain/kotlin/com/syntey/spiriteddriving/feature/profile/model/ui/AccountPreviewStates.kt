@@ -15,4 +15,8 @@ internal object AccountPreviewStates {
         email = "x7k2@privaterelay.appleid.com",
         provider = SignInProvider.Apple,
     )
+
+    fun deletingViewState() = googleViewState().copy(isDeleting = true)
+
+    fun deleteDialogViewState() = googleViewState().copy(isDeleteDialogShown = true)
 }

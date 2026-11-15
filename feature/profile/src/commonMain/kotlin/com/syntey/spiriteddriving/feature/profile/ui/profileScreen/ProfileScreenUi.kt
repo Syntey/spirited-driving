@@ -1,7 +1,9 @@
 package com.syntey.spiriteddriving.feature.profile.ui.profileScreen
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,8 +14,12 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -21,7 +27,9 @@ import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.ListGroup
 import com.syntey.spiriteddriving.core.ui.components.ListRow
 import com.syntey.spiriteddriving.core.ui.components.ListRowIcon
+import com.syntey.spiriteddriving.core.ui.components.MessageHost
 import com.syntey.spiriteddriving.core.ui.components.Showcase
+import com.syntey.spiriteddriving.core.ui.components.showMessage
 import com.syntey.spiriteddriving.core.ui.preview.DarkLightPreviews
 import com.syntey.spiriteddriving.core.ui.preview.ScreenPreviews
 import com.syntey.spiriteddriving.core.ui.theme.Grid
@@ -36,16 +44,24 @@ import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreenUi(screen: ProfileScreen, modifier: Modifier = Modifier) {
     val uriHandler = LocalUriHandler.current
     val viewState by screen.viewState.collectAsStateWithLifecycle()
+    val hostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val accountDeletedMessage = stringResource(MR.strings.account_deleted)
     EventsEffect(screen.events) {
         // Rate opens the store app, not a web page, so it stays with the phone's handler and not the in-app browser
         onEvent<ProfileUiEvent.OpenWebPage> { uriHandler.openUri(it.url) }
+        onEvent<ProfileUiEvent.AccountDeleted> { scope.launch { hostState.showMessage(accountDeletedMessage) } }
     }
-    Content(viewState = viewState, actions = screen.actions, modifier = modifier)
+    Box(modifier) {
+        Content(viewState = viewState, actions = screen.actions, modifier = Modifier.fillMaxSize())
+        MessageHost(hostState, Modifier.align(Alignment.BottomCenter))
+    }
 }
 
 @Composable
