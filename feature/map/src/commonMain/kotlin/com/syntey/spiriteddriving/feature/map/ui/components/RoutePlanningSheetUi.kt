@@ -314,6 +314,7 @@ private fun PlanningList() {
             PlaceholderRow(
                 position = GroupPosition.of(index, PLACEHOLDER_ROWS),
                 groupColors = ListGroupDefaultColors.translucent(),
+                style = AppTheme.platformStyle.sheetList,
             )
         }
     }

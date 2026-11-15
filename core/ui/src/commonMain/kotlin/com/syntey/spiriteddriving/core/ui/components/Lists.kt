@@ -141,8 +141,8 @@ object ListGroupDefaultColors {
 
 /**
  * A row of a list: an optional leading icon or image, the headline, an optional supporting line and value, and an
- * optional trailing control. It sits on the grouped card at [position] on both platforms: iOS separates rows with
- * hairlines, Android with small gaps.
+ * optional trailing control. With [ListStyle.isOnCard] it sits on the grouped card at [position]: iOS separates rows
+ * with hairlines, Android with small gaps.
  *
  * This overload takes a plain [headline]; see the [AnnotatedString] overload for a styled one.
  */
@@ -164,6 +164,7 @@ fun ListRow(
     isLoading: Boolean = false,
     tabularSupporting: Boolean = false,
     contentDescription: String? = null,
+    style: ListStyle = AppTheme.platformStyle.list,
 ) {
     ListRow(
         headline = AnnotatedString(headline),
@@ -182,13 +183,14 @@ fun ListRow(
         isLoading = isLoading,
         tabularSupporting = tabularSupporting,
         contentDescription = contentDescription,
+        style = style,
     )
 }
 
 /**
  * A row of a list: an optional leading icon or image, the headline, an optional supporting line and value, and an
- * optional trailing control. It sits on the grouped card at [position] on both platforms: iOS separates rows with
- * hairlines, Android with small gaps.
+ * optional trailing control. With [ListStyle.isOnCard] it sits on the grouped card at [position]: iOS separates rows
+ * with hairlines, Android with small gaps.
  *
  * @param headline The headline, possibly with styled spans, such as the matched part of a place's name in bold.
  * @param value A setting's current value, such as "km": after the label on iOS, below it on Android.
@@ -200,6 +202,8 @@ fun ListRow(
  * @param tabularSupporting Sets the [supporting] line's digits to equal width, so distances in a column line up.
  * @param contentDescription What screen readers say for the whole row instead of its texts, when they don't make a good
  *   sentence on their own, such as a place's name, kind, distance and area. Null keeps the texts.
+ * @param style [PlatformStyle.list][com.syntey.spiriteddriving.core.ui.theme.PlatformStyle.list] on a screen;
+ *   [PlatformStyle.sheetList][com.syntey.spiriteddriving.core.ui.theme.PlatformStyle.sheetList] on a sheet over the map.
  */
 @Composable
 fun ListRow(
@@ -219,8 +223,8 @@ fun ListRow(
     isLoading: Boolean = false,
     tabularSupporting: Boolean = false,
     contentDescription: String? = null,
+    style: ListStyle = AppTheme.platformStyle.list,
 ) {
-    val style = AppTheme.platformStyle.list
     val row: @Composable () -> Unit = {
         ListRowSurface(
             style = style,
@@ -437,8 +441,7 @@ fun ListGroup(
  * A group's header, also for a header item in a lazy list, such as the "Recent" above the places on the map's sheet.
  */
 @Composable
-fun ListHeader(text: String, modifier: Modifier = Modifier) {
-    val style = AppTheme.platformStyle.list
+fun ListHeader(text: String, modifier: Modifier = Modifier, style: ListStyle = AppTheme.platformStyle.list) {
     Text(
         text = text,
         style = style.headerStyle,
@@ -456,6 +459,7 @@ fun ListHeader(text: String, modifier: Modifier = Modifier) {
  *
  * @param groupColors The card behind it on iOS, as for [ListRow].
  * @param announcement What screen readers hear, such as "Loading"; pass it on the first row only, so a list is announced once.
+ * @param style As for [ListRow].
  */
 @Composable
 fun PlaceholderRow(
@@ -463,8 +467,8 @@ fun PlaceholderRow(
     position: GroupPosition = GroupPosition.Alone,
     groupColors: ListGroupColors = ListGroupDefaultColors.opaque(),
     announcement: String? = null,
+    style: ListStyle = AppTheme.platformStyle.list,
 ) {
-    val style = AppTheme.platformStyle.list
     val shade = MaterialTheme.colorScheme.onSurface.copy(alpha = PLACEHOLDER_ALPHA)
     // Only with reduced motion off: with it on, the row is still and no animation ticks for nothing
     val pulse = if (AppTheme.reduceMotion) {
@@ -526,7 +530,7 @@ fun PlaceholderRow(
     }
 }
 
-// The group's card, and on iOS the separators between rows
+// The group's card when the rows sit on one, and on iOS the separators between rows
 @Composable
 private fun Modifier.rowSurface(
     style: ListStyle,
@@ -541,7 +545,7 @@ private fun Modifier.rowSurface(
     val separatorColor = MaterialTheme.colorScheme.outlineVariant
     return this
         .fillMaxWidth()
-        .background(groupColors.containerColor)
+        .then(if (style.isOnCard) Modifier.background(groupColors.containerColor) else Modifier)
         .then(
             if (showsSeparator) {
                 Modifier.drawBehind {
