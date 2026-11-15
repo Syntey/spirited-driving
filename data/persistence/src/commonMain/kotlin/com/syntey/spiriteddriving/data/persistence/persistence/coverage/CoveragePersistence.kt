@@ -20,8 +20,11 @@ internal class CoveragePersistence(private val jsonPersistence: JsonPersistence)
 
     override suspend fun get(): VersionedCoverage? = jsonPersistence.getCatching<StoredCoverage>(KEY)?.toDomain()
 
+    // DataStore emits on every edit of any key; only a change of the countries key reaches the fallback, so an edit
+    // elsewhere doesn't read the area again
     override fun observeVignetteCountries(): Flow<List<CountryCode>?> =
         jsonPersistence.observeCatching<List<String>>(VIGNETTE_COUNTRIES_KEY)
+            .distinctUntilChanged()
             .map { stored -> stored?.map(::CountryCode) ?: countriesFromCoverage() }
             .distinctUntilChanged()
 

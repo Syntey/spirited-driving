@@ -15,7 +15,9 @@ import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runCurrent
@@ -93,6 +95,25 @@ class CoveragePersistenceTest {
         assertNotNull(dataStore.data.first()[VIGNETTE_COUNTRIES_KEY])
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `an edit of another key doesn't read the kept copy again`() = runTest {
+        val dataStore = InMemoryDataStore()
+        val persistence = coveragePersistence(dataStore)
+        val collecting = launch(UnconfinedTestDispatcher(testScheduler)) {
+            persistence.observeVignetteCountries().collect {}
+        }
+        runCurrent()
+        val readsBefore = dataStore.reads
+
+        dataStore.edit { it[OTHER_KEY] = "km" }
+        dataStore.edit { it[OTHER_KEY] = "mi" }
+        runCurrent()
+        collecting.cancel()
+
+        assertEquals(readsBefore, dataStore.reads)
+    }
+
     @Test
     fun `an invalid copy reads as null`() = runTest {
         val dataStore = InMemoryDataStore()
@@ -128,12 +149,20 @@ class CoveragePersistenceTest {
     private companion object {
         val COVERAGE_KEY = stringPreferencesKey("COVERAGE")
         val VIGNETTE_COUNTRIES_KEY = stringPreferencesKey("VIGNETTE_COUNTRIES")
+        val OTHER_KEY = stringPreferencesKey("OTHER")
     }
 
     private class InMemoryDataStore : DataStore<Preferences> {
         private val preferences = MutableStateFlow(emptyPreferences())
 
-        override val data: Flow<Preferences> = preferences
+        // How many times something started reading, such as a one-off read of the kept copy
+        var reads = 0
+            private set
+
+        override val data: Flow<Preferences> = flow {
+            reads++
+            emitAll(preferences)
+        }
 
         override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences =
             transform(preferences.value).also { preferences.value = it }
