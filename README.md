@@ -1,122 +1,84 @@
 # Spirited Driving
 
+A navigation app for people who enjoy driving. Pick a destination and say how much extra you're willing to spend on
+the trip, like **+30 minutes**. The app finds the most enjoyable route that fits: curvy country roads, hills and
+passes instead of the motorway.
+
+<p align="center">
+  <img src="docs/images/readme/ios-routes.png" width="240" alt="Route planning on iOS: a fun route to Karlštejn next to the fastest one" />
+  &nbsp;
+  <img src="docs/images/readme/android-routes.png" width="240" alt="The same route planning screen on Android" />
+  &nbsp;
+  <img src="docs/images/readme/ios-first-launch-budget.png" width="240" alt="First launch explaining the extra-time budget" />
+</p>
+
+<p align="center"><sub>The same shared Compose screens on iOS (left) and Android (middle), around each platform's own map.</sub></p>
+
 ![kmp](https://img.shields.io/badge/multiplatform-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)
 ![compose](https://img.shields.io/badge/compose_multiplatform-2bab6b.svg?style=for-the-badge&logo=jetpackcompose&logoColor=white)
 ![swiftui](https://img.shields.io/badge/swiftui-%23000000.svg?style=for-the-badge&logo=swift&logoColor=white)
 
 ![kotlin-version](https://img.shields.io/badge/kotlin-2.4.10-%237F52FF.svg?style=flat-square&logo=kotlin&logoColor=white)
-![android-minsdk](https://img.shields.io/badge/minsdk-29-2bab6b.svg?style=flat-square&logo=android&logoColor=white)
+![android-minsdk](https://img.shields.io/badge/minsdk-31-2bab6b.svg?style=flat-square&logo=android&logoColor=white)
 ![android-targetsdk](https://img.shields.io/badge/targetsdk-36-2bab6b.svg?style=flat-square&logo=android&logoColor=white)
-![ios-target](https://img.shields.io/badge/target-17.0-%23000000.svg?style=flat-square&logo=apple&logoColor=white)
+![ios-target](https://img.shields.io/badge/target-26.0-%23000000.svg?style=flat-square&logo=apple&logoColor=white)
 
-## Used Tools
+## What it does
 
-- Code style - **[ktlint](https://pinterest.github.io/ktlint/)**,
-  **[detekt](https://detekt.dev/)**,
-  **[Android lint](https://developer.android.com/studio/write/lint)**
-- Kotlin -> Swift interop - **[skie](https://skie.touchlab.co/)**
-- Module dependency rules - **[modules-graph-assert](https://github.com/jraska/modules-graph-assert)**
-- Architecture rules - **[Konsist](https://docs.konsist.lemonappdev.com/)**: the shape of components, view states,
-  use cases, DTOs and APIs, in `konsist/`
+Other driving apps ask "how curvy?" and show the cost afterwards. Spirited Driving asks "how much extra?" and finds
+the most fun route within that limit, so it works for an everyday trip to the mall as well as for a weekend drive.
+It's built for drivers of light, affordable sports cars, and for anyone who enjoys driving. It launches in Czechia.
 
-## Gradle tasks
+| First launch | Search | Profile and settings |
+|:---:|:---:|:---:|
+| <img src="docs/images/readme/ios-first-launch.png" width="220" alt="First launch on iOS" /> | <img src="docs/images/readme/ios-search.png" width="220" alt="Destination search on iOS" /> | <img src="docs/images/readme/ios-settings.png" width="220" alt="Settings on iOS" /> |
+| What the app does, the location permission and whether you have a motorway vignette | Places suggested as you type, with your recent places | Units, vignettes for nearby countries, drive reminders |
 
-1. `clean` - Remove all `build` folders
-2. `lintCheck` - Run `ktlint`, `detekt`, Android lint and the Konsist architecture rules. The same runs on CI,
-   together with `testAndroidHostTest` (see `.github/workflows/on_pull_request.yml`).
-3. `ktlintFormat` - Reformat source code according to ktlint rules.
-4. `assembleAndCopyDebugSwiftPackage` - Assemble debug KMP XCFramework and copy it into local iOS
-   Swift Package as dependency. (This task shouldn't be used directly, build the KMP target in
-   Xcode, instead.)
-5. `assembleAndCopyReleaseSwiftPackage` - Assemble release KMP XCFramework and copy it into local
-   iOS Swift Package as dependency. (This task shouldn't be used directly, build the KMP target in
-   Xcode, instead.)
-6. `generateMRcommonMain` - Regenerate shared resource IDs.
+- **Map:** Google Maps on Android, Apple MapKit on iOS, centred on you, showing the area the app covers.
+- **Route planning:** a budget in minutes or kilometres gives you the fastest route and fun routes within the
+  budget. Each route shows its extra time, distance, kilometres of curvy road and metres climbed.
+- **Drive:** the chosen route opens in Google Maps or Apple Maps with its waypoints, for turn-by-turn guidance.
+- **Account:** sign in with Google, and delete the account from the app. Sign in with Apple is next.
 
-## Kotlin Multiplatform Swift Package Integration
+The product design, features and what's next are in [docs/overview.md](docs/overview.md).
 
-### Architecture Overview
+## What's in this repo
 
-The iOS application integrates with KMP code through a local Swift Package Manager (SPM) package
-located at `iosApp/shared/KMP/`. This package wraps the XCFramework generated by the KMP Gradle
-plugin, providing a clean and modern dependency management approach.
+The Android and iOS app. Route planning and place search run on a backend, a separate project behind a versioned
+HTTP API described by an OpenAPI specification. The app sends start, destination and budget, and gets back the
+routes and the waypoints for the hand-off.
 
-Key components:
+What the project shows:
 
-1. **Swift Package**: Located at `iosApp/shared/KMP/` with `Package.swift` defining the binary
-   target
-2. **XCFramework**: Generated by Gradle and referenced by the Swift Package
-3. **Makefile**: Automates the build process based on environment variables
-4. **Build Configuration**: Environment variables defined in `.xcconfig` files
+- **One codebase, native feel.** Every screen's content is shared Compose Multiplatform. Navigation stays native on
+  iOS (SwiftUI `NavigationStack`, native sheets and alerts), and the map is each platform's own SDK, with only the
+  sheet content shared ([Architecture](docs/architecture.md#how-the-map-screen-is-built)).
+- **Architecture the build enforces.** Features never see each other or the data layer, and the build fails when a
+  module breaks that ([Modules](#modules)). [Konsist](https://docs.konsist.lemonappdev.com/) tests check the shape of
+  components, view states, use cases, DTOs and APIs (`konsist/`).
+- **Tested logic.** Use cases and DTO mapping have unit tests, run on CI with lint on every pull request.
+- **Design written before code.** Each feature has a doc that says what it does and why, and a screen design while
+  it's being built ([docs/features](docs/features)). The theme is in [docs/theme.md](docs/theme.md).
+- **Platform services behind interfaces.** Location, Firebase sign-in, App Check and Crashlytics are interfaces in
+  `:core:platform`, implemented with the native SDKs on each platform.
+- **An AI-assisted workflow with guardrails.** The project is built with [Claude Code](https://claude.com/claude-code).
+  Its skills (`.claude/skills`) and rules (`.claude/rules`) describe how to add a screen, an API call or a platform
+  service here, and lint, Konsist and the module graph check what it writes.
 
-### Environment Variables
+## Tech stack
 
-Four environment variables control the build process:
-
-- **`KMP_FRAMEWORK_BUILD_TYPE`**: Specifies the framework build type (`debug` or `release`)
-    - Set in `.xcconfig` files for each Xcode build configuration
-    - Controls optimization level and debug information
-    - Determines which Gradle task to run (`assembleAndCopyDebugSwiftPackage` or
-      `assembleAndCopyReleaseSwiftPackage`)
-
-- **`KMP_BUILD_FLAVOR`**: Specifies the product flavor (see [Product Flavors](#product-flavors))
-    - Set in `.xcconfig` files for each Xcode build configuration
-    - Controls API endpoints and environment-specific configuration
-    - Passed to Gradle as `-P buildkonfig.flavor=$(KMP_BUILD_FLAVOR)`
-
-- **`KMP_FRAMEWORK_TARGETS`**: Controls which architectures are compiled (`simulator`, `device`, or `all`)
-    - `simulator` — builds only `iosSimulatorArm64` (fastest for local development)
-    - `device` — builds only `iosArm64`
-    - `all` — builds both targets (default)
-    - Configured in `.xcconfig` files; Beta and Release always use `device`
-    - Passed to Gradle as `-PkmpFrameworkTargets=$(KMP_FRAMEWORK_TARGETS)`
-
-- **`KMP_IS_STATIC`**: Controls whether the KMP XCFramework is linked statically or dynamically
-    - `false` (dynamic) — set in `Debug.xcconfig`; **required for SwiftUI previews** to work in
-      Xcode, as the preview process cannot load a statically linked KMP framework
-    - `true` (static) — set in `Release.xcconfig` and `Beta.xcconfig`; used for beta (TestFlight)
-      and release builds
-    - If not set, Gradle defaults to static (`true`)
-    - Passed to Gradle as `-PisStatic=$(KMP_IS_STATIC)`
-
-### Local Build Configuration
-
-Developers can override `KMP_FRAMEWORK_TARGETS` locally for faster iteration:
-
-1. Copy `iosApp/Config Files/Local.default.xcconfig` → `iosApp/Config Files/Local.xcconfig`
-2. Set `KMP_FRAMEWORK_TARGETS = simulator` in `Local.xcconfig`
-3. `Local.xcconfig` is gitignored — changes won't affect other developers
-
-The Debug configuration includes both files (`Local.default.xcconfig` with optional include for
-`Local.xcconfig`), so local overrides take precedence. Beta and Release configurations hardcode
-`KMP_FRAMEWORK_TARGETS = device` and do not use local overrides.
-
-### Development Workflow
-
-To build and update the KMP package during development:
-
-1. **Select and build the "Build KMP" target in Xcode**:
-    - This target's build phase runs the Makefile with the appropriate environment variables
-    - The Makefile detects the build configuration and runs the corresponding Gradle task
-    - The XCFramework is generated and copied to the Swift Package location
-
-2. **Alternative manual build**:
-    - `./gradlew assembleAndCopyDebugSwiftPackage`
-    - or if you wish to specify product flavor (default is always `dev`):
-      `./gradlew assembleAndCopyDebugSwiftPackage -P buildkonfig.flavor=[dev|prod]`
-
-3. **After KMP code changes**:
-    - Always rebuild the "Build KMP" target to update the XCFramework
-    - Then build the main app target to use the updated KMP code
-
-### SwiftUI Previews
-
-SwiftUI previews require a **dynamically linked** KMP framework. The `Debug` build configuration
-sets `KMP_IS_STATIC = false` in `Debug.xcconfig` to enable this. `Beta` and `Release`
-configurations use static linking.
-
-Screens themselves are written in Compose Multiplatform, so they are previewed with Compose
-`@Preview` instead (see [Previews](#previews)). SwiftUI previews are meant for native SwiftUI views.
+| Area           | Libraries                                                                                                   |
+|----------------|-------------------------------------------------------------------------------------------------------------|
+| Shared code    | Kotlin Multiplatform, Compose Multiplatform, coroutines, kotlinx.serialization, kotlinx-datetime            |
+| Presentation   | [Decompose](https://arkivanov.github.io/Decompose/) with [Arkitekt](https://github.com/futuredapp/arkitekt), [Haze](https://github.com/chrisbanes/haze) for glass |
+| DI             | Koin                                                                                                        |
+| Network        | Ktor, Ktorfit, BuildKonfig flavors                                                                          |
+| Storage        | DataStore                                                                                                   |
+| Resources      | moko-resources, Phosphor icons                                                                              |
+| Maps           | maps-compose (Google Maps) on Android, MapKit on iOS                                                        |
+| Firebase       | Authentication, App Check, Crashlytics with [NSExceptionKt](https://github.com/rickclephas/NSExceptionKt) on iOS |
+| iOS interop    | [SKIE](https://skie.touchlab.co/), a local Swift Package wrapping the KMP XCFramework                     |
+| Quality        | ktlint, detekt, Android lint, Konsist, [modules-graph-assert](https://github.com/jraska/modules-graph-assert), baseline profiles |
 
 ## Modules
 
@@ -130,72 +92,56 @@ Screens themselves are written in Compose Multiplatform, so they are previewed w
  :core:domain   :core:ui   :core:resources   :core:platform
 ```
 
-- **`:feature:*`** holds a feature's components, Compose screens and iOS view controllers. It depends
-  on `:core:*` modules only, so features never see each other or the data implementations.
-- **`:data:*`** holds the network client and local storage, and implements the interfaces in
-  `:core:domain`. It depends on `:core:*` modules only.
-- **`:core:*`** holds domain types and interfaces, the theme and Decompose base classes, shared
-  strings and images, and the interfaces each platform implements natively.
-- **`:shared`** is the only module that sees all others. Features meet each other in its navigation
-  hosts, and domain interfaces meet their `:data:*` implementations in its Koin graph.
+- **`:feature:*`** holds a feature's components, Compose screens and iOS view controllers: `:feature:onboarding`
+  (first launch), `:feature:map` (the map, search and route planning) and `:feature:profile` (profile, settings and
+  account). It depends on `:core:*` modules only, so features never see each other or the data implementations.
+- **`:data:*`** holds the network client and local storage, and implements the interfaces in `:core:domain`. It
+  depends on `:core:*` modules only.
+- **`:core:*`** holds domain types and interfaces, the theme and Decompose base classes, shared strings and images,
+  and the interfaces each platform implements natively.
+- **`:shared`** is the only module that sees all others. Features meet each other in its navigation hosts, and
+  domain interfaces meet their `:data:*` implementations in its Koin graph.
 
-The build fails when a module breaks these rules, or when its longest dependency chain gets
-longer than four steps (`moduleGraphAssert` in the root `build.gradle.kts`).
-`./gradlew generateModulesGraphvizText` prints the current graph.
-A module's package and Android namespace come from its path (`:data:network` is
-`com.syntey.spiriteddriving.data.network`), so a new feature's build file only applies
+The build fails when a module breaks these rules, or when its longest dependency chain gets longer than four steps
+(`moduleGraphAssert` in the root `build.gradle.kts`). A module's package and Android namespace come from its path
+(`:data:network` is `com.syntey.spiriteddriving.data.network`), so a new feature's build file only applies
 `conventions-kmp-feature`.
 
-`:feature:onboarding` holds First launch. `:feature:map` holds the map and its sheet.
+## UI architecture
 
-## UI Architecture
+Screens are implemented once in Compose Multiplatform, in the feature module that owns them, next to the component
+they render (e.g. `feature/onboarding/.../ui/onboardingScreen/OnboardingScreenUi.kt`). A screen only draws its
+content. Navigation chrome stays native:
 
-Screens are implemented once in Compose Multiplatform, in the feature module that owns them, next
-to the component they render (e.g. `feature/onboarding/.../ui/onboardingScreen/OnboardingScreenUi.kt`). A screen
-only draws its content. Navigation chrome stays native:
+- **Android:** navigation hosts in `androidApp/.../ui/navigation/*NavHostUi.kt` render Decompose stacks and slots,
+  and draw top bars and bottom sheets around the shared screens.
+- **iOS:** navigation stays in SwiftUI (`NavigationStack`, sheets), driven by Decompose. Each screen is exposed to
+  Swift as a `*ScreenUiController` function (the feature's `src/iosMain/.../ui/ViewControllers.ios.kt`) and hosted
+  by `ComposeView` in a thin SwiftUI view (`iosApp/SpiritedDriving/Views/Scenes/*/*Component.swift`), which also sets
+  the native navigation title.
 
-- **Android** — navigation hosts in `androidApp/.../ui/navigation/*NavHostUi.kt` render Decompose
-  stacks and slots, and draw top bars and bottom sheets around the shared screens.
-- **iOS** — navigation stays in SwiftUI (`NavigationStack`, sheets) driven by Decompose.
-  Each screen is exposed to Swift as a `*ScreenUiController` function (the feature's
-  `src/iosMain/.../ui/ViewControllers.ios.kt`) and hosted by `ComposeView` in a thin SwiftUI view
-  (`iosApp/SpiritedDriving/Views/Scenes/*/*Component.swift`), which also sets the native navigation
-  title.
+The map screen is the exception: it's built per platform around each platform's map SDK, with native glass buttons
+and a native sheet on iOS, and only the sheet's content is shared Compose.
 
-The map screen is the exception: it's built per platform around each platform's map SDK, with
-native glass buttons and a native sheet on iOS, and only the sheet's content is shared Compose
-([Architecture](docs/architecture.md#how-the-map-screen-is-built)).
-
-When adding a new screen:
-
-1. Create the screen component and its UI in the feature module (see `ui/onboardingScreen` in
-   `:feature:onboarding`), laid out by layer as the `create-screen` skill describes.
-2. Expose the screen in the feature's `*Screens` object (see `OnboardingScreens`), since Arkitekt
-   generates internal factories, and create it from a navigation host in `:shared`.
-3. Android: render it from the navigation host UI.
-4. iOS: add a `*ScreenUiController` to the feature's `ViewControllers.ios.kt` and a `*Component`
-   SwiftUI view hosting it, then render it from the navigation view.
-
-### Previews
-
-Each screen has a preview-states object (e.g. `OnboardingPreviewStates`, in the feature's `model/ui`) with view
-states its previews share, and a fake, no-op implementation of the screen interface where a preview needs the whole
-screen. Previews sit at the bottom of the file of the composable they show.
-
-Previews use the multipreview annotations in `:core:ui` (`core.ui.preview`) rather than a bare
-`@Preview`: `@ScreenPreviews` renders a screen in light and dark mode and with large fonts on dense
-phone screens, `@ComponentPreviews` renders a smaller composable in light and dark mode with small
-and large fonts.
-
-**Preview data** (`feature/onboarding/.../model/ui/OnboardingPreviewStates.kt`):
+[Decompose](https://arkivanov.github.io/Decompose/) holds the navigation state in shared code:
 
 ```kotlin
-internal object OnboardingPreviewStates {
-    fun viewState(step: OnboardingStep = OnboardingStep.WhatItIs) = OnboardingViewState(step = step)
+Navigation("Root") {
+    Slot {
+        Screen("Onboarding") // First launch, until the vignette is answered
+        Screen("TripPlan") // The map and its sheet, with Profile and its screens over it
+    }
 }
 ```
 
-**Preview** (`feature/onboarding/.../ui/onboardingScreen/OnboardingScreenUi.kt`):
+The full tree is in [docs/navigation.md](docs/navigation.md).
+
+### Previews
+
+Each screen has a preview-states object (e.g. `OnboardingPreviewStates`, in the feature's `model/ui`) with the view
+states its previews share. Previews use the multipreview annotations in `:core:ui`: `@ScreenPreviews` renders a
+screen in light and dark mode and with large fonts on dense phone screens, `@ComponentPreviews` a smaller composable
+in light and dark mode with small and large fonts.
 
 ```kotlin
 @ScreenPreviews
@@ -205,112 +151,19 @@ private fun OnboardingScreenPreview() = Showcase {
 }
 ```
 
-When adding a new screen, create a `*PreviewStates` object in the feature's `model/ui` following the same
-pattern.
+## Building it
 
-## Navigation Structure
+1. Add a Maps SDK for Android key to `local.properties` as `MAPS_API_KEY=your-key`. Without it the Android map
+   stays blank. The iOS map needs no key.
+2. Android: `./gradlew :androidApp:assembleDebug`.
+3. iOS: build the KMP framework once with
+   `./gradlew assembleAndCopyDebugSwiftPackage -PkmpFrameworkTargets=simulator -PisStatic=false`, then open
+   `iosApp/SpiritedDriving.xcodeproj` and run the `SpiritedDriving` scheme.
+4. Checks: `./gradlew lintCheck testAndroidHostTest`, as CI runs them.
 
-The app utilizes [Decompose](https://arkivanov.github.io/Decompose/) to share presentation logic and
-navigation state in KMP.  
-The following meta-description provides an overview of Decompose navigation tree:
+Dev builds expect the backend at `localhost:8080`, and Firebase features need your own Firebase config files.
+Configuration, flavors and the iOS build setup are in [docs/development.md](docs/development.md).
 
-```kotlin
-Navigation("Root") {
-    Slot {
-        Screen("Onboarding") // First launch, until the vignette is answered
-        Screen("TripPlan") // The map and its sheet
-    }
-}
-```
+## License
 
-Screens that open over the map, such as Profile and Saved routes, are added to this tree as they're
-built ([Navigation](docs/navigation.md#screens-over-the-map)).
-
-## Project Setup
-
-### First iOS build
-
-The Swift Package XCFramework has to be build manually for the first time using `./gradlew assembleAndCopyDebugSwiftPackage` in order for XCode to resolve Swift Package as being valid.
-
-### Google Maps API key
-
-The Android map needs a Maps SDK for Android key. Put it in `local.properties` (kept out of git):
-
-```properties
-MAPS_API_KEY=your-key
-```
-
-CI passes it as the `MAPS_API_KEY` environment variable. Without a key the app runs, but the Android map stays
-blank. The iOS map (MapKit) needs no key.
-
-### Local backend
-
-Dev builds call the backend on your computer at port 8080: the Android emulator reaches it at `10.0.2.2`, the iOS
-simulator at `localhost`. An Android phone on the same Wi-Fi needs your computer's address in `local.properties`,
-best one your router keeps for it:
-
-```properties
-ANDROID_DEV_API_URL=http://192.168.1.20:8080/v1/
-```
-
-### Product Flavors
-
-The project utilizes [BuildKonfig](https://github.com/yshrsmz/BuildKonfig) plugin for implementing
-build flavors in the network module.
-There are two product flavors: `dev` and `prod`, which select API url used in `:data:network`
-module.
-
-In general, the build flavor can be specified as a Gradle build flag
-
-```shell
-./gradlew whateverTask -P buildkonfig.flavor=dev
-```
-
-Please, refer to `:data:network` Gradle config for more info.
-
-#### Android
-
-During local development, the build flavor can be specified in `gradle.properties` file like so:
-
-```properties
-buildkonfig.flavor=dev
-```
-
-#### Charles Proxy
-
-[Charles Proxy](https://www.charlesproxy.com/documentation/welcome/) is enabled for debug and
-enterprise builds.
-
-#### iOS
-
-On iOS, we utilize
-.xcconfig [Build Configuration](https://www.kodeco.com/21441177-building-your-app-using-build-configurations-and-xcconfig)
-files,
-where each file per build configuration specifies a `KMP_BUILD_FLAVOR` environment variable.
-
-This variable is then used in the "Build KMP" target to pass the flavor as Gradle build
-flag.
-
-```shell
-./gradlew assembleAndCopyDebugSwiftPackage -P buildkonfig.flavor=$(KMP_BUILD_FLAVOR)
-```
-See [Makefile](iosApp/shared/KMP/Makefile) for reference.
-
-Currently, the `Debug.xcconfig` file sets `KMP_BUILD_FLAVOR=dev` and the `Release.xcconfig` sets
-`KMP_BUILD_FLAVOR=prod`. When adding new build configurations, please make sure to also define the
-`KMP_BUILD_FLAVOR`
-variable using the aforementioned method.
-
-### Crashlytics
-
-We can have symbolicated Kotlin crash reports on iOS. We
-use [NSExceptionKt](https://github.com/rickclephas/NSExceptionKt) to achieve that.
-Everything is set up, but some finishing touches need to be made when you add Crashlytics to your
-project:
-
-1. Set up Firebase Crashlytics on both platforms as you would usually do.
-2. After dependencies are in place, on each platform uncomment the code in
-   `PlatformFirebaseCrashlyticsImpl` classes (follow comments).
-3. On iOS, do not forget to also upload debug symbols to Crashlytics. The KMP framework is static
-   in Beta and Release builds, so no standalone debug symbols are generated for KMP, instead, they
-   are included in the app itself.
+The source is published to be read. It may not be used, copied or redistributed; see [LICENSE](LICENSE).

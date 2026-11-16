@@ -29,13 +29,10 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# TODO PROJECT-SETUP update package name
 -keep,includedescriptorclasses class com.syntey.spiriteddriving.**$$serializer { *; }
-# TODO PROJECT-SETUP update package name
 -keepclassmembers class com.syntey.spiriteddriving.** {
     *** Companion;
 }
-# TODO PROJECT-SETUP update package name
 -keepclasseswithmembers class com.syntey.spiriteddriving.** {
     kotlinx.serialization.KSerializer serializer(...);
 }

@@ -30,7 +30,7 @@ fun AppTheme(
     val platformStyle = remember(platform) { PlatformStyle.of(platform, typography) }
 
     CompositionLocalProvider(
-        LocalStackAnimationProvider provides TemplateStackAnimationProvider,
+        LocalStackAnimationProvider provides AppStackAnimationProvider,
         LocalUiPlatform provides platform,
         LocalCustomDimensions provides customDimensions,
         LocalPlatformStyle provides platformStyle,

@@ -2,7 +2,7 @@ import GoogleSignIn
 import SwiftUI
 
 @main
-struct KmpTemplateApp: App {
+struct SpiritedDrivingApp: App {
 
     @UIApplicationDelegateAdaptor var appDelegate: AppDelegate
 
