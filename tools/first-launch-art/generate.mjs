@@ -410,6 +410,60 @@ write('road.json', JSON.stringify({
   cars: CARS,
 }, null, 2) + '\n');
 
+// ---------- 1b. the Profile header: the hairpin on page 3 with both cars, cropped to 420 × 270 ----------
+// Written to the app's resources, not build/. The scenery's circles and ellipses (none sit in a transformed group) are
+// dropped when they miss the crop, and rgba() colours become hex plus an opacity attribute, since Android's vector
+// conversion doesn't read rgba.
+{
+  const HEADER_DIR = path.join(HERE, '../../core/resources/src/commonMain/moko-resources/images');
+  const CROP = { x0: 760, y0: 100, x1: 1180, y1: 370 };
+  const outsideCrop = (tag) => {
+    const n = (attr) => Number(tag.match(new RegExp(`\\s${attr}="([-\\d.]+)"`))[1]);
+    const [cx, cy] = [n('cx'), n('cy')];
+    const [rx, ry] = tag.includes(' rx="') ? [n('rx'), n('ry')] : [n('r'), n('r')];
+    return cx + rx < CROP.x0 || cx - rx > CROP.x1 || cy + ry < CROP.y0 || cy - ry > CROP.y1;
+  };
+  const withOpacity = (tag, attr, a) => {
+    const re = new RegExp(`\\s${attr}-opacity="([\\d.]+)"`);
+    const m = tag.match(re);
+    if (m) return tag.replace(re, ` ${attr}-opacity="${String(Number((Number(m[1]) * a).toFixed(3)))}"`);
+    return tag.replace(/^<([a-z]+)/, `<$1 ${attr}-opacity="${a}"`);
+  };
+  const hexColours = (text) => text.replace(/<[a-z]+ [^>]*>/g, (tag) => {
+    let out = tag;
+    for (const attr of ['fill', 'stroke']) {
+      const re = new RegExp(`\\s${attr}="rgba\\((\\d+), (\\d+), (\\d+), ([\\d.]+)\\)"`);
+      const m = out.match(re);
+      if (!m) continue;
+      const hex = '#' + [m[1], m[2], m[3]].map((v) => Number(v).toString(16).padStart(2, '0')).join('').toUpperCase();
+      out = withOpacity(out.replace(re, ` ${attr}="${hex}"`), attr, Number(m[4]));
+    }
+    return out;
+  });
+
+  // Android ignores opacity on groups, so an opacity-0 beam group (day) is dropped and an opacity-1 group (dusk) loses
+  // the attribute. Each dropped group ends at the first `</g>`, so it must hold no nested group.
+  const stripBeamGroups = (text) => {
+    const dropped = text.replace(/<g opacity="0"[^>]*>[\s\S]*?<\/g>/g, (group) => {
+      if (group.slice(1).includes('<g')) throw new Error('Nested group inside an opacity="0" group: ' + group.slice(0, 80));
+      return '';
+    });
+    const kept = dropped.replace(/<g opacity="1"/g, '<g');
+    const left = kept.match(/<g opacity="[^"]*"/);
+    if (left) throw new Error('Group opacity Android would ignore: ' + left[0]);
+    return kept;
+  };
+
+  for (const [name, pal] of THEMES) {
+    const scenery = fill(scene, pal).replace(/<(circle|ellipse) ([^>]*)><\/\1>/g, (el) => (outsideCrop(el) ? '' : el));
+    const body = scenery + carsAt(steps[CARS.staticStep], pal);
+    fs.writeFileSync(
+      path.join(HEADER_DIR, `profile_header_${name}.svg`),
+      svg(420, 270, '760 100 420 270', hexColours(stripBeamGroups(body))),
+    );
+  }
+}
+
 // ---------- 2. review sheets: every step's cars, page edges, the panel area; the two cars up close ----------
 for (const [name, pal] of THEMES) {
   const guides = [1, 2, 3, 4].map((i) => `<line x1="${i * W}" y1="0" x2="${i * W}" y2="${H}" stroke="#f0f" stroke-width="1"></line>`).join('')

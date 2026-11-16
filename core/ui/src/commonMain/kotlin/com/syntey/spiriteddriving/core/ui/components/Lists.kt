@@ -26,14 +26,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
@@ -50,7 +48,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.painter.Painter
@@ -123,7 +120,7 @@ object ListRowDefaultColors {
     )
 }
 
-/** The card behind grouped rows, taken from [ListGroupDefaultColors]. Used on iOS only; Android rows sit on the sheet. */
+/** The card behind grouped rows, taken from [ListGroupDefaultColors]: on both platforms, rows sit on it. */
 @Immutable
 data class ListGroupColors(val containerColor: Color)
 
@@ -144,7 +141,8 @@ object ListGroupDefaultColors {
 
 /**
  * A row of a list: an optional leading icon or image, the headline, an optional supporting line and value, and an
- * optional trailing control. On iOS it's a cell of an inset grouped card at [position]; on Android a Material list item.
+ * optional trailing control. With [ListStyle.isOnCard] it sits on the grouped card at [position]: iOS separates rows
+ * with hairlines, Android with small gaps.
  *
  * This overload takes a plain [headline]; see the [AnnotatedString] overload for a styled one.
  */
@@ -166,6 +164,7 @@ fun ListRow(
     isLoading: Boolean = false,
     tabularSupporting: Boolean = false,
     contentDescription: String? = null,
+    style: ListStyle = AppTheme.platformStyle.list,
 ) {
     ListRow(
         headline = AnnotatedString(headline),
@@ -184,12 +183,14 @@ fun ListRow(
         isLoading = isLoading,
         tabularSupporting = tabularSupporting,
         contentDescription = contentDescription,
+        style = style,
     )
 }
 
 /**
  * A row of a list: an optional leading icon or image, the headline, an optional supporting line and value, and an
- * optional trailing control. On iOS it's a cell of an inset grouped card at [position]; on Android a Material list item.
+ * optional trailing control. With [ListStyle.isOnCard] it sits on the grouped card at [position]: iOS separates rows
+ * with hairlines, Android with small gaps.
  *
  * @param headline The headline, possibly with styled spans, such as the matched part of a place's name in bold.
  * @param value A setting's current value, such as "km": after the label on iOS, below it on Android.
@@ -201,6 +202,8 @@ fun ListRow(
  * @param tabularSupporting Sets the [supporting] line's digits to equal width, so distances in a column line up.
  * @param contentDescription What screen readers say for the whole row instead of its texts, when they don't make a good
  *   sentence on their own, such as a place's name, kind, distance and area. Null keeps the texts.
+ * @param style [PlatformStyle.list][com.syntey.spiriteddriving.core.ui.theme.PlatformStyle.list] on a screen;
+ *   [PlatformStyle.sheetList][com.syntey.spiriteddriving.core.ui.theme.PlatformStyle.sheetList] on a sheet over the map.
  */
 @Composable
 fun ListRow(
@@ -220,8 +223,8 @@ fun ListRow(
     isLoading: Boolean = false,
     tabularSupporting: Boolean = false,
     contentDescription: String? = null,
+    style: ListStyle = AppTheme.platformStyle.list,
 ) {
-    val style = AppTheme.platformStyle.list
     val row: @Composable () -> Unit = {
         ListRowSurface(
             style = style,
@@ -247,13 +250,8 @@ fun ListRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = style.groupInset)
-            .then(
-                if (style.isInsetGrouped) {
-                    Modifier.clip(position.shape(AppTheme.platformStyle.cardShape.topStart))
-                } else {
-                    Modifier
-                },
-            ),
+            .padding(bottom = if (position == GroupPosition.First || position == GroupPosition.Middle) style.rowGap else Grid.d0)
+            .clip(position.shape(style.outerCorner, style.innerCorner)),
     ) {
         if (swipeDelete != null) {
             SwipeDeleteBox(delete = swipeDelete, content = row)
@@ -443,8 +441,7 @@ fun ListGroup(
  * A group's header, also for a header item in a lazy list, such as the "Recent" above the places on the map's sheet.
  */
 @Composable
-fun ListHeader(text: String, modifier: Modifier = Modifier) {
-    val style = AppTheme.platformStyle.list
+fun ListHeader(text: String, modifier: Modifier = Modifier, style: ListStyle = AppTheme.platformStyle.list) {
     Text(
         text = text,
         style = style.headerStyle,
@@ -462,6 +459,7 @@ fun ListHeader(text: String, modifier: Modifier = Modifier) {
  *
  * @param groupColors The card behind it on iOS, as for [ListRow].
  * @param announcement What screen readers hear, such as "Loading"; pass it on the first row only, so a list is announced once.
+ * @param style As for [ListRow].
  */
 @Composable
 fun PlaceholderRow(
@@ -469,8 +467,8 @@ fun PlaceholderRow(
     position: GroupPosition = GroupPosition.Alone,
     groupColors: ListGroupColors = ListGroupDefaultColors.opaque(),
     announcement: String? = null,
+    style: ListStyle = AppTheme.platformStyle.list,
 ) {
-    val style = AppTheme.platformStyle.list
     val shade = MaterialTheme.colorScheme.onSurface.copy(alpha = PLACEHOLDER_ALPHA)
     // Only with reduced motion off: with it on, the row is still and no animation ticks for nothing
     val pulse = if (AppTheme.reduceMotion) {
@@ -496,13 +494,8 @@ fun PlaceholderRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = style.groupInset)
-            .then(
-                if (style.isInsetGrouped) {
-                    Modifier.clip(position.shape(AppTheme.platformStyle.cardShape.topStart))
-                } else {
-                    Modifier
-                },
-            ),
+            .padding(bottom = if (position == GroupPosition.First || position == GroupPosition.Middle) style.rowGap else Grid.d0)
+            .clip(position.shape(style.outerCorner, style.innerCorner)),
     ) {
         // The card stays solid while the content pulses, so only the placeholder shapes fade
         Row(
@@ -537,7 +530,7 @@ fun PlaceholderRow(
     }
 }
 
-// The group's card and separators on iOS; Android rows have neither and sit on the sheet
+// The group's card when the rows sit on one, and on iOS the separators between rows
 @Composable
 private fun Modifier.rowSurface(
     style: ListStyle,
@@ -548,17 +541,11 @@ private fun Modifier.rowSurface(
     swipeDelete: IconAction?,
     isLoading: Boolean,
 ): Modifier {
-    val showsSeparator = style.isInsetGrouped && (position == GroupPosition.First || position == GroupPosition.Middle)
+    val showsSeparator = style.showsSeparators && (position == GroupPosition.First || position == GroupPosition.Middle)
     val separatorColor = MaterialTheme.colorScheme.outlineVariant
     return this
         .fillMaxWidth()
-        .then(
-            if (style.isInsetGrouped) {
-                Modifier.background(groupColors.containerColor)
-            } else {
-                Modifier
-            },
-        )
+        .then(if (style.isOnCard) Modifier.background(groupColors.containerColor) else Modifier)
         .then(
             if (showsSeparator) {
                 Modifier.drawBehind {
@@ -643,14 +630,11 @@ private fun ListRowText(
     }
 }
 
-private fun GroupPosition.shape(corner: CornerSize): Shape {
-    val none = CornerSize(Grid.d0)
-    return when (this) {
-        GroupPosition.Alone -> RoundedCornerShape(corner)
-        GroupPosition.First -> RoundedCornerShape(topStart = corner, topEnd = corner, bottomEnd = none, bottomStart = none)
-        GroupPosition.Middle -> RectangleShape
-        GroupPosition.Last -> RoundedCornerShape(topStart = none, topEnd = none, bottomEnd = corner, bottomStart = corner)
-    }
+private fun GroupPosition.shape(outer: Dp, inner: Dp): Shape = when (this) {
+    GroupPosition.Alone -> RoundedCornerShape(outer)
+    GroupPosition.First -> RoundedCornerShape(topStart = outer, topEnd = outer, bottomEnd = inner, bottomStart = inner)
+    GroupPosition.Middle -> RoundedCornerShape(inner)
+    GroupPosition.Last -> RoundedCornerShape(topStart = inner, topEnd = inner, bottomEnd = outer, bottomStart = outer)
 }
 
 // A row faded out keeps its place and taps, so it reads as unavailable rather than missing
@@ -709,7 +693,7 @@ private fun ListExamples() {
             item { position ->
                 ListRow(
                     "Czechia",
-                    trailing = { Switch(checked = true, onCheckedChange = null) },
+                    trailing = { ToggleSwitch(checked = true, onCheckedChange = null) },
                     onClick = {},
                     position = position,
                 )

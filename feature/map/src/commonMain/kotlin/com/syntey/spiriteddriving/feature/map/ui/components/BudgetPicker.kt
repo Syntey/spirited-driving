@@ -13,20 +13,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
+import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.AppChip
 import com.syntey.spiriteddriving.core.ui.components.SegmentOption
 import com.syntey.spiriteddriving.core.ui.components.SegmentedSwitch
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.feature.map.model.ui.BudgetChip
+import dev.icerock.moko.resources.StringResource
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.collections.immutable.ImmutableList
 
-/** The budget above the routes: its unit and a row of chips in that unit, which scrolls sideways when they don't fit. */
+/**
+ * The budget above the routes: its unit and a row of chips in that unit, which scrolls sideways when they don't fit. The
+ * second segment names the distance unit, [unit].
+ */
 @Composable
 internal fun BudgetPicker(
     kind: BudgetKind,
+    unit: DistanceUnit,
     chips: ImmutableList<BudgetChip>,
     onKindChange: (BudgetKind) -> Unit,
     onBudgetClick: (Budget) -> Unit,
@@ -49,8 +55,8 @@ internal fun BudgetPicker(
                         accessibilityLabel = stringResource(MR.strings.planning_budget_minutes_description),
                     ),
                     SegmentOption(
-                        label = stringResource(MR.strings.planning_budget_kilometres),
-                        accessibilityLabel = stringResource(MR.strings.planning_budget_kilometres_description),
+                        label = stringResource(distanceLabel(unit)),
+                        accessibilityLabel = stringResource(distanceDescription(unit)),
                     ),
                 ),
                 selectedIndex = if (kind == BudgetKind.Time) 0 else 1,
@@ -70,4 +76,14 @@ internal fun BudgetPicker(
             }
         }
     }
+}
+
+private fun distanceLabel(unit: DistanceUnit): StringResource = when (unit) {
+    DistanceUnit.Kilometres -> MR.strings.planning_budget_kilometres
+    DistanceUnit.Miles -> MR.strings.planning_budget_miles
+}
+
+private fun distanceDescription(unit: DistanceUnit): StringResource = when (unit) {
+    DistanceUnit.Kilometres -> MR.strings.planning_budget_kilometres_description
+    DistanceUnit.Miles -> MR.strings.planning_budget_miles_description
 }

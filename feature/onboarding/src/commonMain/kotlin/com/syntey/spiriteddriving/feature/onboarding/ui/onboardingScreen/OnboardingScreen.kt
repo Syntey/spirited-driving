@@ -21,6 +21,12 @@ interface OnboardingScreen {
         fun onContinue()
         fun onVignetteAnswered(hasVignette: Boolean)
 
+        /** Tapped Terms in the terms line on the first page. */
+        fun onTermsClick()
+
+        /** Tapped Privacy policy in the terms line on the first page. */
+        fun onPrivacyPolicyClick()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onNext() = Unit
@@ -29,6 +35,8 @@ interface OnboardingScreen {
                 override fun onSwipedOn() = Unit
                 override fun onContinue() = Unit
                 override fun onVignetteAnswered(hasVignette: Boolean) = Unit
+                override fun onTermsClick() = Unit
+                override fun onPrivacyPolicyClick() = Unit
             }
         }
     }

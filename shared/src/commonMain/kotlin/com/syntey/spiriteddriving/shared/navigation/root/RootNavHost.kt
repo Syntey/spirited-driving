@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.shared.navigation.root
 
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
 import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreen
+import com.syntey.spiriteddriving.shared.navigation.profile.ProfileNavHost
 import com.arkivanov.decompose.router.slot.ChildSlot
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
@@ -9,6 +10,9 @@ import kotlin.uuid.Uuid
 
 interface RootNavHost {
     val slot: StateFlow<ChildSlot<RootConfig, RootChild>>
+
+    /** Screens over the map, such as Profile. */
+    val sheet: StateFlow<ChildSlot<RootSheetConfig, RootSheetChild>>
 }
 
 @Serializable
@@ -19,6 +23,18 @@ sealed interface RootConfig {
 
     @Serializable
     data object Map : RootConfig
+}
+
+@Serializable
+sealed interface RootSheetConfig {
+
+    @Serializable
+    data object Profile : RootSheetConfig
+}
+
+sealed interface RootSheetChild {
+
+    data class Profile(val navHost: ProfileNavHost) : RootSheetChild
 }
 
 sealed interface RootChild {

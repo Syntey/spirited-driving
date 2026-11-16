@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.core.domain.settings
 
+import kotlinx.coroutines.flow.Flow
 import kotlin.jvm.JvmInline
 
 /**
@@ -12,6 +13,9 @@ interface VignetteSettings {
      * Whether the user has a vignette for [country], or `null` while they haven't answered.
      */
     suspend fun hasVignette(country: CountryCode): Boolean?
+
+    /** The countries the user has a vignette for, now and after each change. */
+    fun observeVignettes(): Flow<Set<CountryCode>>
 
     suspend fun setHasVignette(country: CountryCode, hasVignette: Boolean)
 }

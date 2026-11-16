@@ -5,8 +5,10 @@ import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.backhandler.BackCallback
+import com.syntey.spiriteddriving.core.resources.LegalPages
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
+import com.syntey.spiriteddriving.feature.onboarding.domain.OpenWebPageUseCase
 import com.syntey.spiriteddriving.feature.onboarding.domain.RequestLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.onboarding.domain.SaveVignetteUseCase
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +23,7 @@ internal class OnboardingComponent(
     @InjectedParam override val navigation: OnboardingScreenNavigation,
     private val requestLocationAccessUseCase: RequestLocationAccessUseCase,
     private val saveVignetteUseCase: SaveVignetteUseCase,
+    private val openWebPageUseCase: OpenWebPageUseCase,
 ) : ScreenComponent<OnboardingViewState, Nothing, OnboardingScreenNavigation>(
     componentContext = componentContext,
     defaultState = OnboardingViewState(),
@@ -55,6 +58,12 @@ internal class OnboardingComponent(
 
     override fun onContinue() = requestLocationAccess()
     override fun onVignetteAnswered(hasVignette: Boolean) = saveVignette(hasVignette)
+    override fun onTermsClick() = openWebPage(LegalPages.TERMS_URL)
+    override fun onPrivacyPolicyClick() = openWebPage(LegalPages.PRIVACY_POLICY_URL)
+
+    private fun openWebPage(url: String) = openWebPageUseCase.execute(OpenWebPageUseCase.Args(url)) {
+        onError { error -> logger.e(error) { "Web page not opened" } }
+    }
 
     private fun goTo(step: OnboardingStep) {
         componentState.update { it.copy(step = step) }

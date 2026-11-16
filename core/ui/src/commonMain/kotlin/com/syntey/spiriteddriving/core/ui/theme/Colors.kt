@@ -100,10 +100,12 @@ internal val DarkColors: ColorScheme = darkColorScheme(
  *
  * [routeCasing] is the casing around a route line on the map, so the line reads over any road colour.
  *
- * [listGroup] is the card behind grouped rows on iOS, white in light and raised in dark, as in iOS Settings.
- * [segmentSelected] is the raised pill of the selected segment in an iOS segmented control: white in light, a light grey
+ * [listGroup] is the card behind grouped rows, white in light and raised in dark.
+ * [segmentSelected] is the raised pill of the selected segment in a segmented switch: white in light, a light grey
  * in dark, so it stands out from the track.
  * [systemFill] is the translucent grey of iOS fields on glass, such as the search field on the map's sheet.
+ *
+ * [isDark] says which set this is, for artwork that has a day and a dusk version.
  */
 @Immutable
 data class CustomColors(
@@ -115,6 +117,7 @@ data class CustomColors(
     val listGroup: Color,
     val segmentSelected: Color,
     val systemFill: Color,
+    val isDark: Boolean,
 )
 
 internal val LightCustomColors = CustomColors(
@@ -126,6 +129,7 @@ internal val LightCustomColors = CustomColors(
     listGroup = Color(0xFFFFFFFF),
     segmentSelected = Color(0xFFFFFFFF),
     systemFill = Color(0x1F767680),
+    isDark = false,
 )
 
 internal val DarkCustomColors = CustomColors(
@@ -137,6 +141,7 @@ internal val DarkCustomColors = CustomColors(
     listGroup = Color(0xFF282A2D),
     segmentSelected = Color(0xFF5B5F66),
     systemFill = Color(0x42767680),
+    isDark = true,
 )
 
 internal val LocalCustomColors = staticCompositionLocalOf { LightCustomColors }
