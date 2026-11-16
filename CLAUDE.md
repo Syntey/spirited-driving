@@ -34,3 +34,17 @@ skill or rule is wrong or out of date, fix it in the same change.
   logic; `:data:*` maps DTOs and network errors to domain types.
 - **Naming**: `*Component`, `*Screen`, `*ViewState`, `*ScreenNavigation`, `*UseCase`, `*Dto`, `*Api`, `Api*` for
   implementations of domain interfaces.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are local markdown files under `.scratch/<feature>/`, which git ignores. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default roles, recorded as `Status:` lines: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` at the repo root, ADRs in `.scratch/adr/` (git ignores them), alongside the design docs in `docs/`. See `docs/agents/domain.md`.
