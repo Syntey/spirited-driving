@@ -27,21 +27,18 @@ out as in [Feature packages](#feature-packages).
 
 ```kotlin
 interface {Name}Screen {
-    /** The title the screen's bar shows on Android. */
-    val title: StringDesc
     val viewState: StateFlow<{Name}ViewState>
     val actions: Actions
     val events: Flow<{Name}UiEvent> // only with one-shot events
 
     interface Actions {
         fun onRouteSelected(routeId: String)
-        /** Tapped the back button in the bar. */
-        fun onBackClick()
+        fun onBack()
 
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onRouteSelected(routeId: String) = Unit
-                override fun onBackClick() = Unit
+                override fun onBack() = Unit
             }
         }
     }
@@ -104,7 +101,6 @@ internal class {Name}Component(
     {Name}ScreenNavigation by navigation,
     {Name}Screen.Actions {
 
-    override val title: StringDesc = MR.strings.{name}_screen_title.desc()
     override val viewState: StateFlow<{Name}ViewState> = componentState
     override val actions: {Name}Screen.Actions = this
 
@@ -113,7 +109,7 @@ internal class {Name}Component(
     }
 
     override fun onRouteSelected(routeId: String) = openRouteDetail(routeId)
-    override fun onBackClick() = pop()
+    override fun onBack() = pop()
 
     private fun loadRoutes() = getRoutesUseCase.execute(GetRoutesUseCase.Args(args.tripId)) {
         onSuccess { routes -> componentState.update { it.copy(routes = routes.toItems()) } }
@@ -136,46 +132,24 @@ internal class {Name}Component(
 @Composable
 fun {Name}ScreenUi(screen: {Name}Screen, modifier: Modifier = Modifier) {
     val viewState by screen.viewState.collectAsStateWithLifecycle()
-    Content(viewState = viewState, actions = screen.actions, title = screen.title.localized(), modifier = modifier)
+    Content(viewState = viewState, actions = screen.actions, modifier = modifier)
 }
 
 @Composable
-private fun Content(
-    viewState: {Name}ViewState,
-    actions: {Name}Screen.Actions,
-    title: String?,
-    modifier: Modifier = Modifier,
-) {
-    AppScaffold(
-        title = title,
-        back = IconAction(
-            icon = painterResource(MR.images.back),
-            label = stringResource(MR.strings.generic_back),
-            onClick = actions::onBackClick,
-        ),
-        modifier = modifier,
-    ) { padding ->
-        // ... the body, its root modifier Modifier.fillMaxSize().padding(padding)
-    }
+private fun Content(viewState: {Name}ViewState, actions: {Name}Screen.Actions, modifier: Modifier = Modifier) {
+    // ...
 }
 
 @ScreenPreviews
 @Composable
 private fun {Name}ScreenPreview() = Showcase {
-    Content(
-        viewState = {Name}PreviewStates.viewState(),
-        actions = noOpActions(),
-        title = stringResource(MR.strings.{name}_screen_title),
-    )
+    Content(viewState = {Name}PreviewStates.viewState(), actions = noOpActions())
 }
 ```
 
-- A pushed screen wraps its `Content` in `AppScaffold` from `:core:ui`: the title comes from `screen.title`, the back
-  button calls `actions.onBackClick`, which the component routes to navigation `pop()`. On Android the scaffold draws
-  the top bar; on iOS it draws only the content, as SwiftUI draws the bar. The body takes the scaffold's padding,
-  except a screen that draws behind the bar, like Profile with `AppScaffoldDefaultColors.overArt()`, which keeps its
-  own content clear of the insets. A screen that draws behind the system bars keeps its own controls clear of them
-  with `WindowInsets.safeDrawing`.
+- The screen draws only its content: no top bar, back button or system insets. The navigation hosts draw those. A
+  screen that draws behind the system bars, like First launch with its full-screen illustration, keeps its own
+  controls clear of them with `WindowInsets.safeDrawing`.
 - Colors, type and shapes come from the theme (`MaterialTheme.*`, `AppTheme.*` for what Material has no slot for),
   never literal values. Icons are `painterResource(MR.images.…)` from `:core:resources`, and `:core:ui` components take
   their texts and icons as parameters. A value from a design's Platforms table comes from `AppTheme.platformStyle`, which holds
@@ -244,9 +218,9 @@ ui/<name>Screen/   the contract, component, view state, navigation, UI events an
    - `<Host>NavHostNavigation.kt`: add `{Name}ScreenNavigation` to the interface's supertypes, and implement its
      functions in the navigator (`stackNavigator.pushNew(...)`, `stackNavigator.pop()`, `sheetNavigator.activate(...)`).
    - `<Host>NavHostComponent.kt`: a branch in `childFactory` that calls `<Feature>Screens.{name}(...)`.
-4. **Android**: in `androidApp/.../ui/navigation/<Host>NavHostUi.kt`, render the child with `{Name}ScreenUi`
-   (`modifier = Modifier.fillMaxSize()`); the screen draws its own bar. A sheet gets a
-   `ModalBottomSheet` branch, with `dragHandle = { DragHandle() }` from `:core:ui`, not Material's default.
+4. **Android**: in `androidApp/.../ui/navigation/<Host>NavHostUi.kt`, render the child with `{Name}ScreenUi` and
+   add its title to the `title` mapping (a sheet gets a `ModalBottomSheet` branch, with
+   `dragHandle = { DragHandle() }` from `:core:ui`, not Material's default).
 5. **iOS**:
    - `iosApp/SpiritedDriving/Views/Scenes/{Name}/{Name}Component.swift`:
 
@@ -261,7 +235,7 @@ ui/<name>Screen/   the contract, component, view state, navigation, UI events an
          var body: some View {
              ComposeView { {Name}ScreenUiController(screen: screen) }
                  .composeScreen()
-                 .navigationTitle(screen.title.localized())
+                 .navigationTitle(Localizable.{name}_screen_title.localized)
          }
      }
      ```
