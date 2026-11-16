@@ -30,7 +30,7 @@ internal class ProfileComponent(
     override val title: StringDesc = MR.strings.profile_screen_title.desc()
     override val actions: ProfileScreen.Actions = this
 
-    override fun onBackClick() = close()
+    override fun onBack() = close()
     override fun onSettingsClick() = openSettings()
     override fun onRateClick() = sendUiEvent(ProfileUiEvent.OpenWebPage(platform.storeReviewUrl))
     override fun onSendFeedbackClick() = openFeedback()

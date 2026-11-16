@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.AppButton
 import com.syntey.spiriteddriving.core.ui.components.AppScaffold
+import com.syntey.spiriteddriving.core.ui.components.AndroidTopBar
 import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.components.NoteCard
 import com.syntey.spiriteddriving.core.ui.components.NoteDefaultColors
@@ -51,12 +52,16 @@ private fun Content(
     modifier: Modifier = Modifier,
 ) {
     AppScaffold(
-        title = title,
-        back = IconAction(
-            icon = painterResource(MR.images.back),
-            label = stringResource(MR.strings.generic_back),
-            onClick = actions::onBackClick,
-        ),
+        topBar = {
+            AndroidTopBar(
+                title = title,
+                navigation = IconAction(
+                    icon = painterResource(MR.images.back),
+                    label = stringResource(MR.strings.generic_back),
+                    onClick = actions::onBack,
+                ),
+            )
+        },
         modifier = modifier,
     ) { padding ->
         if (viewState.status == FeedbackStatus.Sent) {

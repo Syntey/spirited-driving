@@ -43,7 +43,7 @@ internal class AboutComponent(
         doOnCreate { showVersion() }
     }
 
-    override fun onBackClick() = pop()
+    override fun onBack() = pop()
     override fun onPrivacyPolicyClick() = openWebPage(LegalPages.PRIVACY_POLICY_URL)
     override fun onTermsClick() = openWebPage(LegalPages.TERMS_URL)
     override fun onLicencesClick() = openLicences()

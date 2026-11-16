@@ -17,7 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.AppScaffold
-import com.syntey.spiriteddriving.core.ui.components.AppScaffoldDefaultColors
+import com.syntey.spiriteddriving.core.ui.components.AndroidTopBar
+import com.syntey.spiriteddriving.core.ui.components.AndroidTopBarDefaults
 import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.components.ListGroup
 import com.syntey.spiriteddriving.core.ui.components.ListRow
@@ -51,15 +52,19 @@ private fun Content(
     modifier: Modifier = Modifier,
 ) {
     AppScaffold(
-        title = null,
-        back = IconAction(
-            icon = painterResource(MR.images.back),
-            label = stringResource(MR.strings.generic_back),
-            onClick = actions::onBackClick,
-        ),
+        topBar = {
+            AndroidTopBar(
+                title = null,
+                navigation = IconAction(
+                    icon = painterResource(MR.images.back),
+                    label = stringResource(MR.strings.generic_back),
+                    onClick = actions::onBack,
+                ),
+                // Profile draws behind the transparent top bar and keeps its own content clear of the insets
+                colors = AndroidTopBarDefaults.overArt(),
+            )
+        },
         modifier = modifier,
-        // Profile draws behind the transparent top bar and keeps its own content clear of the insets
-        colors = AppScaffoldDefaultColors.overArt(),
     ) { _ ->
         Column(
             modifier = Modifier

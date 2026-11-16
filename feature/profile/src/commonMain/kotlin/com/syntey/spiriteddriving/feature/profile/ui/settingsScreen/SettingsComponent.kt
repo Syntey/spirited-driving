@@ -55,7 +55,7 @@ internal class SettingsComponent(
         observeVignetteCountries()
     }
 
-    override fun onBackClick() = pop()
+    override fun onBack() = pop()
     override fun onDriveRemindersClick() = openDriveReminderSettings()
     override fun onDistanceUnitSelect(unit: DistanceUnit) = saveDistanceUnit(unit)
 

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.AppScaffold
+import com.syntey.spiriteddriving.core.ui.components.AndroidTopBar
 import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.components.ListGroup
 import com.syntey.spiriteddriving.core.ui.components.ListRow
@@ -44,12 +45,16 @@ private fun Content(
 ) {
     val phosphorName = stringResource(MR.strings.licences_phosphor)
     AppScaffold(
-        title = title,
-        back = IconAction(
-            icon = painterResource(MR.images.back),
-            label = stringResource(MR.strings.generic_back),
-            onClick = actions::onBackClick,
-        ),
+        topBar = {
+            AndroidTopBar(
+                title = title,
+                navigation = IconAction(
+                    icon = painterResource(MR.images.back),
+                    label = stringResource(MR.strings.generic_back),
+                    onClick = actions::onBack,
+                ),
+            )
+        },
         modifier = modifier,
     ) { padding ->
         Column(

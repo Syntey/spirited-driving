@@ -41,7 +41,7 @@ internal class LicenceTextComponent(
         doOnCreate { loadLicences() }
     }
 
-    override fun onBackClick() = pop()
+    override fun onBack() = pop()
     override fun onLicenceLinkClick(url: String) = openWebPage(url)
 
     private fun openWebPage(url: String) = openWebPageUseCase.execute(OpenWebPageUseCase.Args(url)) {

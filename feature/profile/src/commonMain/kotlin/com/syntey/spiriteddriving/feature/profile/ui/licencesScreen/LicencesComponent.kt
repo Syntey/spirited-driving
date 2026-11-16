@@ -47,7 +47,7 @@ internal class LicencesComponent(
         doOnCreate { loadLibraries() }
     }
 
-    override fun onBackClick() = pop()
+    override fun onBack() = pop()
 
     override fun onOpenStreetMapClick() = openWebPage(Constants.Licences.OPENSTREETMAP_COPYRIGHT_URL)
 
