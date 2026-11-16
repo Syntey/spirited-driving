@@ -67,7 +67,7 @@ internal class FeedbackComponent(
         }
     }
 
-    override fun onBackClick() = pop()
+    override fun onBack() = pop()
     override fun onDoneClick() = pop()
 
     private fun showSentWith() {

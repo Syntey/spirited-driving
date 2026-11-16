@@ -20,14 +20,14 @@ interface AboutScreen {
         fun onLicencesClick()
 
         /** Tapped the back button in the bar. */
-        fun onBackClick()
+        fun onBack()
 
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onPrivacyPolicyClick() = Unit
                 override fun onTermsClick() = Unit
                 override fun onLicencesClick() = Unit
-                override fun onBackClick() = Unit
+                override fun onBack() = Unit
             }
         }
     }

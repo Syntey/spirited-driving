@@ -14,12 +14,12 @@ interface LicenceTextScreen {
         fun onLicenceLinkClick(url: String)
 
         /** Tapped the back button in the bar. */
-        fun onBackClick()
+        fun onBack()
 
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onLicenceLinkClick(url: String) = Unit
-                override fun onBackClick() = Unit
+                override fun onBack() = Unit
             }
         }
     }

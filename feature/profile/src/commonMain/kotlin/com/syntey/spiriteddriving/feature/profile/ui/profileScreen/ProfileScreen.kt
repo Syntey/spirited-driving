@@ -27,7 +27,7 @@ interface ProfileScreen {
         fun onAboutClick()
 
         /** Tapped the back button in the bar. */
-        fun onBackClick()
+        fun onBack()
 
         companion object {
             fun noOpActions(): Actions = object : Actions {
@@ -35,7 +35,7 @@ interface ProfileScreen {
                 override fun onRateClick() = Unit
                 override fun onSendFeedbackClick() = Unit
                 override fun onAboutClick() = Unit
-                override fun onBackClick() = Unit
+                override fun onBack() = Unit
             }
         }
     }

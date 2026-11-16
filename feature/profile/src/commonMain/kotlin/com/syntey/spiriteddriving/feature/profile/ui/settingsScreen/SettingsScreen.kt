@@ -22,14 +22,14 @@ interface SettingsScreen {
         fun onDriveRemindersClick()
 
         /** Tapped the back button in the bar. */
-        fun onBackClick()
+        fun onBack()
 
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onDistanceUnitSelect(unit: DistanceUnit) = Unit
                 override fun onVignetteToggle(country: CountryCode) = Unit
                 override fun onDriveRemindersClick() = Unit
-                override fun onBackClick() = Unit
+                override fun onBack() = Unit
             }
         }
     }

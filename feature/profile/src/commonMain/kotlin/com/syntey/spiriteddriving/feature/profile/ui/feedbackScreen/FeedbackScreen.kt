@@ -20,14 +20,14 @@ interface FeedbackScreen {
         fun onDoneClick()
 
         /** Tapped the back button in the bar. */
-        fun onBackClick()
+        fun onBack()
 
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onMessageChange(text: String) = Unit
                 override fun onSendClick() = Unit
                 override fun onDoneClick() = Unit
-                override fun onBackClick() = Unit
+                override fun onBack() = Unit
             }
         }
     }

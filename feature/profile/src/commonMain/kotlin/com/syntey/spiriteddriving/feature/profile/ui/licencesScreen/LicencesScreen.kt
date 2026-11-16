@@ -20,14 +20,14 @@ interface LicencesScreen {
         fun onIconsClick(name: String)
 
         /** Tapped the back button in the bar. */
-        fun onBackClick()
+        fun onBack()
 
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onOpenStreetMapClick() = Unit
                 override fun onLibraryClick(id: String, name: String) = Unit
                 override fun onIconsClick(name: String) = Unit
-                override fun onBackClick() = Unit
+                override fun onBack() = Unit
             }
         }
     }
