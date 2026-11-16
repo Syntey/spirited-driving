@@ -5,7 +5,7 @@ import org.gradle.api.JavaVersion
 object ProjectSettings {
 
     object Gradle {
-        const val TaskGroup = "spirited driving"
+        const val TaskGroup = "futured"
     }
 
     object Lint {
