@@ -30,6 +30,7 @@ import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.SuggestionRow
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
 import com.syntey.spiriteddriving.feature.map.tools.budgetText
+import com.syntey.spiriteddriving.feature.map.tools.distanceChips
 import com.syntey.spiriteddriving.feature.map.tools.distanceText
 import com.syntey.spiriteddriving.feature.map.tools.durationText
 import com.syntey.spiriteddriving.feature.map.tools.heightText
@@ -84,8 +85,8 @@ data class TripPlanViewState(
     val budgetChips: ImmutableList<BudgetChip>
         get() {
             val budget = planning?.budget ?: return persistentListOf()
-            return budgetOptions(budget).map { option ->
-                BudgetChip(budget = option, label = budgetText(option), isSelected = option == budget)
+            return budgetOptions(budget, distanceUnit).map { option ->
+                BudgetChip(budget = option, label = budgetText(option, distanceUnit), isSelected = option == budget)
             }.toImmutableList()
         }
 
@@ -266,23 +267,27 @@ data class TripPlanViewState(
     // The closest fun route's budget picks the smallest chip that fits it. A budget in the other unit fits nothing, as with none.
     private fun noFunRouteMessageFor(planning: RoutePlanningState, plan: TripPlan): NoFunRouteMessage {
         val budget = planning.budget
-        val options = budgetOptions(budget)
+        val options = budgetOptions(budget, distanceUnit)
         val closest = plan.closestFunRouteBudget
         val fitting = closest?.let { needed -> options.firstOrNull { it.allowsAtLeast(needed) } }
         return if (closest != null && fitting != null) {
             NoFunRouteMessage(
-                text = StringDesc.ResourceFormatted(MR.strings.planning_no_fun_route, budgetText(budget), closestText(closest)),
+                text = StringDesc.ResourceFormatted(
+                    MR.strings.planning_no_fun_route,
+                    budgetText(budget, distanceUnit),
+                    closestText(closest),
+                ),
                 useBudget = UseBudgetButton(
                     budget = fitting,
-                    label = StringDesc.ResourceFormatted(MR.strings.planning_use_budget, budgetText(fitting)),
+                    label = StringDesc.ResourceFormatted(MR.strings.planning_use_budget, budgetText(fitting, distanceUnit)),
                 ),
             )
         } else {
             NoFunRouteMessage(
                 text = StringDesc.ResourceFormatted(
                     MR.strings.planning_no_fun_route_beyond,
-                    budgetText(budget),
-                    budgetText(options.last()),
+                    budgetText(budget, distanceUnit),
+                    budgetText(options.last(), distanceUnit),
                 ),
                 useBudget = null,
             )
@@ -320,10 +325,10 @@ data class TripPlanViewState(
 private fun boundsOf(points: List<GeoPoint>): GeoBounds =
     points.drop(1).fold(GeoBounds(points.first(), points.first())) { bounds, point -> bounds.including(point) }
 
-// The chips of the budget's unit
-private fun budgetOptions(budget: Budget): List<Budget> = when (budget) {
+// The chips of the budget's unit, the distance ones in [unit]
+private fun budgetOptions(budget: Budget, unit: DistanceUnit): List<Budget> = when (budget) {
     is Budget.Time -> Constants.Budgets.TIME
-    is Budget.Distance -> Constants.Budgets.DISTANCE
+    is Budget.Distance -> distanceChips(unit)
 }
 
 // Whether this budget allows at least [other]'s extra; never across units

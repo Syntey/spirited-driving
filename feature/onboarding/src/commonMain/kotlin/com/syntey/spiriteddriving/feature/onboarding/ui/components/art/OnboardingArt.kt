@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -17,11 +16,11 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Density
 import com.syntey.spiriteddriving.core.ui.components.Showcase
 import com.syntey.spiriteddriving.core.ui.preview.DarkLightPreviews
+import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 
 /**
@@ -45,7 +44,7 @@ internal fun OnboardingArt(
     panelTop: () -> Float,
     modifier: Modifier = Modifier,
 ) {
-    val palette = if (MaterialTheme.colorScheme.background.luminance() < 0.5f) ArtPalette.Dusk else ArtPalette.Day
+    val palette = if (AppTheme.customColors.isDark) ArtPalette.Dusk else ArtPalette.Day
     Box(
         modifier = modifier
             .clipToBounds()

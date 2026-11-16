@@ -8,6 +8,8 @@ import com.syntey.spiriteddriving.core.domain.coverage.VersionedCoverage
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.GeoPolygon
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -116,6 +118,8 @@ class ObserveCoverageUseCaseTest {
             private set
 
         override suspend fun get(): VersionedCoverage? = stored
+
+        override fun observeVignetteCountries(): Flow<List<CountryCode>?> = flowOf(stored?.coverage?.vignetteCountries)
 
         override suspend fun save(coverage: VersionedCoverage) {
             saves++

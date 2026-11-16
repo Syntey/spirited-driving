@@ -21,6 +21,7 @@ Needs Node 18 or newer and nothing else. The scenery is seeded, so every run dra
 | `review-*.svg`                         | For checking: every step's cars at once, page edges, the area under the panel, and the cars up close |
 | `OnboardingArt.dc.html`                | The illustration artboard for the design canvas                            |
 | `prototype.html`                       | The interactive prototype: `prototype.template.html` with the artwork filled in |
+| `core/resources/.../images/profile_header_*.svg` | The Profile header: the hairpin on page 3 with both cars, cropped to 420 × 270 |
 
 It also writes the scene for the app, `feature/onboarding/.../ui/components/art/OnboardingArtScene.kt`, which is checked in. Run the
 generator after every change, so the app and the canvas show the same picture.

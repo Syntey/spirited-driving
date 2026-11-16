@@ -13,6 +13,7 @@
     <string name="generic_loading">Loading</string>
     <string name="generic_sign_in">Sign In</string>
     <string name="generic_sign_out">Sign Out</string>
+    <string name="generic_back">Back</string>
 
     <!-- Rating -->
     <string name="rating_label">Rate the route</string>
@@ -29,6 +30,7 @@
     <string name="budget_minutes">+%1$d min</string>
     <string name="budget_hours">+%1$s h</string>
     <string name="budget_kilometres">+%1$d km</string>
+    <string name="budget_miles">+%1$d mi</string>
 
     <!-- First launch. Where the copy names the platform's maps app or its location prompt, it has an Android and an iOS version. -->
     <string name="onboarding_skip">Skip</string>
@@ -145,4 +147,54 @@
     <string name="planning_budget_minutes_description">Minutes</string>
     <string name="planning_budget_kilometres">km</string>
     <string name="planning_budget_kilometres_description">Kilometres</string>
+    <string name="planning_budget_miles">mi</string>
+    <string name="planning_budget_miles_description">Miles</string>
+
+    <!-- Profile -->
+    <string name="profile_screen_title">Profile</string>
+    <string name="profile_settings">Settings</string>
+    <string name="profile_settings_supporting">Units, vignettes, reminders</string>
+    <string name="profile_feedback">Feedback</string>
+    <string name="profile_rate">Rate Spirited Driving</string>
+    <string name="profile_send_feedback">Send feedback</string>
+    <string name="profile_about">About Spirited Driving</string>
+
+    <!-- About -->
+    <string name="about_screen_title">About</string>
+    <string name="about_privacy_policy">Privacy policy</string>
+    <string name="about_terms">Terms</string>
+    <string name="about_version">Version</string>
+    <string name="about_version_value">%1$s (%2$s)</string>
+    <string name="about_licences">Licences</string>
+
+    <!-- Licences -->
+    <string name="licences_screen_title">Licences</string>
+    <string name="licences_route_data">Route data and place search</string>
+    <string name="licences_osm">© OpenStreetMap contributors</string>
+    <string name="licences_osm_supporting">Available under the Open Database License.</string>
+    <string name="licences_libraries">Open-source libraries</string>
+    <string name="licences_icons">Icons</string>
+    <string name="licences_phosphor">Phosphor Icons</string>
+    <string name="licences_mit">MIT License</string>
+
+    <!-- Settings -->
+    <string name="settings_screen_title">Settings</string>
+    <string name="settings_units">Units</string>
+    <string name="settings_distance">Distance</string>
+    <string name="settings_vignettes">Motorway vignettes</string>
+    <string name="settings_vignettes_footer">Without a vignette, routes avoid motorways that need one.</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_drive_reminders">Drive reminders</string>
+    <string name="settings_notifications_footer">A quiet notification after a drive, asking how the route was.</string>
+
+    <!-- Send feedback -->
+    <string name="feedback_screen_title">Send feedback</string>
+    <string name="feedback_placeholder">What\'s on your mind?</string>
+    <string name="feedback_sent_with">Sent with: %1$s %2$s (%3$s) · %4$s · %5$s</string>
+    <string name="feedback_send">Send</string>
+    <string name="feedback_sent_title">Thanks for your feedback</string>
+    <string name="feedback_sent_text">Every message is read.</string>
+    <string name="feedback_done">Done</string>
+    <string name="feedback_offline">You\'re offline. Send it again once you\'re back online.</string>
+    <string name="feedback_failed">Couldn\'t send your feedback. Try again.</string>
 </resources>
