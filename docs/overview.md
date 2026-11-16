@@ -55,9 +55,6 @@ Gaps we target:
 2. **Everyday A→B trips**, not only planned weekend rides.
 3. **Cars first, light sports cars in particular.** The mature tools are built for motorcycles.
 
-Risk: a budget control is easy to copy. The lasting advantage has to be the quality of the fun score and a
-navigation experience good enough for daily use.
-
 ## Core concepts
 
 - **Baseline route**: the fastest route from A to B, computed by *our* engine. The budget is measured against this
@@ -129,7 +126,9 @@ layout, sizes and copy:
 
 - Its `design.md` is deleted. The decisions the code can't explain, and why they were made, move to a short
   "Design" section in the feature's `README.md`.
-- Screenshots come from screenshot tests and are never added by hand, so they stay current.
+- Screenshots in feature docs come from screenshot tests and are never added by hand, so they stay current. The
+  repo README's images are the exception: device captures of the running app with its map, retaken when the look
+  changes.
 - The theme keeps its reasons and drops its tables of values.
 
 ## Architecture

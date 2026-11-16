@@ -20,7 +20,7 @@ internal object AppLogging {
     ) {
         with(Logger) {
             setMinSeverity(Severity.Debug)
-            setTag("KmpTemplate")
+            setTag("SpiritedDriving")
             setLogWriters(getPlatformLogWriters(isDebugBuild) + getCrashlyticsLogWriter(crashlytics))
         }
     }
