@@ -1,17 +1,17 @@
 package com.syntey.spiriteddriving.core.domain.feedback
 
 /**
- * [FeedbackSender] that records the feedback it got. Throws [failure] instead of recording, when it's set.
+ * [FeedbackSender] that records the messages it got. Throws [failure] instead of recording, when it's set.
  */
 class FakeFeedbackSender : FeedbackSender {
 
     var failure: Throwable? = null
 
-    val sent: List<Feedback>
-        field = mutableListOf<Feedback>()
+    val sent: List<String>
+        field = mutableListOf<String>()
 
-    override suspend fun send(feedback: Feedback) {
+    override suspend fun send(message: String) {
         failure?.let { throw it }
-        sent += feedback
+        sent += message
     }
 }

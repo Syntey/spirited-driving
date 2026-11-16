@@ -11,7 +11,7 @@ struct FeedbackComponent: View {
     var body: some View {
         ComposeView { FeedbackScreenUiController(screen: screen) }
             .composeScreen()
-            .navigationTitle(Localizable.feedback_screen_title.localized)
+            .navigationTitle(screen.title.localized())
             .navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -4,11 +4,14 @@ import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.lifecycle.doOnCreate
+import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.feature.profile.domain.DeleteAccountUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.ObserveAccountUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.SignOutUseCase
+import dev.icerock.moko.resources.desc.StringDesc
+import dev.icerock.moko.resources.desc.desc
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
@@ -33,11 +36,14 @@ internal class AccountComponent(
     private val logger = Logger.withTag("AccountComponent")
 
     override val viewState: StateFlow<AccountViewState> = componentState
+    override val title: StringDesc = MR.strings.account_screen_title.desc()
     override val actions: AccountScreen.Actions = this
 
     init {
         doOnCreate { observeAccount() }
     }
+
+    override fun onBack() = pop()
 
     override fun onSignOutClick() {
         if (componentState.value.isDeleting) return

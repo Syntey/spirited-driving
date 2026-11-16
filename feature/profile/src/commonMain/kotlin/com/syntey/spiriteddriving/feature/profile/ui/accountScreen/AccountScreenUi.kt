@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -25,7 +24,10 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.core.platform.binding.SignInProvider
 import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.core.ui.components.AndroidTopBar
+import com.syntey.spiriteddriving.core.ui.components.AppScaffold
 import com.syntey.spiriteddriving.core.ui.components.CarSpinner
+import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.components.ListGroup
 import com.syntey.spiriteddriving.core.ui.components.ListRow
 import com.syntey.spiriteddriving.core.ui.components.ListRowDefaultColors
@@ -57,16 +59,48 @@ fun AccountScreenUi(screen: AccountScreen, modifier: Modifier = Modifier) {
         onEvent<AccountUiEvent.DeleteFailed> { scope.launch { hostState.showMessage(deleteFailedMessage) } }
     }
     Box(modifier) {
-        Content(viewState = viewState, actions = screen.actions, modifier = Modifier.fillMaxSize())
+        Content(
+            viewState = viewState,
+            actions = screen.actions,
+            title = screen.title.localized(),
+            modifier = Modifier.fillMaxSize(),
+        )
         MessageHost(hostState, Modifier.align(Alignment.BottomCenter))
     }
 }
 
 @Composable
-private fun Content(viewState: AccountViewState, actions: AccountScreen.Actions, modifier: Modifier = Modifier) {
+private fun Content(
+    viewState: AccountViewState,
+    actions: AccountScreen.Actions,
+    title: String?,
+    modifier: Modifier = Modifier,
+) {
+    AppScaffold(
+        topBar = {
+            AndroidTopBar(
+                title = title,
+                navigation = IconAction(
+                    icon = painterResource(MR.images.back),
+                    label = stringResource(MR.strings.generic_back),
+                    onClick = actions::onBack,
+                ),
+            )
+        },
+        modifier = modifier,
+    ) { padding ->
+        AccountRows(viewState = viewState, actions = actions, modifier = Modifier.fillMaxSize().padding(padding))
+    }
+    // iOS shows the same confirmation as a native alert, from AccountComponent.swift
+    if (AppTheme.platform == UiPlatform.Android && viewState.isDeleteDialogShown) {
+        DeleteAccountDialog(actions = actions)
+    }
+}
+
+@Composable
+private fun AccountRows(viewState: AccountViewState, actions: AccountScreen.Actions, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(top = Grid.d4),
         verticalArrangement = Arrangement.spacedBy(Grid.d6),
@@ -128,10 +162,6 @@ private fun Content(viewState: AccountViewState, actions: AccountScreen.Actions,
             }
         }
     }
-    // iOS shows the same confirmation as a native alert, from AccountComponent.swift
-    if (AppTheme.platform == UiPlatform.Android && viewState.isDeleteDialogShown) {
-        DeleteAccountDialog(actions = actions)
-    }
 }
 
 @Composable
@@ -165,41 +195,69 @@ private fun GoogleLogo() {
 @ScreenPreviews
 @Composable
 private fun AccountScreenPreview() = Showcase {
-    Content(viewState = AccountPreviewStates.googleViewState(), actions = noOpActions())
+    Content(
+        viewState = AccountPreviewStates.googleViewState(),
+        actions = noOpActions(),
+        title = stringResource(MR.strings.account_screen_title),
+    )
 }
 
 @ScreenPreviews
 @Composable
 private fun AccountScreenWithoutNamePreview() = Showcase {
-    Content(viewState = AccountPreviewStates.appleViewState(), actions = noOpActions())
+    Content(
+        viewState = AccountPreviewStates.appleViewState(),
+        actions = noOpActions(),
+        title = stringResource(MR.strings.account_screen_title),
+    )
 }
 
 @ScreenPreviews
 @Composable
 private fun AccountScreenDeletingPreview() = Showcase {
-    Content(viewState = AccountPreviewStates.deletingViewState(), actions = noOpActions())
+    Content(
+        viewState = AccountPreviewStates.deletingViewState(),
+        actions = noOpActions(),
+        title = stringResource(MR.strings.account_screen_title),
+    )
 }
 
 @ScreenPreviews
 @Composable
 private fun AccountScreenDeleteDialogPreview() = Showcase(platform = UiPlatform.Android) {
-    Content(viewState = AccountPreviewStates.deleteDialogViewState(), actions = noOpActions())
+    Content(
+        viewState = AccountPreviewStates.deleteDialogViewState(),
+        actions = noOpActions(),
+        title = stringResource(MR.strings.account_screen_title),
+    )
 }
 
 @DarkLightPreviews
 @Composable
 private fun AccountScreenIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(viewState = AccountPreviewStates.googleViewState(), actions = noOpActions())
+    Content(
+        viewState = AccountPreviewStates.googleViewState(),
+        actions = noOpActions(),
+        title = stringResource(MR.strings.account_screen_title),
+    )
 }
 
 @DarkLightPreviews
 @Composable
 private fun AccountScreenIosWithoutNamePreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(viewState = AccountPreviewStates.appleViewState(), actions = noOpActions())
+    Content(
+        viewState = AccountPreviewStates.appleViewState(),
+        actions = noOpActions(),
+        title = stringResource(MR.strings.account_screen_title),
+    )
 }
 
 @DarkLightPreviews
 @Composable
 private fun AccountScreenIosDeletingPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(viewState = AccountPreviewStates.deletingViewState(), actions = noOpActions())
+    Content(
+        viewState = AccountPreviewStates.deletingViewState(),
+        actions = noOpActions(),
+        title = stringResource(MR.strings.account_screen_title),
+    )
 }
