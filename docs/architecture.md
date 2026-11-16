@@ -240,14 +240,15 @@ How features map to screens is in [navigation.md](navigation.md).
 The content of every screen is shared Compose in its feature module, one implementation for both platforms.
 Platform code draws only the frame around it:
 
-| Part                                                   | Android                       | iOS                                |
-|--------------------------------------------------------|-------------------------------|------------------------------------|
-| Screen and sheet content: lists, cards, buttons, chips | Compose, shared               | Compose, shared                    |
-| Navigation between screens, navigation bars            | Compose                       | SwiftUI                            |
-| Sheets                                                 | Compose                       | SwiftUI, hosting the shared content |
-| Alerts                                                 | Compose (Material dialog)     | Native alert                       |
-| Map and map buttons                                    | Compose (`maps-compose`)      | SwiftUI, MapKit                    |
-| Web pages (legal pages, licences)                      | Custom Tab                    | Safari view controller             |
+| Part                                                   | Android                                      | iOS                                 |
+|--------------------------------------------------------|----------------------------------------------|-------------------------------------|
+| Screen and sheet content: lists, cards, buttons, chips | Compose, shared                              | Compose, shared                     |
+| Navigation between screens                             | Compose                                      | SwiftUI                             |
+| Navigation bars                                        | Compose, `AppScaffold` in each shared screen | SwiftUI                             |
+| Sheets                                                 | Compose                                      | SwiftUI, hosting the shared content |
+| Alerts                                                 | Compose (Material dialog)                    | Native alert                        |
+| Map and map buttons                                    | Compose (`maps-compose`)                     | SwiftUI, MapKit                     |
+| Web pages (legal pages, licences)                      | Custom Tab                                   | Safari view controller              |
 
 The Platforms tables in the [screen designs](overview.md#design) (sizes, button and chip styles, iOS-style or
 Material lists) are values of the same shared components. Both platforms' values sit side by side in `PlatformStyle`

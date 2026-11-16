@@ -20,7 +20,7 @@ internal class ProfileNavHostComponent(
 ) : AppComponent<ProfileNavHostViewState, Nothing>(componentContext, ProfileNavHostViewState),
     ProfileNavHost {
 
-    private val navigator: ProfileNavHostNavigation = ProfileNavHostNavigator()
+    private val navigator: ProfileNavHostNavigation = ProfileNavHostNavigator(onClosed)
 
     override val stack: StateFlow<ChildStack<ProfileConfig, ProfileChild>> = childStack(
         source = navigator.stackNavigator,

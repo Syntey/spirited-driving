@@ -4,6 +4,7 @@ import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.lifecycle.doOnCreate
+import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.resources.LegalPages
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
@@ -13,6 +14,8 @@ import com.syntey.spiriteddriving.feature.profile.model.OpenSourceLibrary
 import com.syntey.spiriteddriving.feature.profile.model.ui.LibraryItem
 import com.syntey.spiriteddriving.feature.profile.tools.Constants
 import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextArgs
+import dev.icerock.moko.resources.desc.StringDesc
+import dev.icerock.moko.resources.desc.desc
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -37,11 +40,14 @@ internal class LicencesComponent(
     private val logger = Logger.withTag("LicencesComponent")
 
     override val viewState: StateFlow<LicencesViewState> = componentState
+    override val title: StringDesc = MR.strings.licences_screen_title.desc()
     override val actions: LicencesScreen.Actions = this
 
     init {
         doOnCreate { loadLibraries() }
     }
+
+    override fun onBackClick() = pop()
 
     override fun onOpenStreetMapClick() = openWebPage(Constants.Licences.OPENSTREETMAP_COPYRIGHT_URL)
 

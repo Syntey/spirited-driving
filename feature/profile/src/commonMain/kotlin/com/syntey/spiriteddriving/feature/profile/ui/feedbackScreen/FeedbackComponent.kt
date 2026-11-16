@@ -13,6 +13,7 @@ import com.syntey.spiriteddriving.feature.profile.model.ui.FeedbackStatus
 import com.syntey.spiriteddriving.feature.profile.tools.Constants
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
+import dev.icerock.moko.resources.desc.desc
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
@@ -35,6 +36,7 @@ internal class FeedbackComponent(
     FeedbackScreen.Actions {
 
     override val viewState: StateFlow<FeedbackViewState> = componentState
+    override val title: StringDesc = MR.strings.feedback_screen_title.desc()
     override val actions: FeedbackScreen.Actions = this
 
     init {
@@ -65,6 +67,7 @@ internal class FeedbackComponent(
         }
     }
 
+    override fun onBackClick() = pop()
     override fun onDoneClick() = pop()
 
     private fun showSentWith() {

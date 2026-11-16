@@ -6,6 +6,7 @@ import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.lifecycle.doOnResume
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
+import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.feature.profile.domain.IsDriveRemindersOnUseCase
@@ -14,6 +15,8 @@ import com.syntey.spiriteddriving.feature.profile.domain.ObserveVignetteCountrie
 import com.syntey.spiriteddriving.feature.profile.domain.OpenDriveReminderSettingsUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.SetDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.SetVignetteUseCase
+import dev.icerock.moko.resources.desc.StringDesc
+import dev.icerock.moko.resources.desc.desc
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -42,6 +45,7 @@ internal class SettingsComponent(
     private val logger = Logger.withTag("SettingsComponent")
 
     override val viewState: StateFlow<SettingsViewState> = componentState
+    override val title: StringDesc = MR.strings.settings_screen_title.desc()
     override val actions: SettingsScreen.Actions = this
 
     init {
@@ -51,6 +55,7 @@ internal class SettingsComponent(
         observeVignetteCountries()
     }
 
+    override fun onBackClick() = pop()
     override fun onDriveRemindersClick() = openDriveReminderSettings()
     override fun onDistanceUnitSelect(unit: DistanceUnit) = saveDistanceUnit(unit)
 
