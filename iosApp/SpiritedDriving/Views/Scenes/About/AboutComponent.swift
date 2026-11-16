@@ -11,7 +11,7 @@ struct AboutComponent: View {
     var body: some View {
         ComposeView { AboutScreenUiController(screen: screen) }
             .composeScreen()
-            .navigationTitle(Localizable.about_screen_title.localized)
+            .navigationTitle(screen.title.localized())
             .navigationBarTitleDisplayMode(.inline)
     }
 }

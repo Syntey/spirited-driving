@@ -11,7 +11,7 @@ struct LicencesComponent: View {
     var body: some View {
         ComposeView { LicencesScreenUiController(screen: screen) }
             .composeScreen()
-            .navigationTitle(Localizable.licences_screen_title.localized)
+            .navigationTitle(screen.title.localized())
             .navigationBarTitleDisplayMode(.inline)
     }
 }

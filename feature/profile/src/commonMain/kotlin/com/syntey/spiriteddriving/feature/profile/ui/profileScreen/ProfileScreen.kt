@@ -1,9 +1,12 @@
 package com.syntey.spiriteddriving.feature.profile.ui.profileScreen
 
+import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface ProfileScreen {
+    /** The title the navigation hosts show in the bar. */
+    val title: StringDesc
     val viewState: StateFlow<ProfileViewState>
     val actions: Actions
 
@@ -23,12 +26,16 @@ interface ProfileScreen {
         /** Tapped About Spirited Driving. */
         fun onAboutClick()
 
+        /** Tapped the back button in the bar. */
+        fun onBackClick()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onSettingsClick() = Unit
                 override fun onRateClick() = Unit
                 override fun onSendFeedbackClick() = Unit
                 override fun onAboutClick() = Unit
+                override fun onBackClick() = Unit
             }
         }
     }

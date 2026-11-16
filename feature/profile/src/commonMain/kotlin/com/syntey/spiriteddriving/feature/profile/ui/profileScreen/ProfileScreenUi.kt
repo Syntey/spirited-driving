@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -16,6 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.core.ui.components.AppScaffold
+import com.syntey.spiriteddriving.core.ui.components.AppScaffoldDefaultColors
+import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.components.ListGroup
 import com.syntey.spiriteddriving.core.ui.components.ListRow
 import com.syntey.spiriteddriving.core.ui.components.ListRowIcon
@@ -43,62 +46,77 @@ fun ProfileScreenUi(screen: ProfileScreen, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Content(actions: ProfileScreen.Actions, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState()),
-    ) {
-        ProfileHeader()
-        // The first card overlaps the bottom of the picture, so the road runs on behind it
+private fun Content(
+    actions: ProfileScreen.Actions,
+    modifier: Modifier = Modifier,
+) {
+    AppScaffold(
+        title = null,
+        back = IconAction(
+            icon = painterResource(MR.images.back),
+            label = stringResource(MR.strings.generic_back),
+            onClick = actions::onBackClick,
+        ),
+        modifier = modifier,
+        // Profile draws behind the transparent top bar and keeps its own content clear of the insets
+        colors = AppScaffoldDefaultColors.overArt(),
+    ) { _ ->
         Column(
             modifier = Modifier
-                .offset(y = -Grid.d6)
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-                .padding(bottom = Grid.d4),
-            verticalArrangement = Arrangement.spacedBy(Grid.d6),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
         ) {
-            ListGroup {
-                item { position ->
-                    ListRow(
-                        headline = stringResource(MR.strings.profile_settings),
-                        supporting = stringResource(MR.strings.profile_settings_supporting),
-                        leading = { ListRowIcon(painterResource(MR.images.settings)) },
-                        chevron = painterResource(MR.images.chevron_right),
-                        onClick = actions::onSettingsClick,
-                        position = position,
-                    )
+            ProfileHeader()
+            // The first card overlaps the bottom of the picture, so the road runs on behind it
+            Column(
+                modifier = Modifier
+                    .offset(y = -Grid.d6)
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
+                    .padding(bottom = Grid.d4),
+                verticalArrangement = Arrangement.spacedBy(Grid.d6),
+            ) {
+                ListGroup {
+                    item { position ->
+                        ListRow(
+                            headline = stringResource(MR.strings.profile_settings),
+                            supporting = stringResource(MR.strings.profile_settings_supporting),
+                            leading = { ListRowIcon(painterResource(MR.images.settings)) },
+                            chevron = painterResource(MR.images.chevron_right),
+                            onClick = actions::onSettingsClick,
+                            position = position,
+                        )
+                    }
                 }
-            }
-            ListGroup(header = stringResource(MR.strings.profile_feedback)) {
-                item { position ->
-                    ListRow(
-                        headline = stringResource(MR.strings.profile_rate),
-                        leading = { ListRowIcon(painterResource(MR.images.rate)) },
-                        trailing = { WebLinkIcon() },
-                        onClick = actions::onRateClick,
-                        position = position,
-                    )
+                ListGroup(header = stringResource(MR.strings.profile_feedback)) {
+                    item { position ->
+                        ListRow(
+                            headline = stringResource(MR.strings.profile_rate),
+                            leading = { ListRowIcon(painterResource(MR.images.rate)) },
+                            trailing = { WebLinkIcon() },
+                            onClick = actions::onRateClick,
+                            position = position,
+                        )
+                    }
+                    item { position ->
+                        ListRow(
+                            headline = stringResource(MR.strings.profile_send_feedback),
+                            leading = { ListRowIcon(painterResource(MR.images.feedback)) },
+                            onClick = actions::onSendFeedbackClick,
+                            chevron = painterResource(MR.images.chevron_right),
+                            position = position,
+                        )
+                    }
                 }
-                item { position ->
-                    ListRow(
-                        headline = stringResource(MR.strings.profile_send_feedback),
-                        leading = { ListRowIcon(painterResource(MR.images.feedback)) },
-                        onClick = actions::onSendFeedbackClick,
-                        chevron = painterResource(MR.images.chevron_right),
-                        position = position,
-                    )
-                }
-            }
-            ListGroup {
-                item { position ->
-                    ListRow(
-                        headline = stringResource(MR.strings.profile_about),
-                        leading = { ListRowIcon(painterResource(MR.images.about)) },
-                        onClick = actions::onAboutClick,
-                        chevron = painterResource(MR.images.chevron_right),
-                        position = position,
-                    )
+                ListGroup {
+                    item { position ->
+                        ListRow(
+                            headline = stringResource(MR.strings.profile_about),
+                            leading = { ListRowIcon(painterResource(MR.images.about)) },
+                            onClick = actions::onAboutClick,
+                            chevron = painterResource(MR.images.chevron_right),
+                            position = position,
+                        )
+                    }
                 }
             }
         }

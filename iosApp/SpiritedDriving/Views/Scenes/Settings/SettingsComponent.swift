@@ -11,7 +11,7 @@ struct SettingsComponent: View {
     var body: some View {
         ComposeView { SettingsScreenUiController(screen: screen) }
             .composeScreen()
-            .navigationTitle(Localizable.settings_screen_title.localized)
+            .navigationTitle(screen.title.localized())
             .navigationBarTitleDisplayMode(.inline)
     }
 }
