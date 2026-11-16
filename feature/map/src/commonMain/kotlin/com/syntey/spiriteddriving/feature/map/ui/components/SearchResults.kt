@@ -24,6 +24,7 @@ import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.GroupPosition
 import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.components.ListGroupDefaultColors
+import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.syntey.spiriteddriving.core.ui.components.ListHeader
 import com.syntey.spiriteddriving.core.ui.components.ListRow
 import com.syntey.spiriteddriving.core.ui.components.ListRowIcon
@@ -152,7 +153,7 @@ private fun PlaceList(
             item { MyLocationItem(row = myLocationRow, onClick = onMyLocationClick) }
         }
         if (showsHeader) {
-            item { ListHeader(text = stringResource(MR.strings.search_recent_header)) }
+            item { ListHeader(text = stringResource(MR.strings.search_recent_header), style = AppTheme.platformStyle.sheetList) }
         }
         // Keyed, so a swiped row's state doesn't carry over to the row that moves up into its place
         itemsIndexed(recentRows, key = { _, row -> row.place.toString() }) { index, row ->
@@ -171,6 +172,7 @@ private fun PlaceList(
                 ),
                 position = GroupPosition.of(index, count),
                 groupColors = ListGroupDefaultColors.translucent(),
+                style = AppTheme.platformStyle.sheetList,
                 isDimmed = !row.isCovered,
                 tabularSupporting = true,
                 contentDescription = recentAccessibilityText(row),
@@ -188,6 +190,7 @@ private fun PlaceList(
                 onClick = { onSuggestionClick(row.suggestion) },
                 position = GroupPosition.of(recentRows.size + index, count),
                 groupColors = ListGroupDefaultColors.translucent(),
+                style = AppTheme.platformStyle.sheetList,
                 isDimmed = !row.suggestion.isCovered,
                 tabularSupporting = true,
                 contentDescription = accessibilityText(row),
@@ -223,6 +226,7 @@ private fun MyLocationItem(row: MyLocationRow, onClick: () -> Unit) {
         leading = { ListRowIcon(icon = painterResource(MR.images.locate_arrow)) },
         onClick = onClick,
         groupColors = ListGroupDefaultColors.translucent(),
+        style = AppTheme.platformStyle.sheetList,
         isDimmed = row == MyLocationRow.OutsideCoveredArea,
         contentDescription = listOfNotNull(headline, supporting).joinToString(", "),
     )

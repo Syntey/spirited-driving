@@ -1,6 +1,6 @@
 # Trip history screens
 
-> **Status:** draft, being iterated. Last updated 2026-11-09.
+> **Status:** draft, being iterated. Last updated 2026-11-14.
 >
 > The design for [Trip history](README.md): the list, rating a past drive, deleting and clearing, and a past drive
 > on the map. Uses the [Theme](../../theme.md); the list opens from [Profile](../account/design.md#profile)
@@ -110,7 +110,7 @@ Close and Back (Android) go to the search step.
 
 |                       | iOS                                                          | Android                                          |
 |-----------------------|--------------------------------------------------------------|--------------------------------------------------|
-| List                  | Pushed inside the Profile sheet (native navigation), inset grouped rows, corners 22 pt | Full screen, list items 72 dp |
+| List                  | Pushed inside the Profile sheet (native navigation), inset grouped rows, corners 22 pt | Full screen, a card per row, 72 dp |
 | Title, back           | Native navigation bar                                        | Compose top app bar, titleLarge 22 / 28, Back    |
 | Month headers         | Section headers, as in iOS lists                             | titleSmall, `onSurfaceVariant`                   |
 | Rating                | Filled thumb, tertiary, 20 pt                                | Filled thumb, tertiary, 20 dp                    |

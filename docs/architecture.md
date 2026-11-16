@@ -214,7 +214,7 @@ into it.
 | `:core:domain`        | Domain types, and the interfaces features reach data through          | `GeoPoint`, `Route`, `RoutePlanner`, `PlaceSearch`, domain errors, polyline decoding, the hand-off link |
 | `:core:ui`            | Theme, shared components, Decompose base classes                      | Glass modifier, per-platform component styles          |
 | `:core:resources`     | Shared strings and images                                             | Attribution texts                                      |
-| `:core:platform`      | Interfaces implemented natively on each platform                      | Location, Firebase sign-in and App Check, local notifications |
+| `:core:platform`      | Interfaces implemented natively on each platform                      | Location, Firebase sign-in and App Check, local notifications, the in-app browser |
 | `:data:network`       | Ktorfit/Ktor client, DTOs, `NetworkResult`                            | `ApiRoutePlanner`, `ApiPlaceSearch`, `ApiCoverageSource` |
 | `:data:persistence`   | DataStore                                                             | The covered area, recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet |
 
@@ -240,13 +240,15 @@ How features map to screens is in [navigation.md](navigation.md).
 The content of every screen is shared Compose in its feature module, one implementation for both platforms.
 Platform code draws only the frame around it:
 
-| Part                                                   | Android                       | iOS                                |
-|--------------------------------------------------------|-------------------------------|------------------------------------|
-| Screen and sheet content: lists, cards, buttons, chips | Compose, shared               | Compose, shared                    |
-| Navigation between screens, navigation bars            | Compose                       | SwiftUI                            |
-| Sheets                                                 | Compose                       | SwiftUI, hosting the shared content |
-| Alerts                                                 | Compose (Material dialog)     | Native alert                       |
-| Map and map buttons                                    | Compose (`maps-compose`)      | SwiftUI, MapKit                    |
+| Part                                                   | Android                                        | iOS                                 |
+|--------------------------------------------------------|------------------------------------------------|-------------------------------------|
+| Screen and sheet content: lists, cards, buttons, chips | Compose, shared                                | Compose, shared                     |
+| Navigation between screens                             | Compose                                        | SwiftUI                             |
+| Navigation bars                                        | Compose, `AndroidTopBar` in each shared screen | SwiftUI                             |
+| Sheets                                                 | Compose                                        | SwiftUI, hosting the shared content |
+| Alerts                                                 | Compose (Material dialog)                      | Native alert                        |
+| Map and map buttons                                    | Compose (`maps-compose`)                       | SwiftUI, MapKit                     |
+| Web pages (legal pages, licences)                      | Custom Tab                                     | Safari view controller              |
 
 The Platforms tables in the [screen designs](overview.md#design) (sizes, button and chip styles, iOS-style or
 Material lists) are values of the same shared components. Both platforms' values sit side by side in `PlatformStyle`

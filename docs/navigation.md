@@ -18,7 +18,9 @@ Map ── sheet: Search ─► (Start search) ─► Route planning ─► Driv
  │       └─ Recent places ─► Route planning
  └─ Profile ─┬─ Account (signed in) or sign-in (signed out)
              ├─ Trip history
-             └─ Settings
+             ├─ Settings
+             ├─ Send feedback
+             └─ About ─► Licences
 ```
 
 ## Map and its sheet
@@ -48,7 +50,7 @@ opened from, from search to the map. Back on the map leaves the app
 
 Saved routes and Profile open on top of the map:
 
-- **iOS:** as sheets stacked on the map's sheet, as in Apple Maps. Trip history, Settings and Account open inside
+- **iOS:** as sheets stacked on the map's sheet, as in Apple Maps. Trip history, Settings, Send feedback, About and Account open inside
   the Profile sheet. Swiping the sheet down or its close button returns to the map.
 - **Android:** as full screens. Back returns to the map.
 
@@ -70,7 +72,9 @@ The profile button in the top right corner of the map opens Profile, signed in o
   the sheet; planning new routes opens Route planning to the same destination, from where the user is now. Rating a
   past drive opens a sheet over the list and returns to it
   ([design](features/trip-history/design.md#rating-sheet)).
-- [Settings](features/settings/README.md), which works the same signed in or out.
+- [Settings](features/settings/README.md): units, vignettes and drive reminders. It works the same signed in or out.
+- Rate Spirited Driving and Send feedback, and About with the legal pages, licences and version
+  ([Settings design](features/settings/README.md#design)).
 
 ## Sign-in
 

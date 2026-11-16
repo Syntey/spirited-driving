@@ -1,6 +1,6 @@
 # Saved routes screens
 
-> **Status:** draft, being iterated. Last updated 2026-11-09.
+> **Status:** draft, being iterated. Last updated 2026-11-14.
 >
 > The design for [Saved routes](README.md): saving a route, the list, renaming and deleting, and a saved route on
 > the map, the one-route step of the map's sheet that [Trip history](../trip-history/README.md) uses too. Uses the
@@ -89,7 +89,7 @@ Close and Back (Android) go to the search step.
 
 |                     | iOS                                                       | Android                                          |
 |---------------------|-----------------------------------------------------------|--------------------------------------------------|
-| List                | Native sheet at large height, inset grouped rows, corners 22 pt | Full screen, list items 72 dp              |
+| List                | Native sheet at large height, inset grouped rows, corners 22 pt | Full screen, a card per row, 72 dp              |
 | More button         | ⋯, 44 pt                                                  | ⋮, 48 dp                                         |
 | Menu                | Corners 12 pt, icons after the labels                     | `surfaceContainer`, corners 12 dp, icons before the labels |
 | Name dialogs        | Native alert with a text field                            | Material dialog with an outlined text field      |

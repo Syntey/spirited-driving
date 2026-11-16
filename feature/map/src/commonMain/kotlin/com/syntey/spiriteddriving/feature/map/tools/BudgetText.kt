@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.feature.map.tools
 
 import com.syntey.spiriteddriving.core.domain.route.Budget
+import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.resources.*
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
@@ -8,10 +9,10 @@ import kotlin.math.roundToInt
 
 /**
  * [budget] as its chip shows it, with the sign: "+45 min" for 45 minutes, "+1.5 h" for 90 minutes, "+2 h" for two
- * hours, and "+50 km" for 50 kilometres. Hours take one decimal when they aren't whole, in English, so the decimal point
- * is always a dot.
+ * hours, "+50 km" for 50 kilometres, and "+20 mi" for 20 miles in [unit]. Distances round to whole units. Hours take one
+ * decimal when they aren't whole, in English, so the decimal point is always a dot.
  */
-internal fun budgetText(budget: Budget): StringDesc = when (budget) {
+internal fun budgetText(budget: Budget, unit: DistanceUnit): StringDesc = when (budget) {
     is Budget.Time -> {
         val minutes = budget.extra.inWholeMinutes.toInt()
         if (minutes < MINUTES_PER_HOUR) {
@@ -21,7 +22,10 @@ internal fun budgetText(budget: Budget): StringDesc = when (budget) {
         }
     }
 
-    is Budget.Distance -> StringDesc.ResourceFormatted(MR.strings.budget_kilometres, budget.extra.inKilometres.roundToInt())
+    is Budget.Distance -> when (unit) {
+        DistanceUnit.Kilometres -> StringDesc.ResourceFormatted(MR.strings.budget_kilometres, budget.extra.inKilometres.roundToInt())
+        DistanceUnit.Miles -> StringDesc.ResourceFormatted(MR.strings.budget_miles, budget.extra.inMiles.roundToInt())
+    }
 }
 
 // One decimal from the minutes: 90 is "1.5", 120 is "2"

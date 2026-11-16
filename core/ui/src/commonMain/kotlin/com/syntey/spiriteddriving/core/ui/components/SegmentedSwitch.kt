@@ -20,11 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
@@ -56,8 +52,8 @@ import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 data class SegmentOption(val label: String, val accessibilityLabel: String = label)
 
 /**
- * A choice of two or three, such as km / mi: Material's outlined segmented button on Android, a segmented control on
- * iOS whose raised pill slides to the selected segment, or jumps there with reduced motion.
+ * A choice of two or three, such as km / mi: a segmented control whose raised pill slides to the selected segment, or
+ * jumps there with reduced motion.
  */
 @Composable
 fun SegmentedSwitch(
@@ -67,41 +63,11 @@ fun SegmentedSwitch(
     modifier: Modifier = Modifier,
 ) {
     require(options.isNotEmpty()) { "A segmented switch needs at least one option" }
-    val style = AppTheme.platformStyle.segmented
-    if (style.isOutlined) {
-        OutlinedSegments(options, selectedIndex, onSelect, style, modifier)
-    } else {
-        IosSegmentedControl(options, selectedIndex, onSelect, style, modifier)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun OutlinedSegments(
-    options: List<SegmentOption>,
-    selectedIndex: Int,
-    onSelect: (Int) -> Unit,
-    style: SegmentedStyle,
-    modifier: Modifier = Modifier,
-) {
-    SingleChoiceSegmentedButtonRow(modifier = modifier) {
-        options.forEachIndexed { index, option ->
-            val selected = index == selectedIndex
-            SegmentedButton(
-                selected = selected,
-                onClick = { onSelect(index) },
-                shape = SegmentedButtonDefaults.itemShape(index, options.size),
-                modifier = Modifier.semantics { contentDescription = option.accessibilityLabel },
-                label = {
-                    Text(option.label, style = style.textStyle.selectedIf(selected, style))
-                },
-            )
-        }
-    }
+    PillSegmentedControl(options, selectedIndex, onSelect, AppTheme.platformStyle.segmented, modifier)
 }
 
 @Composable
-private fun IosSegmentedControl(
+private fun PillSegmentedControl(
     options: List<SegmentOption>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit,
@@ -146,7 +112,7 @@ private fun IosSegmentedControl(
                 .selectableGroup(),
         ) {
             options.forEachIndexed { index, option ->
-                IosSegment(
+                PillSegment(
                     option = option,
                     selected = index == selectedIndex,
                     style = style,
@@ -157,9 +123,9 @@ private fun IosSegmentedControl(
     }
 }
 
-// iOS segments don't ripple, so the segment shows its selection by the pill alone
+// Segments don't ripple, so the segment shows its selection by the pill alone
 @Composable
-private fun RowScope.IosSegment(option: SegmentOption, selected: Boolean, style: SegmentedStyle, onClick: () -> Unit) {
+private fun RowScope.PillSegment(option: SegmentOption, selected: Boolean, style: SegmentedStyle, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .weight(1f)
