@@ -1,7 +1,6 @@
 package com.syntey.spiriteddriving.data.network.feedback
 
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
-import com.syntey.spiriteddriving.core.domain.feedback.Feedback
 import com.syntey.spiriteddriving.data.network.api.createSpiritedDrivingApi
 import com.syntey.spiriteddriving.data.network.injection.NetworkModule
 import com.syntey.spiriteddriving.data.network.plugin.ContentNegotiationPlugin
@@ -33,16 +32,15 @@ class ApiFeedbackSenderTest {
     private var lastRequest: HttpRequestData? = null
 
     @Test
-    fun `accepted feedback is posted to the feedback path with its fields`() = runTest {
+    fun `accepted feedback is posted to the feedback path with only its message`() = runTest {
         val sender = sender { respond(content = "", status = HttpStatusCode.NoContent) }
 
-        sender.send(feedback())
+        sender.send("The map froze")
 
         assertEquals(HttpMethod.Post, lastRequest?.method)
         assertTrue(lastRequest?.url?.encodedPath?.endsWith("/v1/feedback") == true)
         val body = (lastRequest?.body as? TextContent)?.text ?: error("The request body is not text")
-        assertTrue("\"message\":\"The map froze\"" in body, body)
-        assertTrue("\"appBuild\":\"42\"" in body, body)
+        assertEquals("""{"message":"The map froze"}""", body)
     }
 
     @Test
@@ -55,7 +53,7 @@ class ApiFeedbackSenderTest {
             )
         }
 
-        val error = assertFailsWith<NetworkError.HttpError> { sender.send(feedback()) }
+        val error = assertFailsWith<NetworkError.HttpError> { sender.send("The map froze") }
 
         assertEquals(429, error.statusCode)
         assertEquals("RATE_LIMITED", error.code)
@@ -71,7 +69,7 @@ class ApiFeedbackSenderTest {
             )
         }
 
-        val error = assertFailsWith<NetworkError.HttpError> { sender.send(feedback()) }
+        val error = assertFailsWith<NetworkError.HttpError> { sender.send("The map froze") }
 
         assertEquals(400, error.statusCode)
         assertEquals("VALIDATION_FAILED", error.code)
@@ -81,7 +79,7 @@ class ApiFeedbackSenderTest {
     fun `server error is thrown as the HTTP error without a code`() = runTest {
         val sender = sender { respond(content = "", status = HttpStatusCode.InternalServerError) }
 
-        val error = assertFailsWith<NetworkError.HttpError> { sender.send(feedback()) }
+        val error = assertFailsWith<NetworkError.HttpError> { sender.send("The map froze") }
 
         assertEquals(500, error.statusCode)
         assertNull(error.code)
@@ -91,16 +89,8 @@ class ApiFeedbackSenderTest {
     fun `no connection is thrown as offline`() = runTest {
         val sender = sender { throw IOException("Network is unreachable") }
 
-        assertFailsWith<OfflineException> { sender.send(feedback()) }
+        assertFailsWith<OfflineException> { sender.send("The map froze") }
     }
-
-    private fun feedback() = Feedback(
-        message = "The map froze",
-        appVersion = "1.0.0",
-        appBuild = "42",
-        os = "iOS 26.1",
-        device = "iPhone 17 Pro",
-    )
 
     private fun sender(handler: MockRequestHandleScope.(HttpRequestData) -> HttpResponseData): ApiFeedbackSender {
         val client = HttpClient(
