@@ -53,7 +53,11 @@ benchmarkMacroJunit4 = "1.5.0"
 profileinstaller = "1.4.1"
 google-servicesPlugin = "4.5.0"
 google-firebaseAppDistributionPlugin = "5.3.1"
+google-firebaseCrashlyticsPlugin = "3.0.8"
 google-playServicesLocation = "21.4.0"
+google-firebaseBom = "35.2.0"
+google-identityGoogleId = "1.2.1"
+androidxCredentials = "1.6.0"
 google-mapsCompose = "9.0.1"
 arkitekt = "6.1.0"
 versionCatalogUpdate = "1.1.2"
@@ -123,6 +127,16 @@ androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstall
 # Google Play services
 google-playServices-location = { module = "com.google.android.gms:play-services-location", version.ref = "google-playServicesLocation" }
 google-maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "google-mapsCompose" }
+# Firebase
+google-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "google-firebaseBom" }
+google-firebase-auth = { module = "com.google.firebase:firebase-auth" }
+google-firebase-appCheck-playIntegrity = { module = "com.google.firebase:firebase-appcheck-playintegrity" }
+google-firebase-appCheck-debug = { module = "com.google.firebase:firebase-appcheck-debug" }
+google-firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+# Credential Manager, for the Google sign-in sheet
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidxCredentials" }
+androidx-credentials-playServicesAuth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidxCredentials" }
+google-identity-googleId = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "google-identityGoogleId" }
 # Desugar
 androidTools-desugarLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugarLibs" }
 # Lint
@@ -174,6 +188,7 @@ aboutlibraries-android = { id = "com.mikepenz.aboutlibraries.plugin.android", ve
 androidx-baselineprofile = { id = "androidx.baselineprofile", version.ref = "baselineProfile" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-servicesPlugin" }
 firebase-distribution = { id = "com.google.firebase.appdistribution", version.ref = "google-firebaseAppDistributionPlugin" }
+google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "google-firebaseCrashlyticsPlugin" }
 detekt = { id = "dev.detekt", version.ref = "detektGradlePlugin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 koin = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompilerPlugin" }

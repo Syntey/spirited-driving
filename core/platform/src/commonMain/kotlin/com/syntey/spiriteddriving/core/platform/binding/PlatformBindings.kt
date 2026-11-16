@@ -32,4 +32,10 @@ interface PlatformBindings {
 
     /** Provides the in-app browser, see [PlatformWebBrowser]. */
     fun webBrowser(): PlatformWebBrowser
+
+    /** Provides the Firebase sign-in, see [PlatformAuth]. */
+    fun auth(): PlatformAuth
+
+    /** Provides the Firebase App Check token, see [PlatformAppCheck]. */
+    fun appCheck(): PlatformAppCheck
 }

@@ -9,6 +9,11 @@ internal object Constants {
         val BUILT_IN: List<CountryCode> = listOf(CountryCode.Czechia)
     }
 
+    object Account {
+        // Apple's Hide My Email addresses end in this domain; they mean nothing to the user, so the row names the provider
+        const val APPLE_PRIVATE_RELAY_DOMAIN = "privaterelay.appleid.com"
+    }
+
     object Feedback {
         // The backend rejects a message longer than this after trimming
         const val MESSAGE_MAX_LENGTH = 2000

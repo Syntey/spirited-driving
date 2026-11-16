@@ -9,3 +9,7 @@ KMP_FRAMEWORK_BUILD_TYPE = debug
 // Dynamic framework is required to enable SwiftUI previews in Xcode.
 // Static linking prevents the preview process from loading the KMP framework.
 KMP_IS_STATIC = false
+
+// Google sign-in URL scheme, from the gitignored Firebase.xcconfig
+#include? "Firebase.xcconfig"
+GOOGLE_REVERSED_CLIENT_ID = $(GOOGLE_REVERSED_CLIENT_ID_MAIN)

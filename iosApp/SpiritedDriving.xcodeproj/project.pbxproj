@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		11B83C232D79C075007D03F7 /* KMP in Frameworks */ = {isa = PBXBuildFile; productRef = 11B83C222D79C075007D03F7 /* KMP */; };
 		F4820AB72B0B51A100B13080 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4820AB62B0B51A100B13080 /* XCTest.framework */; };
+		8E05E4F9F28D5FCE620C6CB6 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FCA878D2B9BA47B5C801BF7C /* FirebaseAuth */; };
+		2CDEF61B39B82E74BD5B71A7 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = 46C7766C68AF817C982879DF /* FirebaseAppCheck */; };
+		949240613790B76C34E22C1D /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 735B7EE5BA5F189EED66CF13 /* FirebaseCrashlytics */; };
+		DC8904C42CAF1F58A2FB7CCE /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 8B2C80262CD7CDB8E1D10405 /* GoogleSignIn */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -62,6 +66,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				11B83C232D79C075007D03F7 /* KMP in Frameworks */,
+				8E05E4F9F28D5FCE620C6CB6 /* FirebaseAuth in Frameworks */,
+				2CDEF61B39B82E74BD5B71A7 /* FirebaseAppCheck in Frameworks */,
+				949240613790B76C34E22C1D /* FirebaseCrashlytics in Frameworks */,
+				DC8904C42CAF1F58A2FB7CCE /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -134,7 +142,9 @@
 				7555FF77242A565900829871 /* Sources */,
 				7555FF78242A565900829871 /* Frameworks */,
 				7555FF79242A565900829871 /* Resources */,
+				8598029E7FF40D4A68A11C92 /* Copy GoogleService-Info.plist */,
 				7555FFB4242A642300829871 /* Embed Frameworks */,
+				CBC4885B32EF5D25D7E51CE4 /* Upload Crashlytics dSYMs */,
 			);
 			buildRules = (
 			);
@@ -144,6 +154,13 @@
 				88EDA0482F5A075A00F18D64 /* SpiritedDriving */,
 			);
 			name = SpiritedDriving;
+			packageProductDependencies = (
+				11B83C222D79C075007D03F7 /* KMP */,
+				FCA878D2B9BA47B5C801BF7C /* FirebaseAuth */,
+				46C7766C68AF817C982879DF /* FirebaseAppCheck */,
+				735B7EE5BA5F189EED66CF13 /* FirebaseCrashlytics */,
+				8B2C80262CD7CDB8E1D10405 /* GoogleSignIn */,
+			);
 			productName = SpiritedDriving;
 			productReference = 7555FF7B242A565900829871 /* SpiritedDriving.app */;
 			productType = "com.apple.product-type.application";
@@ -203,6 +220,8 @@
 			mainGroup = 7555FF72242A565900829871;
 			packageReferences = (
 				11B83C212D79C062007D03F7 /* XCLocalSwiftPackageReference "shared/KMP" */,
+				42C03A7228905BCCEBDD9831 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				CC4EB262E62C2C23C8B239F7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			productRefGroup = 7555FF7C242A565900829871 /* Products */;
 			projectDirPath = "";
@@ -251,6 +270,49 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if test -d \"/opt/homebrew/bin/\"; then\n  PATH=\"/opt/homebrew/bin/:${PATH}\"\nfi\n\nexport PATH\n\nif which swiftlint >/dev/null; then\n    swiftlint --fix\n    swiftlint\nelse\n    echo \"error: SwiftLint not installed, run: brew install swiftlint\"\nfi\n";
+		};
+		8598029E7FF40D4A68A11C92 /* Copy GoogleService-Info.plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy GoogleService-Info.plist";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"${CONFIGURATION}\" = \"Beta\" ]; then\n    PLIST_NAME=\"GoogleService-Info-Beta.plist\"\nelse\n    PLIST_NAME=\"GoogleService-Info.plist\"\nfi\nSOURCE=\"${PROJECT_DIR}/Config Files/${PLIST_NAME}\"\nif [ ! -f \"${SOURCE}\" ]; then\n    echo \"warning: GoogleService-Info.plist missing, Firebase is off\"\n    exit 0\nfi\nDESTINATION=\"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app\"\nmkdir -p \"${DESTINATION}\"\ncp \"${SOURCE}\" \"${DESTINATION}/GoogleService-Info.plist\"\n";
+		};
+		CBC4885B32EF5D25D7E51CE4 /* Upload Crashlytics dSYMs */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Upload Crashlytics dSYMs";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"${CONFIGURATION}\" = \"Debug\" ]; then\n    exit 0\nfi\nif [ ! -f \"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\" ]; then\n    exit 0\nfi\nUPLOAD_SCRIPT=\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nif [ ! -x \"${UPLOAD_SCRIPT}\" ]; then\n    echo \"warning: Crashlytics upload script not found, dSYMs aren't uploaded\"\n    exit 0\nfi\n\"${UPLOAD_SCRIPT}\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -755,11 +817,50 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		42C03A7228905BCCEBDD9831 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.2.0;
+			};
+		};
+		CC4EB262E62C2C23C8B239F7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		11B83C222D79C075007D03F7 /* KMP */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 11B83C212D79C062007D03F7 /* XCLocalSwiftPackageReference "shared/KMP" */;
 			productName = KMP;
+		};
+		FCA878D2B9BA47B5C801BF7C /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 42C03A7228905BCCEBDD9831 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		46C7766C68AF817C982879DF /* FirebaseAppCheck */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 42C03A7228905BCCEBDD9831 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAppCheck;
+		};
+		735B7EE5BA5F189EED66CF13 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 42C03A7228905BCCEBDD9831 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		8B2C80262CD7CDB8E1D10405 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CC4EB262E62C2C23C8B239F7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

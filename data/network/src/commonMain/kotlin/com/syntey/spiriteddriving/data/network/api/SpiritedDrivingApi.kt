@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.data.network.api
 
 import com.syntey.spiriteddriving.data.network.dto.coverage.CoverageDto
+import com.syntey.spiriteddriving.data.network.dto.drive.ClaimDrivesRequestDto
 import com.syntey.spiriteddriving.data.network.dto.drive.RecordDriveRequestDto
 import com.syntey.spiriteddriving.data.network.dto.feedback.FeedbackRequestDto
 import com.syntey.spiriteddriving.data.network.dto.place.PlaceSearchResultDto
@@ -10,6 +11,7 @@ import com.syntey.spiriteddriving.data.network.dto.plan.PlanRequestDto
 import com.syntey.spiriteddriving.data.network.result.NetworkResult
 import com.syntey.spiriteddriving.data.network.result.Revalidated
 import de.jensklingenberg.ktorfit.http.Body
+import de.jensklingenberg.ktorfit.http.DELETE
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Header
 import de.jensklingenberg.ktorfit.http.PUT
@@ -58,5 +60,15 @@ internal interface SpiritedDrivingApi {
     suspend fun recordDrive(
         @Path("driveId") driveId: String,
         @Body request: RecordDriveRequestDto,
+    ): NetworkResult<Unit>
+
+    /** `DELETE /me` (`deleteAccount`). */
+    @DELETE("me")
+    suspend fun deleteAccount(): NetworkResult<Unit>
+
+    /** `POST /me/drives/claim` (`claimDrives`). */
+    @POST("me/drives/claim")
+    suspend fun claimDrives(
+        @Body request: ClaimDrivesRequestDto,
     ): NetworkResult<Unit>
 }

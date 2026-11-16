@@ -9,6 +9,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenUi
+import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesScreenUi
@@ -38,6 +39,8 @@ fun ProfileNavHostUi(
             is ProfileChild.Feedback -> FeedbackScreenUi(screen = instance.screen, modifier = Modifier.fillMaxSize())
 
             is ProfileChild.About -> AboutScreenUi(screen = instance.screen, modifier = Modifier.fillMaxSize())
+
+            is ProfileChild.Account -> AccountScreenUi(screen = instance.screen, modifier = Modifier.fillMaxSize())
 
             is ProfileChild.Licences -> LicencesScreenUi(screen = instance.screen, modifier = Modifier.fillMaxSize())
 

@@ -1,3 +1,4 @@
+import GoogleSignIn
 import SwiftUI
 
 @main
@@ -8,6 +9,7 @@ struct KmpTemplateApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .onOpenURL { _ = GIDSignIn.sharedInstance.handle($0) }
         }
     }
 }

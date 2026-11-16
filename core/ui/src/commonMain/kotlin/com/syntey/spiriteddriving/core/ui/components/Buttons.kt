@@ -200,8 +200,8 @@ object ButtonDefaultColors {
     )
 
     // Material's disabled alphas, so disabled buttons look like the rest of Material
-    private const val DISABLED_CONTAINER_ALPHA = 0.12f
-    private const val DISABLED_CONTENT_ALPHA = 0.38f
+    internal const val DISABLED_CONTAINER_ALPHA = 0.12f
+    internal const val DISABLED_CONTENT_ALPHA = 0.38f
 }
 
 /**

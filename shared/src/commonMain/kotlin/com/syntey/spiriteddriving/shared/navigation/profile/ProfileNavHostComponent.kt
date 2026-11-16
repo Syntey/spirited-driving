@@ -20,7 +20,10 @@ internal class ProfileNavHostComponent(
 ) : AppComponent<ProfileNavHostViewState, Nothing>(componentContext, ProfileNavHostViewState),
     ProfileNavHost {
 
-    private val navigator: ProfileNavHostNavigation = ProfileNavHostNavigator(onClosed)
+    private val navigator: ProfileNavHostNavigation = ProfileNavHostNavigator(
+        onClosed = onClosed,
+        onAccountDeleted = { (stack.value.active.instance as? ProfileChild.Profile)?.screen?.onAccountDeleted() },
+    )
 
     override val stack: StateFlow<ChildStack<ProfileConfig, ProfileChild>> = childStack(
         source = navigator.stackNavigator,
@@ -36,6 +39,8 @@ internal class ProfileNavHostComponent(
                 ProfileConfig.Feedback -> ProfileChild.Feedback(ProfileScreens.feedback(childCtx, navigator))
 
                 ProfileConfig.About -> ProfileChild.About(ProfileScreens.about(childCtx, navigator))
+
+                ProfileConfig.Account -> ProfileChild.Account(ProfileScreens.account(childCtx, navigator))
 
                 ProfileConfig.Licences -> ProfileChild.Licences(ProfileScreens.licences(childCtx, navigator))
 

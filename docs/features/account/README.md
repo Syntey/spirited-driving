@@ -17,8 +17,8 @@ Signing in, and what the user's account holds.
 - Using a feature that needs an account asks the user to sign in first, then continues with that feature.
 - Signing out keeps settings and recent places on the device. Saved routes and trip history stay in the
   account.
-- Deleting the account deletes everything it holds: saved routes, trip history and ratings. The
-  user signs in once more to confirm.
+- Deleting the account deletes everything it holds: saved routes, trip history and ratings. A dialog confirms it;
+  Apple users also sign in once more, which revoking the Sign in with Apple token needs.
 - Deletion is offered in the app, as both stores require, and on a web page, since Google Play also requires a link
   where users can ask for deletion without the app.
 
