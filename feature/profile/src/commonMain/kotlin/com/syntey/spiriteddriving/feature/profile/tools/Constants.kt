@@ -12,6 +12,9 @@ internal object Constants {
     object Feedback {
         // The backend rejects a message longer than this after trimming
         const val MESSAGE_MAX_LENGTH = 2000
+
+        // Three lines show the field as a box to write in, and it grows from there
+        const val MESSAGE_MIN_LINES = 3
     }
 
     object Licences {

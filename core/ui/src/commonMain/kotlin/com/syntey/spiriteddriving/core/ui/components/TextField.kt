@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,28 +20,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.ImeAction
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 
 /**
- * A multi-line text field that grows with its text, such as the feedback message. On iOS it's a filled card on the grouped
- * card's colour; on Android a Material outlined field, which turns primary while it has focus. A field that isn't [enabled]
- * shows its text and takes no input.
+ * A text field. On iOS it's a filled card on the grouped card's colour; on Android a Material outlined field, which turns
+ * primary while it has focus. With [maxLines] of 1 it's a single line; otherwise it grows with its text from [minLines],
+ * such as the feedback message. A field that isn't [enabled] shows its text and takes no input.
  */
 @Composable
-fun TextArea(
+fun AppTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    minLines: Int = DEFAULT_MIN_LINES,
+    minLines: Int = 1,
+    maxLines: Int = Int.MAX_VALUE,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
-    val style = AppTheme.platformStyle.textArea
+    val style = AppTheme.platformStyle.textField
     val shape: Shape = AppTheme.platformStyle.cardShape
     val colors = MaterialTheme.colorScheme
     val interactionSource = remember { MutableInteractionSource() }
@@ -62,8 +68,13 @@ fun TextArea(
             .then(outline),
         enabled = enabled,
         textStyle = style.textStyle.copy(color = colors.onSurface),
-        cursorBrush = SolidColor(colors.primary),
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        // A single-line field takes no line breaks, the return key runs its IME action instead
+        singleLine = maxLines == 1,
         minLines = minLines,
+        maxLines = maxLines,
+        cursorBrush = SolidColor(colors.primary),
         interactionSource = interactionSource,
         decorationBox = { field ->
             Box(Modifier.padding(style.contentPadding)) {
@@ -72,6 +83,7 @@ fun TextArea(
                         text = placeholder,
                         style = style.textStyle,
                         color = colors.onSurfaceVariant,
+                        maxLines = maxLines,
                     )
                 }
                 field()
@@ -80,29 +92,34 @@ fun TextArea(
     )
 }
 
-// Three lines show the field as a box to write in, and it grows from there
-private const val DEFAULT_MIN_LINES = 3
-
 @ComponentPreviews
 @Composable
-private fun TextAreaPreview() = Showcase {
-    TextAreaExamples()
+private fun TextFieldPreview() = Showcase {
+    TextFieldExamples()
 }
 
 @ComponentPreviews
 @Composable
-private fun TextAreaIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    TextAreaExamples()
+private fun TextFieldIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    TextFieldExamples()
 }
 
 @Composable
-private fun TextAreaExamples() {
+private fun TextFieldExamples() {
     Column(Modifier.padding(Grid.d4), verticalArrangement = Arrangement.spacedBy(Grid.d3)) {
-        TextArea(value = "", onValueChange = {}, placeholder = "What's on your mind?")
-        TextArea(
+        AppTextField(
+            value = "",
+            onValueChange = {},
+            placeholder = "Name",
+            maxLines = 1,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        )
+        AppTextField(value = "", onValueChange = {}, placeholder = "What's on your mind?", minLines = 3)
+        AppTextField(
             value = "The lane closure near the lake was missing from the route. Otherwise the twisty bit was great.",
             onValueChange = {},
             placeholder = "What's on your mind?",
+            minLines = 3,
         )
     }
 }

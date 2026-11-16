@@ -23,7 +23,7 @@ import com.syntey.spiriteddriving.core.ui.components.NoteCard
 import com.syntey.spiriteddriving.core.ui.components.NoteDefaultColors
 import com.syntey.spiriteddriving.core.ui.components.Showcase
 import com.syntey.spiriteddriving.core.ui.components.StateMessage
-import com.syntey.spiriteddriving.core.ui.components.TextArea
+import com.syntey.spiriteddriving.core.ui.components.AppTextField
 import com.syntey.spiriteddriving.core.ui.preview.DarkLightPreviews
 import com.syntey.spiriteddriving.core.ui.preview.ScreenPreviews
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
@@ -31,6 +31,7 @@ import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.feature.profile.model.ui.FeedbackPreviewStates
 import com.syntey.spiriteddriving.feature.profile.model.ui.FeedbackStatus
+import com.syntey.spiriteddriving.feature.profile.tools.Constants
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen.Actions.Companion.noOpActions
 import dev.icerock.moko.resources.ImageResource
 import dev.icerock.moko.resources.StringResource
@@ -92,11 +93,12 @@ private fun Content(
                     ),
                 verticalArrangement = Arrangement.spacedBy(Grid.d3),
             ) {
-                TextArea(
+                AppTextField(
                     value = viewState.message,
                     onValueChange = actions::onMessageChange,
                     placeholder = stringResource(MR.strings.feedback_placeholder),
                     enabled = viewState.isEditable,
+                    minLines = Constants.Feedback.MESSAGE_MIN_LINES,
                 )
                 Text(
                     text = viewState.sentWith.localized(),

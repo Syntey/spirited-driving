@@ -22,7 +22,7 @@ data class PlatformStyle(
     val chip: ChipStyle,
     val segmented: SegmentedStyle,
     val switch: SwitchStyle,
-    val textArea: TextAreaStyle,
+    val textField: TextFieldStyle,
     val glassButton: GlassButtonStyle,
     val bottomPanel: BottomPanelStyle,
     val closeButton: IconButtonStyle,
@@ -85,7 +85,7 @@ data class PlatformStyle(
                 selectedFontWeight = FontWeight.Medium,
             ),
             switch = SwitchStyle(isIosStyle = false),
-            textArea = androidTextArea(typography),
+            textField = androidTextField(typography),
             glassButton = GlassButtonStyle(height = Grid.d12, horizontalPadding = Grid.d5, textStyle = typography.labelLarge),
             bottomPanel = BottomPanelStyle(
                 inset = Grid.d0,
@@ -106,7 +106,7 @@ data class PlatformStyle(
             minTouchTarget = Grid.d12,
         )
 
-        private fun androidTextArea(typography: Typography) = TextAreaStyle(
+        private fun androidTextField(typography: Typography) = TextFieldStyle(
             isOutlined = true,
             contentPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d4),
             textStyle = typography.bodyLarge,
@@ -175,7 +175,7 @@ data class PlatformStyle(
             ),
             segmented = iosSegmented(typography),
             switch = SwitchStyle(isIosStyle = true),
-            textArea = iosTextArea(typography),
+            textField = iosTextField(typography),
             glassButton = GlassButtonStyle(height = Grid.d11, horizontalPadding = Grid.d4_5, textStyle = typography.titleSmall),
             bottomPanel = BottomPanelStyle(
                 inset = Grid.d3,
@@ -196,7 +196,7 @@ data class PlatformStyle(
             minTouchTarget = Grid.d11,
         )
 
-        private fun iosTextArea(typography: Typography) = TextAreaStyle(
+        private fun iosTextField(typography: Typography) = TextFieldStyle(
             isOutlined = false,
             contentPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d3),
             textStyle = typography.bodyLarge,
@@ -256,11 +256,11 @@ data class SegmentedStyle(val height: Dp, val textStyle: TextStyle, val selected
 data class SwitchStyle(val isIosStyle: Boolean)
 
 /**
- * A multi-line text field. [isOutlined]: Material's outlined field, as on Android; otherwise a filled card on the grouped
+ * A text field. [isOutlined]: Material's outlined field, as on Android; otherwise a filled card on the grouped
  * card's colour, as iOS forms have it.
  */
 @Immutable
-data class TextAreaStyle(val isOutlined: Boolean, val contentPadding: PaddingValues, val textStyle: TextStyle)
+data class TextFieldStyle(val isOutlined: Boolean, val contentPadding: PaddingValues, val textStyle: TextStyle)
 
 /**
  * A capsule button on glass, over an illustration or a scrolling list.
