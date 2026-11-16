@@ -8,6 +8,8 @@ import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.feature.profile.domain.GetLicencesUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.OpenWebPageUseCase
+import dev.icerock.moko.resources.desc.StringDesc
+import dev.icerock.moko.resources.desc.desc
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
@@ -31,7 +33,7 @@ internal class LicenceTextComponent(
 
     private val logger = Logger.withTag("LicenceTextComponent")
 
-    override val title: String = args.name
+    override val title: StringDesc = args.name.desc()
     override val viewState: StateFlow<LicenceTextViewState> = componentState
     override val actions: LicenceTextScreen.Actions = this
 
@@ -39,6 +41,7 @@ internal class LicenceTextComponent(
         doOnCreate { loadLicences() }
     }
 
+    override fun onBack() = pop()
     override fun onLicenceLinkClick(url: String) = openWebPage(url)
 
     private fun openWebPage(url: String) = openWebPageUseCase.execute(OpenWebPageUseCase.Args(url)) {

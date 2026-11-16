@@ -10,11 +10,13 @@ import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreenNavi
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreen
 import com.syntey.spiriteddriving.feature.profile.ui.feedbackScreen.FeedbackScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextArgs
+import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreen
 import com.syntey.spiriteddriving.feature.profile.ui.licenceTextScreen.LicenceTextScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesScreen
 import com.syntey.spiriteddriving.feature.profile.ui.licencesScreen.LicencesScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreenNavigation
+import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreen
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreenNavigation
 
 internal interface ProfileNavHostNavigation :
@@ -28,7 +30,8 @@ internal interface ProfileNavHostNavigation :
     val stackNavigator: StackNavigation<ProfileConfig>
 }
 
-internal class ProfileNavHostNavigator(private val onAccountDeleted: () -> Unit) : ProfileNavHostNavigation {
+internal class ProfileNavHostNavigator(private val onClosed: () -> Unit, private val onAccountDeleted: () -> Unit) :
+    ProfileNavHostNavigation {
     override val stackNavigator: StackNavigation<ProfileConfig> = StackNavigation()
 
     override fun ProfileScreen.openSettings() = stackNavigator.pushNew(ProfileConfig.Settings)
@@ -48,5 +51,15 @@ internal class ProfileNavHostNavigator(private val onAccountDeleted: () -> Unit)
     override fun LicencesScreen.openLicenceText(args: LicenceTextArgs) =
         stackNavigator.pushNew(ProfileConfig.LicenceText(args))
 
+    override fun ProfileScreen.close() = onClosed()
+
+    override fun SettingsScreen.pop() = stackNavigator.pop()
+
     override fun FeedbackScreen.pop() = stackNavigator.pop()
+
+    override fun AboutScreen.pop() = stackNavigator.pop()
+
+    override fun LicencesScreen.pop() = stackNavigator.pop()
+
+    override fun LicenceTextScreen.pop() = stackNavigator.pop()
 }

@@ -1,9 +1,12 @@
 package com.syntey.spiriteddriving.feature.profile.ui.profileScreen
 
+import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 interface ProfileScreen {
+    /** The title the navigation hosts show in the bar. */
+    val title: StringDesc
     val viewState: StateFlow<ProfileViewState>
     val actions: Actions
 
@@ -32,6 +35,9 @@ interface ProfileScreen {
         /** Tapped the Account row, which shows the signed-in user. */
         fun onAccountClick()
 
+        /** Tapped the back button in the bar. */
+        fun onBack()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onSettingsClick() = Unit
@@ -40,6 +46,7 @@ interface ProfileScreen {
                 override fun onAboutClick() = Unit
                 override fun onSignInWithGoogleClick() = Unit
                 override fun onAccountClick() = Unit
+                override fun onBack() = Unit
             }
         }
     }

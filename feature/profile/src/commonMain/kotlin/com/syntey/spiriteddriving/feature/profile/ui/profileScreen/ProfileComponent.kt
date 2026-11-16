@@ -40,12 +40,14 @@ internal class ProfileComponent(
     private val logger = Logger.withTag("ProfileComponent")
 
     override val viewState: StateFlow<ProfileViewState> = componentState
+    override val title: StringDesc = MR.strings.profile_screen_title.desc()
     override val actions: ProfileScreen.Actions = this
 
     init {
         doOnCreate { observeAccount() }
     }
 
+    override fun onBack() = close()
     override fun onSettingsClick() = openSettings()
     override fun onRateClick() = sendUiEvent(ProfileUiEvent.OpenWebPage(platform.storeReviewUrl))
     override fun onSendFeedbackClick() = openFeedback()

@@ -11,6 +11,7 @@ import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.feature.profile.domain.OpenWebPageUseCase
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
+import dev.icerock.moko.resources.desc.desc
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
@@ -35,12 +36,14 @@ internal class AboutComponent(
     private val logger = Logger.withTag("AboutComponent")
 
     override val viewState: StateFlow<AboutViewState> = componentState
+    override val title: StringDesc = MR.strings.about_screen_title.desc()
     override val actions: AboutScreen.Actions = this
 
     init {
         doOnCreate { showVersion() }
     }
 
+    override fun onBack() = pop()
     override fun onPrivacyPolicyClick() = openWebPage(LegalPages.PRIVACY_POLICY_URL)
     override fun onTermsClick() = openWebPage(LegalPages.TERMS_URL)
     override fun onLicencesClick() = openLicences()

@@ -11,7 +11,7 @@ struct ProfileComponent: View {
     var body: some View {
         ComposeView { ProfileScreenUiController(screen: screen) }
             .composeScreen()
-            .navigationTitle(Localizable.profile_screen_title.localized)
+            .navigationTitle(screen.title.localized())
             .navigationBarTitleDisplayMode(.inline)
             // The header illustration reaches behind the bar, so the bar shows only its buttons
             .toolbarBackground(.hidden, for: .navigationBar)

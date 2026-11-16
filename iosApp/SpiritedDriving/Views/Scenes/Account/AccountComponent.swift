@@ -13,7 +13,7 @@ struct AccountComponent: View {
     var body: some View {
         ComposeView { AccountScreenUiController(screen: screen) }
             .composeScreen()
-            .navigationTitle(Localizable.account_screen_title.localized)
+            .navigationTitle(screen.title.localized())
             .navigationBarTitleDisplayMode(.inline)
             .alert(Localizable.account_delete_dialog_title.localized, isPresented: $model.isDeleteDialogPresented) {
                 Button(Localizable.generic_cancel.localized, role: .cancel) {}

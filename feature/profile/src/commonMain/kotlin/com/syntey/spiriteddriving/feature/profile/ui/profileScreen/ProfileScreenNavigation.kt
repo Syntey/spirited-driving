@@ -7,4 +7,7 @@ interface ProfileScreenNavigation : NavigationActions {
     fun ProfileScreen.openFeedback()
     fun ProfileScreen.openAbout()
     fun ProfileScreen.openAccount()
+
+    /** Closes Profile and its screens. */
+    fun ProfileScreen.close()
 }
