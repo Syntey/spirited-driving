@@ -7,7 +7,7 @@ The core of the app: from a start, a destination and a detour budget to a list o
 ## What the user can do
 
 - Plan from their location to a destination, or change the start to any place.
-- Pick the budget from a row of chips, in minutes (+15 min to +2 h) or km, and switch between the two.
+- Pick the budget from a row of chips, in minutes (+15 min to +2 h) or distance (+10 to +100 km, or +5 to +60 mi), and switch between the two.
 - See the fastest route and 1–3 fun routes together, on the map and as a list.
 - Compare the routes. Each shows its extra time over the fastest route, its total time and distance, how fun it is,
   and one or two facts about its roads, such as km of curvy roads or metres climbed.
@@ -17,7 +17,7 @@ The core of the app: from a start, a destination and a detour budget to a list o
 ## Rules
 
 - Changing the start, the destination or the budget plans again.
-- Budgets are absolute: minutes or km on top of the fastest route, not a percentage of it.
+- Budgets are absolute: minutes, km or miles on top of the fastest route, not a percentage of it.
 - Each route has its own colour and number, the same on the map and in the list.
 - How fun a route is uses one scale for every route, the fastest one included, so routes can be compared.
 - Nothing shown is about speed.
@@ -62,6 +62,8 @@ the decisions behind it. What isn't built yet, Save, is still in [design.md](des
   locate buttons hide while planning, as the routes take the map.
 - **Picking a chip or switching the unit plans again at once.** The choice is kept on the device, with the last value
   in each unit, so the next trip starts with it; before the first pick it's +30 min.
+- **Distance chips follow the distance unit in [Settings](../settings/README.md):** miles have chips of their own
+  (+5, 10, 20, 30, 50, 60 mi), not converted km. A kept distance budget moves to the closest chip in the other unit.
 - **When no fun route fits,** the fastest route is listed under a message naming what the closest fun route needs, with
   a button for the smallest chip that fits it, in the same unit. Without one big enough the button is left out.
 - **Not covered, offline and failed take the list's place;** the header and budget stay, so a new budget plans again.
@@ -79,8 +81,7 @@ Plan a trip.
 
 ## Open questions
 
-1. **Chip values:** the steps between +15 min and +2 h, the km chips, and mile chips of their own, since converted
-   km chips give odd numbers. Needs real data.
+1. **Chip values:** the steps between +15 min and +2 h, the km chips (10–100) and the mile chips (5–60). Needs real data.
 2. **Route facts:** which facts describe a route best. Curvy-road distance and climbing come first; check them in
    testing.
 3. **Fun scale:** five steps read at a glance. Check with real plans whether routes often land on the same step.

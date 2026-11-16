@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.data.network.api
 
 import com.syntey.spiriteddriving.data.network.dto.coverage.CoverageDto
 import com.syntey.spiriteddriving.data.network.dto.drive.RecordDriveRequestDto
+import com.syntey.spiriteddriving.data.network.dto.feedback.FeedbackRequestDto
 import com.syntey.spiriteddriving.data.network.dto.place.PlaceSearchResultDto
 import com.syntey.spiriteddriving.data.network.dto.place.PlaceSuggestionDto
 import com.syntey.spiriteddriving.data.network.dto.plan.PlanDto
@@ -45,6 +46,12 @@ internal interface SpiritedDrivingApi {
     suspend fun getCoverage(
         @Header("If-None-Match") ifNoneMatch: String? = null,
     ): NetworkResult<Revalidated<CoverageDto>>
+
+    /** `POST /feedback` (`sendFeedback`). */
+    @POST("feedback")
+    suspend fun sendFeedback(
+        @Body request: FeedbackRequestDto,
+    ): NetworkResult<Unit>
 
     /** `PUT /drives/{driveId}` (`recordDrive`). */
     @PUT("drives/{driveId}")

@@ -12,9 +12,11 @@ private enum Layout {
 
 struct MapComponent<Model: MapComponentModelProtocol>: View {
     @State var model: Model
+    @Binding private var profile: DecomposeSlotItem<ProfileNavHost>?
 
-    init(model: Model) {
+    init(model: Model, profile: Binding<DecomposeSlotItem<ProfileNavHost>?>) {
         _model = State(initialValue: model)
+        _profile = profile
     }
 
     var body: some View {
@@ -40,6 +42,10 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled)
                 .interactiveDismissDisabled()
+                .sheet(item: $profile) { item in
+                    ProfileNavigationComponent(navHost: item.instance)
+                        .presentationDetents([.large])
+                }
                 // Inside the sheet: an alert on the view under a presented sheet wouldn't show
                 .alert(driveDialogTitle,
                        isPresented: $model.isDriveDialogPresented,
@@ -159,6 +165,6 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
 
 #if DEBUG
 #Preview {
-    MapComponent(model: MapComponentModelMock())
+    MapComponent(model: MapComponentModelMock(), profile: .constant(nil))
 }
 #endif

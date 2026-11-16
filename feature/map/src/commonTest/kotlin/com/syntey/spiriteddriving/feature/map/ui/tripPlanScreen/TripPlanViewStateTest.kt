@@ -4,6 +4,7 @@ import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.kilometres
+import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.miles
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceKind
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
@@ -301,7 +302,7 @@ class TripPlanViewStateTest {
     fun `a distance plan shows the six kilometre chips with its budget selected`() {
         val chips = planning(Budget.Distance(50.kilometres)).budgetChips
 
-        assertEquals(Constants.Budgets.DISTANCE, chips.map { it.budget })
+        assertEquals(Constants.Budgets.DISTANCE_KILOMETRES, chips.map { it.budget })
         assertEquals(listOf(Budget.Distance(50.kilometres)), chips.filter { it.isSelected }.map { it.budget })
     }
 
@@ -339,13 +340,28 @@ class TripPlanViewStateTest {
     }
 
     @Test
+    fun `a distance plan in miles shows the six mile chips with its budget selected`() {
+        val chips = planning(Budget.Distance(20.miles)).copy(distanceUnit = DistanceUnit.Miles).budgetChips
+
+        assertEquals(Constants.Budgets.DISTANCE_MILES, chips.map { it.budget })
+        assertEquals(listOf(Budget.Distance(20.miles)), chips.filter { it.isSelected }.map { it.budget })
+    }
+
+    @Test
+    fun `the mile chips are labelled in miles`() {
+        val chips = planning(Budget.Distance(20.miles)).copy(distanceUnit = DistanceUnit.Miles).budgetChips
+
+        assertEquals(budgetText(Budget.Distance(5.miles), DistanceUnit.Miles), chips.first().label)
+    }
+
+    @Test
     fun `no fun route message names the budget and the closest fun route`() {
         val text = noFunRoute(budget = Budget.Time(15.minutes), closest = Budget.Time(22.minutes)).noFunRouteMessage?.text
 
         assertEquals(
             StringDesc.ResourceFormatted(
                 MR.strings.planning_no_fun_route,
-                budgetText(Budget.Time(15.minutes)),
+                budgetText(Budget.Time(15.minutes), DistanceUnit.Kilometres),
                 StringDesc.ResourceFormatted(MR.strings.planning_extra, durationText(22.minutes)),
             ),
             text,
@@ -360,7 +376,10 @@ class TripPlanViewStateTest {
         assertEquals(
             UseBudgetButton(
                 budget = Budget.Time(30.minutes),
-                label = StringDesc.ResourceFormatted(MR.strings.planning_use_budget, budgetText(Budget.Time(30.minutes))),
+                label = StringDesc.ResourceFormatted(
+                    MR.strings.planning_use_budget,
+                    budgetText(Budget.Time(30.minutes), DistanceUnit.Kilometres),
+                ),
             ),
             useBudget,
         )
@@ -389,8 +408,8 @@ class TripPlanViewStateTest {
         assertEquals(
             StringDesc.ResourceFormatted(
                 MR.strings.planning_no_fun_route_beyond,
-                budgetText(Budget.Time(15.minutes)),
-                budgetText(Budget.Time(120.minutes)),
+                budgetText(Budget.Time(15.minutes), DistanceUnit.Kilometres),
+                budgetText(Budget.Time(120.minutes), DistanceUnit.Kilometres),
             ),
             message?.text,
         )
@@ -404,8 +423,8 @@ class TripPlanViewStateTest {
         assertEquals(
             StringDesc.ResourceFormatted(
                 MR.strings.planning_no_fun_route_beyond,
-                budgetText(Budget.Time(15.minutes)),
-                budgetText(Budget.Time(120.minutes)),
+                budgetText(Budget.Time(15.minutes), DistanceUnit.Kilometres),
+                budgetText(Budget.Time(120.minutes), DistanceUnit.Kilometres),
             ),
             message?.text,
         )

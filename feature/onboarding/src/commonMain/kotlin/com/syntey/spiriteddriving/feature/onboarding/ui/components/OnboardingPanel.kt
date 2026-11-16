@@ -102,6 +102,7 @@ internal fun Panel(
                 TermsLine(
                     isCurrent = step == OnboardingStep.WhatItIs,
                     shown = { termsShown(position.value) },
+                    actions = actions,
                     modifier = Modifier.padding(horizontal = style.contentSides),
                 )
             },
@@ -333,19 +334,24 @@ private fun Buttons(shown: OnboardingStep, actions: OnboardingScreen.Actions, mo
 }
 
 @Composable
-private fun TermsLine(isCurrent: Boolean, shown: () -> Float, modifier: Modifier = Modifier) {
+private fun TermsLine(isCurrent: Boolean, shown: () -> Float, actions: OnboardingScreen.Actions, modifier: Modifier = Modifier) {
     val terms = stringResource(MR.strings.onboarding_terms_link)
     val privacyPolicy = stringResource(MR.strings.onboarding_privacy_link)
     val text = stringResource(MR.strings.onboarding_terms, terms, privacyPolicy)
     val linkStyles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary))
-    val annotated = remember(text, terms, privacyPolicy, linkStyles) {
+    // The listeners replace the default link opening, so the links open in the in-app browser
+    val annotated = remember(text, terms, privacyPolicy, linkStyles, actions) {
         buildAnnotatedString {
             append(text)
             val termsStart = text.indexOf(terms)
             val privacyStart = text.indexOf(privacyPolicy)
-            if (termsStart >= 0) addLink(LinkAnnotation.Url(LegalPages.TERMS_URL, linkStyles), termsStart, termsStart + terms.length)
+            if (termsStart >= 0) {
+                val link = LinkAnnotation.Url(LegalPages.TERMS_URL, linkStyles) { actions.onTermsClick() }
+                addLink(link, termsStart, termsStart + terms.length)
+            }
             if (privacyStart >= 0) {
-                addLink(LinkAnnotation.Url(LegalPages.PRIVACY_POLICY_URL, linkStyles), privacyStart, privacyStart + privacyPolicy.length)
+                val link = LinkAnnotation.Url(LegalPages.PRIVACY_POLICY_URL, linkStyles) { actions.onPrivacyPolicyClick() }
+                addLink(link, privacyStart, privacyStart + privacyPolicy.length)
             }
         }
     }

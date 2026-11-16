@@ -5,6 +5,7 @@ package com.syntey.spiriteddriving.feature.map.tools
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.kilometres
+import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.miles
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
@@ -16,7 +17,8 @@ internal object Constants {
     object Budgets {
         // Placeholders until the values are settled (route planning, open question 1)
         val TIME: List<Budget.Time> = listOf(15, 30, 45, 60, 90, 120).map { Budget.Time(it.minutes) }
-        val DISTANCE: List<Budget.Distance> = listOf(10, 20, 30, 50, 75, 100).map { Budget.Distance(it.kilometres) }
+        val DISTANCE_KILOMETRES: List<Budget.Distance> = listOf(10, 20, 30, 50, 75, 100).map { Budget.Distance(it.kilometres) }
+        val DISTANCE_MILES: List<Budget.Distance> = listOf(5, 10, 20, 30, 50, 60).map { Budget.Distance(it.miles) }
 
         // Before the first pick: +30 min, with +30 km for the first switch to distance
         val DEFAULT_CHOICE = BudgetChoice(

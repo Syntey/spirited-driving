@@ -24,6 +24,12 @@ interface PlatformBindings {
     /** Provides the user's location while the app is in use, see [UserLocation]. */
     fun location(): PlatformLocation
 
+    /** Provides the phone's drive feedback notification, see [DriveReminders]. */
+    fun driveReminders(): PlatformDriveReminders
+
     /** Provides the phone's maps app that drives are handed to, see [MapsApp]. */
     fun mapsApp(): PlatformMapsApp
+
+    /** Provides the in-app browser, see [PlatformWebBrowser]. */
+    fun webBrowser(): PlatformWebBrowser
 }

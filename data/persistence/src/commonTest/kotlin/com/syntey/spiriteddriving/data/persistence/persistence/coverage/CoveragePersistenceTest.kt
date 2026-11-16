@@ -12,11 +12,19 @@ import com.syntey.spiriteddriving.core.domain.geo.GeoPolygon
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
 import com.syntey.spiriteddriving.data.persistence.injection.PersistenceModule
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class CoveragePersistenceTest {
@@ -44,6 +52,66 @@ class CoveragePersistenceTest {
         persistence.save(newer)
 
         assertEquals(newer, persistence.get())
+    }
+
+    @Test
+    fun `nothing kept has no vignette countries`() = runTest {
+        assertNull(coveragePersistence().observeVignetteCountries().first())
+    }
+
+    @Test
+    fun `the vignette countries read back in the saved order`() = runTest {
+        val persistence = coveragePersistence()
+
+        persistence.save(sampleCoverage())
+
+        assertEquals(listOf(CountryCode.Czechia, CountryCode("SK")), persistence.observeVignetteCountries().first())
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `saving a copy emits its vignette countries to an observer`() = runTest {
+        val persistence = coveragePersistence()
+        val emissions = mutableListOf<List<CountryCode>?>()
+        val collecting = launch(UnconfinedTestDispatcher(testScheduler)) {
+            persistence.observeVignetteCountries().collect { emissions += it }
+        }
+
+        persistence.save(sampleCoverage())
+        runCurrent()
+        collecting.cancel()
+
+        assertEquals(listOf(null, listOf(CountryCode.Czechia, CountryCode("SK"))), emissions)
+    }
+
+    @Test
+    fun `a kept copy without its vignette countries key reads the countries from the copy and keeps them`() = runTest {
+        val dataStore = InMemoryDataStore()
+        val persistence = coveragePersistence(dataStore)
+        persistence.save(sampleCoverage())
+        dataStore.edit { it.remove(VIGNETTE_COUNTRIES_KEY) }
+
+        assertEquals(listOf(CountryCode.Czechia, CountryCode("SK")), persistence.observeVignetteCountries().first())
+        assertNotNull(dataStore.data.first()[VIGNETTE_COUNTRIES_KEY])
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `an edit of another key doesn't read the kept copy again`() = runTest {
+        val dataStore = InMemoryDataStore()
+        val persistence = coveragePersistence(dataStore)
+        val collecting = launch(UnconfinedTestDispatcher(testScheduler)) {
+            persistence.observeVignetteCountries().collect {}
+        }
+        runCurrent()
+        val readsBefore = dataStore.reads
+
+        dataStore.edit { it[OTHER_KEY] = "km" }
+        dataStore.edit { it[OTHER_KEY] = "mi" }
+        runCurrent()
+        collecting.cancel()
+
+        assertEquals(readsBefore, dataStore.reads)
     }
 
     @Test
@@ -80,12 +148,21 @@ class CoveragePersistenceTest {
 
     private companion object {
         val COVERAGE_KEY = stringPreferencesKey("COVERAGE")
+        val VIGNETTE_COUNTRIES_KEY = stringPreferencesKey("VIGNETTE_COUNTRIES")
+        val OTHER_KEY = stringPreferencesKey("OTHER")
     }
 
     private class InMemoryDataStore : DataStore<Preferences> {
         private val preferences = MutableStateFlow(emptyPreferences())
 
-        override val data: Flow<Preferences> = preferences
+        // How many times something started reading, such as a one-off read of the kept copy
+        var reads = 0
+            private set
+
+        override val data: Flow<Preferences> = flow {
+            reads++
+            emitAll(preferences)
+        }
 
         override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences =
             transform(preferences.value).also { preferences.value = it }

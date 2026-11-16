@@ -20,6 +20,20 @@ plugins {
     alias(libs.plugins.moko.resources)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.aboutlibraries)
+}
+
+// The iOS app bundles the JSON for the Licences screen, so every iOS framework build regenerates it.
+aboutLibraries {
+    collect {
+        fetchRemoteLicense = false
+        // Kotlin/Native targets have no `*CompileClasspath`, so the export names the iOS configuration itself
+        all = true
+    }
+    export {
+        outputFile = rootProject.layout.projectDirectory.file("iosApp/SpiritedDriving/Resources/aboutlibraries.json")
+        variant = "iosArm64CompileKlibraries"
+    }
 }
 
 kotlin {
@@ -63,6 +77,7 @@ kotlin {
             export(projects.core.ui)
             export(projects.feature.onboarding)
             export(projects.feature.map)
+            export(projects.feature.profile)
             export(libs.futured.arkitekt.decompose)
 
             export(libs.decompose)
@@ -87,6 +102,7 @@ kotlin {
 
                 implementation(projects.feature.onboarding)
                 implementation(projects.feature.map)
+                implementation(projects.feature.profile)
 
                 implementation(libs.logging.kermitCrashlytics)
 
@@ -108,6 +124,7 @@ kotlin {
                 api(projects.core.ui)
                 api(projects.feature.onboarding)
                 api(projects.feature.map)
+                api(projects.feature.profile)
                 api(libs.futured.arkitekt.decompose)
 
                 api(libs.decompose)
@@ -174,8 +191,10 @@ private fun Copy.assembleAndCopySwiftPackageForBuildType(buildType: NativeBuildT
 
 tasks.register<Copy>("assembleAndCopyDebugSwiftPackage") {
     assembleAndCopySwiftPackageForBuildType(NativeBuildType.DEBUG)
+    dependsOn("exportLibraryDefinitions")
 }
 
 tasks.register<Copy>("assembleAndCopyReleaseSwiftPackage") {
     assembleAndCopySwiftPackageForBuildType(NativeBuildType.RELEASE)
+    dependsOn("exportLibraryDefinitions")
 }

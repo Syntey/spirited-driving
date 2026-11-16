@@ -21,6 +21,8 @@ data class PlatformStyle(
     val buttonToggle: ButtonStyle,
     val chip: ChipStyle,
     val segmented: SegmentedStyle,
+    val switch: SwitchStyle,
+    val textField: TextFieldStyle,
     val glassButton: GlassButtonStyle,
     val bottomPanel: BottomPanelStyle,
     val closeButton: IconButtonStyle,
@@ -32,6 +34,8 @@ data class PlatformStyle(
     val cardShape: RoundedCornerShape,
     val message: MessageStyle,
     val list: ListStyle,
+    /** Rows on a sheet over the map: flat on the sheet on Android, on the grouped card as [list] on iOS. */
+    val sheetList: ListStyle,
     val menu: MenuStyle,
     /** Least size of anything tappable: 48dp on Android, 44pt on iOS. */
     val minTouchTarget: Dp,
@@ -76,11 +80,12 @@ data class PlatformStyle(
                 isOutlined = true,
             ),
             segmented = SegmentedStyle(
-                isOutlined = true,
                 height = Grid.d10,
                 textStyle = typography.labelLarge,
                 selectedFontWeight = FontWeight.Medium,
             ),
+            switch = SwitchStyle(isIosStyle = false),
+            textField = androidTextField(typography),
             glassButton = GlassButtonStyle(height = Grid.d12, horizontalPadding = Grid.d5, textStyle = typography.labelLarge),
             bottomPanel = BottomPanelStyle(
                 inset = Grid.d0,
@@ -96,13 +101,24 @@ data class PlatformStyle(
             cardShape = RoundedCornerShape(Grid.d4),
             message = MessageStyle(isCapsule = false),
             list = androidList(typography),
+            sheetList = androidSheetList(typography),
             menu = MenuStyle(iconsAfterLabels = false),
             minTouchTarget = Grid.d12,
         )
 
+        private fun androidTextField(typography: Typography) = TextFieldStyle(
+            isOutlined = true,
+            contentPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d4),
+            textStyle = typography.bodyLarge,
+        )
+
         private fun androidList(typography: Typography) = ListStyle(
-            isInsetGrouped = false,
-            groupInset = Grid.d0,
+            isOnCard = true,
+            groupInset = Grid.d4,
+            outerCorner = Grid.d5,
+            innerCorner = Grid.d1,
+            rowGap = Grid.d0_5,
+            showsSeparators = false,
             rowPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d2),
             oneLineHeight = Grid.d14,
             twoLineHeight = Grid.d18,
@@ -113,6 +129,15 @@ data class PlatformStyle(
             supportingStyle = typography.bodyMedium,
             headerStyle = typography.titleSmall,
             footerStyle = typography.bodySmall,
+        )
+
+        // Material list items straight on the sheet, without a card
+        private fun androidSheetList(typography: Typography) = androidList(typography).copy(
+            isOnCard = false,
+            groupInset = Grid.d0,
+            outerCorner = Grid.d0,
+            innerCorner = Grid.d0,
+            rowGap = Grid.d0,
         )
 
         private fun ios(typography: Typography) = PlatformStyle(
@@ -149,6 +174,8 @@ data class PlatformStyle(
                 isOutlined = false,
             ),
             segmented = iosSegmented(typography),
+            switch = SwitchStyle(isIosStyle = true),
+            textField = iosTextField(typography),
             glassButton = GlassButtonStyle(height = Grid.d11, horizontalPadding = Grid.d4_5, textStyle = typography.titleSmall),
             bottomPanel = BottomPanelStyle(
                 inset = Grid.d3,
@@ -164,20 +191,30 @@ data class PlatformStyle(
             cardShape = RoundedCornerShape(Grid.d5_5),
             message = MessageStyle(isCapsule = true),
             list = iosList(typography),
+            sheetList = iosList(typography),
             menu = MenuStyle(iconsAfterLabels = true),
             minTouchTarget = Grid.d11,
         )
 
-        private fun iosSegmented(typography: Typography) = SegmentedStyle(
+        private fun iosTextField(typography: Typography) = TextFieldStyle(
             isOutlined = false,
+            contentPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d3),
+            textStyle = typography.bodyLarge,
+        )
+
+        private fun iosSegmented(typography: Typography) = SegmentedStyle(
             height = Grid.d8,
             textStyle = typography.bodySmall,
             selectedFontWeight = FontWeight.SemiBold,
         )
 
         private fun iosList(typography: Typography) = ListStyle(
-            isInsetGrouped = true,
+            isOnCard = true,
             groupInset = Grid.d4,
+            outerCorner = Grid.d5_5,
+            innerCorner = Grid.d0,
+            rowGap = Grid.d0,
+            showsSeparators = true,
             rowPadding = PaddingValues(horizontal = Grid.d4, vertical = Grid.d2_5),
             oneLineHeight = Grid.d11,
             twoLineHeight = Grid.d15,
@@ -210,12 +247,20 @@ data class ChipStyle(
     val isOutlined: Boolean,
 )
 
+/** A segmented switch: a raised pill on a track that slides to the selected segment. */
+@Immutable
+data class SegmentedStyle(val height: Dp, val textStyle: TextStyle, val selectedFontWeight: FontWeight)
+
+/** An on/off switch. [isIosStyle]: the iOS-style switch drawn in primary; otherwise Material 3's switch. */
+@Immutable
+data class SwitchStyle(val isIosStyle: Boolean)
+
 /**
- * A segmented switch. [isOutlined]: Material's outlined segmented button, as on Android; otherwise an iOS segmented
- * control, a raised pill on a track.
+ * A text field. [isOutlined]: Material's outlined field, as on Android; otherwise a filled card on the grouped
+ * card's colour, as iOS forms have it.
  */
 @Immutable
-data class SegmentedStyle(val isOutlined: Boolean, val height: Dp, val textStyle: TextStyle, val selectedFontWeight: FontWeight)
+data class TextFieldStyle(val isOutlined: Boolean, val contentPadding: PaddingValues, val textStyle: TextStyle)
 
 /**
  * A capsule button on glass, over an illustration or a scrolling list.
@@ -239,14 +284,20 @@ data class SheetHeaderStyle(val titleStyle: TextStyle, val subtitleStyle: TextSt
 data class MessageStyle(val isCapsule: Boolean)
 
 /**
- * Rows and groups. [isInsetGrouped]: rows on a rounded card inset by [groupInset], with separators, as iOS lists;
- * otherwise Material list items on the sheet. [showsChevrons]: rows that open a screen end in a chevron.
- * [valueAfterLabel]: a row's value sits at its end, as on iOS, rather than below the label.
+ * Rows and groups. [isOnCard]: rows sit on a rounded card inset by [groupInset]; otherwise straight on what's behind
+ * them, as Material list items on a sheet. [outerCorner] rounds the group's outer corners and [innerCorner] the corners
+ * between rows; [rowGap] is the space between rows; [showsSeparators]: hairlines between rows, as iOS lists have.
+ * [showsChevrons]: rows that open a screen end in a chevron. [valueAfterLabel]: a row's value sits at its end, as on
+ * iOS, rather than below the label.
  */
 @Immutable
 data class ListStyle(
-    val isInsetGrouped: Boolean,
+    val isOnCard: Boolean,
     val groupInset: Dp,
+    val outerCorner: Dp,
+    val innerCorner: Dp,
+    val rowGap: Dp,
+    val showsSeparators: Boolean,
     val rowPadding: PaddingValues,
     val oneLineHeight: Dp,
     val twoLineHeight: Dp,

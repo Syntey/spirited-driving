@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
 import com.syntey.spiriteddriving.data.persistence.persistence.PrimitivePersistence
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -39,6 +40,33 @@ class VignettePersistenceTest {
         persistence.setHasVignette(CountryCode.Czechia, hasVignette = true)
 
         assertNull(persistence.hasVignette(CountryCode("AT")))
+    }
+
+    @Test
+    fun `no country has a vignette at first`() = runTest {
+        val persistence = vignettePersistence()
+
+        assertEquals(emptySet(), persistence.observeVignettes().first())
+    }
+
+    @Test
+    fun `only the countries answered yes are observed`() = runTest {
+        val persistence = vignettePersistence()
+
+        persistence.setHasVignette(CountryCode.Czechia, hasVignette = true)
+        persistence.setHasVignette(CountryCode("SK"), hasVignette = false)
+
+        assertEquals(setOf(CountryCode.Czechia), persistence.observeVignettes().first())
+    }
+
+    @Test
+    fun `a country whose vignette is taken away is no longer observed`() = runTest {
+        val persistence = vignettePersistence()
+        persistence.setHasVignette(CountryCode.Czechia, hasVignette = true)
+
+        persistence.setHasVignette(CountryCode.Czechia, hasVignette = false)
+
+        assertEquals(emptySet(), persistence.observeVignettes().first())
     }
 
     private fun vignettePersistence() = VignettePersistence(PrimitivePersistence(InMemoryDataStore()))

@@ -6,6 +6,8 @@
     <!-- While the app is in use only: guidance runs in the maps app -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- For the drive feedback notification, asked for when the user turns on drive reminders in Settings -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".App"
