@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.android
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,9 +22,17 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var rootNavHost: RootNavHost
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        (application as App).platformBindings.onIntent(intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         (application as App).platformBindings.attach(this)
+        // A rebuilt activity gets its launch intent again, whose notification tap has already opened the drive.
+        if (savedInstanceState == null) (application as App).platformBindings.onIntent(intent)
         rootNavHost = retainedComponent { retainedContext ->
             RootNavHostFactory.create(DefaultAppComponentContext(retainedContext))
         }

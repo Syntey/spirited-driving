@@ -37,8 +37,9 @@ internal class ClaimDrivesOnSignInUseCase(
     @Suppress("TooGenericExceptionCaught")
     private suspend fun claimRecordedDrives() {
         try {
-            // Unrecorded drives are left out: they are recorded once online with the ID token, so they already belong to the user
-            val ids = startedDrives.all().filter { it.isRecorded }.map { it.id }.distinct()
+            // Unrecorded drives are left out: they are recorded once online with the ID token, so they already belong to the user.
+            // Drives marked not driven are left out too, as they're removed next and the claim would only add them back.
+            val ids = startedDrives.all().filter { it.isRecorded && !it.isNotDriven }.map { it.id }.distinct()
             if (ids.isEmpty()) return
             // The phone keeps at most 100 drives and the backend accepts 500, so one request always fits
             driveClaimer.claim(ids)

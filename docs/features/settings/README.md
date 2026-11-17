@@ -41,7 +41,7 @@ Profile sheet on iOS and full screen on Android. The code holds their layout, si
 behind them.
 
 - **Settings holds only preferences:** Units, Motorway vignettes and Notifications. Rate, Send feedback and About are
-  on [Profile](../account/design.md#profile), so Settings stays short and looks the same signed in or out.
+  on [Profile](../account/README.md#design), so Settings stays short and looks the same signed in or out.
 - **The units switch** is the segmented switch from [Route planning](../route-planning/README.md#design), so km / mi
   looks like min / km. A remembered distance budget moves to the closest chip in the new unit.
 - **Vignettes come with the covered area,** one row per country, with Czechia built in until the covered area has

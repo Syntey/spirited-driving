@@ -37,7 +37,8 @@ Record a drive.
 Drive has no screen of its own: it is the Drive button of [Route planning](../route-planning/README.md), held by
 `TripPlanComponent` in `:feature:map`. The code holds its layout and copy; these are the decisions behind it.
 
-- **The sheet stays on the route** after the hand-off, so the user finds it there when they come back.
+- **The sheet stays on the route** after the hand-off, so the user finds it there when they come back, until half its
+  planned duration has passed; then [Drive feedback](../drive-feedback/README.md#design) asks about it.
 - **"Routing provided by Spirited Driving" is always under Drive on Android,** above the OpenStreetMap attribution,
   in the half and the collapsed sheet. Google's EEA terms ask for it before navigation begins when routes not made by
   Google are shown on a Google map. A line on screen meets that without a dialog in the way.

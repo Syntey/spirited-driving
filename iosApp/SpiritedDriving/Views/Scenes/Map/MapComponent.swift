@@ -1,5 +1,6 @@
 import KMP
 import SwiftUI
+import UIKit
 
 private enum Layout {
     static let sheetBottomInset: CGFloat = 8
@@ -8,11 +9,17 @@ private enum Layout {
     static let buttonTopPadding: CGFloat = 8
     static let buttonTrailingPadding: CGFloat = 16
     static let iconSize: CGFloat = 20
+    static let reminderHeight: CGFloat = 56
+    static let reminderSheetGap: CGFloat = 12
+    static let reminderHorizontalPadding: CGFloat = 16
+    static let reminderSpacing: CGFloat = 12
+    static let reminderBadgeSize: CGFloat = 32
 }
 
 struct MapComponent<Model: MapComponentModelProtocol>: View {
     @State var model: Model
     @Binding private var profile: DecomposeSlotItem<ProfileNavHost>?
+    @Environment(\.colorScheme) private var colorScheme
 
     init(model: Model, profile: Binding<DecomposeSlotItem<ProfileNavHost>?>) {
         _model = State(initialValue: model)
@@ -25,7 +32,7 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
                 map: model.map,
                 routeLines: model.routeLines,
                 routeBounds: model.routeBounds,
-                bottomMargin: model.collapsedSheetHeight + Layout.sheetBottomInset,
+                bottomMargin: model.collapsedSheetHeight + Layout.sheetBottomInset + reminderInset,
                 sheetTop: model.sheetTop,
                 isSheetLarge: model.sheetDetent == .large,
                 onPanned: model.onMapPanned,
@@ -34,7 +41,13 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
             )
             .ignoresSafeArea()
             buttons
+            // Left out while hidden, not only faded, so VoiceOver doesn't find a reminder that isn't there
+            if model.showsReminder {
+                reminderBubble
+                    .transition(.opacity)
+            }
         }
+        .animation(.easeInOut, value: model.showsReminder)
         .sheet(isPresented: .constant(true)) {
             ComposeView { model.sheetViewController() }
                 .onGeometryChange(for: CGFloat.self) { $0.frame(in: .global).minY } action: { model.sheetTop = $0 }
@@ -70,6 +83,65 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
             Button(Localizable.drive_missing_store_apple.localized) { model.onMapsAppStoreClick() }
                 .keyboardShortcut(.defaultAction)
         }
+    }
+
+    // The reminder sits above the sheet, so the map's logo and legal notice move up by its height and the gap
+    private var reminderInset: CGFloat {
+        model.showsReminder ? Layout.reminderHeight + Layout.reminderSheetGap : 0
+    }
+
+    private var reminderBubble: some View {
+        HStack(spacing: Layout.reminderSpacing) {
+            Button(action: model.onReminderClick) {
+                HStack(spacing: Layout.reminderSpacing) {
+                    if let number = model.reminderNumber {
+                        reminderBadge(number: number)
+                    }
+                    VStack(alignment: .leading, spacing: 0) {
+                        // The question never truncates; the destination's line does
+                        Text(Localizable.drive_feedback_question_unnamed.localized)
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                        Text(model.reminderText)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                }
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            Button(action: model.onReminderDismiss) {
+                MR.images().close.image
+                    .renderingMode(.template)
+                    .resizable()
+                    .frame(width: Layout.iconSize, height: Layout.iconSize)
+                    .foregroundStyle(.secondary)
+                    .frame(width: Layout.buttonSize, height: Layout.buttonSize)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Localizable.generic_close.localized)
+        }
+        .frame(height: Layout.reminderHeight)
+        .padding(.horizontal, Layout.reminderHorizontalPadding)
+        .frame(maxWidth: .infinity)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .padding(.bottom, model.collapsedSheetHeight + Layout.reminderSheetGap)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .ignoresSafeArea(edges: .bottom)
+    }
+
+    // The route's badge in its colour, with the number in the text colour the route labels use
+    private func reminderBadge(number: Int) -> some View {
+        let traits = UITraitCollection(userInterfaceStyle: colorScheme == .dark ? .dark : .light)
+        let route = MapRoutes.lineColor(for: number).resolvedColor(with: traits)
+        return Text("\(number)")
+            .font(.subheadline.weight(.semibold).monospacedDigit())
+            .foregroundStyle(Color(uiColor: MapRouteLabels.textColor(on: route)))
+            .frame(width: Layout.reminderBadgeSize, height: Layout.reminderBadgeSize)
+            .background(Color(uiColor: route), in: Circle())
     }
 
     private func driveDialogMessage(_ dialog: DriveDialog) -> String {

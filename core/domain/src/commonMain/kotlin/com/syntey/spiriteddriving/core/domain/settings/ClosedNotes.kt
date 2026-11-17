@@ -13,4 +13,7 @@ enum class Note {
 
     /** The dialog before the first hand-off to the maps app. */
     FirstDrive,
+
+    /** The offer of the drive reminder after the first rating (Android). */
+    ReminderOffer,
 }

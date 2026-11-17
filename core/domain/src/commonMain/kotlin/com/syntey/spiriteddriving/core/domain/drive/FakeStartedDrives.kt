@@ -22,6 +22,18 @@ class FakeStartedDrives(drives: List<Drive> = emptyList()) : StartedDrives {
         drives = drives.filterNot { it.id == id }
     }
 
+    override suspend fun rate(id: String, rating: Rating) {
+        drives = drives.map { if (it.id == id) it.copy(rating = rating, isRatingSent = false) else it }
+    }
+
+    override suspend fun markRatingSent(id: String, rating: Rating) {
+        drives = drives.map { if (it.id == id && it.rating == rating) it.copy(isRatingSent = true) else it }
+    }
+
+    override suspend fun markNotDriven(id: String) {
+        drives = drives.map { if (it.id == id) it.copy(isNotDriven = true) else it }
+    }
+
     private companion object {
         const val MAX_KEPT = 100
     }

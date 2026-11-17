@@ -141,6 +141,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.browser)
+    implementation(libs.androidx.work.runtime)
 
     implementation(libs.decompose)
     implementation(libs.decompose.compose.ext)

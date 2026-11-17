@@ -1,7 +1,6 @@
 package com.syntey.spiriteddriving.android.tools.binding
 
 import android.Manifest
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
@@ -18,16 +17,24 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.work.WorkManager
+import com.syntey.spiriteddriving.android.tools.binding.DriveReminderSupport.EXTRA_DRIVE_ID
+import com.syntey.spiriteddriving.android.tools.binding.DriveReminderSupport.KEY_ASKED
+import com.syntey.spiriteddriving.android.tools.binding.DriveReminderSupport.NOTIFICATION_ID
+import com.syntey.spiriteddriving.core.platform.binding.DriveReminderOpenListener
 import com.syntey.spiriteddriving.core.platform.binding.DriveRemindersListener
 import com.syntey.spiriteddriving.core.platform.binding.PlatformDriveReminders
-import com.syntey.spiriteddriving.core.resources.*
 
 class PlatformDriveRemindersImpl(private val context: Context) : PlatformDriveReminders {
 
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val preferences by lazy { context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE) }
+    private val preferences by lazy { DriveReminderSupport.preferences(context) }
     private var activity: ComponentActivity? = null
     private var launcher: ActivityResultLauncher<String>? = null
+
+    // Read and written on the main thread only.
+    private var openListener: DriveReminderOpenListener? = null
+    private var pendingOpenDriveId: String? = null
 
     /**
      * Lets the notification permission prompt show over [activity]. Call it from the activity's `onCreate`, as the prompt's
@@ -48,9 +55,22 @@ class PlatformDriveRemindersImpl(private val context: Context) : PlatformDriveRe
         )
     }
 
+    /**
+     * Reads a tapped notification from [intent], an activity's launch or new intent, and opens its drive. The extra is
+     * removed so that the same intent doesn't open it again.
+     */
+    fun onIntent(intent: Intent) {
+        val driveId = intent.getStringExtra(EXTRA_DRIVE_ID) ?: return
+        intent.removeExtra(EXTRA_DRIVE_ID)
+        mainHandler.post {
+            val listener = openListener
+            if (listener == null) pendingOpenDriveId = driveId else listener.onOpen(driveId)
+        }
+    }
+
     override fun isOn(listener: DriveRemindersListener) {
         mainHandler.post {
-            val channel = ensureChannel()
+            val channel = DriveReminderSupport.ensureChannel(context)
             val on = NotificationManagerCompat.from(context).areNotificationsEnabled() &&
                 channel.importance != NotificationManager.IMPORTANCE_NONE &&
                 (!needsPermission() || isGranted())
@@ -73,24 +93,42 @@ class PlatformDriveRemindersImpl(private val context: Context) : PlatformDriveRe
                 }
                 return@post
             }
-            ensureChannel()
+            DriveReminderSupport.ensureChannel(context)
             startSettings(
                 Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
                     .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                    .putExtra(Settings.EXTRA_CHANNEL_ID, CHANNEL_ID),
+                    .putExtra(Settings.EXTRA_CHANNEL_ID, DriveReminderSupport.CHANNEL_ID),
             )
         }
     }
 
-    // Created again on each read, which keeps the channel listed in the system settings. Creating it again changes nothing
-    // the user set.
-    private fun ensureChannel(): NotificationChannel {
-        val name = MR.strings.settings_drive_reminders.getString(context)
-        val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_LOW)
-        val manager = context.getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(channel)
-        return manager.getNotificationChannel(CHANNEL_ID) ?: channel
+    override fun schedule(driveId: String, destinationName: String?, atEpochMillis: Long) {
+        // One reminder at a time: a new drive's replaces the one before. WorkManager keeps it across a reboot, and may
+        // deliver it some minutes late, later while the phone dozes.
+        DriveReminderWorker.schedule(context, driveId, destinationName, atEpochMillis, driveTag(driveId))
     }
+
+    override fun cancel(driveId: String) {
+        NotificationManagerCompat.from(context).cancel(driveId, NOTIFICATION_ID)
+        WorkManager.getInstance(context).cancelAllWorkByTag(driveTag(driveId))
+    }
+
+    override fun setOpenListener(listener: DriveReminderOpenListener?) {
+        mainHandler.post {
+            openListener = listener
+            val driveId = pendingOpenDriveId
+            if (listener != null && driveId != null) {
+                pendingOpenDriveId = null
+                listener.onOpen(driveId)
+            }
+        }
+    }
+
+    override fun canOffer(listener: DriveRemindersListener) {
+        mainHandler.post { listener.onResult(needsPermission()) }
+    }
+
+    private fun driveTag(driveId: String) = "drive_reminder:$driveId"
 
     private fun needsPermission() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isGranted()
 
@@ -103,10 +141,6 @@ class PlatformDriveRemindersImpl(private val context: Context) : PlatformDriveRe
     }
 
     private companion object {
-        /** The channel the drive feedback notification posts to. Its settings are where the user silences it. */
-        const val CHANNEL_ID = "drive_reminders"
-        const val PREFERENCES_NAME = "drive_reminders"
-        const val KEY_ASKED = "asked"
         const val PERMISSION = Manifest.permission.POST_NOTIFICATIONS
     }
 }

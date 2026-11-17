@@ -6,7 +6,8 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 /**
- * A drive as kept on the device. Its shape is the stored format, so renaming a field loses the kept drives.
+ * A drive as kept on the device. Its shape is the stored format, so renaming a field loses the kept drives. The fields
+ * after `isRecorded` have defaults, so drives kept before they existed still read.
  */
 @Serializable
 internal data class StoredDrive(
@@ -15,6 +16,9 @@ internal data class StoredDrive(
     val startedAtEpochMillis: Long,
     val plannedDurationSeconds: Long,
     val isRecorded: Boolean,
+    val rating: StoredRating? = null,
+    val isRatingSent: Boolean = false,
+    val isNotDriven: Boolean = false,
 )
 
 internal fun Drive.toStored() = StoredDrive(
@@ -23,6 +27,9 @@ internal fun Drive.toStored() = StoredDrive(
     startedAtEpochMillis = startedAt.toEpochMilliseconds(),
     plannedDurationSeconds = plannedDuration.inWholeSeconds,
     isRecorded = isRecorded,
+    rating = rating?.toStored(),
+    isRatingSent = isRatingSent,
+    isNotDriven = isNotDriven,
 )
 
 internal fun StoredDrive.toDomain() = Drive(
@@ -31,4 +38,7 @@ internal fun StoredDrive.toDomain() = Drive(
     startedAt = Instant.fromEpochMilliseconds(startedAtEpochMillis),
     plannedDuration = plannedDurationSeconds.seconds,
     isRecorded = isRecorded,
+    rating = rating?.toDomain(),
+    isRatingSent = isRatingSent,
+    isNotDriven = isNotDriven,
 )

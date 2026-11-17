@@ -27,12 +27,6 @@ final class RouteLabelView: MKAnnotationView {
     private static let verticalPadding: CGFloat = 2
     private static let cornerRadius: CGFloat = 6
     private static let borderWidth: CGFloat = 1.5
-    // The text is dark on the lighter route colours, the same rule as core/ui's RouteBadge
-    private static let lightLuminance: CGFloat = 0.4
-    // The light theme's onSurface, the text on the lighter route colours of the dark theme; no asset holds it
-    // swiftlint:disable:next object_literal
-    private static let onLightRoute = UIColor(red: 0x1A / 255, green: 0x1C / 255, blue: 0x1E / 255, alpha: 1)
-
     private let textLabel = UILabel()
 
     override var annotation: MKAnnotation? {
@@ -84,33 +78,34 @@ final class RouteLabelView: MKAnnotationView {
         let route = MapRoutes.lineColor(for: label.number).resolvedColor(with: traitCollection)
         backgroundColor = route
         layer.borderColor = MapRoutes.routeCasingColor.resolvedColor(with: traitCollection).cgColor
-        textLabel.textColor = Self.relativeLuminance(route) > Self.lightLuminance ? Self.onLightRoute : .white
-    }
-
-    // WCAG relative luminance, as core/ui's Compose Color.luminance() computes it
-    private static func relativeLuminance(_ color: UIColor) -> CGFloat {
-        var red: CGFloat = 0
-        var green: CGFloat = 0
-        var blue: CGFloat = 0
-        var alpha: CGFloat = 0
-        color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
-        func linear(_ component: CGFloat) -> CGFloat {
-            component <= 0.03928 ? component / 12.92 : pow((component + 0.055) / 1.055, 2.4)
-        }
-        return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
+        textLabel.textColor = MapRouteLabels.textColor(on: route)
     }
 }
 
 /// The route labels' annotations, and the route of the label a tap landed on.
 enum MapRouteLabels {
-    // One label per line, at its midpoint
+    // The text is dark on the lighter route colours, the same rule as core/ui's RouteBadge
+    private static let lightLuminance: CGFloat = 0.4
+    // The light theme's onSurface, the text on the lighter route colours of the dark theme; no asset holds it
+    // swiftlint:disable:next object_literal
+    private static let onLightRoute = UIColor(red: 0x1A / 255, green: 0x1C / 255, blue: 0x1E / 255, alpha: 1)
+
+    /// The text on a route's colour: dark on the lighter routes, white on the darker ones. [route] is resolved already.
+    static func textColor(on route: UIColor) -> UIColor {
+        relativeLuminance(route) > lightLuminance ? onLightRoute : .white
+    }
+
+    // One label per line, at its midpoint; a line drawn without a label, as the rating step's, has none
     static func labels(for lines: [RouteLine]) -> [RouteLabelAnnotation] {
-        lines.map { line in
-            RouteLabelAnnotation(
+        lines.compactMap { line in
+            guard let label = line.label else {
+                return nil
+            }
+            return RouteLabelAnnotation(
                 coordinate: MapView.coordinate(line.labelPoint),
                 routeId: line.id,
                 number: line.number?.intValue,
-                text: line.label.localized(),
+                text: label.localized(),
                 isSelected: line.isSelected
             )
         }
@@ -126,6 +121,19 @@ enum MapRouteLabels {
             view = current.superview
         }
         return nil
+    }
+
+    // WCAG relative luminance, as core/ui's Compose Color.luminance() computes it
+    private static func relativeLuminance(_ color: UIColor) -> CGFloat {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+        func linear(_ component: CGFloat) -> CGFloat {
+            component <= 0.03928 ? component / 12.92 : pow((component + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
     }
 }
 

@@ -2,18 +2,25 @@ package com.syntey.spiriteddriving.feature.map.domain
 
 import com.syntey.spiriteddriving.core.domain.drive.Drive
 import com.syntey.spiriteddriving.core.domain.drive.DriveNotRecordableException
+import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.DriveRecorder
+import com.syntey.spiriteddriving.core.domain.drive.FakeOpenDriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.FakeStartedDrives
+import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.StartedDrives
+import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.route.Route
+import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
@@ -22,6 +29,7 @@ class StartDriveUseCaseTest {
 
     private val route = FakeRoutePlanner.Recorded.fastest
     private val otherRoute = FakeRoutePlanner.Recorded.funRoutes.first()
+    private val funRoute = FakeRoutePlanner.Recorded.funRoutes.first()
     private val at = Instant.parse("2026-11-13T10:00:00Z")
     private val halfDuration = route.duration / 2
 
@@ -141,8 +149,127 @@ class StartDriveUseCaseTest {
         assertFalse(stored.isRecorded)
     }
 
-    private suspend fun startDrive(route: Route, at: Instant, startedDrives: StartedDrives, recorder: DriveRecorder): Drive =
-        StartDriveUseCase(startedDrives, recorder).build(StartDriveUseCase.Args(route = route, at = at))
+    @Test
+    fun `a new drive on a fun route opens the question with the route and its number`() = runTest {
+        val questions = FakeOpenDriveQuestion()
+        val drive = startDrive(funRoute, at, FakeStartedDrives(), ScriptedDriveRecorder(), questions, routeNumber = 2)
+
+        val question = assertNotNull(questions.question)
+        assertEquals(drive.id, question.driveId)
+        assertEquals(at, question.startedAt)
+        assertEquals(2, question.routeNumber)
+        assertEquals(funRoute.start.location, question.start)
+        assertEquals(funRoute.destination, question.destination)
+        assertEquals(funRoute.duration, question.duration)
+        assertEquals(funRoute.distance, question.distance)
+        assertEquals(funRoute.line, question.line)
+        assertEquals(funRoute.attribution, question.attribution)
+    }
+
+    @Test
+    fun `a drive on the fastest route drops the open question`() = runTest {
+        val questions = FakeOpenDriveQuestion(question(driveId = "older"))
+
+        startDrive(route, at, FakeStartedDrives(), ScriptedDriveRecorder(), questions, routeNumber = null)
+
+        assertNull(questions.question)
+    }
+
+    @Test
+    fun `a fun route schedules the notification after the hand-off with the destination's name`() = runTest {
+        val reminders = FakePlatformDriveReminders()
+
+        val drive = startDrive(funRoute, at, FakeStartedDrives(), ScriptedDriveRecorder(), reminders = reminders, routeNumber = 1)
+
+        val expectedAt = at + funRoute.duration * 1.2
+        assertEquals(
+            listOf(FakePlatformDriveReminders.Scheduled(drive.id, funRoute.destination.name, expectedAt.toEpochMilliseconds())),
+            reminders.scheduled,
+        )
+    }
+
+    @Test
+    fun `the fastest route schedules no notification and cancels the dropped question's`() = runTest {
+        val reminders = FakePlatformDriveReminders()
+        val questions = FakeOpenDriveQuestion(question(driveId = "older"))
+
+        startDrive(route, at, FakeStartedDrives(), ScriptedDriveRecorder(), questions, reminders = reminders, routeNumber = null)
+
+        assertTrue(reminders.scheduled.isEmpty())
+        assertEquals(listOf("older"), reminders.cancelled)
+    }
+
+    @Test
+    fun `a continued drive leaves the open question as it is`() = runTest {
+        val startedDrives = FakeStartedDrives()
+        val questions = FakeOpenDriveQuestion()
+        startDrive(funRoute, at, startedDrives, ScriptedDriveRecorder(), questions, routeNumber = 1)
+        val kept = questions.question
+
+        startDrive(funRoute, at + 1.minutes, startedDrives, ScriptedDriveRecorder(), questions, routeNumber = 1)
+
+        assertEquals(kept, questions.question)
+    }
+
+    @Test
+    fun `a new drive on a fun route already rated on a kept drive opens no question`() = runTest {
+        val rated = Drive(
+            id = "rated",
+            routeId = funRoute.id,
+            startedAt = at - 1.minutes,
+            plannedDuration = funRoute.duration,
+            isRecorded = true,
+            rating = Rating(Thumb.Down),
+            isRatingSent = true,
+        )
+        val questions = FakeOpenDriveQuestion()
+
+        startDrive(funRoute, at + funRoute.duration, FakeStartedDrives(listOf(rated)), ScriptedDriveRecorder(), questions, routeNumber = 1)
+
+        assertNull(questions.question)
+    }
+
+    @Test
+    fun `the question is kept when recording is offline`() = runTest {
+        val questions = FakeOpenDriveQuestion()
+
+        assertFailsWith<OfflineException> {
+            startDrive(
+                funRoute,
+                at,
+                FakeStartedDrives(),
+                ScriptedDriveRecorder(failure = OfflineException(cause = null)),
+                questions,
+                routeNumber = 1,
+            )
+        }
+
+        assertEquals(1, assertNotNull(questions.question).routeNumber)
+    }
+
+    private suspend fun startDrive(
+        route: Route,
+        at: Instant,
+        startedDrives: StartedDrives,
+        recorder: DriveRecorder,
+        questions: FakeOpenDriveQuestion = FakeOpenDriveQuestion(),
+        reminders: FakePlatformDriveReminders = FakePlatformDriveReminders(),
+        routeNumber: Int? = null,
+    ): Drive = StartDriveUseCase(startedDrives, recorder, questions, DriveReminders(reminders)).build(
+        StartDriveUseCase.Args(route = route, routeNumber = routeNumber, at = at),
+    )
+
+    private fun question(driveId: String) = DriveQuestion(
+        driveId = driveId,
+        startedAt = at,
+        routeNumber = 1,
+        start = funRoute.start.location,
+        destination = funRoute.destination,
+        duration = funRoute.duration,
+        distance = funRoute.distance,
+        line = funRoute.line,
+        attribution = funRoute.attribution,
+    )
 
     private class ScriptedDriveRecorder(private val failure: Throwable? = null) : DriveRecorder {
         val recorded = mutableListOf<Drive>()
@@ -151,5 +278,7 @@ class StartDriveUseCaseTest {
             failure?.let { throw it }
             recorded += drive
         }
+
+        override suspend fun remove(id: String) = Unit
     }
 }

@@ -1,6 +1,10 @@
 package com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen
 
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
+import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
+import com.syntey.spiriteddriving.core.domain.drive.Rating
+import com.syntey.spiriteddriving.core.domain.drive.RatingReason
+import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.kilometres
@@ -16,9 +20,12 @@ import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
+import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
+import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
+import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.TripPlanPreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.UseBudgetButton
@@ -26,6 +33,7 @@ import com.syntey.spiriteddriving.feature.map.tools.budgetText
 import com.syntey.spiriteddriving.feature.map.tools.durationText
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
 import dev.icerock.moko.resources.desc.ResourceFormatted
+import dev.icerock.moko.resources.desc.desc
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlin.math.abs
 import kotlin.test.Test
@@ -37,6 +45,7 @@ import kotlin.test.assertTrue
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 class TripPlanViewStateTest {
@@ -439,6 +448,216 @@ class TripPlanViewStateTest {
     @Test
     fun `no fun route message is absent while planning`() {
         assertNull(TripPlanPreviewStates.planningViewState().noFunRouteMessage)
+    }
+
+    @Test
+    fun `the rating step draws only the driven line`() {
+        assertEquals(listOf("drive"), ratingState().routeLines.map { it.id })
+    }
+
+    @Test
+    fun `the rating step's line is selected and numbered`() {
+        val line = ratingState().routeLines.single()
+
+        assertTrue(line.isSelected)
+        assertEquals(1, line.number)
+    }
+
+    @Test
+    fun `the rating step's line has no label`() {
+        assertNull(ratingState().routeLines.single().label)
+    }
+
+    @Test
+    fun `the rating step frames the driven line`() {
+        val bounds = assertNotNull(ratingState().routeBounds)
+        val line = FakeRoutePlanner.Recorded.funRoutes.first().line
+
+        assertTrue(
+            line.all { point ->
+                point.latitude in bounds.southWest.latitude..bounds.northEast.latitude &&
+                    point.longitude in bounds.southWest.longitude..bounds.northEast.longitude
+            },
+        )
+    }
+
+    @Test
+    fun `the map buttons hide during the rating step`() {
+        assertFalse(ratingState().showsMapButtons)
+    }
+
+    @Test
+    fun `the rating title names the destination`() {
+        assertEquals(StringDesc.ResourceFormatted(MR.strings.drive_feedback_question, "Karlštejn Castle"), ratingState().ratingTitle)
+    }
+
+    @Test
+    fun `the rating title asks without a name for an unnamed destination`() {
+        assertEquals(MR.strings.drive_feedback_question_unnamed.desc(), ratingState(destinationName = null).ratingTitle)
+    }
+
+    @Test
+    fun `the drive text joins the time, the planned duration and the distance`() {
+        val expected = StringDesc.ResourceFormatted(
+            MR.strings.drive_feedback_drive,
+            "Today, 14:20".desc(),
+            StringDesc.ResourceFormatted(MR.strings.unit_hours_minutes, 1, 5),
+            km("58"),
+        )
+
+        assertEquals(expected, ratingState().ratingDriveText)
+    }
+
+    @Test
+    fun `there are no reason chips before a thumb`() {
+        assertTrue(ratingState().reasonChips.isEmpty())
+    }
+
+    @Test
+    fun `there is no thanks before a thumb`() {
+        assertNull(ratingState().ratingThanks)
+    }
+
+    @Test
+    fun `a Good rating thanks for what stood out`() {
+        assertEquals(MR.strings.drive_feedback_thanks_good.desc(), ratingState(Rating(Thumb.Up)).ratingThanks)
+    }
+
+    @Test
+    fun `a Not good rating asks what didn't work`() {
+        assertEquals(MR.strings.drive_feedback_thanks_not_good.desc(), ratingState(Rating(Thumb.Down)).ratingThanks)
+    }
+
+    @Test
+    fun `a Good rating gives its five reason chips in order`() {
+        val reasons = ratingState(Rating(Thumb.Up)).reasonChips.map { it.reason }
+
+        assertEquals(
+            listOf(
+                RatingReason.CurvyRoads,
+                RatingReason.NiceViews,
+                RatingReason.LittleTraffic,
+                RatingReason.SmoothSurface,
+                RatingReason.WorthTheExtraTime,
+            ),
+            reasons,
+        )
+    }
+
+    @Test
+    fun `a Not good rating gives its eight reason chips in order`() {
+        val reasons = ratingState(Rating(Thumb.Down)).reasonChips.map { it.reason }
+
+        assertEquals(
+            listOf(
+                RatingReason.BoringRoads,
+                RatingReason.TooManyTowns,
+                RatingReason.TooNarrow,
+                RatingReason.RoughSurface,
+                RatingReason.HeavyTraffic,
+                RatingReason.Roadworks,
+                RatingReason.TookTooLong,
+                RatingReason.MapsAppWentAnotherWay,
+            ),
+            reasons,
+        )
+    }
+
+    @Test
+    fun `the picked reason chip is selected`() {
+        val chips = ratingState(Rating(Thumb.Up, setOf(RatingReason.NiceViews))).reasonChips
+
+        assertEquals(listOf(RatingReason.NiceViews), chips.filter { it.isSelected }.map { it.reason })
+    }
+
+    @Test
+    fun `a reason chip has the text of its reason`() {
+        val chip = ratingState(Rating(Thumb.Up)).reasonChips.single { it.reason == RatingReason.NiceViews }
+
+        assertEquals(MR.strings.reason_nice_views.desc(), chip.label)
+    }
+
+    // The rating step after the first fun route of the recorded plan, driven at 14:20 today from the start to the castle
+    @Test
+    fun `the reminder shows on the collapsed search step`() {
+        assertTrue(reminderState().showsReminder)
+    }
+
+    @Test
+    fun `the reminder hides while the sheet is pulled up`() {
+        assertFalse(reminderState().copy(sheetHeight = SheetHeight.Half).showsReminder)
+    }
+
+    @Test
+    fun `the reminder hides while planning`() {
+        val planning = RoutePlanningState(destination = dresden, budget = Budget.Time(30.minutes))
+        assertFalse(reminderState().copy(planning = planning).showsReminder)
+    }
+
+    @Test
+    fun `the reminder hides during the rating step`() {
+        assertFalse(ratingState().copy(sheetHeight = SheetHeight.Collapsed, reminder = reminder()).showsReminder)
+    }
+
+    @Test
+    fun `the reminder text joins the destination's name and the day`() {
+        val expected = StringDesc.ResourceFormatted(
+            MR.strings.drive_feedback_reminder_text,
+            "Karlštejn Castle",
+            MR.strings.drive_feedback_yesterday_day.desc(),
+        )
+
+        assertEquals(expected, reminderState().reminderText)
+    }
+
+    @Test
+    fun `the reminder text reads as a point on the map for an unnamed destination`() {
+        val expected = StringDesc.ResourceFormatted(
+            MR.strings.drive_feedback_reminder_text,
+            MR.strings.search_point_on_map.desc(),
+            MR.strings.drive_feedback_yesterday_day.desc(),
+        )
+
+        assertEquals(expected, reminderState(destinationName = null).reminderText)
+    }
+
+    private fun reminderState(destinationName: String? = "Karlštejn Castle") = TripPlanViewState(
+        reminder = reminder(destinationName),
+    )
+
+    private fun reminder(destinationName: String? = "Karlštejn Castle"): ReminderBubble {
+        val route = FakeRoutePlanner.Recorded.funRoutes.first()
+        val question = DriveQuestion(
+            driveId = "drive",
+            startedAt = Instant.parse("2026-11-15T13:20:00Z"),
+            routeNumber = 1,
+            start = route.start.location,
+            destination = route.destination.copy(name = destinationName),
+            duration = route.duration,
+            distance = route.distance,
+            line = route.line,
+            attribution = route.attribution,
+        )
+        return ReminderBubble(question = question, day = MR.strings.drive_feedback_yesterday_day.desc())
+    }
+
+    private fun ratingState(rating: Rating? = null, destinationName: String? = "Karlštejn Castle"): TripPlanViewState {
+        val route = FakeRoutePlanner.Recorded.funRoutes.first()
+        val question = DriveQuestion(
+            driveId = "drive",
+            startedAt = Instant.parse("2026-11-16T13:20:00Z"),
+            routeNumber = 1,
+            start = route.start.location,
+            destination = route.destination.copy(name = destinationName),
+            duration = route.duration,
+            distance = route.distance,
+            line = route.line,
+            attribution = route.attribution,
+        )
+        return TripPlanViewState(
+            sheetHeight = SheetHeight.Half,
+            ratingStep = RatingStep(question = question, driveTime = "Today, 14:20".desc(), rating = rating),
+        )
     }
 
     private fun noFunRoute(budget: Budget, closest: Budget?) = TripPlanViewState(

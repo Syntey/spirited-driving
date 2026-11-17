@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -87,11 +88,13 @@ import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.TripPlanPreviewStates
 import com.syntey.spiriteddriving.feature.map.ui.components.MapStyles
+import com.syntey.spiriteddriving.feature.map.ui.components.ReminderBubbleContent
 import com.syntey.spiriteddriving.feature.map.ui.components.routeColor
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen.Actions.Companion.noOpActions
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
+import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -108,6 +111,9 @@ private const val UNSELECTED_ALPHA = 0.5f
 
 // The selected line's casing is its line with a border on each side, which has no Grid token
 private val SELECTED_CASING_WIDTH = Grid.d1_5 + Grid.d0_375 * 2
+
+// The space between the reminder bubble and the locate control, and above the sheet
+private val REMINDER_GAP = Grid.d2
 
 // The start ring is centred on its point, and drawn under the destination's pin
 private val START_ANCHOR = Offset(0.5f, 0.5f)
@@ -166,6 +172,8 @@ private fun Content(
         // While planning, the routes are framed above the sheet; the collapsed height otherwise, so the camera doesn't move as the
         // sheet is dragged
         val fitBottomPadding = sheetCover.takeIf { viewState.planning != null }
+        // The reminder sits above the collapsed sheet, so the map's logo and legal notice move up with it
+        val reminderHeight = if (viewState.showsReminder) REMINDER_GAP + Grid.d14 else Grid.d0
         Map(
             map = viewState.map,
             routeLines = viewState.routeLines,
@@ -174,7 +182,7 @@ private fun Content(
             onPanned = actions::onMapPanned,
             onLongPress = actions::onMapLongPress,
             onRouteClick = actions::onRouteClick,
-            contentPadding = PaddingValues(top = statusBarHeight, bottom = fitBottomPadding ?: collapsedHeight),
+            contentPadding = PaddingValues(top = statusBarHeight, bottom = fitBottomPadding ?: (collapsedHeight + reminderHeight)),
             modifier = Modifier.fillMaxSize(),
         )
         AnimatedVisibility(
@@ -192,6 +200,17 @@ private fun Content(
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = Grid.d4, bottom = collapsedHeight + Grid.d4),
         ) {
             LocateControl(locateButton = viewState.locateButton, onClick = actions::onLocateClick)
+        }
+        AnimatedVisibility(
+            visible = viewState.showsReminder,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = Grid.d4, end = Grid.d4 + Grid.d14 + REMINDER_GAP, bottom = collapsedHeight + REMINDER_GAP)
+                .fillMaxWidth(),
+        ) {
+            ReminderBubbleSurface(viewState = viewState, actions = actions)
         }
         MapSheet(
             height = viewState.sheetHeight,
@@ -291,6 +310,18 @@ private fun ProfileButton(onClick: () -> Unit) {
                 modifier = Modifier.size(Grid.d6),
             )
         }
+    }
+}
+
+@Composable
+private fun ReminderBubbleSurface(viewState: TripPlanViewState, actions: TripPlanScreen.Actions) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(percent = 50),
+        shadowElevation = Grid.d1,
+        modifier = Modifier.fillMaxWidth().height(Grid.d14),
+    ) {
+        ReminderBubbleContent(viewState = viewState, actions = actions, modifier = Modifier.padding(horizontal = Grid.d4))
     }
 }
 
@@ -494,15 +525,16 @@ private fun RouteLines(lines: ImmutableList<RouteLine>, onClick: (String) -> Uni
                 clickable = true,
                 onClick = { onClick(line.id) },
             )
-            RouteLabelMarker(line = line, outline = casing, onClick = onClick)
+            // A line drawn without a label, as the rating step's, has no marker
+            line.label?.let { label -> RouteLabelMarker(line = line, label = label, outline = casing, onClick = onClick) }
         }
     }
 }
 
 // The label sits above every line, the selected one's above the others'
 @Composable
-private fun RouteLabelMarker(line: RouteLine, outline: Color, onClick: (String) -> Unit) {
-    val text = line.label.localized()
+private fun RouteLabelMarker(line: RouteLine, label: StringDesc, outline: Color, onClick: (String) -> Unit) {
+    val text = label.localized()
     val color = routeColor(line.number)
     MarkerComposable(
         text,

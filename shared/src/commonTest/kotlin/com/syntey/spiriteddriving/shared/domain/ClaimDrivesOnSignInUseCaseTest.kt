@@ -37,6 +37,19 @@ class ClaimDrivesOnSignInUseCaseTest {
     }
 
     @Test
+    fun `a drive marked not driven is not claimed`() = runTest {
+        val claimer = FakeDriveClaimer()
+        val auth = FakePlatformAuth()
+        val useCase = useCase(auth, claimer, drive("a", isRecorded = true), drive("b", isRecorded = true, isNotDriven = true))
+        start(useCase)
+
+        auth.becomeSignedIn()
+        runCurrent()
+
+        assertEquals(listOf(listOf("a")), claimer.claimed)
+    }
+
+    @Test
     fun `nothing is claimed while signed out`() = runTest {
         val claimer = FakeDriveClaimer()
         val useCase = useCase(FakePlatformAuth(), claimer, drive("a", isRecorded = true))
@@ -102,12 +115,13 @@ class ClaimDrivesOnSignInUseCaseTest {
         driveClaimer = claimer,
     )
 
-    private fun drive(id: String, isRecorded: Boolean = false) = Drive(
+    private fun drive(id: String, isRecorded: Boolean = false, isNotDriven: Boolean = false) = Drive(
         id = id,
         routeId = "route-1",
         startedAt = Instant.parse("2026-11-13T10:15:30Z"),
         plannedDuration = 3900.seconds,
         isRecorded = isRecorded,
+        isNotDriven = isNotDriven,
     )
 }
 

@@ -9,6 +9,7 @@ import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.miles
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
@@ -48,6 +49,20 @@ internal object Constants {
     object Drive {
         /** Farther than this from the user, the sheet says how far away the route starts. */
         val START_ELSEWHERE_DISTANCE = 1.kilometres
+    }
+
+    object DriveFeedback {
+        /** How long after the planned arrival the rating step still opens on its own; later, the bubble reminds instead. */
+        val ASKS_UNTIL_AFTER_ARRIVAL = 2.hours
+
+        /** How long after the hand-off the bubble reminds the user. */
+        val REMINDS_FOR = 48.hours
+
+        /**
+         * When the notification asks, as a share of the planned duration after the hand-off: the planned arrival leaves out
+         * stops and the way to a start elsewhere.
+         */
+        const val REMINDER_AFTER_DURATION = 1.2
     }
 
     object Map {

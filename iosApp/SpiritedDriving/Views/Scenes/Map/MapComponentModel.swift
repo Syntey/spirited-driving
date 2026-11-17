@@ -21,6 +21,10 @@ protocol MapComponentModelProtocol: AnyObject {
     var driveDialog: DriveDialog? { get }
     /// Whether the drive dialog's alert is shown. SwiftUI sets it to false when the alert goes away; that dismisses the dialog.
     var isDriveDialogPresented: Bool { get set }
+    var showsReminder: Bool { get }
+    /// The number of the reminded route; null without a reminder.
+    var reminderNumber: Int? { get }
+    var reminderText: String { get }
 
     func sheetViewController() -> UIViewController
     func onLocateClick()
@@ -30,6 +34,8 @@ protocol MapComponentModelProtocol: AnyObject {
     func onRouteClick(_ id: String)
     func onFirstDriveConfirm()
     func onMapsAppStoreClick()
+    func onReminderClick()
+    func onReminderDismiss()
 }
 
 @Observable
@@ -49,6 +55,9 @@ final class MapComponentModel: MapComponentModelProtocol {
     var routeBounds: DomainGeoBounds? { viewState.routeBounds }
     var showsMapButtons: Bool { viewState.showsMapButtons }
     var driveDialog: DriveDialog? { viewState.driveDialog }
+    var showsReminder: Bool { viewState.showsReminder }
+    var reminderNumber: Int? { viewState.reminder.map { Int($0.question.routeNumber) } }
+    var reminderText: String { viewState.reminderText?.localized() ?? "" }
     var isDriveDialogPresented: Bool {
         get { viewState.driveDialog != nil }
         set {
@@ -143,6 +152,14 @@ final class MapComponentModel: MapComponentModelProtocol {
     func onMapsAppStoreClick() {
         screen.actions.onMapsAppStoreClick()
     }
+
+    func onReminderClick() {
+        screen.actions.onReminderClick()
+    }
+
+    func onReminderDismiss() {
+        screen.actions.onReminderDismiss()
+    }
 }
 
 #if DEBUG
@@ -181,6 +198,9 @@ final class MapComponentModelMock: MapComponentModelProtocol {
     var showsMapButtons = true
     var driveDialog: DriveDialog?
     var isDriveDialogPresented = false
+    var showsReminder = true
+    var reminderNumber: Int? = 1
+    var reminderText = "Karlštejn Castle · Yesterday"
 
     func sheetViewController() -> UIViewController {
         UIViewController()
@@ -193,5 +213,7 @@ final class MapComponentModelMock: MapComponentModelProtocol {
     func onRouteClick(_ id: String) {}
     func onFirstDriveConfirm() {}
     func onMapsAppStoreClick() {}
+    func onReminderClick() {}
+    func onReminderDismiss() {}
 }
 #endif

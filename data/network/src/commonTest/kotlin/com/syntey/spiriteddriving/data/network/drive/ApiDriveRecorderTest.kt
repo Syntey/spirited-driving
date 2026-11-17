@@ -97,6 +97,37 @@ class ApiDriveRecorderTest {
         assertFailsWith<OfflineException> { recorder.record(drive()) }
     }
 
+    @Test
+    fun `removing a drive sends DELETE to its ID's path under the API version`() = runTest {
+        val recorder = recorder { respond(content = "", status = HttpStatusCode.NoContent) }
+
+        recorder.remove(DRIVE_ID)
+
+        assertEquals(HttpMethod.Delete, lastRequest?.method)
+        assertEquals(true, lastRequest?.url?.encodedPath?.endsWith("/v1/drives/$DRIVE_ID"), lastRequest?.url.toString())
+    }
+
+    @Test
+    fun `a no content response is a removed drive`() = runTest {
+        val recorder = recorder { respond(content = "", status = HttpStatusCode.NoContent) }
+
+        recorder.remove(DRIVE_ID)
+    }
+
+    @Test
+    fun `a drive of another user counts as removed`() = runTest {
+        val recorder = recorder { respond(content = "", status = HttpStatusCode.Forbidden) }
+
+        recorder.remove(DRIVE_ID)
+    }
+
+    @Test
+    fun `removing without a connection is thrown as offline`() = runTest {
+        val recorder = recorder { throw IOException("Network is unreachable") }
+
+        assertFailsWith<OfflineException> { recorder.remove(DRIVE_ID) }
+    }
+
     private fun drive() = Drive(
         id = DRIVE_ID,
         routeId = ROUTE_ID,
