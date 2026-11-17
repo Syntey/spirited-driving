@@ -19,6 +19,30 @@ internal object Constants {
         const val ID_TOKEN_INVALID = "ID_TOKEN_INVALID"
     }
 
+    object ThumbCode {
+        const val UP = "UP"
+        const val DOWN = "DOWN"
+    }
+
+    object RatingReasonCode {
+        // Positive
+        const val CURVY_ROADS = "CURVY_ROADS"
+        const val NICE_VIEWS = "NICE_VIEWS"
+        const val LITTLE_TRAFFIC = "LITTLE_TRAFFIC"
+        const val SMOOTH_SURFACE = "SMOOTH_SURFACE"
+        const val WORTH_THE_EXTRA_TIME = "WORTH_THE_EXTRA_TIME"
+
+        // Negative
+        const val BORING_ROADS = "BORING_ROADS"
+        const val TOO_MANY_TOWNS = "TOO_MANY_TOWNS"
+        const val TOO_NARROW = "TOO_NARROW"
+        const val ROUGH_SURFACE = "ROUGH_SURFACE"
+        const val HEAVY_TRAFFIC = "HEAVY_TRAFFIC"
+        const val ROADWORKS = "ROADWORKS"
+        const val TOOK_TOO_LONG = "TOOK_TOO_LONG"
+        const val MAPS_APP_WENT_ANOTHER_WAY = "MAPS_APP_WENT_ANOTHER_WAY"
+    }
+
     object RouteKindCode {
         const val FASTEST = "FASTEST"
     }

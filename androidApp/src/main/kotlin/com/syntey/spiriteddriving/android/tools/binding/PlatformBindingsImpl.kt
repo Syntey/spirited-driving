@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.android.tools.binding
 
 import android.content.Context
+import android.content.Intent
 import androidx.activity.ComponentActivity
 import com.syntey.spiriteddriving.core.platform.binding.Platform
 import com.syntey.spiriteddriving.core.platform.binding.PlatformAppCheck
@@ -42,5 +43,10 @@ class PlatformBindingsImpl(private val applicationContext: Context) : PlatformBi
         driveReminders.attach(activity)
         webBrowser.attach(activity)
         auth.attach(activity)
+    }
+
+    /** Passes an activity's launch or new intent on, so a tapped drive feedback notification opens its drive. */
+    fun onIntent(intent: Intent) {
+        driveReminders.onIntent(intent)
     }
 }

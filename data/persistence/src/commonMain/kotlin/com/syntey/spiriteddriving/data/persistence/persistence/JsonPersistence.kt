@@ -90,6 +90,26 @@ internal class JsonPersistence(@Provided private val dataStore: DataStore<Prefer
     }
 
     /**
+     * Removes the persisted object under [key] if it can be read as [T] and [predicate] holds for it, in one edit. An
+     * unreadable object is kept.
+     */
+    suspend inline fun <reified T : Any> deleteIf(
+        key: Preferences.Key<String>,
+        crossinline predicate: (T) -> Boolean,
+    ) {
+        dataStore.edit { preferences ->
+            val jsonString = preferences[key] ?: return@edit
+            val current = try {
+                json.decodeFromString<T>(jsonString)
+            } catch (error: SerializationException) {
+                logger.e(error) { "Unable to deserialize property with key '${key.name}'" }
+                return@edit
+            }
+            if (predicate(current)) preferences.remove(key)
+        }
+    }
+
+    /**
      * Removes persisted object with provided [key].
      */
     suspend fun delete(key: Preferences.Key<String>) = dataStore.edit { preferences -> preferences.remove(key) }

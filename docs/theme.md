@@ -204,7 +204,7 @@ sheets show the system's grabber.
 
 `NoteCard`: a note inside a sheet or screen, with an optional icon, title, action and Close. A hint, such as "Precise
 location is off" on the [Map](features/map/design.md#states), is on `tertiaryContainer` with a tertiary action. A
-failed action the user can retry right there, such as signing in ([Account](features/account/design.md#errors)), is
+failed action the user can retry right there, such as signing in ([Account](features/account/README.md#design)), is
 on `errorContainer`, and screen readers announce it. Corners follow the platform's cards: 22 pt on iOS, 16 dp on
 Android.
 
@@ -258,7 +258,7 @@ One layout for a list or a result with nothing to show, whether it's empty or so
   sheet it fills the space left; on a full screen it sits a little above the middle.
 - It stays neutral. Being offline or a failure on our side isn't the user's mistake, and orange would make it look
   like one. The error colour is for an action the user took that failed, shown next to it, such as signing in
-  ([Account](features/account/design.md#errors)).
+  ([Account](features/account/README.md#design)).
 - One shared Compose component. Each feature passes its icon, title, message and whether Try again shows: see
   [Destination search](features/destination-search/README.md#design),
   [Route planning](features/route-planning/README.md#design), [Saved routes](features/saved-routes/design.md#list)

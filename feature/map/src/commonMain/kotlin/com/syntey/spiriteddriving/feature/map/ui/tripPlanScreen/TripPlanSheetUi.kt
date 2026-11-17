@@ -3,6 +3,7 @@ package com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,8 +46,11 @@ import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.core.ui.tools.EventsEffect
 import com.syntey.spiriteddriving.core.ui.tools.onEvent
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen.Actions.Companion.noOpActions
+import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedRatingStep
 import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedRoutePlanning
 import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
+import com.syntey.spiriteddriving.feature.map.ui.components.RatingStepBody
+import com.syntey.spiriteddriving.feature.map.ui.components.RatingStepHeader
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningBody
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningHeader
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchResults
@@ -59,8 +63,8 @@ import kotlinx.coroutines.launch
 
 /**
  * The content of the map's sheet, shared by both platforms: the Android bottom sheet and the native iOS sheet host it. It
- * fills the sheet. [onCollapsedHeightChange] gets the sheet's collapsed height: that of the notes and the search field, or
- * while planning, that of the collapsed planning layout.
+ * fills the sheet. [onCollapsedHeightChange] gets the sheet's collapsed height: that of the notes and the search field, while
+ * planning that of the collapsed planning layout, and in the rating step that of its header and thumbs.
  */
 @Composable
 fun TripPlanSheetUi(screen: TripPlanScreen, onCollapsedHeightChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
@@ -99,12 +103,17 @@ internal fun Content(
     val isStartStep = viewState.startSearch != null
     val isPlanning = viewState.planning != null
     val currentIsPlanning by rememberUpdatedState(isPlanning)
+    val rating = viewState.ratingStep
+    val isRating = rating != null
     val reportCollapsedHeight by rememberUpdatedState(onCollapsedHeightChange)
     var searchCollapsedHeight by remember { mutableStateOf<Dp?>(null) }
     var planningCollapsedHeight by remember { mutableStateOf<Dp?>(null) }
-    // Each layout keeps its own collapsed height, so starting or cancelling planning moves the sheet to the right one at once
-    LaunchedEffect(isPlanning, searchCollapsedHeight, planningCollapsedHeight) {
-        (if (isPlanning) planningCollapsedHeight else searchCollapsedHeight)?.let(reportCollapsedHeight)
+    var ratingCollapsedHeight by remember { mutableStateOf<Dp?>(null) }
+    // Each layout keeps its own collapsed height, so starting or cancelling planning, or ending the rating step, moves the
+    // sheet to the right one at once. The rating step comes first: it takes the place of the other two.
+    LaunchedEffect(isRating, isPlanning, searchCollapsedHeight, planningCollapsedHeight, ratingCollapsedHeight) {
+        shownCollapsedHeight(isRating, isPlanning, searchCollapsedHeight, planningCollapsedHeight, ratingCollapsedHeight)
+            ?.let(reportCollapsedHeight)
     }
     // The keyboard comes with the full height: dragging the sheet lower or closing the search hides it
     LaunchedEffect(viewState.sheetHeight) {
@@ -120,7 +129,9 @@ internal fun Content(
                     .clearAndSetSemantics {},
             )
         }
-        if (planning != null && viewState.sheetHeight == SheetHeight.Collapsed) {
+        if (rating != null) {
+            RatingLayout(viewState = viewState, actions = actions, onCollapsedHeight = { ratingCollapsedHeight = it })
+        } else if (planning != null && viewState.sheetHeight == SheetHeight.Collapsed) {
             CollapsedRoutePlanning(viewState = viewState, actions = actions)
         } else {
             Column(
@@ -164,6 +175,39 @@ internal fun Content(
                     modifier = Modifier.weight(1f),
                 )
             }
+        }
+    }
+}
+
+// The collapsed height of the layout on screen, which the sheet's collapsed detent follows
+private fun shownCollapsedHeight(isRating: Boolean, isPlanning: Boolean, search: Dp?, planning: Dp?, rating: Dp?): Dp? = when {
+    isRating -> rating
+    isPlanning -> planning
+    else -> search
+}
+
+// The rating step takes the place of the search and planning. Its collapsed layout is measured unplaced first, as planning's
+// is, so the sheet's collapsed height is known before the sheet gets there.
+@Composable
+private fun ColumnScope.RatingLayout(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
+    val style = MapPlatformStyle.current
+    val density = LocalDensity.current
+    CollapsedRatingStep(
+        viewState = viewState,
+        actions = actions,
+        modifier = Modifier
+            .measureOnly { height -> onCollapsedHeight(with(density) { height.toDp() }) }
+            .clearAndSetSemantics {},
+    )
+    if (viewState.sheetHeight == SheetHeight.Collapsed) {
+        CollapsedRatingStep(viewState = viewState, actions = actions)
+    } else {
+        Column(
+            Modifier.fillMaxSize().padding(style.sheetContentPadding),
+            verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
+        ) {
+            RatingStepHeader(viewState = viewState, actions = actions)
+            RatingStepBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
         }
     }
 }

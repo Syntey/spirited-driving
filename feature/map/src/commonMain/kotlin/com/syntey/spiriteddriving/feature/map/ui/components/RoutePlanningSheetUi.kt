@@ -212,6 +212,15 @@ internal fun RoutePlanningActions(viewState: TripPlanViewState, actions: TripPla
                 modifier = Modifier.weight(2f),
             )
         }
+        RouteAttribution()
+    }
+}
+
+/** The data credit under a route's actions: the routing provider on Android, then the route data's attribution. */
+@Composable
+internal fun RouteAttribution(modifier: Modifier = Modifier) {
+    val style = MapPlatformStyle.current
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(style.sheetSpacing)) {
         if (style.showsRoutingProvider) {
             Text(
                 text = stringResource(MR.strings.drive_routing_provider),

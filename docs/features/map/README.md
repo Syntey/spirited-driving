@@ -1,6 +1,6 @@
 # Map
 
-> **Status:** partly built, MVP. Last updated 2026-11-12.
+> **Status:** partly built, MVP. Last updated 2026-11-16.
 
 The primary screen, inspired by Waze: a full-screen map around the user, with the destination search on it.
 
@@ -30,8 +30,8 @@ The primary screen, inspired by Waze: a full-screen map around the user, with th
 
 The screen is `TripPlanComponent` in `:feature:map`. `MapScreenUi` draws it on Android and `MapComponent` on iOS, around
 the sheet's shared content, `TripPlanSheetUi` ([Architecture](../../architecture.md#how-the-map-screen-is-built)). The
-code holds its layout, sizes and copy; these are the decisions behind it. What isn't built yet, the half sheet's content and
-what picking a point leads to, is still in [design.md](design.md).
+code holds its layout, sizes and copy; these are the decisions behind it. What isn't built yet, the half sheet's content, is
+still in [design.md](design.md).
 
 - **The map follows the user** whenever location access is on, so it opens where they are. Panning stops it, and the
   locate button brings it back. The map doesn't turn with the heading.
@@ -67,7 +67,9 @@ what picking a point leads to, is still in [design.md](design.md).
   height is measured with them, so the sheet comes back to the same height.
 - **Choosing a place drops a pin** and moves the map to the streets around it, then opens
   [Route planning](../route-planning/README.md#design). Touching and holding the map drops a pin there too, with a
-  haptic tap, and the camera stays. The profile button does nothing yet; it opens Profile once that's built.
+  haptic tap, and the camera stays, then opens Route planning for that point at once; its name follows from the
+  reverse lookup ([Destination search](../destination-search/README.md#design)). While the start is being chosen, the
+  point becomes the start instead.
 
 ## Account
 

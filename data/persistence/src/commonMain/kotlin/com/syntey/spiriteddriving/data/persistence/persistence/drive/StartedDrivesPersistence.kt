@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.data.persistence.persistence.drive
 
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.syntey.spiriteddriving.core.domain.drive.Drive
+import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.StartedDrives
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import com.syntey.spiriteddriving.data.persistence.tools.Constants
@@ -32,6 +33,26 @@ internal class StartedDrivesPersistence(private val jsonPersistence: JsonPersist
     override suspend fun remove(id: String) {
         jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
             stored.orEmpty().filterNot { it.id == id }
+        }
+    }
+
+    override suspend fun rate(id: String, rating: Rating) {
+        jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
+            stored.orEmpty().map { if (it.id == id) it.copy(rating = rating.toStored(), isRatingSent = false) else it }
+        }
+    }
+
+    override suspend fun markRatingSent(id: String, rating: Rating) {
+        jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
+            stored.orEmpty().map {
+                if (it.id == id && it.rating == rating.toStored()) it.copy(isRatingSent = true) else it
+            }
+        }
+    }
+
+    override suspend fun markNotDriven(id: String) {
+        jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
+            stored.orEmpty().map { if (it.id == id) it.copy(isNotDriven = true) else it }
         }
     }
 

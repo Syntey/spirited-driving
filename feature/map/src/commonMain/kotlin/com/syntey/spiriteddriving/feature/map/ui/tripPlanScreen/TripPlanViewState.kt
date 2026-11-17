@@ -2,6 +2,8 @@ package com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen
 
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
+import com.syntey.spiriteddriving.core.domain.drive.RatingReason
+import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.geo.Length
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
@@ -17,6 +19,9 @@ import com.syntey.spiriteddriving.feature.map.model.ui.DriveDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
+import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
+import com.syntey.spiriteddriving.feature.map.model.ui.ReasonChip
+import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
 import com.syntey.spiriteddriving.feature.map.model.ui.UseBudgetButton
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
 import com.syntey.spiriteddriving.feature.map.model.ui.RecentPlaceRow
@@ -34,9 +39,11 @@ import com.syntey.spiriteddriving.feature.map.tools.distanceChips
 import com.syntey.spiriteddriving.feature.map.tools.distanceText
 import com.syntey.spiriteddriving.feature.map.tools.durationText
 import com.syntey.spiriteddriving.feature.map.tools.heightText
+import com.syntey.spiriteddriving.feature.map.tools.label
 import com.syntey.spiriteddriving.feature.map.tools.matchedRanges
 import com.syntey.spiriteddriving.feature.map.tools.midpointAlong
 import dev.icerock.moko.resources.desc.ResourceFormatted
+import dev.icerock.moko.resources.desc.desc
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlin.math.ceil
 import kotlin.time.Duration.Companion.minutes
@@ -57,6 +64,8 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
  * @property budgetChoice The budget planning starts with, and the last value in each unit.
  * @property driveDialog The dialog about a drive shown over the trip; null when none is.
  * @property isFirstDriveExplained Whether the user went past the first-drive dialog.
+ * @property ratingStep The rating step after a drive; null otherwise. It takes the sheet's place of the search and route planning.
+ * @property reminder The reminder about the drive not rated yet; null when there's none.
  */
 data class TripPlanViewState(
     val locationAccess: LocationAccess? = null,
@@ -70,6 +79,8 @@ data class TripPlanViewState(
     val budgetChoice: BudgetChoice = Constants.Budgets.DEFAULT_CHOICE,
     val driveDialog: DriveDialog? = null,
     val isFirstDriveExplained: Boolean = false,
+    val ratingStep: RatingStep? = null,
+    val reminder: ReminderBubble? = null,
 ) {
     val locateButton: LocateButton get() = LocateButton.of(locationAccess, map.followsUser)
 
@@ -102,16 +113,21 @@ data class TripPlanViewState(
             return noFunRouteMessageFor(planning, plan)
         }
 
-    /** The profile and locate buttons hide while planning, as the planned routes take the map. */
-    val showsMapButtons: Boolean get() = planning == null
+    /** The profile and locate buttons hide while planning, as the planned routes take the map, and during the rating step. */
+    val showsMapButtons: Boolean get() = planning == null && ratingStep == null
 
     /**
      * The area the map frames: all the planned routes' lines once they have points; otherwise, and while planning, the start,
      * or the user's location when known, and the destination. Never smaller than the minimum span, so a single point still shows
-     * its streets. Null without planning.
+     * its streets. During the rating step, the driven line. Null without planning or the rating step.
      */
     val routeBounds: GeoBounds?
         get() {
+            ratingStep?.let { step ->
+                // A stored line may be empty; the drive's ends frame it then
+                val question = step.question
+                return boundsOf(question.line.ifEmpty { listOf(question.start, question.destination.location) }).withMinimumSpan()
+            }
             val planning = planning ?: return null
             val points = if (planning.plan != null) planning.listedRoutes.flatMap { it.line } else emptyList()
             val bounds = if (points.isEmpty()) planningBounds(planning) else boundsOf(points)
@@ -200,10 +216,24 @@ data class TripPlanViewState(
 
     /**
      * The routes' lines as the map draws them, each with its label; empty without a plan. The selected line is last, so it
-     * draws on top of the others.
+     * draws on top of the others. The rating step's drive is its one line, without a label.
      */
     val routeLines: ImmutableList<RouteLine>
         get() {
+            ratingStep?.let { step ->
+                val question = step.question
+                if (question.line.isEmpty()) return persistentListOf()
+                return persistentListOf(
+                    RouteLine(
+                        id = question.driveId,
+                        number = question.routeNumber,
+                        points = question.line.toImmutableList(),
+                        label = null,
+                        labelPoint = midpointAlong(question.line),
+                        isSelected = true,
+                    ),
+                )
+            }
             val planning = planning ?: return persistentListOf()
             return planning.listedRoutes.mapIndexedNotNull { index, route ->
                 // A line without points has nothing to draw, and no midpoint
@@ -228,6 +258,64 @@ data class TripPlanViewState(
                     isSelected = route.id == planning.selectedRouteId,
                 )
             }.sortedBy { it.isSelected }.toImmutableList()
+        }
+
+    /** The offer of the drive reminder above Done in the rating step; false without the step. */
+    val showsReminderOffer: Boolean
+        get() = ratingStep?.showsReminderOffer == true
+
+    /** The reminder shows on the search step with the sheet collapsed, and never over the rating step or planning. */
+    val showsReminder: Boolean
+        get() = reminder != null &&
+            ratingStep == null &&
+            planning == null &&
+            startSearch == null &&
+            sheetHeight == SheetHeight.Collapsed
+
+    /** The reminder's second line: the destination's name, or the point on the map, and the day; null without a reminder. */
+    val reminderText: StringDesc?
+        get() {
+            val reminder = reminder ?: return null
+            val name = reminder.question.destination.name
+                ?: MR.strings.search_point_on_map.desc()
+            return StringDesc.ResourceFormatted(MR.strings.drive_feedback_reminder_text, name, reminder.day)
+        }
+
+    /** The rating step's title: the question about the destination; null without the step. */
+    val ratingTitle: StringDesc?
+        get() {
+            val question = ratingStep?.question ?: return null
+            val name = question.destination.name ?: return MR.strings.drive_feedback_question_unnamed.desc()
+            return StringDesc.ResourceFormatted(MR.strings.drive_feedback_question, name)
+        }
+
+    /** The drive's time, planned duration and distance under the title; null without the rating step. */
+    val ratingDriveText: StringDesc?
+        get() {
+            val step = ratingStep ?: return null
+            return StringDesc.ResourceFormatted(
+                MR.strings.drive_feedback_drive,
+                step.driveTime,
+                durationText(step.question.duration),
+                distanceText(step.question.distance, distanceUnit, isApproximate = false),
+            )
+        }
+
+    /** The thanks for the picked thumb; null before a thumb is picked. */
+    val ratingThanks: StringDesc?
+        get() = when (ratingStep?.rating?.thumb) {
+            null -> null
+            Thumb.Up -> MR.strings.drive_feedback_thanks_good.desc()
+            Thumb.Down -> MR.strings.drive_feedback_thanks_not_good.desc()
+        }
+
+    /** The reason chips of the picked thumb, in order; empty before a thumb is picked. */
+    val reasonChips: ImmutableList<ReasonChip>
+        get() {
+            val rating = ratingStep?.rating ?: return persistentListOf()
+            return RatingReason.of(rating.thumb).map { reason ->
+                ReasonChip(reason = reason, label = reason.label(), isSelected = reason in rating.reasons)
+            }.toImmutableList()
         }
 
     private fun planningBounds(planning: RoutePlanningState): GeoBounds {

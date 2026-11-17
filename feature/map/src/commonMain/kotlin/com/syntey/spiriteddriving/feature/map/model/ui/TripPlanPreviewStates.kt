@@ -1,6 +1,8 @@
 package com.syntey.spiriteddriving.feature.map.model.ui
 
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
+import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
+import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.kilometres
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.miles
@@ -11,10 +13,13 @@ import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
+import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanUiEvent
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
+import dev.icerock.moko.resources.desc.desc
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Instant
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -227,6 +232,50 @@ internal object TripPlanPreviewStates {
                 funRoute.copy(id = "route-fun-2", funLevel = 4, extraDuration = 33.minutes),
                 funRoute.copy(id = "route-fun-3", funLevel = 3, extraDuration = 41.minutes),
             ),
+        )
+    }
+
+    /** The rating step after a drive to Karlštejn Castle along the first fun route, with [rating] picked so far. */
+    fun ratingViewState(rating: Rating? = null, showsReminderOffer: Boolean = false): TripPlanViewState {
+        val route = FakeRoutePlanner.Recorded.funRoutes.first()
+        val question = DriveQuestion(
+            driveId = "preview",
+            startedAt = Instant.parse("2026-11-16T13:20:00Z"),
+            routeNumber = 1,
+            start = route.start.location,
+            destination = route.destination,
+            duration = route.duration,
+            distance = route.distance,
+            line = route.line,
+            attribution = route.attribution,
+        )
+        return viewState().copy(
+            sheetHeight = SheetHeight.Half,
+            ratingStep = RatingStep(
+                question = question,
+                driveTime = "Today, 14:20".desc(),
+                rating = rating,
+                showsReminderOffer = showsReminderOffer,
+            ),
+        )
+    }
+
+    /** The reminder over the collapsed search, for a named destination or an unnamed one, which reads as a point on the map. */
+    fun reminderViewState(destinationName: String? = "Karlštejn Castle"): TripPlanViewState {
+        val route = FakeRoutePlanner.Recorded.funRoutes.first()
+        val question = DriveQuestion(
+            driveId = "preview",
+            startedAt = Instant.parse("2026-11-15T13:20:00Z"),
+            routeNumber = 1,
+            start = route.start.location,
+            destination = route.destination.copy(name = destinationName),
+            duration = route.duration,
+            distance = route.distance,
+            line = route.line,
+            attribution = route.attribution,
+        )
+        return viewState().copy(
+            reminder = ReminderBubble(question = question, day = MR.strings.drive_feedback_yesterday_day.desc()),
         )
     }
 

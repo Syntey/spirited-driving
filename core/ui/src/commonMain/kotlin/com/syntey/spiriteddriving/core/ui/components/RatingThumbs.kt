@@ -22,12 +22,9 @@ import com.syntey.spiriteddriving.core.ui.preview.previewIcon
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 
-/** A rating of a route: thumbs up or down. */
-enum class Thumb { Up, Down }
-
-/** One of the two buttons of [RatingThumbs]: its label, and its icon unpicked and picked. */
+/** One of the two buttons of [RatingThumbs]: its label, its icon unpicked and picked, whether it's picked, and its tap. */
 @Immutable
-data class ThumbContent(val label: String, val icon: Painter, val pickedIcon: Painter)
+data class ThumbContent(val label: String, val icon: Painter, val pickedIcon: Painter, val picked: Boolean, val onClick: () -> Unit)
 
 /**
  * Good and Not good, two equal buttons side by side. The picked one is amber with its picked icon. Screen readers hear
@@ -35,8 +32,6 @@ data class ThumbContent(val label: String, val icon: Painter, val pickedIcon: Pa
  */
 @Composable
 fun RatingThumbs(
-    picked: Thumb?,
-    onPick: (Thumb) -> Unit,
     groupLabel: String,
     good: ThumbContent,
     notGood: ThumbContent,
@@ -50,17 +45,17 @@ fun RatingThumbs(
             .semantics { contentDescription = groupLabel },
         horizontalArrangement = Arrangement.spacedBy(Grid.d3),
     ) {
-        ThumbButton(thumb = Thumb.Up, thumbContent = good, picked = picked, onPick = onPick)
-        ThumbButton(thumb = Thumb.Down, thumbContent = notGood, picked = picked, onPick = onPick)
+        ThumbButton(good)
+        ThumbButton(notGood)
     }
 }
 
 @Composable
-private fun RowScope.ThumbButton(thumb: Thumb, thumbContent: ThumbContent, picked: Thumb?, onPick: (Thumb) -> Unit) {
-    val isPicked = picked == thumb
+private fun RowScope.ThumbButton(thumbContent: ThumbContent) {
+    val isPicked = thumbContent.picked
     AppButton(
         text = thumbContent.label,
-        onClick = { onPick(thumb) },
+        onClick = thumbContent.onClick,
         modifier = Modifier
             .weight(1f)
             .fillMaxHeight()
@@ -81,10 +76,10 @@ private fun RatingThumbsIosPreview() = Showcase(platform = UiPlatform.Ios) { Rat
 
 @Composable
 private fun RatingThumbsExamples() {
-    val good = ThumbContent(label = "Good", icon = previewIcon(), pickedIcon = previewIcon())
-    val notGood = ThumbContent(label = "Not good", icon = previewIcon(), pickedIcon = previewIcon())
+    val good = ThumbContent(label = "Good", icon = previewIcon(), pickedIcon = previewIcon(), picked = false, onClick = {})
+    val notGood = ThumbContent(label = "Not good", icon = previewIcon(), pickedIcon = previewIcon(), picked = false, onClick = {})
     Column(Modifier.padding(Grid.d4), verticalArrangement = Arrangement.spacedBy(Grid.d3)) {
-        RatingThumbs(picked = null, onPick = {}, groupLabel = "Rate the route", good = good, notGood = notGood)
-        RatingThumbs(picked = Thumb.Up, onPick = {}, groupLabel = "Rate the route", good = good, notGood = notGood)
+        RatingThumbs(groupLabel = "Rate the route", good = good, notGood = notGood)
+        RatingThumbs(groupLabel = "Rate the route", good = good.copy(picked = true), notGood = notGood)
     }
 }

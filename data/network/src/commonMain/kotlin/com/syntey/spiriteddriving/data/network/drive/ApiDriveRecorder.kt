@@ -23,6 +23,14 @@ internal class ApiDriveRecorder(private val api: SpiritedDrivingApi) : DriveReco
         result.getOrThrowDomainError()
     }
 
+    override suspend fun remove(id: String) {
+        val result = api.deleteDrive(driveId = id)
+        // A drive that isn't this user's is not theirs to remove, so there's nothing left for them to remove either
+        val error = (result as? NetworkResult.Failure)?.error
+        if (error is NetworkError.HttpError && error.statusCode == HttpStatusCode.Forbidden.value) return
+        result.getOrThrowDomainError()
+    }
+
     private companion object {
         val NOT_RECORDABLE_STATUSES = setOf(HttpStatusCode.NotFound.value, HttpStatusCode.Conflict.value)
     }

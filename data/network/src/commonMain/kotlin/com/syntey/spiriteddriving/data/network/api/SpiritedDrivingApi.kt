@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.data.network.api
 
 import com.syntey.spiriteddriving.data.network.dto.coverage.CoverageDto
 import com.syntey.spiriteddriving.data.network.dto.drive.ClaimDrivesRequestDto
+import com.syntey.spiriteddriving.data.network.dto.drive.RatingInputDto
 import com.syntey.spiriteddriving.data.network.dto.drive.RecordDriveRequestDto
 import com.syntey.spiriteddriving.data.network.dto.feedback.FeedbackRequestDto
 import com.syntey.spiriteddriving.data.network.dto.place.PlaceSearchResultDto
@@ -60,6 +61,19 @@ internal interface SpiritedDrivingApi {
     suspend fun recordDrive(
         @Path("driveId") driveId: String,
         @Body request: RecordDriveRequestDto,
+    ): NetworkResult<Unit>
+
+    /** `DELETE /drives/{driveId}` (`deleteDrive`). */
+    @DELETE("drives/{driveId}")
+    suspend fun deleteDrive(
+        @Path("driveId") driveId: String,
+    ): NetworkResult<Unit>
+
+    /** `PUT /drives/{driveId}/rating` (`rateDrive`). */
+    @PUT("drives/{driveId}/rating")
+    suspend fun rateDrive(
+        @Path("driveId") driveId: String,
+        @Body request: RatingInputDto,
     ): NetworkResult<Unit>
 
     /** `DELETE /me` (`deleteAccount`). */

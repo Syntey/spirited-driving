@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.feature.profile.domain
 
 import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
+import com.syntey.spiriteddriving.core.platform.binding.DriveReminderOpenListener
 import com.syntey.spiriteddriving.core.platform.binding.DriveRemindersListener
 import com.syntey.spiriteddriving.core.platform.binding.PlatformDriveReminders
 import kotlinx.coroutines.test.runTest
@@ -25,5 +26,9 @@ class OpenDriveReminderSettingsUseCaseTest {
         override fun openSettings() {
             settingsOpened = true
         }
+        override fun schedule(driveId: String, destinationName: String?, atEpochMillis: Long) = Unit
+        override fun cancel(driveId: String) = Unit
+        override fun setOpenListener(listener: DriveReminderOpenListener?) = Unit
+        override fun canOffer(listener: DriveRemindersListener) = Unit
     }
 }

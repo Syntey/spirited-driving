@@ -3,7 +3,7 @@
 > **Status:** draft, being iterated. Last updated 2026-11-14.
 >
 > The design for [Trip history](README.md): the list, rating a past drive, deleting and clearing, and a past drive
-> on the map. Uses the [Theme](../../theme.md); the list opens from [Profile](../account/design.md#profile)
+> on the map. Uses the [Theme](../../theme.md); the list opens from [Profile](../account/README.md#design)
 > ([Navigation](../../navigation.md#profile)). It looks and works like [Saved routes](../saved-routes/design.md).
 
 ## List
@@ -39,7 +39,7 @@ The thumb isn't a button: a rating can't be changed from the list.
 ### Rating sheet
 
 **Rate** opens a sheet over the list with the content of Drive feedback's
-[rating step](../drive-feedback/design.md#rating-step), so the user stays in the list and can rate several drives
+rating step ([Drive feedback](../drive-feedback/README.md#design), `RatingStepSheetUi`), so the user stays in the list and can rate several drives
 in a row:
 
 1. **Header:** "How was the route to Křivoklát Castle?" and a close button. Below it, "Yesterday, 16:40 · 1 h 20 ·
@@ -50,7 +50,7 @@ in a row:
 - Behaves like the rating step: tapping a thumb saves the rating at once, the other thumb switches it, and the
   reasons picked are kept however the sheet closes.
 - Left out: "I didn't drive it", since Delete does that here; the attribution, since no route is shown; the
-  [reminder offer](../drive-feedback/design.md#reminder-offer-android), which belongs after a drive.
+  reminder offer ([Drive feedback](../drive-feedback/README.md#design)), which belongs after a drive.
 - Done, the close button, swiping down and Back (Android) close the sheet. With a thumb picked, the row shows it in
   place of Rate. Without one, nothing changes.
 - Rating here ends the drive's question everywhere: the rating step, the reminder bubble and the notification
@@ -83,7 +83,7 @@ Close and Back (Android) go to the search step.
 - **Delete** in the menu, or swiping left, removes the drive at once and shows "Drive deleted" with **Undo** for
   5 seconds. Undo puts it back in its place. No confirmation, as in Saved routes.
 - When Undo is gone, the drive and its rating are deleted for good.
-- Deleting the drive that [Drive feedback](../drive-feedback/design.md) is still asking about also removes the
+- Deleting the drive that [Drive feedback](../drive-feedback/README.md) is still asking about also removes the
   reminder bubble and the notification.
 
 ## Clear
@@ -126,7 +126,7 @@ Close and Back (Android) go to the search step.
 - **Built with:** shared Compose, styled per platform as above; the rows, the menu, swiping and the rating content
   are the same Compose code on both. On iOS only the navigation bar and its menu, the rating sheet's container and
   the alert are native ([Architecture](../../architecture.md#shared-and-native-ui)).
-- **Colours:** as in [Account](../account/design.md#platforms): the iOS sheet on `surfaceContainerLow`, cells on
+- **Colours:** as in [Account](../account/README.md#design): the iOS sheet on `surfaceContainerLow`, cells on
   `surfaceContainerLowest` in light and `surfaceContainerHigh` in dark. Delete is in the error colour in the menu.
 - **Screen readers** hear a row as one item, "Karlštejn Castle, Thursday 5 November, from Smíchov, 58 km, rated
   Good", the Rate button as "Rate the drive to Křivoklát Castle", and the more button as "More for Karlštejn
@@ -152,7 +152,7 @@ Close and Back (Android) go to the search step.
 | Offline, saving        | You're offline. Saving needs a connection.                           |
 | Offline, nothing yet   | You're offline / Trip history needs a connection. / Try again        |
 
-The rating sheet's thumbs, reasons and Done use Drive feedback's [copy](../drive-feedback/design.md#copy).
+The rating sheet's thumbs, reasons and Done use the rating step's strings (`drive_feedback_*`, `rating_*`, `reason_*`).
 
 ## Open questions
 

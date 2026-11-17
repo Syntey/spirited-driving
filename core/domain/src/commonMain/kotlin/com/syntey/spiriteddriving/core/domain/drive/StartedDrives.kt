@@ -15,4 +15,13 @@ interface StartedDrives {
     suspend fun markRecorded(id: String)
 
     suspend fun remove(id: String)
+
+    /** Sets the drive's rating, not yet sent. */
+    suspend fun rate(id: String, rating: Rating)
+
+    /** Marks [rating] as sent, unless the drive's rating changed meanwhile. */
+    suspend fun markRatingSent(id: String, rating: Rating)
+
+    /** Marks the drive as not driven, to be removed from the backend. */
+    suspend fun markNotDriven(id: String)
 }

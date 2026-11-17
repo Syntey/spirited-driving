@@ -1,5 +1,7 @@
 package com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen
 
+import com.syntey.spiriteddriving.core.domain.drive.RatingReason
+import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
@@ -100,6 +102,30 @@ interface TripPlanScreen {
         /** Tapped Get Apple Maps or Open Play Store in the maps-app-missing dialog. */
         fun onMapsAppStoreClick()
 
+        /** Tapped Good or Not good in the rating step. */
+        fun onRatingThumbClick(thumb: Thumb)
+
+        /** Tapped a reason chip in the rating step. */
+        fun onRatingReasonClick(reason: RatingReason)
+
+        /** Tapped Done in the rating step. */
+        fun onRatingDone()
+
+        /** Closed the rating step: its close button, or Back on Android. */
+        fun onRatingClose()
+
+        /** Tapped I didn't drive it. */
+        fun onNotDrivenClick()
+
+        /** Tapped the reminder bubble. */
+        fun onReminderClick()
+
+        /** Dismissed the reminder bubble. */
+        fun onReminderDismiss()
+
+        /** Tapped Turn on in the reminder offer. */
+        fun onReminderOfferClick()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onSearchFocus() = Unit
@@ -128,6 +154,14 @@ interface TripPlanScreen {
                 override fun onFirstDriveConfirm() = Unit
                 override fun onDriveDialogDismiss() = Unit
                 override fun onMapsAppStoreClick() = Unit
+                override fun onRatingThumbClick(thumb: Thumb) = Unit
+                override fun onRatingReasonClick(reason: RatingReason) = Unit
+                override fun onRatingDone() = Unit
+                override fun onRatingClose() = Unit
+                override fun onNotDrivenClick() = Unit
+                override fun onReminderClick() = Unit
+                override fun onReminderDismiss() = Unit
+                override fun onReminderOfferClick() = Unit
             }
         }
     }

@@ -10,6 +10,9 @@ import kotlin.time.Instant
  * @property startedAt When the route was handed off, by the phone's clock.
  * @property plannedDuration The route's duration, from which the app tells when the drive is likely over.
  * @property isRecorded Whether the backend has the drive.
+ * @property rating The user's rating; null while not rated.
+ * @property isRatingSent Whether the backend has [rating] as it is now.
+ * @property isNotDriven The user said they didn't drive it; it's kept until the backend has removed it.
  */
 data class Drive(
     val id: String,
@@ -17,4 +20,7 @@ data class Drive(
     val startedAt: Instant,
     val plannedDuration: Duration,
     val isRecorded: Boolean = false,
+    val rating: Rating? = null,
+    val isRatingSent: Boolean = false,
+    val isNotDriven: Boolean = false,
 )

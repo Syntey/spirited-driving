@@ -14,6 +14,7 @@ composeMultiplatformMaterial3 = "1.9.0"
 jetbrainsLifecycle = "2.11.0"
 androidxActivity = "1.13.0"
 androidxBrowser = "1.10.0"
+androidxWork = "2.12.0"
 decompose = "3.6.1"
 # Must be compatible with: `composeMultiplatform`
 haze = "2.1.0"
@@ -112,6 +113,7 @@ androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 androidx-lifecycle-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidxLifecycle" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidxBrowser" }
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "androidxWork" }
 # Decompose
 decompose = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
 decompose-compose-ext = { module = "com.arkivanov.decompose:extensions-compose", version.ref = "decompose" }

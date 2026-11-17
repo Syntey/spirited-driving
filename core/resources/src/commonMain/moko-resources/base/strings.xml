@@ -221,4 +221,43 @@
     <string name="feedback_done">Done</string>
     <string name="feedback_offline">You\'re offline. Send it again once you\'re back online.</string>
     <string name="feedback_failed">Couldn\'t send your feedback. Try again.</string>
+
+    <!-- Drive feedback -->
+    <string name="drive_feedback_question">How was the route to %1$s?</string>
+    <string name="drive_feedback_question_unnamed">How was the route?</string>
+    <string name="drive_feedback_notification_body">Rate it to help find better roads.</string>
+    <string name="drive_feedback_today">Today, %1$s</string>
+    <string name="drive_feedback_yesterday">Yesterday, %1$s</string>
+    <string name="drive_feedback_weekday">%1$s, %2$s</string>
+    <string name="drive_feedback_today_day">Today</string>
+    <string name="drive_feedback_yesterday_day">Yesterday</string>
+    <string name="drive_feedback_reminder_text">%1$s · %2$s</string>
+    <string name="weekday_monday">Monday</string>
+    <string name="weekday_tuesday">Tuesday</string>
+    <string name="weekday_wednesday">Wednesday</string>
+    <string name="weekday_thursday">Thursday</string>
+    <string name="weekday_friday">Friday</string>
+    <string name="weekday_saturday">Saturday</string>
+    <string name="weekday_sunday">Sunday</string>
+    <string name="drive_feedback_drive">%1$s · %2$s · %3$s</string>
+    <string name="drive_feedback_not_driven">I didn\'t drive it</string>
+    <string name="drive_feedback_thanks_good">Thanks! What stood out?</string>
+    <string name="drive_feedback_thanks_not_good">Thanks. What didn\'t work?</string>
+    <string name="drive_feedback_done">Done</string>
+    <string name="drive_feedback_offer_title">Get a reminder after each drive</string>
+    <string name="drive_feedback_offer_text">A quiet notification, no sound</string>
+    <string name="drive_feedback_offer_action">Turn on</string>
+    <string name="reason_curvy_roads">Curvy roads</string>
+    <string name="reason_nice_views">Nice views</string>
+    <string name="reason_little_traffic">Little traffic</string>
+    <string name="reason_smooth_surface">Smooth surface</string>
+    <string name="reason_worth_the_extra_time">Worth the extra time</string>
+    <string name="reason_boring_roads">Boring roads</string>
+    <string name="reason_too_many_towns">Too many towns</string>
+    <string name="reason_too_narrow">Too narrow</string>
+    <string name="reason_rough_surface">Rough surface</string>
+    <string name="reason_heavy_traffic">Heavy traffic</string>
+    <string name="reason_roadworks">Roadworks</string>
+    <string name="reason_took_too_long">Took too long</string>
+    <string name="reason_maps_app_went_another_way">Maps app went another way</string>
 </resources>

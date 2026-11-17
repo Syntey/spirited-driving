@@ -5,6 +5,10 @@ import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnStart
+import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
+import com.syntey.spiriteddriving.core.domain.drive.Rating
+import com.syntey.spiriteddriving.core.domain.drive.RatingReason
+import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
@@ -36,19 +40,29 @@ import com.syntey.spiriteddriving.feature.map.domain.ObserveVignettesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenMapsAppStoreUseCase
 import com.syntey.spiriteddriving.feature.map.domain.PlanTripUseCase
-import com.syntey.spiriteddriving.feature.map.domain.RecordPendingDrivesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RemoveRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SaveBudgetChoiceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SendPendingDrivesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase.SearchUpdate
 import com.syntey.spiriteddriving.feature.map.domain.StartDriveUseCase
+import com.syntey.spiriteddriving.feature.map.domain.DrivePrompt
+import com.syntey.spiriteddriving.feature.map.domain.GetDriveQuestionUseCase
+import com.syntey.spiriteddriving.feature.map.domain.MarkNotDrivenUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveOpenedReminderUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ShouldOfferReminderUseCase
+import com.syntey.spiriteddriving.feature.map.domain.TurnOnRemindersUseCase
+import com.syntey.spiriteddriving.feature.map.domain.RateDriveUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SkipDriveQuestionUseCase
 import com.syntey.spiriteddriving.feature.map.domain.unnamedPlace
 import com.syntey.spiriteddriving.feature.map.model.ui.DriveDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
+import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
+import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchStatus
@@ -56,11 +70,14 @@ import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
 import com.syntey.spiriteddriving.feature.map.tools.Constants
+import com.syntey.spiriteddriving.feature.map.tools.driveDayText
+import com.syntey.spiriteddriving.feature.map.tools.driveTimeText
 import com.syntey.spiriteddriving.feature.map.tools.inUnit
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.datetime.TimeZone
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
 import kotlin.time.Clock
@@ -68,7 +85,7 @@ import kotlin.time.Clock
 @Factory
 @GenerateFactory
 // Each action of the sheet and each read on start is a function here, for both the search and route planning
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LargeClass")
 internal class TripPlanComponent(
     @InjectedParam componentContext: AppComponentContext,
     @InjectedParam override val navigation: TripPlanScreenNavigation,
@@ -92,8 +109,15 @@ internal class TripPlanComponent(
     private val saveBudgetChoiceUseCase: SaveBudgetChoiceUseCase,
     private val handOffUseCase: HandOffUseCase,
     private val startDriveUseCase: StartDriveUseCase,
-    private val recordPendingDrivesUseCase: RecordPendingDrivesUseCase,
+    private val sendPendingDrivesUseCase: SendPendingDrivesUseCase,
     private val openMapsAppStoreUseCase: OpenMapsAppStoreUseCase,
+    private val getDriveQuestionUseCase: GetDriveQuestionUseCase,
+    private val rateDriveUseCase: RateDriveUseCase,
+    private val skipDriveQuestionUseCase: SkipDriveQuestionUseCase,
+    private val markNotDrivenUseCase: MarkNotDrivenUseCase,
+    private val observeOpenedReminderUseCase: ObserveOpenedReminderUseCase,
+    private val shouldOfferReminderUseCase: ShouldOfferReminderUseCase,
+    private val turnOnRemindersUseCase: TurnOnRemindersUseCase,
 ) : ScreenComponent<TripPlanViewState, TripPlanUiEvent, TripPlanScreenNavigation>(
     componentContext = componentContext,
     defaultState = TripPlanViewState(),
@@ -107,10 +131,13 @@ internal class TripPlanComponent(
     override val viewState: StateFlow<TripPlanViewState> = componentState
     override val actions: TripPlanScreen.Actions = this
 
-    // Back closes the innermost step first: the start step, then route planning, then the search while the sheet is pulled up
+    // Back closes the innermost step first: the rating step, then the start step, then route planning,
+    // then the search while the sheet is pulled up
     private val backCallback = BackCallback(isEnabled = false) {
         val state = componentState.value
-        if (state.startSearch != null) {
+        if (state.ratingStep != null) {
+            closeRatingStep()
+        } else if (state.startSearch != null) {
             closeStartSearch()
         } else if (state.planning != null) {
             onRoutePlanningClose()
@@ -121,8 +148,12 @@ internal class TripPlanComponent(
 
     init {
         backHandler.register(backCallback)
-        // On every start, so access turned on in the system settings shows when the user comes back
-        doOnStart(isOneTime = false) { readLocationAccess() }
+        // On every start, so access turned on in the system settings shows when the user comes back, and so coming back from
+        // the maps app asks about the drive
+        doOnStart(isOneTime = false) {
+            readLocationAccess()
+            askAboutDrive()
+        }
         loadCoverage()
         readPreciseLocationNote()
         observeDistanceUnit()
@@ -130,7 +161,8 @@ internal class TripPlanComponent(
         readRecentPlaces()
         readBudgetChoice()
         readFirstDriveNote()
-        recordPendingDrives()
+        sendPendingDrives()
+        observeOpenedReminder()
     }
 
     // Observed, so a unit picked in Settings applies while the map is under the Profile sheet
@@ -338,7 +370,12 @@ internal class TripPlanComponent(
     override fun onMapPanned() = componentState.update { it.copy(map = it.map.copy(followsUser = false)) }
 
     // The pin drops at once; the name comes later and only reaches the recent places, and the planning header
+    // The rating step is about the drive just made, not a new trip, so a long press doesn't start one
     override fun onMapLongPress(point: GeoPoint) {
+        if (componentState.value.ratingStep == null) pressMap(point)
+    }
+
+    private fun pressMap(point: GeoPoint) {
         if (!componentState.value.map.covers(point)) {
             sendUiEvent(TripPlanUiEvent.NotCovered)
             return
@@ -454,11 +491,174 @@ internal class TripPlanComponent(
         }
     }
 
+    override fun onRatingThumbClick(thumb: Thumb) = pickThumb(thumb)
+
+    override fun onRatingReasonClick(reason: RatingReason) = toggleReason(reason)
+
+    override fun onRatingDone() = closeRatingStep()
+
+    override fun onRatingClose() = closeRatingStep()
+
+    override fun onNotDrivenClick() = markNotDriven()
+
+    override fun onReminderClick() = openReminder()
+
+    override fun onReminderDismiss() = dismissReminder()
+
+    override fun onReminderOfferClick() = turnOnReminders()
+
+    private fun askAboutDrive() {
+        if (componentState.value.ratingStep != null) return
+        getDriveQuestionUseCase.execute(Clock.System.now()) {
+            onSuccess { prompt -> if (prompt != null) showDrivePrompt(prompt) }
+            onError { error -> logger.e(error) { "Drive question not read" } }
+        }
+    }
+
+    private fun showDrivePrompt(prompt: DrivePrompt) {
+        val planning = componentState.value.planning
+        // A trip planned after the hand-off isn't thrown away
+        val canReplacePlanning = planning == null || planning.isHandedOff
+        if (prompt.kind == DrivePrompt.Kind.RatingStep && canReplacePlanning) {
+            openRatingStep(prompt.question)
+        } else {
+            // A rating step that can't take the planning's place waits as the reminder, so the question isn't lost while
+            // the user plans another trip
+            showReminder(prompt.question)
+        }
+    }
+
+    private fun showReminder(question: DriveQuestion) {
+        val day = driveDayText(question.startedAt, Clock.System.now(), TimeZone.currentSystemDefault())
+        componentState.update { it.copy(reminder = ReminderBubble(question = question, day = day)) }
+    }
+
+    private fun openReminder() {
+        val reminder = componentState.value.reminder ?: return
+        openRatingStep(reminder.question)
+    }
+
+    // Dismissing is for good: the question is skipped, so the drive isn't asked about again
+    private fun dismissReminder() {
+        val reminder = componentState.value.reminder ?: return
+        componentState.update { it.copy(reminder = null) }
+        skipDriveQuestion(reminder.question.driveId)
+    }
+
+    // The step takes the place of the search and of any planning, and the map shows the drive's ends
+    private fun openRatingStep(question: DriveQuestion) {
+        useCaseJobPool[planTripUseCase]?.cancel()
+        val now = Clock.System.now()
+        componentState.update {
+            it.copy(
+                planning = null,
+                startSearch = null,
+                reminder = null,
+                ratingStep = RatingStep(
+                    question = question,
+                    driveTime = driveTimeText(question.startedAt, now, TimeZone.currentSystemDefault()),
+                ),
+                map = it.map.copy(destination = question.destination.location, start = question.start),
+            )
+        }
+        setSheetHeight(SheetHeight.Half)
+    }
+
+    // Tapping the thumb already picked changes nothing and sends nothing
+    private fun pickThumb(thumb: Thumb) {
+        val step = componentState.value.ratingStep ?: return
+        if (step.rating?.thumb == thumb) return
+        updateRating(Rating(thumb))
+        // The reasons come below the thumbs, so a collapsed sheet opens to show them
+        if (componentState.value.sheetHeight == SheetHeight.Collapsed) setSheetHeight(SheetHeight.Half)
+        sendRating()
+        if (step.rating == null) offerReminder()
+    }
+
+    // Asked after the first thumb only: the offer is for the user who has just rated a drive
+    private fun offerReminder() = shouldOfferReminderUseCase.execute {
+        onSuccess { shouldOffer -> if (shouldOffer) showReminderOffer() }
+        onError { error -> logger.e(error) { "Reminder offer not read" } }
+    }
+
+    private fun showReminderOffer() = componentState.update {
+        it.copy(ratingStep = it.ratingStep?.copy(showsReminderOffer = true))
+    }
+
+    // Hidden at once, so the offer doesn't wait for the settings to open
+    private fun turnOnReminders() {
+        componentState.update { it.copy(ratingStep = it.ratingStep?.copy(showsReminderOffer = false)) }
+        turnOnRemindersUseCase.execute {
+            onError { error -> logger.e(error) { "Reminders not turned on" } }
+        }
+    }
+
+    // A tap on a drive's notification opens its rating step, even over planning, as the user asked for it; the step that
+    // already shows that drive stays as it is
+    private fun observeOpenedReminder() = observeOpenedReminderUseCase.execute {
+        onNext { question ->
+            if (componentState.value.ratingStep?.question?.driveId != question.driveId) openRatingStep(question)
+        }
+        onError { error -> logger.e(error) { "Opened reminder not observed" } }
+    }
+
+    // Only the reasons of the picked thumb can be picked
+    private fun toggleReason(reason: RatingReason) {
+        val rating = componentState.value.ratingStep?.rating ?: return
+        if (reason.thumb != rating.thumb) return
+        val reasons = if (reason in rating.reasons) rating.reasons - reason else rating.reasons + reason
+        updateRating(Rating(rating.thumb, reasons))
+        sendRating()
+    }
+
+    private fun updateRating(rating: Rating) = componentState.update { it.copy(ratingStep = it.ratingStep?.copy(rating = rating)) }
+
+    // Each send cancels the one before, as a repeated execute does, so the latest rating is the one kept
+    private fun sendRating() {
+        val step = componentState.value.ratingStep ?: return
+        val rating = step.rating ?: return
+        rateDriveUseCase.execute(RateDriveUseCase.Args(driveId = step.question.driveId, rating = rating)) {
+            // Offline, the rating is sent later, so it isn't logged
+            onError { error -> if (error !is OfflineException) logger.e(error) { "Rating not sent" } }
+        }
+    }
+
+    // A step closed without a thumb drops the drive's question, so it isn't asked about again
+    private fun closeRatingStep() {
+        val step = componentState.value.ratingStep ?: return
+        if (step.rating == null) skipDriveQuestion(step.question.driveId)
+        hideRatingStep()
+    }
+
+    private fun skipDriveQuestion(driveId: String) = skipDriveQuestionUseCase.execute(driveId) {
+        onError { error -> logger.e(error) { "Drive question not skipped" } }
+    }
+
+    private fun hideRatingStep() {
+        componentState.update { it.copy(ratingStep = null, map = it.map.copy(destination = null, start = null)) }
+        setSheetHeight(SheetHeight.Collapsed)
+    }
+
+    // Marked not driven, the question is already cleared, so the step closes without a skip
+    private fun markNotDriven() {
+        val step = componentState.value.ratingStep ?: return
+        markNotDrivenUseCase.execute(step.question.driveId) {
+            // Offline, the removal is sent later, so it isn't logged
+            onError { error -> if (error !is OfflineException) logger.e(error) { "Drive not marked as not driven" } }
+        }
+        hideRatingStep()
+    }
+
     private fun handOff(route: Route) {
         handOffUseCase.execute(route) {
             onSuccess { result ->
                 when (result) {
-                    MapsAppResult.Opened -> startDrive(route)
+                    MapsAppResult.Opened -> {
+                        // A new drive replaces the reminder about an earlier one
+                        componentState.update { it.copy(planning = it.planning?.copy(isHandedOff = true), reminder = null) }
+                        startDrive(route)
+                    }
+
                     MapsAppResult.Missing -> componentState.update { it.copy(driveDialog = DriveDialog.MapsAppMissing) }
                 }
             }
@@ -468,7 +668,8 @@ internal class TripPlanComponent(
 
     // Errors are only logged: the drive stays stored and is recorded on a later try
     private fun startDrive(route: Route) {
-        startDriveUseCase.execute(StartDriveUseCase.Args(route = route, at = Clock.System.now())) {
+        val routeNumber = componentState.value.routeRows.firstOrNull { it.id == route.id }?.number
+        startDriveUseCase.execute(StartDriveUseCase.Args(route = route, routeNumber = routeNumber, at = Clock.System.now())) {
             onError { error -> if (error !is OfflineException) logger.e(error) { "Drive not started" } }
         }
     }
@@ -479,8 +680,8 @@ internal class TripPlanComponent(
     }
 
     // Drives from an earlier start without a connection; offline is expected here, so it isn't logged
-    private fun recordPendingDrives() = recordPendingDrivesUseCase.execute {
-        onError { error -> if (error !is OfflineException) logger.e(error) { "Pending drives not recorded" } }
+    private fun sendPendingDrives() = sendPendingDrivesUseCase.execute {
+        onError { error -> if (error !is OfflineException) logger.e(error) { "Pending drives not sent" } }
     }
 
     override fun onMyLocationClick() = useMyLocation()
@@ -566,7 +767,7 @@ internal class TripPlanComponent(
 
     private fun syncBackCallback() {
         val state = componentState.value
-        backCallback.isEnabled = state.sheetHeight != SheetHeight.Collapsed || state.planning != null
+        backCallback.isEnabled = state.sheetHeight != SheetHeight.Collapsed || state.planning != null || state.ratingStep != null
     }
 
     // The first covered area sets the overview; until it's loaded the map shows the launch region, undimmed
