@@ -2,7 +2,7 @@
 
 > **Status:** partly built. Last updated 2026-11-17.
 >
-> What's left to build of [Account](README.md): Sign in with Apple, and opening the sign-in sheet from Trip history.
+> What's left to build of [Account](README.md): Sign in with Apple.
 > Profile, the Account screen, Google sign-in, the sign-in sheet, signing out and deleting are built; the decisions
 > behind them are in the README's [Design](README.md#design) section. Uses the [Theme](../../theme.md).
 
@@ -24,10 +24,6 @@ Waits for the Apple Developer Program.
 - **Deleting:** Apple users sign in once more after the confirmation, because the app has to revoke its Sign in with
   Apple token, which needs a fresh authorization. Cancelling that cancels the deletion.
 
-## Sign-in sheet from Trip history
-
-Trip history in Profile opens the built sign-in sheet while signed out, titled "Sign in to see your trip history", and
-opens after signing in ([Navigation](../../navigation.md#sign-in)).
 
 ## Platforms
 
@@ -40,4 +36,3 @@ opens after signing in ([Navigation](../../navigation.md#sign-in)).
 | Where                        | Text                                                                 |
 |------------------------------|----------------------------------------------------------------------|
 | Apple button                 | Continue with Apple                                                  |
-| Sign-in sheet, Trip history  | Sign in to see your trip history                                     |

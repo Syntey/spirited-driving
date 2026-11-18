@@ -54,6 +54,9 @@ internal class ProfileComponent(
     override fun onAboutClick() = openAbout()
     override fun onSignInWithGoogleClick() = signIn(SignInProvider.Google)
     override fun onAccountClick() = openAccount()
+    override fun onTripHistoryClick() {
+        if (componentState.value.account != null) openTripHistory() else openSignInForTripHistory()
+    }
     override fun onAccountDeleted() = sendUiEvent(ProfileUiEvent.AccountDeleted)
 
     private fun observeAccount() = observeAccountUseCase.execute {

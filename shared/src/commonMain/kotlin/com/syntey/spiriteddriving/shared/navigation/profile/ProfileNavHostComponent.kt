@@ -2,6 +2,9 @@ package com.syntey.spiriteddriving.shared.navigation.profile
 
 import app.futured.arkitekt.decompose.ext.asStateFlow
 import com.arkivanov.decompose.Child
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.navigate
@@ -9,6 +12,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.feature.profile.ui.ProfileScreens
+import com.syntey.spiriteddriving.feature.routes.ui.RoutesScreens
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
@@ -16,12 +20,12 @@ import org.koin.core.annotation.InjectedParam
 @Factory
 internal class ProfileNavHostComponent(
     @InjectedParam componentContext: AppComponentContext,
-    @InjectedParam private val onClosed: () -> Unit,
+    @InjectedParam private val onFinished: (ProfileResult) -> Unit,
 ) : AppComponent<ProfileNavHostViewState, Nothing>(componentContext, ProfileNavHostViewState),
     ProfileNavHost {
 
     private val navigator: ProfileNavHostNavigation = ProfileNavHostNavigator(
-        onClosed = onClosed,
+        onFinished = onFinished,
         onAccountDeleted = { (stack.value.active.instance as? ProfileChild.Profile)?.screen?.onAccountDeleted() },
     )
 
@@ -46,6 +50,23 @@ internal class ProfileNavHostComponent(
 
                 is ProfileConfig.LicenceText ->
                     ProfileChild.LicenceText(ProfileScreens.licenceText(childCtx, navigator, config.args))
+
+                ProfileConfig.TripHistory -> ProfileChild.TripHistory(RoutesScreens.tripHistory(childCtx, navigator))
+            }
+        },
+    ).asStateFlow()
+
+    override val sheet: StateFlow<ChildSlot<ProfileSheetConfig, ProfileSheetChild>> = childSlot(
+        source = navigator.sheetNavigator,
+        serializer = ProfileSheetConfig.serializer(),
+        key = "profileSheet",
+        initialConfiguration = { null },
+        handleBackButton = true,
+        childFactory = { config, childCtx ->
+            when (config) {
+                is ProfileSheetConfig.SignIn -> ProfileSheetChild.SignIn(
+                    ProfileScreens.signInSheet(childCtx, navigator, config.args),
+                )
             }
         },
     ).asStateFlow()
@@ -54,13 +75,15 @@ internal class ProfileNavHostComponent(
         if (stack.value.items.size > 1) {
             navigator.stackNavigator.pop()
         } else {
-            onClosed()
+            onFinished(ProfileResult.Closed)
         }
     }
 
-    override fun onClose() = onClosed()
+    override fun onClose() = onFinished(ProfileResult.Closed)
 
     override fun iosPopTo(newStack: List<Child<ProfileConfig, ProfileChild>>) {
         navigator.stackNavigator.navigate { _ -> newStack.map { child -> child.configuration } }
     }
+
+    override fun onSheetDismissed() = navigator.sheetNavigator.dismiss()
 }

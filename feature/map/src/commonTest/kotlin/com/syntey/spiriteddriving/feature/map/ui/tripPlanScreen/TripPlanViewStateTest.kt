@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen
 
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
+import com.syntey.spiriteddriving.core.domain.drive.PastDrive
 import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.RatingReason
 import com.syntey.spiriteddriving.core.domain.drive.Thumb
@@ -17,7 +18,9 @@ import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.route.Route
+import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
@@ -26,8 +29,9 @@ import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
 import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
-import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStatus
-import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStep
+import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStatus
+import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
+import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
@@ -783,7 +787,7 @@ class TripPlanViewStateTest {
 
     @Test
     fun `a saved route's step draws no line while the route loads`() {
-        assertTrue(savedRouteState(route = null, status = SavedRouteStatus.Loading).routeLines.isEmpty())
+        assertTrue(savedRouteState(route = null, status = OneRouteStatus.Loading).routeLines.isEmpty())
     }
 
     @Test
@@ -792,7 +796,7 @@ class TripPlanViewStateTest {
         assertTrue(ready.holds(savedRoute.start.location))
         assertTrue(ready.holds(savedRoute.destination.location))
 
-        val loading = assertNotNull(savedRouteState(route = null, status = SavedRouteStatus.Loading).routeBounds)
+        val loading = assertNotNull(savedRouteState(route = null, status = OneRouteStatus.Loading).routeBounds)
         assertTrue(loading.holds(savedRoute.start.location))
         assertTrue(loading.holds(savedRoute.destination.location))
     }
@@ -806,12 +810,12 @@ class TripPlanViewStateTest {
     fun `drive is enabled once a saved route's route is loaded`() {
         assertEquals(savedRouteRoute, savedRouteState().driveRoute)
         assertTrue(savedRouteState().isDriveEnabled)
-        assertFalse(savedRouteState(route = null, status = SavedRouteStatus.Loading).isDriveEnabled)
+        assertFalse(savedRouteState(route = null, status = OneRouteStatus.Loading).isDriveEnabled)
     }
 
     @Test
     fun `a saved route's row is route 1 without an extra`() {
-        val row = assertNotNull(savedRouteState().savedRouteRow)
+        val row = assertNotNull(savedRouteState().oneRouteRow)
 
         assertEquals(1, row.number)
         assertNull(row.extra)
@@ -838,9 +842,74 @@ class TripPlanViewStateTest {
 
     private fun savedRouteState(
         route: Route? = savedRouteRoute,
-        status: SavedRouteStatus = SavedRouteStatus.Ready,
+        status: OneRouteStatus = OneRouteStatus.Ready,
     ) = TripPlanViewState(
-        savedRouteStep = SavedRouteStep(savedRoute = savedRoute, route = route, status = status),
+        oneRouteStep = OneRouteStep(origin = OneRouteOrigin.Saved(savedRoute), route = route, status = status),
         sheetHeight = SheetHeight.Half,
     )
+
+    private val pastRoute = FakeRoutePlanner.Recorded.funRoutes.first()
+
+    private val pastDrive = PastDrive(
+        id = "drive-1",
+        startedAt = Instant.parse("2026-11-05T13:20:00Z"),
+        routeId = pastRoute.id,
+        kind = RouteKind.Fun,
+        start = Place(name = null, area = "Smíchov, Prague", location = GeoPoint(latitude = 50.07, longitude = 14.40)),
+        destination = Place(name = "Karlštejn Castle", area = "Beroun", location = pastRoute.destination.location),
+        duration = pastRoute.duration,
+        distance = pastRoute.distance,
+        funLevel = pastRoute.funLevel,
+    )
+
+    private fun pastDriveState(
+        drive: PastDrive = pastDrive,
+        route: Route? = pastRoute,
+        savedRoutes: List<SavedRoute> = emptyList(),
+    ) = TripPlanViewState(
+        oneRouteStep = OneRouteStep(origin = OneRouteOrigin.Past(drive), route = route),
+        sheetHeight = SheetHeight.Half,
+        savedRoutes = savedRoutes.toImmutableList(),
+    )
+
+    @Test
+    fun `a past drive's header is its destination's name`() {
+        assertEquals("Karlštejn Castle", pastDriveState().oneRouteTitle)
+    }
+
+    @Test
+    fun `a past drive without a destination name is headed by its area`() {
+        val unnamed = pastDrive.copy(destination = Place(name = null, area = "49.9, 14.2", location = pastRoute.destination.location))
+
+        assertEquals("49.9, 14.2", pastDriveState(drive = unnamed).oneRouteTitle)
+    }
+
+    @Test
+    fun `a past drive's route is its drive route once loaded`() {
+        assertEquals(pastRoute, pastDriveState().driveRoute)
+        assertTrue(pastDriveState().isDriveEnabled)
+        assertNull(pastDriveState(route = null).driveRoute)
+    }
+
+    @Test
+    fun `a past drive is saved while a saved route has its route ID`() {
+        val saved = FakeSavedRoutesSource.Recorded.copy(routeId = pastRoute.id)
+
+        assertTrue(pastDriveState(savedRoutes = listOf(saved)).isSelectedRouteSaved)
+        assertEquals(saved, pastDriveState(savedRoutes = listOf(saved)).savedRouteOnScreen)
+    }
+
+    @Test
+    fun `a past drive is unsaved when no saved route has its route ID`() {
+        val other = FakeSavedRoutesSource.Recorded.copy(routeId = "other-route")
+
+        assertFalse(pastDriveState(savedRoutes = listOf(other)).isSelectedRouteSaved)
+        assertFalse(pastDriveState().isSelectedRouteSaved)
+    }
+
+    @Test
+    fun `a past drive's route is on screen by its route ID`() {
+        assertEquals(pastRoute, pastDriveState().routeOnScreen(pastRoute.id))
+        assertNull(pastDriveState().routeOnScreen("other-route"))
+    }
 }

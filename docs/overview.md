@@ -1,6 +1,6 @@
 # Spirited Driving: Overview
 
-> **Status:** draft, being iterated. Last updated 2026-11-17.
+> **Status:** draft, being iterated. Last updated 2026-11-18.
 >
 > Entry point for product and architecture design. Topics that outgrow this file get their own file in `docs/`
 > and a link from here.
@@ -112,15 +112,15 @@ MVP, for the [launch](#launch) region:
 
 - **[Theme](theme.md):** colours, type, shapes, glass and the empty and error layout, shared by every screen.
 - **Screens:** each feature's `design.md`, so far [Destination search](features/destination-search/design.md),
-  [Account](features/account/design.md), [Saved routes](features/saved-routes/design.md) and
-  [Trip history](features/trip-history/design.md). A design's Platforms table says how the one shared screen is styled on
+  [Account](features/account/design.md) and [Saved routes](features/saved-routes/design.md). A design's Platforms table says how the one shared screen is styled on
   each platform; it never means two screens ([Architecture](architecture.md#shared-and-native-ui)). Built so far:
   [First launch](features/first-launch/README.md#design), the [Map](features/map/README.md#design),
   [Destination search](features/destination-search/README.md#design),
   [Route planning](features/route-planning/README.md#design), [Drive](features/drive/README.md#design),
   [Drive feedback](features/drive-feedback/README.md#design), [Settings](features/settings/README.md#design),
   [Account](features/account/README.md#design) without Sign in with Apple, and
-  [Saved routes](features/saved-routes/README.md#design) without its order by last use and the vignette note.
+  [Saved routes](features/saved-routes/README.md#design) without its order by last use and the vignette note, and
+  [Trip history](features/trip-history/README.md#design).
 
 Written design is a spec for building a screen, not a record of it. Once a screen is built, the code holds its
 layout, sizes and copy:

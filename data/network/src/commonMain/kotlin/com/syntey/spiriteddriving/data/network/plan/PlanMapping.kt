@@ -77,7 +77,7 @@ internal fun RouteDto.toDomain(): Route = Route(
 )
 
 // A kind the app doesn't know yet is shown as a fun route, so a new backend kind doesn't fail the whole plan
-private fun String.toRouteKind(): RouteKind = when (this) {
+internal fun String.toRouteKind(): RouteKind = when (this) {
     Constants.RouteKindCode.FASTEST -> RouteKind.Fastest
     else -> RouteKind.Fun
 }

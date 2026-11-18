@@ -7,6 +7,7 @@ import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.DriveRecorder
 import com.syntey.spiriteddriving.core.domain.drive.OpenDriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.StartedDrives
+import com.syntey.spiriteddriving.core.domain.drive.TripHistoryCache
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
@@ -31,6 +32,7 @@ internal class StartDriveUseCase(
     private val startedDrives: StartedDrives,
     private val driveRecorder: DriveRecorder,
     private val openDriveQuestion: OpenDriveQuestion,
+    private val tripHistoryCache: TripHistoryCache,
     @Provided private val driveReminders: DriveReminders,
 ) : UseCase<StartDriveUseCase.Args, Drive> {
 
@@ -43,6 +45,8 @@ internal class StartDriveUseCase(
 
     override suspend fun build(args: Args): Drive {
         val drive = continuedDrive(args) ?: newDrive(args)
+        // Kept for Trip history, so the drive can be opened and driven offline, also before it is recorded
+        tripHistoryCache.putRoute(drive.id, args.route)
         if (drive.isRecorded) return drive
         try {
             driveRecorder.record(drive)

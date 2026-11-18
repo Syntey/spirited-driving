@@ -2,6 +2,8 @@ package com.syntey.spiriteddriving.data.network.api
 
 import com.syntey.spiriteddriving.data.network.dto.coverage.CoverageDto
 import com.syntey.spiriteddriving.data.network.dto.drive.ClaimDrivesRequestDto
+import com.syntey.spiriteddriving.data.network.dto.drive.DriveDto
+import com.syntey.spiriteddriving.data.network.dto.drive.DrivePageDto
 import com.syntey.spiriteddriving.data.network.dto.drive.RatingInputDto
 import com.syntey.spiriteddriving.data.network.dto.drive.RecordDriveRequestDto
 import com.syntey.spiriteddriving.data.network.dto.feedback.FeedbackRequestDto
@@ -69,6 +71,13 @@ internal interface SpiritedDrivingApi {
         @Body request: RecordDriveRequestDto,
     ): NetworkResult<Unit>
 
+    /** `GET /drives/{driveId}` (`getDrive`). */
+    @GET("drives/{driveId}")
+    suspend fun getDrive(
+        @Path("driveId") driveId: String,
+        @Query("maxHandOffWaypoints") maxHandOffWaypoints: Int,
+    ): NetworkResult<DriveDto>
+
     /** `DELETE /drives/{driveId}` (`deleteDrive`). */
     @DELETE("drives/{driveId}")
     suspend fun deleteDrive(
@@ -115,6 +124,17 @@ internal interface SpiritedDrivingApi {
     /** `DELETE /me` (`deleteAccount`). */
     @DELETE("me")
     suspend fun deleteAccount(): NetworkResult<Unit>
+
+    /** `GET /me/drives` (`listDrives`). */
+    @GET("me/drives")
+    suspend fun listDrives(
+        @Query("limit") limit: Int? = null,
+        @Query("cursor") cursor: String? = null,
+    ): NetworkResult<DrivePageDto>
+
+    /** `DELETE /me/drives` (`clearDrives`). */
+    @DELETE("me/drives")
+    suspend fun clearDrives(): NetworkResult<Unit>
 
     /** `POST /me/drives/claim` (`claimDrives`). */
     @POST("me/drives/claim")

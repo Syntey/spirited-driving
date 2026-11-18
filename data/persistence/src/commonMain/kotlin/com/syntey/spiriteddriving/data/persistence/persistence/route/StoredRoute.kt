@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.data.persistence.persistence.savedroute
+package com.syntey.spiriteddriving.data.persistence.persistence.route
 
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.metres
 import com.syntey.spiriteddriving.core.domain.route.HandOff

@@ -59,6 +59,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
@@ -626,6 +627,8 @@ private fun ListRowText(
                 text = supporting,
                 style = if (tabularSupporting) style.supportingStyle.copy(fontFeatureSettings = TABULAR_DIGITS) else style.supportingStyle,
                 color = colors.supportingColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         if (!style.valueAfterLabel && value != null) {

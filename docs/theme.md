@@ -262,7 +262,7 @@ One layout for a list or a result with nothing to show, whether it's empty or so
 - One shared Compose component. Each feature passes its icon, title, message and whether Try again shows: see
   [Destination search](features/destination-search/README.md#design),
   [Route planning](features/route-planning/README.md#design), [Saved routes](features/saved-routes/README.md#design)
-  and [Trip history](features/trip-history/design.md#states).
+  and [Trip history](features/trip-history/README.md#design).
 
 ## App icon
 

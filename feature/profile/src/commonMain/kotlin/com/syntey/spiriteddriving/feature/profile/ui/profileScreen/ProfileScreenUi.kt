@@ -126,6 +126,17 @@ private fun Content(
                 ListGroup {
                     item { position ->
                         ListRow(
+                            headline = stringResource(MR.strings.profile_trip_history),
+                            leading = { ListRowIcon(painterResource(MR.images.recent)) },
+                            chevron = painterResource(MR.images.chevron_right),
+                            onClick = actions::onTripHistoryClick,
+                            position = position,
+                        )
+                    }
+                }
+                ListGroup {
+                    item { position ->
+                        ListRow(
                             headline = stringResource(MR.strings.profile_settings),
                             supporting = stringResource(MR.strings.profile_settings_supporting),
                             leading = { ListRowIcon(painterResource(MR.images.settings)) },

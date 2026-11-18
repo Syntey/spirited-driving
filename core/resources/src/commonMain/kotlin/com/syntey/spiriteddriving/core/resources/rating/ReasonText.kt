@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.map.tools
+package com.syntey.spiriteddriving.core.resources.rating
 
 import com.syntey.spiriteddriving.core.domain.drive.RatingReason
 import com.syntey.spiriteddriving.core.resources.*
@@ -6,7 +6,7 @@ import dev.icerock.moko.resources.desc.StringDesc
 import dev.icerock.moko.resources.desc.desc
 
 /** The chip's text of the reason. */
-internal fun RatingReason.label(): StringDesc = when (this) {
+fun RatingReason.label(): StringDesc = when (this) {
     RatingReason.CurvyRoads -> MR.strings.reason_curvy_roads.desc()
     RatingReason.NiceViews -> MR.strings.reason_nice_views.desc()
     RatingReason.LittleTraffic -> MR.strings.reason_little_traffic.desc()

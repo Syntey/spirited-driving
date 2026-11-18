@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.core.ui.components
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,9 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
 import com.syntey.spiriteddriving.core.ui.preview.previewIcon
@@ -237,6 +241,35 @@ private fun ButtonLabel(text: String, style: ButtonStyle, modifier: Modifier = M
     Text(text = text, modifier = modifier, style = style.textStyle, textAlign = TextAlign.Center)
 }
 
+/**
+ * A small tonal button for a row, such as Rate: drawn at the small size, but tappable at the platform's least touch target,
+ * which is larger. [contentDescription] is what screen readers say, when the text alone isn't enough.
+ */
+@Composable
+fun SmallTonalButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+) {
+    Box(
+        modifier = modifier
+            .heightIn(min = AppTheme.platformStyle.minTouchTarget)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics(mergeDescendants = true) {
+                if (contentDescription != null) this.contentDescription = contentDescription
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        AppButton(
+            text = text,
+            onClick = onClick,
+            colors = ButtonDefaultColors.tonal(),
+            style = ButtonDefaultStyles.small(),
+        )
+    }
+}
+
 @ComponentPreviews
 @Composable
 private fun ButtonColorsPreview() = Showcase {
@@ -330,5 +363,13 @@ private fun ButtonIosPreview() = Showcase(platform = UiPlatform.Ios) {
         )
         AppButton(text = "Rate", onClick = {}, colors = ButtonDefaultColors.tonal(), style = ButtonDefaultStyles.small())
         AppButton(text = "Drive", onClick = {}, isLoading = true, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@ComponentPreviews
+@Composable
+private fun SmallTonalButtonPreview() = Showcase {
+    Column(Modifier.padding(Grid.d4)) {
+        SmallTonalButton(text = "Rate", onClick = {}, contentDescription = "Rate the drive to Karlštejn Castle")
     }
 }

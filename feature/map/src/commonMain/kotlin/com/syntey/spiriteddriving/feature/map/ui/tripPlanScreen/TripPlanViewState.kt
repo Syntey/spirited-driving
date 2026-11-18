@@ -15,6 +15,7 @@ import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.core.resources.datetime.driveDateTimeText
 import com.syntey.spiriteddriving.feature.map.model.ui.BudgetChip
 import com.syntey.spiriteddriving.feature.map.model.ui.DriveDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
@@ -28,8 +29,9 @@ import com.syntey.spiriteddriving.feature.map.model.ui.UseBudgetButton
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
 import com.syntey.spiriteddriving.feature.map.model.ui.RecentPlaceRow
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
-import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStatus
-import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStep
+import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
+import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStatus
+import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteLine
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteRow
@@ -43,7 +45,7 @@ import com.syntey.spiriteddriving.feature.map.tools.distanceChips
 import com.syntey.spiriteddriving.core.resources.measure.distanceText
 import com.syntey.spiriteddriving.core.resources.measure.durationText
 import com.syntey.spiriteddriving.core.resources.measure.heightText
-import com.syntey.spiriteddriving.feature.map.tools.label
+import com.syntey.spiriteddriving.core.resources.rating.label
 import com.syntey.spiriteddriving.feature.map.tools.matchedRanges
 import com.syntey.spiriteddriving.feature.map.tools.midpointAlong
 import dev.icerock.moko.resources.desc.ResourceFormatted
@@ -74,7 +76,8 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
  * @property savedRoutes The kept saved routes, which the selected route is checked against.
  * @property isSavingRoute Whether a route is being saved or removed; Save shows its progress meanwhile.
  * @property nameDialog The dialog asking for a name, shown when the destination's name is taken; null when there's none.
- * @property savedRouteStep The one-route step of a saved route; null otherwise. It takes the sheet's place of the search and planning.
+ * @property oneRouteStep The one-route step of a saved route or a past drive; null otherwise. It takes the sheet's place of the search
+ *   and planning.
  */
 data class TripPlanViewState(
     val locationAccess: LocationAccess? = null,
@@ -94,7 +97,7 @@ data class TripPlanViewState(
     val savedRoutes: ImmutableList<SavedRoute> = persistentListOf(),
     val isSavingRoute: Boolean = false,
     val nameDialog: RouteNameDialog? = null,
-    val savedRouteStep: SavedRouteStep? = null,
+    val oneRouteStep: OneRouteStep? = null,
 ) {
     val locateButton: LocateButton get() = LocateButton.of(locationAccess, map.followsUser)
 
@@ -128,7 +131,7 @@ data class TripPlanViewState(
         }
 
     /** The profile and locate buttons hide while planning, as the planned routes take the map, and during the rating step. */
-    val showsMapButtons: Boolean get() = planning == null && ratingStep == null && savedRouteStep == null
+    val showsMapButtons: Boolean get() = planning == null && ratingStep == null && oneRouteStep == null
 
     /**
      * The area the map frames: all the planned routes' lines once they have points; otherwise, and while planning, the start,
@@ -142,10 +145,10 @@ data class TripPlanViewState(
                 val question = step.question
                 return boundsOf(question.line.ifEmpty { listOf(question.start, question.destination.location) }).withMinimumSpan()
             }
-            savedRouteStep?.let { step ->
-                // Until the route is loaded, the saved start and destination frame the map
+            oneRouteStep?.let { step ->
+                // Until the route is loaded, the start and destination of its origin frame the map
                 val line = step.route?.line.orEmpty()
-                return boundsOf(line.ifEmpty { listOf(step.savedRoute.start.location, step.savedRoute.destination.location) })
+                return boundsOf(line.ifEmpty { listOf(step.origin.start.location, step.origin.destination.location) })
                     .withMinimumSpan()
             }
             val planning = planning ?: return null
@@ -216,9 +219,9 @@ data class TripPlanViewState(
     val selectedRouteRow: RouteRow? get() = routeRows.firstOrNull { it.isSelected }
 
     /** The saved route's route as its step's summary shows it: numbered 1, without an extra; null until it's loaded. */
-    val savedRouteRow: RouteRow?
+    val oneRouteRow: RouteRow?
         get() {
-            val route = savedRouteStep?.route ?: return null
+            val route = oneRouteStep?.route ?: return null
             return routeRow(route = route, number = 1, extra = null, isSelected = true)
         }
 
@@ -226,18 +229,52 @@ data class TripPlanViewState(
      * The route Drive hands off: the saved route's while its step is open, else the selected planned route. Null while there's
      * none to drive, such as while the saved route is still loading.
      */
-    val driveRoute: Route? get() = savedRouteStep?.route ?: planning?.selectedRoute
+    val driveRoute: Route? get() = oneRouteStep?.route ?: planning?.selectedRoute
+
+    /** The one-route step's header title: the saved route's name, or the past drive's destination. Null without the step. */
+    val oneRouteTitle: String?
+        get() = when (val origin = oneRouteStep?.origin ?: return null) {
+            is OneRouteOrigin.Saved -> origin.savedRoute.name
+            is OneRouteOrigin.Past -> origin.destination.name ?: origin.destination.area.orEmpty()
+        }
 
     /**
-     * Whether the route on screen is saved, by its route ID for a plan, and by the saved route's own ID for a saved route's step,
-     * since saving it again makes a new one.
+     * The one-route step's header subtitle: the start's area, and for a past drive, when it started before that. Null without the
+     * step, and without the start's area for a saved route.
      */
-    val isSelectedRouteSaved: Boolean
-        get() {
-            savedRouteStep?.let { step -> return savedRoutes.any { it.id == step.savedRoute.id } }
-            val routeId = planning?.selectedRouteId ?: return false
-            return savedRoutes.any { it.routeId == routeId }
+    val oneRouteSubtitle: StringDesc?
+        get() = when (val origin = oneRouteStep?.origin ?: return null) {
+            is OneRouteOrigin.Saved -> origin.start.shortArea?.let { StringDesc.ResourceFormatted(MR.strings.planning_from, it) }
+
+            is OneRouteOrigin.Past -> {
+                val started = driveDateTimeText(origin.drive.startedAt)
+                origin.start.shortArea?.let { StringDesc.ResourceFormatted(MR.strings.map_past_drive_subtitle, started, it) }
+                    ?: StringDesc.ResourceFormatted(MR.strings.map_past_drive_subtitle_no_start, started)
+            }
         }
+
+    /**
+     * The saved route the route on screen is kept as, or null when it isn't saved: by its route ID for a plan, by the saved route's
+     * own ID for a saved route's step, since saving it again makes a new one, and by its route ID for a past drive.
+     */
+    val savedRouteOnScreen: SavedRoute?
+        get() {
+            oneRouteStep?.let { step ->
+                return when (val origin = step.origin) {
+                    is OneRouteOrigin.Saved -> savedRoutes.firstOrNull { it.id == origin.savedRoute.id }
+                    is OneRouteOrigin.Past -> savedRoutes.firstOrNull { it.routeId == origin.drive.routeId }
+                }
+            }
+            val routeId = planning?.selectedRouteId ?: return null
+            return savedRoutes.firstOrNull { it.routeId == routeId }
+        }
+
+    /** Whether the route on screen is saved; see [savedRouteOnScreen]. */
+    val isSelectedRouteSaved: Boolean get() = savedRouteOnScreen != null
+
+    /** The route with the ID among the routes on screen: a planned route or the one-route step's; null when neither has it. */
+    fun routeOnScreen(routeId: String): Route? =
+        planning?.listedRoutes?.firstOrNull { it.id == routeId } ?: driveRoute?.takeIf { it.id == routeId }
 
     /** Drive is offered once a route is selected, or a saved route's route is loaded. */
     val isDriveEnabled: Boolean get() = driveRoute != null
@@ -285,12 +322,12 @@ data class TripPlanViewState(
                     ),
                 )
             }
-            savedRouteStep?.let { step ->
+            oneRouteStep?.let { step ->
                 val line = step.route?.line.orEmpty()
                 if (line.isEmpty()) return persistentListOf()
                 return persistentListOf(
                     RouteLine(
-                        id = step.savedRoute.id,
+                        id = step.origin.id,
                         number = 1,
                         points = line.toImmutableList(),
                         label = null,
@@ -334,7 +371,7 @@ data class TripPlanViewState(
         get() = reminder != null &&
             ratingStep == null &&
             planning == null &&
-            savedRouteStep == null &&
+            oneRouteStep == null &&
             startSearch == null &&
             sheetHeight == SheetHeight.Collapsed
 

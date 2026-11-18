@@ -70,6 +70,7 @@ class SavedRouteMappingTest {
         savedAt = "2026-11-08T09:30:00Z",
         route = RouteSummaryDto(
             id = "9c4e7a2d-1b3f-4c8e-8d5a-6f7b2e9c0a1d",
+            kind = "FUN",
             start = PlaceDto(location = GeoPointDto(lat = 50.0755, lon = 14.4378), name = "Vinohradská 12", area = "Prague 2"),
             destination = PlaceDto(
                 location = GeoPointDto(lat = 49.9394, lon = 14.1882),

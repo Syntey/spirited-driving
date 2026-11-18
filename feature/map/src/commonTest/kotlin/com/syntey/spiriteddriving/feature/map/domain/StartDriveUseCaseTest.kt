@@ -6,6 +6,7 @@ import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.DriveRecorder
 import com.syntey.spiriteddriving.core.domain.drive.FakeOpenDriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.FakeStartedDrives
+import com.syntey.spiriteddriving.core.domain.drive.FakeTripHistoryCache
 import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.StartedDrives
 import com.syntey.spiriteddriving.core.domain.drive.Thumb
@@ -230,6 +231,24 @@ class StartDriveUseCaseTest {
     }
 
     @Test
+    fun `a drive keeps its route for Trip history, also when recording is offline`() = runTest {
+        val startedDrives = FakeStartedDrives()
+        val cache = FakeTripHistoryCache()
+
+        assertFailsWith<OfflineException> {
+            StartDriveUseCase(
+                startedDrives,
+                ScriptedDriveRecorder(failure = OfflineException(cause = null)),
+                FakeOpenDriveQuestion(),
+                cache,
+                DriveReminders(FakePlatformDriveReminders()),
+            ).build(StartDriveUseCase.Args(route = route, routeNumber = null, at = at))
+        }
+
+        assertEquals(route, cache.getRoute(startedDrives.all().single().id))
+    }
+
+    @Test
     fun `the question is kept when recording is offline`() = runTest {
         val questions = FakeOpenDriveQuestion()
 
@@ -255,7 +274,7 @@ class StartDriveUseCaseTest {
         questions: FakeOpenDriveQuestion = FakeOpenDriveQuestion(),
         reminders: FakePlatformDriveReminders = FakePlatformDriveReminders(),
         routeNumber: Int? = null,
-    ): Drive = StartDriveUseCase(startedDrives, recorder, questions, DriveReminders(reminders)).build(
+    ): Drive = StartDriveUseCase(startedDrives, recorder, questions, FakeTripHistoryCache(), DriveReminders(reminders)).build(
         StartDriveUseCase.Args(route = route, routeNumber = routeNumber, at = at),
     )
 

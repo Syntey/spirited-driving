@@ -16,11 +16,14 @@ data class Place(val name: String?, val area: String?, val location: GeoPoint) {
     fun isSameAs(other: Place): Boolean = name == other.name && location.distanceTo(other.location) <= SAME_PLACE_DISTANCE
 
     /**
-     * The first part of [area], such as "Smíchov" of "Smíchov, Prague", for a short "From Smíchov"; the name without an
-     * area, and null without either.
+     * The first part of [area], such as "Smíchov" of "Smíchov, Prague", for a short "From Smíchov"; the name when that
+     * part already holds it, such as "okres Beroun" of Beroun; the name without an area, and null without either.
      */
     val shortArea: String?
-        get() = area?.substringBefore(',')?.trim()?.ifEmpty { null } ?: name
+        get() {
+            val firstPart = area?.substringBefore(',')?.trim()?.ifEmpty { null } ?: return name
+            return if (name != null && firstPart.contains(name, ignoreCase = true)) name else firstPart
+        }
 
     private companion object {
         val SAME_PLACE_DISTANCE: Length = 100.metres
