@@ -65,6 +65,11 @@ internal object Constants {
         const val REMINDER_AFTER_DURATION = 1.2
     }
 
+    object SavedRoutes {
+        /** The most characters of the name a route gets when it's saved without one: the destination's, cut to this. */
+        const val DEFAULT_NAME_MAX_LENGTH = 100
+    }
+
     object Map {
         // The launch region, by its corners
         val LAUNCH_REGION =

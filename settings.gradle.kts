@@ -38,6 +38,7 @@ include(":data:persistence")
 include(":feature:map")
 include(":feature:onboarding")
 include(":feature:profile")
+include(":feature:routes")
 
 // Architecture rules, see `konsist/build.gradle.kts`
 include(":konsist")

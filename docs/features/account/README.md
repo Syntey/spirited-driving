@@ -1,6 +1,6 @@
 # Account
 
-> **Status:** partly built, MVP. Last updated 2026-11-16.
+> **Status:** partly built, MVP. Last updated 2026-11-17.
 
 Signing in, and what the user's account holds.
 
@@ -35,8 +35,13 @@ before sign-in, delete account (from the app and from the web page).
 
 Profile and Account are in `:feature:profile`: `ProfileComponent` and `AccountComponent`, inside the Profile sheet on
 iOS and full screen on Android. The code holds their layout, sizes and copy; these are the decisions behind them. Still
-to build, in [design.md](design.md): Sign in with Apple, which waits for the Apple Developer Program, and the sign-in
-sheet that features needing an account open.
+to build, in [design.md](design.md): Sign in with Apple, which waits for the Apple Developer Program, and opening the
+sign-in sheet from Trip history.
+
+- **The sign-in sheet** is `SignInSheetComponent`, opened over the map by Save and the Saved routes row while signed
+  out. Its title says what asked, so the sign-in has a reason. After signing in it closes and the feature goes on, with
+  no "signed in" message: the feature opening is the feedback. Closing it leaves the user where they were. A bottom
+  sheet on Android; a native sheet on iOS, with its close button in the shared content, like the map's sheets.
 
 - **No initials, photos or avatars,** the map's profile button included, which is always the person icon. The app is
   about the roads, not about the user.

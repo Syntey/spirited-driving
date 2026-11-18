@@ -18,12 +18,14 @@ private enum Layout {
 
 struct MapComponent<Model: MapComponentModelProtocol>: View {
     @State var model: Model
-    @Binding private var profile: DecomposeSlotItem<ProfileNavHost>?
+    @Binding private var sheet: DecomposeSlotItem<RootSheetChild>?
     @Environment(\.colorScheme) private var colorScheme
+    // The name the name dialog's field holds, set to the suggestion as the dialog appears
+    @State private var nameText = ""
 
-    init(model: Model, profile: Binding<DecomposeSlotItem<ProfileNavHost>?>) {
+    init(model: Model, sheet: Binding<DecomposeSlotItem<RootSheetChild>?>) {
         _model = State(initialValue: model)
-        _profile = profile
+        _sheet = sheet
     }
 
     var body: some View {
@@ -55,9 +57,8 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled)
                 .interactiveDismissDisabled()
-                .sheet(item: $profile) { item in
-                    ProfileNavigationComponent(navHost: item.instance)
-                        .presentationDetents([.large])
+                .sheet(item: $sheet) { item in
+                    rootSheetContent(item.instance)
                 }
                 // Inside the sheet: an alert on the view under a presented sheet wouldn't show
                 .alert(driveDialogTitle,
@@ -67,10 +68,38 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
                 } message: { dialog in
                     Text(driveDialogMessage(dialog))
                 }
+                .alert(Localizable.saved_routes_name_title.localized,
+                       isPresented: $model.isNameDialogPresented,
+                       presenting: model.nameDialog) { dialog in
+                    TextField("", text: $nameText)
+                    Button(Localizable.generic_cancel.localized, role: .cancel) { model.onRouteNameDismiss() }
+                    Button(Localizable.planning_save.localized) { model.onRouteNameSave(nameText) }
+                        .disabled(!dialog.canSave(name: nameText))
+                } message: { _ in
+                    Text(model.nameDialogMessage)
+                }
+                .onChange(of: model.isNameDialogPresented) { _, presented in
+                    if presented { nameText = model.nameDialog?.suggestion ?? "" }
+                }
         }
     }
 
     // MARK: Private views
+
+    @ViewBuilder
+    private func rootSheetContent(_ child: RootSheetChild) -> some View {
+        switch onEnum(of: child) {
+        case let .profile(entry):
+            ProfileNavigationComponent(navHost: entry.navHost)
+                .presentationDetents([.large])
+        case let .signIn(entry):
+            SignInSheetComponent(entry.screen)
+                .presentationDetents([.medium])
+        case let .savedRoutes(entry):
+            SavedRoutesComponent(entry.screen)
+                .presentationDetents([.large])
+        }
+    }
 
     @ViewBuilder
     private func driveDialogButtons(_ dialog: DriveDialog) -> some View {
@@ -237,6 +266,6 @@ struct MapComponent<Model: MapComponentModelProtocol>: View {
 
 #if DEBUG
 #Preview {
-    MapComponent(model: MapComponentModelMock(), profile: .constant(nil))
+    MapComponent(model: MapComponentModelMock(), sheet: .constant(nil))
 }
 #endif

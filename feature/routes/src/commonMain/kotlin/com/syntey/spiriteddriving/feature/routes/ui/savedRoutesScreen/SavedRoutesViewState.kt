@@ -1,0 +1,32 @@
+package com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen
+
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
+import com.syntey.spiriteddriving.feature.routes.model.ui.RenameDialog
+import com.syntey.spiriteddriving.feature.routes.model.ui.SavedRouteRow
+import com.syntey.spiriteddriving.feature.routes.model.ui.toRow
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
+
+data class SavedRoutesViewState(
+    /** The kept saved routes, newest first, or `null` while nothing is kept. */
+    val savedRoutes: ImmutableList<SavedRoute>? = null,
+    val distanceUnit: DistanceUnit = DistanceUnit.Kilometres,
+    val status: SavedRoutesStatus = SavedRoutesStatus.Loading,
+    val renameDialog: RenameDialog? = null,
+    /** Routes deleted with their Undo still open: they're left out of [routes] until the message ends. */
+    val deletingIds: ImmutableSet<String> = persistentSetOf(),
+) {
+    /** The rows to show, without the routes whose delete is still undoable. */
+    val routes: ImmutableList<SavedRouteRow>
+        get() = savedRoutes.orEmpty()
+            .filterNot { it.id in deletingIds }
+            .map { it.toRow(distanceUnit) }
+            .toImmutableList()
+
+    /** Whether nothing is kept. A route whose delete is undoable still counts, so the list doesn't flash empty. */
+    val isEmpty: Boolean
+        get() = savedRoutes.isNullOrEmpty()
+}

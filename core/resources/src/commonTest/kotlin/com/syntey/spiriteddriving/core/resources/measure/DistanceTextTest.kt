@@ -1,10 +1,8 @@
-package com.syntey.spiriteddriving.feature.map.tools
+package com.syntey.spiriteddriving.core.resources.measure
 
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.metres
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.resources.*
-import com.syntey.spiriteddriving.feature.map.tools.distanceText
-import com.syntey.spiriteddriving.feature.map.tools.heightText
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlin.test.Test

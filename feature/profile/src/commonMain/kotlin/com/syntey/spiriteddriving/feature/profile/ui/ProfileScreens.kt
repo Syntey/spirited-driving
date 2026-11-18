@@ -23,6 +23,10 @@ import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsComponentFactory
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreen
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreenNavigation
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetArgs
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetComponentFactory
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreen
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreenNavigation
 
 /**
  * The screens this feature offers to the navigation hosts in `:shared`. Components stay internal, so each screen is
@@ -53,4 +57,10 @@ object ProfileScreens {
         navigation: LicenceTextScreenNavigation,
         args: LicenceTextArgs,
     ): LicenceTextScreen = LicenceTextComponentFactory.createComponent(componentContext, navigation, args)
+
+    fun signInSheet(
+        componentContext: AppComponentContext,
+        navigation: SignInSheetScreenNavigation,
+        args: SignInSheetArgs,
+    ): SignInSheetScreen = SignInSheetComponentFactory.createComponent(componentContext, navigation, args)
 }

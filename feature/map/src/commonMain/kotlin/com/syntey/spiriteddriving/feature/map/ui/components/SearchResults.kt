@@ -53,13 +53,15 @@ internal fun SearchResults(
     onSearchRetry: () -> Unit,
     myLocationRow: MyLocationRow?,
     onMyLocationClick: () -> Unit,
+    onSavedRoutesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val search = viewState.search
     val recentRows = viewState.recentRows
-    // With the My location row above it, the hint goes below the row in the list
+    // The Saved routes row or the My location row above it: the hint goes below the row in the list
+    val savedRoutesText = if (viewState.showsSavedRoutesRow) viewState.savedRoutesRowText.localized() else null
     when {
-        search.showsHint && myLocationRow == null -> SearchHint(modifier = modifier.fillMaxWidth())
+        search.showsHint && myLocationRow == null && savedRoutesText == null -> SearchHint(modifier = modifier.fillMaxWidth())
 
         search.showsFailureAlone -> search.failure?.let { failure ->
             FailureMessage(
@@ -80,6 +82,8 @@ internal fun SearchResults(
             recentRows = recentRows,
             suggestionRows = viewState.suggestionRows,
             showsHeader = search.showsRecentHeader,
+            savedRoutesText = savedRoutesText,
+            onSavedRoutesClick = onSavedRoutesClick,
             myLocationRow = myLocationRow,
             onMyLocationClick = onMyLocationClick,
             onRecentPlaceClick = onRecentPlaceClick,
@@ -132,6 +136,8 @@ private fun PlaceList(
     recentRows: ImmutableList<RecentPlaceRow>,
     suggestionRows: ImmutableList<SuggestionRow>,
     showsHeader: Boolean,
+    savedRoutesText: String?,
+    onSavedRoutesClick: () -> Unit,
     myLocationRow: MyLocationRow?,
     onMyLocationClick: () -> Unit,
     onRecentPlaceClick: (Place) -> Unit,
@@ -149,6 +155,9 @@ private fun PlaceList(
     val count = recentRows.size + suggestionRows.size
     LazyColumn(state = listState, modifier = modifier.fillMaxWidth().imePadding()) {
         // Its own group, so the Recent header can sit between it and the places
+        if (savedRoutesText != null) {
+            item { SavedRoutesItem(supporting = savedRoutesText, onClick = onSavedRoutesClick) }
+        }
         if (myLocationRow != null) {
             item { MyLocationItem(row = myLocationRow, onClick = onMyLocationClick) }
         }
@@ -208,6 +217,26 @@ private fun boldHeadline(name: String, boldRanges: List<IntRange>): AnnotatedStr
     boldRanges.forEach { range ->
         addStyle(SpanStyle(fontWeight = FontWeight.SemiBold), range.first, range.last + 1)
     }
+}
+
+// Saved routes, a group of its own above the recent places, as the My location row is in the start step
+@Composable
+private fun SavedRoutesItem(supporting: String, onClick: () -> Unit) {
+    ListRow(
+        headline = stringResource(MR.strings.saved_routes_title),
+        supporting = supporting,
+        leading = {
+            ListRowIcon(
+                icon = painterResource(MR.images.bookmark),
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+        },
+        onClick = onClick,
+        chevron = painterResource(MR.images.chevron_right),
+        groupColors = ListGroupDefaultColors.translucent(),
+        style = AppTheme.platformStyle.sheetList,
+    )
 }
 
 // The user's location as the start: its supporting line says why it's not usable yet, and it's dimmed outside the covered area

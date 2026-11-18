@@ -16,6 +16,8 @@ import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
+import com.syntey.spiriteddriving.core.domain.route.Route
+import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
@@ -24,13 +26,15 @@ import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
 import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
+import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStatus
+import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.TripPlanPreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.UseBudgetButton
 import com.syntey.spiriteddriving.feature.map.tools.budgetText
-import com.syntey.spiriteddriving.feature.map.tools.durationText
+import com.syntey.spiriteddriving.core.resources.measure.durationText
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.desc
@@ -728,4 +732,115 @@ class TripPlanViewStateTest {
     private fun km(number: String) = StringDesc.ResourceFormatted(MR.strings.unit_kilometres, number)
 
     private fun mi(number: String) = StringDesc.ResourceFormatted(MR.strings.unit_miles, number)
+
+    @Test
+    fun `the saved routes row asks to sign in while signed out`() {
+        assertEquals(MR.strings.sign_in_sheet_title_saved_routes.desc(), TripPlanViewState(isSignedIn = false).savedRoutesRowText)
+    }
+
+    @Test
+    fun `the saved routes row says to save routes when signed in without any`() {
+        assertEquals(MR.strings.map_saved_routes_none.desc(), TripPlanViewState(isSignedIn = true).savedRoutesRowText)
+    }
+
+    @Test
+    fun `the saved routes row counts one saved route`() {
+        val state = TripPlanViewState(isSignedIn = true, savedRoutes = listOf(savedRoute).toImmutableList())
+
+        assertEquals(MR.strings.map_saved_routes_one.desc(), state.savedRoutesRowText)
+    }
+
+    @Test
+    fun `the saved routes row counts several saved routes`() {
+        val state =
+            TripPlanViewState(isSignedIn = true, savedRoutes = listOf(savedRoute, savedRoute.copy(id = "saved-2")).toImmutableList())
+
+        assertEquals(StringDesc.ResourceFormatted(MR.strings.map_saved_routes_many, 2), state.savedRoutesRowText)
+    }
+
+    @Test
+    fun `the saved routes row shows in the search step while the field is blank`() {
+        assertTrue(TripPlanViewState().showsSavedRoutesRow)
+    }
+
+    @Test
+    fun `the saved routes row hides while typing and in the start step`() {
+        assertFalse(TripPlanViewState(search = SearchState(text = "Kar")).showsSavedRoutesRow)
+        assertFalse(
+            TripPlanViewState(startSearch = StartSearch(destinationSearch = SearchState(), closesPlanning = false)).showsSavedRoutesRow,
+        )
+    }
+
+    @Test
+    fun `a saved route's step draws its line as route 1 without a label`() {
+        val line = savedRouteState().routeLines.single()
+
+        assertEquals(1, line.number)
+        assertNull(line.label)
+        assertTrue(line.isSelected)
+        assertEquals(savedRouteRoute.line, line.points.toList())
+    }
+
+    @Test
+    fun `a saved route's step draws no line while the route loads`() {
+        assertTrue(savedRouteState(route = null, status = SavedRouteStatus.Loading).routeLines.isEmpty())
+    }
+
+    @Test
+    fun `a saved route's step frames its line, or its start and destination while loading`() {
+        val ready = assertNotNull(savedRouteState().routeBounds)
+        assertTrue(ready.holds(savedRoute.start.location))
+        assertTrue(ready.holds(savedRoute.destination.location))
+
+        val loading = assertNotNull(savedRouteState(route = null, status = SavedRouteStatus.Loading).routeBounds)
+        assertTrue(loading.holds(savedRoute.start.location))
+        assertTrue(loading.holds(savedRoute.destination.location))
+    }
+
+    @Test
+    fun `a saved route's step hides the map buttons`() {
+        assertFalse(savedRouteState().showsMapButtons)
+    }
+
+    @Test
+    fun `drive is enabled once a saved route's route is loaded`() {
+        assertEquals(savedRouteRoute, savedRouteState().driveRoute)
+        assertTrue(savedRouteState().isDriveEnabled)
+        assertFalse(savedRouteState(route = null, status = SavedRouteStatus.Loading).isDriveEnabled)
+    }
+
+    @Test
+    fun `a saved route's row is route 1 without an extra`() {
+        val row = assertNotNull(savedRouteState().savedRouteRow)
+
+        assertEquals(1, row.number)
+        assertNull(row.extra)
+        assertTrue(row.isSelected)
+    }
+
+    @Test
+    fun `a saved route's start distance counts from the route's start`() {
+        val farAway = GeoPoint(latitude = savedRoute.start.location.latitude + 0.1, longitude = savedRoute.start.location.longitude)
+        val state = savedRouteState().copy(
+            locationAccess = LocationAccess.Precise,
+            map = RouteMapState(userLocation = farAway),
+        )
+
+        assertNotNull(state.startDistance)
+    }
+
+    private val savedRouteRoute = FakeRoutePlanner.Recorded.funRoutes.first()
+
+    private val savedRoute = FakeSavedRoutesSource.Recorded
+
+    private fun GeoBounds.holds(point: GeoPoint): Boolean =
+        point.latitude in southWest.latitude..northEast.latitude && point.longitude in southWest.longitude..northEast.longitude
+
+    private fun savedRouteState(
+        route: Route? = savedRouteRoute,
+        status: SavedRouteStatus = SavedRouteStatus.Ready,
+    ) = TripPlanViewState(
+        savedRouteStep = SavedRouteStep(savedRoute = savedRoute, route = route, status = status),
+        sheetHeight = SheetHeight.Half,
+    )
 }

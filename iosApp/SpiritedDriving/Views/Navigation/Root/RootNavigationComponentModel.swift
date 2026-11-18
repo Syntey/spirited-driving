@@ -3,10 +3,8 @@ import Observation
 
 protocol RootNavigationComponentModelProtocol {
     var slotChild: RootChild? { get }
-    /// The Profile sheet's navigation host while Profile is open; nil otherwise.
-    var profileNavHost: ProfileNavHost? { get }
-    /// The Profile sheet as a slot item; setting nil (a swipe down) closes Profile in Kotlin.
-    var profileSheetItem: DecomposeSlotItem<ProfileNavHost>? { get set }
+    /// The open sheet as a slot item; setting nil (a swipe down) closes that sheet in Kotlin.
+    var sheetItem: DecomposeSlotItem<RootSheetChild>? { get set }
 }
 
 @Observable
@@ -16,20 +14,25 @@ final class RootNavigationComponentModel: RootNavigationComponentModelProtocol {
 
     var slotChild: RootChild? { _slot.child?.instance }
 
-    var profileNavHost: ProfileNavHost? { profileSheetItem?.instance }
-
-    var profileSheetItem: DecomposeSlotItem<ProfileNavHost>? {
+    var sheetItem: DecomposeSlotItem<RootSheetChild>? {
         get {
             guard let sheetChild = _sheet.child?.instance else {
                 return nil
             }
-            switch onEnum(of: sheetChild) {
-            case let .profile(entry):
-                return DecomposeSlotItem(id: ObjectIdentifier(entry), instance: entry.navHost)
-            }
+            return DecomposeSlotItem(id: ObjectIdentifier(sheetChild), instance: sheetChild)
         }
         set { // swiftlint:disable:this unused_setter_value
-            profileNavHost?.onClose()
+            guard let sheetChild = _sheet.child?.instance else {
+                return
+            }
+            switch onEnum(of: sheetChild) {
+            case let .profile(entry):
+                entry.navHost.onClose()
+            case let .signIn(entry):
+                entry.screen.actions.onClose()
+            case let .savedRoutes(entry):
+                entry.screen.actions.onClose()
+            }
         }
     }
 

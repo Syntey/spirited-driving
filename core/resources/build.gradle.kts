@@ -18,6 +18,8 @@ kotlin {
                 api(libs.moko.resources)
                 implementation(libs.jetbrains.compose.runtime)
                 implementation(libs.kotlinx.dateTime)
+                // Measures are formatted from the domain's lengths and distance units
+                implementation(projects.core.domain)
             }
         }
         androidMain {

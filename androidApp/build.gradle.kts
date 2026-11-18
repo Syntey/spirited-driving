@@ -131,6 +131,7 @@ dependencies {
     implementation(projects.feature.onboarding)
     implementation(projects.feature.map)
     implementation(projects.feature.profile)
+    implementation(projects.feature.routes)
     implementation(libs.futured.arkitekt.decompose)
 
     implementation(platform(libs.androidx.compose.bom))

@@ -208,7 +208,7 @@ into it.
 | `iosApp`              | SwiftUI shell: native navigation, hosts Compose screens               | `MapComponent` (MapKit map, native sheet, glass map buttons), Firebase sign-in |
 | `:shared`             | Navigation hosts, Koin graph, logging, crash reporting, iOS framework | Wiring of `RoutePlanner` and `PlaceSearch` to their implementations |
 | `:feature:map`        | [Map](features/map/README.md), [Destination search](features/destination-search/README.md), [Route planning](features/route-planning/README.md), [Drive](features/drive/README.md), [Drive feedback](features/drive-feedback/README.md) | `TripPlanComponent`, its use cases, `TripPlanSheetUi`, Android `MapScreenUi` |
-| `:feature:routes`     | [Saved routes](features/saved-routes/README.md), [Trip history](features/trip-history/README.md) |                                  |
+| `:feature:routes`     | [Saved routes](features/saved-routes/README.md), [Trip history](features/trip-history/README.md) | `SavedRoutesComponent`, its use cases |
 | `:feature:profile`    | Profile, [Settings](features/settings/README.md), [Account](features/account/README.md) |                     |
 | `:feature:onboarding` | [First launch](features/first-launch/README.md)                       |                                                        |
 | `:core:domain`        | Domain types, and the interfaces features reach data through          | `GeoPoint`, `Route`, `RoutePlanner`, `PlaceSearch`, domain errors, polyline decoding, the hand-off link |

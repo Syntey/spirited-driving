@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.map.tools
+package com.syntey.spiriteddriving.core.resources.measure
 
 import com.syntey.spiriteddriving.core.domain.geo.Length
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
@@ -13,7 +13,7 @@ import kotlin.math.roundToInt
  * Miles: "0.3 mi" and "4.2 mi" under 10 mi, then "17 mi". [isApproximate], as with approximate location: whole kilometres or
  * miles, at least 1. The app's English text, so the decimal point is a dot.
  */
-internal fun distanceText(distance: Length, unit: DistanceUnit, isApproximate: Boolean): StringDesc = when (unit) {
+fun distanceText(distance: Length, unit: DistanceUnit, isApproximate: Boolean): StringDesc = when (unit) {
     DistanceUnit.Kilometres -> kilometresText(distance, isApproximate)
     DistanceUnit.Miles -> milesText(distance, isApproximate)
 }
@@ -45,7 +45,7 @@ private fun milesText(distance: Length, isApproximate: Boolean): StringDesc {
  * [height] as the sheet shows a climb: whole metres or feet, rounded to 10, such as "810 m" or "2,660 ft". Thousands get a
  * comma.
  */
-internal fun heightText(height: Length, unit: DistanceUnit): StringDesc = when (unit) {
+fun heightText(height: Length, unit: DistanceUnit): StringDesc = when (unit) {
     DistanceUnit.Kilometres -> StringDesc.ResourceFormatted(MR.strings.unit_metres, roundedToTen(height.inMetres).withThousands())
     DistanceUnit.Miles -> StringDesc.ResourceFormatted(MR.strings.unit_feet, roundedToTen(height.inFeet).withThousands())
 }

@@ -6,6 +6,7 @@ package com.syntey.spiriteddriving.feature.profile.ui
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.syntey.spiriteddriving.core.ui.sheetFullScreenViewController
+import com.syntey.spiriteddriving.core.ui.sheetViewController
 import com.syntey.spiriteddriving.core.ui.sheetScreenViewController
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreen
 import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreen
@@ -21,6 +22,8 @@ import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreen
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreenUi
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreen
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreenUi
 import platform.UIKit.UIViewController
 
 fun ProfileScreenUiController(screen: ProfileScreen): UIViewController = sheetFullScreenViewController {
@@ -49,4 +52,9 @@ fun LicencesScreenUiController(screen: LicencesScreen): UIViewController = sheet
 
 fun LicenceTextScreenUiController(screen: LicenceTextScreen): UIViewController = sheetScreenViewController {
     LicenceTextScreenUi(screen = screen, modifier = Modifier.fillMaxSize())
+}
+
+// The sheet's background stays clear, so the native sheet's glass shows through
+fun SignInSheetScreenUiController(screen: SignInSheetScreen): UIViewController = sheetViewController {
+    SignInSheetScreenUi(screen = screen)
 }

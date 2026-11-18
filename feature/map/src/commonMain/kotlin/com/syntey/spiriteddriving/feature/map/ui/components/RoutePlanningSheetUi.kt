@@ -62,7 +62,7 @@ import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteRow
-import com.syntey.spiriteddriving.feature.map.tools.distanceText
+import com.syntey.spiriteddriving.core.resources.measure.distanceText
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
@@ -197,12 +197,14 @@ internal fun RoutePlanningActions(viewState: TripPlanViewState, actions: TripPla
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(Grid.d2)) {
-            // Save waits for Account, the sign-in it needs
+            val isSaved = viewState.isSelectedRouteSaved
             AppButton(
-                text = stringResource(MR.strings.planning_save),
-                onClick = {},
+                text = stringResource(if (isSaved) MR.strings.planning_saved else MR.strings.planning_save),
+                onClick = actions::onSaveClick,
                 colors = ButtonDefaultColors.tonal(),
-                enabled = false,
+                leadingIcon = painterResource(if (isSaved) MR.images.bookmark_filled else MR.images.bookmark),
+                isLoading = viewState.isSavingRoute,
+                enabled = viewState.isDriveEnabled,
                 modifier = Modifier.weight(1f),
             )
             AppButton(
@@ -296,14 +298,14 @@ internal fun RoutePlanningSummary(viewState: TripPlanViewState, modifier: Modifi
 }
 
 @Composable
-private fun retryAction(actions: TripPlanScreen.Actions): IconAction = IconAction(
+internal fun retryAction(actions: TripPlanScreen.Actions): IconAction = IconAction(
     icon = painterResource(MR.images.refresh),
     label = stringResource(MR.strings.generic_try_again),
     onClick = actions::onPlanningRetry,
 )
 
 @Composable
-private fun PlanningProgress() {
+internal fun PlanningProgress() {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Grid.d2)) {
         CarSpinner(Modifier.size(Grid.d4_5), color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(
@@ -396,9 +398,10 @@ private fun RouteRowItem(row: RouteRow, onClick: () -> Unit, modifier: Modifier 
     }
 }
 
-// The badge, the extra over the fastest route with the time and distance, the facts about the roads when shown, and the fun meter
+// The badge, the extra over the fastest route with the time and distance, the facts about the roads when shown, and the fun meter.
+// A route without an extra, such as a saved route, shows no first line.
 @Composable
-private fun RouteRowContent(row: RouteRow, showsFacts: Boolean, modifier: Modifier = Modifier) {
+internal fun RouteRowContent(row: RouteRow, showsFacts: Boolean, modifier: Modifier = Modifier, showsExtra: Boolean = true) {
     val color = routeColor(row.number)
     val badgeDescription = row.number?.let { stringResource(MR.strings.route_badge, it) }
         ?: stringResource(MR.strings.route_badge_fastest)
@@ -414,11 +417,13 @@ private fun RouteRowContent(row: RouteRow, showsFacts: Boolean, modifier: Modifi
             fastestIcon = if (row.number == null) painterResource(MR.images.fastest) else null,
         )
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Grid.d0_5)) {
-            Text(
-                text = row.extra?.localized() ?: stringResource(MR.strings.planning_fastest),
-                style = MaterialTheme.typography.titleMedium.withTabularFigures(),
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            if (showsExtra) {
+                Text(
+                    text = row.extra?.localized() ?: stringResource(MR.strings.planning_fastest),
+                    style = MaterialTheme.typography.titleMedium.withTabularFigures(),
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
             Text(
                 text = "${row.duration.localized()} · ${row.distance.localized()}",
                 style = MaterialTheme.typography.bodyMedium.withTabularFigures(),

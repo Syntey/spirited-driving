@@ -82,7 +82,7 @@ private fun String.toRouteKind(): RouteKind = when (this) {
     else -> RouteKind.Fun
 }
 
-private fun RouteStatsDto.toDomain(): RouteStats = RouteStats(
+internal fun RouteStatsDto.toDomain(): RouteStats = RouteStats(
     curvyDistance = curvyDistanceMeters.metres,
     ascent = ascentMeters.metres,
 )
@@ -92,4 +92,4 @@ private fun HandOffDto.toDomain(): HandOff = HandOff(
     followedShare = followedShare,
 )
 
-private fun PlaceDto.toDomain(): Place = Place(name = name, area = area, location = location.toDomain())
+internal fun PlaceDto.toDomain(): Place = Place(name = name, area = area, location = location.toDomain())

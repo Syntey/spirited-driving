@@ -21,6 +21,12 @@ interface TripPlanScreen {
     /** One-time events for the screen, such as an explanation after a tap. */
     val events: Flow<TripPlanUiEvent>
 
+    /** Called by navigation when the sign-in sheet opened by Save closed. [isSignedIn] is whether the user signed in. */
+    fun onSignInToSaveFinished(isSignedIn: Boolean)
+
+    /** Called by navigation when a saved route was chosen in Saved routes: it shows on the map, ready to drive. */
+    fun showSavedRoute(savedRouteId: String)
+
     // Each tap and drag on the screen is a function here
     @Suppress("TooManyFunctions")
     interface Actions {
@@ -126,6 +132,24 @@ interface TripPlanScreen {
         /** Tapped Turn on in the reminder offer. */
         fun onReminderOfferClick()
 
+        /** Tapped Save, or Saved, in route planning. */
+        fun onSaveClick()
+
+        /** Tapped the Saved routes row in the search step. */
+        fun onSavedRoutesClick()
+
+        /** Closed the saved route's step: its close button, or Back on Android. */
+        fun onSavedRouteClose()
+
+        /** Tapped Try again after the saved route didn't load. */
+        fun onSavedRouteRetry()
+
+        /** Tapped Save in the name dialog, with the name typed. */
+        fun onRouteNameSave(name: String)
+
+        /** Cancelled or dismissed the name dialog. */
+        fun onRouteNameDismiss()
+
         companion object {
             fun noOpActions(): Actions = object : Actions {
                 override fun onSearchFocus() = Unit
@@ -162,6 +186,12 @@ interface TripPlanScreen {
                 override fun onReminderClick() = Unit
                 override fun onReminderDismiss() = Unit
                 override fun onReminderOfferClick() = Unit
+                override fun onSaveClick() = Unit
+                override fun onRouteNameSave(name: String) = Unit
+                override fun onRouteNameDismiss() = Unit
+                override fun onSavedRoutesClick() = Unit
+                override fun onSavedRouteClose() = Unit
+                override fun onSavedRouteRetry() = Unit
             }
         }
     }

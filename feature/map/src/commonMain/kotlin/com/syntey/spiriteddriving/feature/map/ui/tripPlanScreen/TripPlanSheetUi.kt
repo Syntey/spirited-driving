@@ -48,11 +48,14 @@ import com.syntey.spiriteddriving.core.ui.tools.onEvent
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen.Actions.Companion.noOpActions
 import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedRatingStep
 import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedRoutePlanning
+import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedSavedRoute
 import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
 import com.syntey.spiriteddriving.feature.map.ui.components.RatingStepBody
 import com.syntey.spiriteddriving.feature.map.ui.components.RatingStepHeader
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningBody
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningHeader
+import com.syntey.spiriteddriving.feature.map.ui.components.SavedRouteBody
+import com.syntey.spiriteddriving.feature.map.ui.components.SavedRouteHeader
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchResults
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchRow
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
@@ -72,8 +75,16 @@ fun TripPlanSheetUi(screen: TripPlanScreen, onCollapsedHeightChange: (Dp) -> Uni
     val hostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val notCoveredMessage = stringResource(MR.strings.search_not_covered_message)
+    val saveOfflineMessage = stringResource(MR.strings.saved_routes_offline_saving)
+    val saveFailedMessage = stringResource(MR.strings.saved_routes_save_failed)
+    val removeOfflineMessage = stringResource(MR.strings.saved_routes_offline_changes)
+    val removeFailedMessage = stringResource(MR.strings.saved_routes_remove_failed)
     EventsEffect(screen.events) {
         onEvent<TripPlanUiEvent.NotCovered> { scope.launch { hostState.showMessage(notCoveredMessage) } }
+        onEvent<TripPlanUiEvent.SaveRouteOffline> { scope.launch { hostState.showMessage(saveOfflineMessage) } }
+        onEvent<TripPlanUiEvent.SaveRouteFailed> { scope.launch { hostState.showMessage(saveFailedMessage) } }
+        onEvent<TripPlanUiEvent.RemoveRouteOffline> { scope.launch { hostState.showMessage(removeOfflineMessage) } }
+        onEvent<TripPlanUiEvent.RemoveRouteFailed> { scope.launch { hostState.showMessage(removeFailedMessage) } }
     }
     Box(modifier) {
         Content(
@@ -104,33 +115,21 @@ internal fun Content(
     val isPlanning = viewState.planning != null
     val currentIsPlanning by rememberUpdatedState(isPlanning)
     val rating = viewState.ratingStep
-    val isRating = rating != null
     val reportCollapsedHeight by rememberUpdatedState(onCollapsedHeightChange)
-    var searchCollapsedHeight by remember { mutableStateOf<Dp?>(null) }
-    var planningCollapsedHeight by remember { mutableStateOf<Dp?>(null) }
-    var ratingCollapsedHeight by remember { mutableStateOf<Dp?>(null) }
-    // Each layout keeps its own collapsed height, so starting or cancelling planning, or ending the rating step, moves the
-    // sheet to the right one at once. The rating step comes first: it takes the place of the other two.
-    LaunchedEffect(isRating, isPlanning, searchCollapsedHeight, planningCollapsedHeight, ratingCollapsedHeight) {
-        shownCollapsedHeight(isRating, isPlanning, searchCollapsedHeight, planningCollapsedHeight, ratingCollapsedHeight)
-            ?.let(reportCollapsedHeight)
-    }
+    val savedRoute = viewState.savedRouteStep
+    val collapsedHeights = remember { CollapsedHeights() }
+    val shownHeight = collapsedHeights.shownBy(viewState)
+    LaunchedEffect(shownHeight) { shownHeight?.let(reportCollapsedHeight) }
     // The keyboard comes with the full height: dragging the sheet lower or closing the search hides it
     LaunchedEffect(viewState.sheetHeight) {
         if (viewState.sheetHeight != SheetHeight.Full) focusManager.clearFocus()
     }
     Column(modifier.fillMaxSize()) {
-        if (isPlanning) {
-            CollapsedRoutePlanning(
-                viewState = viewState,
-                actions = actions,
-                modifier = Modifier
-                    .measureOnly { height -> planningCollapsedHeight = with(density) { height.toDp() } }
-                    .clearAndSetSemantics {},
-            )
-        }
+        MeasuredPlanning(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.planning = it })
         if (rating != null) {
-            RatingLayout(viewState = viewState, actions = actions, onCollapsedHeight = { ratingCollapsedHeight = it })
+            RatingLayout(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.rating = it })
+        } else if (savedRoute != null) {
+            SavedRouteLayout(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.savedRoute = it })
         } else if (planning != null && viewState.sheetHeight == SheetHeight.Collapsed) {
             CollapsedRoutePlanning(viewState = viewState, actions = actions)
         } else {
@@ -143,7 +142,7 @@ internal fun Content(
                     // its height, or the sheet's collapsed height would shrink along with the notes. Planning reports its own.
                     .onSizeChanged { size ->
                         if (currentSheetHeight == SheetHeight.Collapsed && !currentIsPlanning) {
-                            searchCollapsedHeight = with(density) { size.height.toDp() }
+                            collapsedHeights.search = with(density) { size.height.toDp() }
                         }
                     }
                     .padding(style.sheetContentPadding),
@@ -172,18 +171,12 @@ internal fun Content(
                     onSearchRetry = actions::onSearchRetry,
                     myLocationRow = viewState.myLocationRow,
                     onMyLocationClick = actions::onMyLocationClick,
+                    onSavedRoutesClick = actions::onSavedRoutesClick,
                     modifier = Modifier.weight(1f),
                 )
             }
         }
     }
-}
-
-// The collapsed height of the layout on screen, which the sheet's collapsed detent follows
-private fun shownCollapsedHeight(isRating: Boolean, isPlanning: Boolean, search: Dp?, planning: Dp?, rating: Dp?): Dp? = when {
-    isRating -> rating
-    isPlanning -> planning
-    else -> search
 }
 
 // The rating step takes the place of the search and planning. Its collapsed layout is measured unplaced first, as planning's
@@ -208,6 +201,62 @@ private fun ColumnScope.RatingLayout(viewState: TripPlanViewState, actions: Trip
         ) {
             RatingStepHeader(viewState = viewState, actions = actions)
             RatingStepBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+// Planning's collapsed layout, measured unplaced while planning, so its height is known before the sheet gets there
+@Composable
+private fun MeasuredPlanning(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
+    if (viewState.planning == null) return
+    val density = LocalDensity.current
+    CollapsedRoutePlanning(
+        viewState = viewState,
+        actions = actions,
+        modifier = Modifier
+            .measureOnly { height -> onCollapsedHeight(with(density) { height.toDp() }) }
+            .clearAndSetSemantics {},
+    )
+}
+
+// The collapsed height of each layout, measured as the layout is shown. The sheet's collapsed detent follows the one on screen,
+// so starting or cancelling planning, or ending a step, moves the sheet to the right one at once.
+private class CollapsedHeights {
+    var search by mutableStateOf<Dp?>(null)
+    var planning by mutableStateOf<Dp?>(null)
+    var rating by mutableStateOf<Dp?>(null)
+    var savedRoute by mutableStateOf<Dp?>(null)
+
+    // The rating step takes the place of the others, and a saved route's step that of search and planning
+    fun shownBy(viewState: TripPlanViewState): Dp? = when {
+        viewState.ratingStep != null -> rating
+        viewState.savedRouteStep != null -> savedRoute
+        viewState.planning != null -> planning
+        else -> search
+    }
+}
+
+// A saved route's step replaces the search and planning, and is measured the same way as the rating step
+@Composable
+private fun ColumnScope.SavedRouteLayout(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
+    val style = MapPlatformStyle.current
+    val density = LocalDensity.current
+    CollapsedSavedRoute(
+        viewState = viewState,
+        actions = actions,
+        modifier = Modifier
+            .measureOnly { height -> onCollapsedHeight(with(density) { height.toDp() }) }
+            .clearAndSetSemantics {},
+    )
+    if (viewState.sheetHeight == SheetHeight.Collapsed) {
+        CollapsedSavedRoute(viewState = viewState, actions = actions)
+    } else {
+        Column(
+            Modifier.fillMaxSize().padding(style.sheetContentPadding),
+            verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
+        ) {
+            SavedRouteHeader(viewState = viewState, actions = actions)
+            SavedRouteBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
         }
     }
 }
