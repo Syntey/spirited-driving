@@ -4,11 +4,13 @@ import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.lifecycle.doOnCreate
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.feature.routes.domain.DeleteSavedRouteUseCase
+import com.syntey.spiriteddriving.feature.routes.domain.DeleteSavedRoutesLaterUseCase
 import com.syntey.spiriteddriving.feature.routes.domain.ObserveDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.routes.domain.ObserveSavedRoutesUseCase
 import com.syntey.spiriteddriving.feature.routes.domain.RefreshSavedRoutesUseCase
@@ -33,6 +35,7 @@ internal class SavedRoutesComponent(
     private val refreshSavedRoutesUseCase: RefreshSavedRoutesUseCase,
     private val renameSavedRouteUseCase: RenameSavedRouteUseCase,
     private val deleteSavedRouteUseCase: DeleteSavedRouteUseCase,
+    private val deleteSavedRoutesLaterUseCase: DeleteSavedRoutesLaterUseCase,
 ) : ScreenComponent<SavedRoutesViewState, SavedRoutesUiEvent, SavedRoutesScreenNavigation>(
     componentContext = componentContext,
     defaultState = SavedRoutesViewState(),
@@ -53,6 +56,8 @@ internal class SavedRoutesComponent(
             observeDistanceUnit()
             refresh()
         }
+        // The deletes still hidden were confirmed by closing the list, and its own work stops with it
+        doOnDestroy { deleteSavedRoutesLaterUseCase(componentState.value.deletingIds) }
     }
 
     override fun onRouteClick(id: String) = openOnMap(id)

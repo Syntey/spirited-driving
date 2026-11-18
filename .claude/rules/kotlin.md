@@ -9,7 +9,8 @@ paths:
 - Immutable by default: `val`, `data class` for values, kotlinx `ImmutableList`/`ImmutableMap` in state.
 - No `!!`. Handle null with `?:`, `?.let`, or `requireNotNull(x) { "why it can't be null" }`.
 - No `GlobalScope` or `runBlocking` in production code. Components run work through use cases (`execute`), which
-  are cancelled with the component.
+  are cancelled with the component. Work that has to finish after its screen closes goes to `AppWork` from
+  `:core:domain`.
 - Platform code goes in `androidMain`/`iosMain` with `.android.kt`/`.ios.kt` file names. Prefer an interface in
   common code to `expect`/`actual`.
 - A module's fixed values (option lists, defaults, limits, delays, timeouts, backend codes) go in its

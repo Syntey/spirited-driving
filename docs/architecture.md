@@ -230,7 +230,9 @@ the [README](../README.md#modules)). So features don't see each other, and reach
 - Its Koin graph binds the `:core:domain` interfaces to their `:data:*` implementations.
 
 Inside a feature, the component holds immutable view state, handles events and drives navigation; use cases hold
-the logic; `RoutePlanner` and `PlaceSearch` hide where data comes from. Network errors (`NetworkError`) map to
+the logic, and are cancelled with the component. Work that has to finish after its screen closes, such as a saved
+route's delete when the list closes during its Undo, runs in `AppWork`, which lasts as long as the app. `RoutePlanner`
+and `PlaceSearch` hide where data comes from. Network errors (`NetworkError`) map to
 domain errors the UI can explain: offline, no route within the budget, region not covered.
 
 How features map to screens is in [navigation.md](navigation.md).
