@@ -30,14 +30,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxDefaults
 import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -328,7 +329,10 @@ private fun ListRowSurface(
 // Swipe left deletes the row. The screen decides whether it goes; a row it keeps slides back.
 @Composable
 private fun SwipeDeleteBox(delete: IconAction, content: @Composable () -> Unit) {
-    val state = rememberSwipeToDismissBoxState()
+    // Not saved: a lazy list keeps a removed row's saved state, so a row brought back by Undo would return swiped and
+    // be deleted again
+    val positionalThreshold = SwipeToDismissBoxDefaults.positionalThreshold
+    val state = remember { SwipeToDismissBoxState(SwipeToDismissBoxValue.Settled, positionalThreshold) }
     val currentOnDelete by rememberUpdatedState(delete.onClick)
     LaunchedEffect(state.currentValue) {
         if (state.currentValue == SwipeToDismissBoxValue.EndToStart) {
