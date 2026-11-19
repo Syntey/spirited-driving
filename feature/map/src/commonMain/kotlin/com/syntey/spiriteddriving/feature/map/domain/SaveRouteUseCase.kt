@@ -12,14 +12,17 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
 import org.koin.core.annotation.Factory
 
 /**
- * Saves [Args.route] as a saved route. Named after the destination unless [Args.name] is given; without a given name, a
- * taken name asks for another one instead of saving. The full route is kept on the device, so it can be driven offline.
+ * Saves [Args.route] as a saved route. Named after the destination unless [Args.name] is given; a taken name, given or not,
+ * asks for another one instead of saving. The full route is kept on the device, so it can be driven offline.
  */
 @Factory
 internal class SaveRouteUseCase(private val savedRoutesSource: SavedRoutesSource, private val savedRoutesCache: SavedRoutesCache) :
     UseCase<SaveRouteUseCase.Args, SaveRouteResult> {
 
-    /** @property name The name typed in the name dialog; null to name the route after its destination. */
+    /**
+     * @property name The name typed in the name dialog, or a saved route's name it's saved under again; null to name the
+     * route after its destination.
+     */
     data class Args(val route: Route, val name: String? = null)
 
     override suspend fun build(args: Args): SaveRouteResult {
@@ -29,7 +32,7 @@ internal class SaveRouteUseCase(private val savedRoutesSource: SavedRoutesSource
 
     private suspend fun saveNew(args: Args, known: List<SavedRoute>): SaveRouteResult {
         val name = args.name?.trim() ?: defaultName(args.route.destination)
-        if (args.name == null && known.hasName(name)) {
+        if (known.hasName(name)) {
             return SaveRouteResult.NameTaken(
                 takenName = name,
                 suggestion = known.freeNameFor(name, args.route.start.shortArea),

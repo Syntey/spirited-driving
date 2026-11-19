@@ -34,9 +34,6 @@ internal class RootNavHostNavigator(
     override val slotNavigator: SlotNavigation<RootConfig> = SlotNavigation()
     override val sheetNavigator: SlotNavigation<RootSheetConfig> = SlotNavigation()
 
-    // Only one sign-in sheet is open at a time, and it's the one opened last that finishes
-    private var signInReason: SignInReason? = null
-
     override fun OnboardingScreen.finish() = slotNavigator.activate(RootConfig.Map)
 
     override fun TripPlanScreen.openProfile() = sheetNavigator.activate(RootSheetConfig.Profile)
@@ -55,14 +52,10 @@ internal class RootNavHostNavigator(
 
     override fun TripPlanScreen.openSignInForSavedRoutes() = openSignIn(SignInReason.SavedRoutes)
 
-    override fun SignInSheetScreen.finish(isSignedIn: Boolean) {
-        val reason = requireNotNull(signInReason) { "The sign-in sheet is opened with a reason" }
+    override fun SignInSheetScreen.finish(reason: SignInReason, isSignedIn: Boolean) {
         sheetNavigator.dismiss()
         onSignInFinished(reason, isSignedIn)
     }
 
-    private fun openSignIn(reason: SignInReason) {
-        signInReason = reason
-        sheetNavigator.activate(RootSheetConfig.SignIn(SignInSheetArgs(reason)))
-    }
+    private fun openSignIn(reason: SignInReason) = sheetNavigator.activate(RootSheetConfig.SignIn(SignInSheetArgs(reason)))
 }

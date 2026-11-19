@@ -95,6 +95,20 @@ class SaveRouteUseCaseTest {
     }
 
     @Test
+    fun `a given name that is taken asks for a free one instead of saving`() = runTest {
+        val taken = route.toSavedRoute(id = SavedRouteId("saved-1"), name = "Sunday loop", savedAt = SAVED_AT)
+        val other = FakeRoutePlanner.Recorded.fastest
+        val source = FakeSavedRoutesSource(routes = listOf(taken))
+
+        val result = assertIs<SaveRouteResult.NameTaken>(
+            saveRoute(other, name = "Sunday loop", source = source, cache = FakeSavedRoutesCache(routes = listOf(taken))),
+        )
+
+        assertEquals("Sunday loop", result.takenName)
+        assertEquals(listOf(taken), source.routes)
+    }
+
+    @Test
     fun `the saved routes are read from the backend when nothing is kept`() = runTest {
         val existing = route.toSavedRoute(id = SavedRouteId("saved-9"), name = "Old name", savedAt = SAVED_AT)
         val cache = FakeSavedRoutesCache(routes = null)

@@ -3,10 +3,9 @@ package com.syntey.spiriteddriving.feature.profile.domain
 import app.futured.arkitekt.crusecases.FlowUseCase
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnitSettings
+import com.syntey.spiriteddriving.core.domain.settings.observeUnit
 import com.syntey.spiriteddriving.core.platform.binding.Platform
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Provided
 
@@ -19,7 +18,5 @@ internal class ObserveDistanceUnitUseCase(
     @Provided private val platform: Platform,
 ) : FlowUseCase<Unit, DistanceUnit> {
 
-    override fun build(args: Unit): Flow<DistanceUnit> = distanceUnitSettings.observe()
-        .map { it ?: DistanceUnit.of(platform.regionCode) }
-        .distinctUntilChanged()
+    override fun build(args: Unit): Flow<DistanceUnit> = distanceUnitSettings.observeUnit(platform.regionCode)
 }

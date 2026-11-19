@@ -61,7 +61,7 @@ internal class ProfileNavHostNavigator(private val onFinished: (ProfileResult) -
     override fun ProfileScreen.openSignInForTripHistory() =
         sheetNavigator.activate(ProfileSheetConfig.SignIn(SignInSheetArgs(SignInReason.TripHistory)))
 
-    override fun SignInSheetScreen.finish(isSignedIn: Boolean) {
+    override fun SignInSheetScreen.finish(reason: SignInReason, isSignedIn: Boolean) {
         sheetNavigator.dismiss()
         if (isSignedIn) stackNavigator.pushNew(ProfileConfig.TripHistory)
     }
