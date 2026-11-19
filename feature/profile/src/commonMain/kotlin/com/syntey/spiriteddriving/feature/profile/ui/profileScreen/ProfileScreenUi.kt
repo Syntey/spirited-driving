@@ -40,6 +40,7 @@ import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.core.ui.tools.EventsEffect
 import com.syntey.spiriteddriving.core.ui.tools.onEvent
 import com.syntey.spiriteddriving.feature.profile.model.ui.ProfilePreviewStates
+import com.syntey.spiriteddriving.feature.profile.model.ui.SignInState
 import com.syntey.spiriteddriving.feature.profile.ui.components.ProfileHeader
 import com.syntey.spiriteddriving.feature.profile.ui.components.SignInCard
 import com.syntey.spiriteddriving.feature.profile.ui.components.WebLinkIcon
@@ -105,8 +106,7 @@ private fun Content(
                 val account = viewState.account
                 if (account == null) {
                     SignInCard(
-                        signInError = viewState.signInError,
-                        isSigningIn = viewState.isSigningIn,
+                        signIn = viewState.signIn,
                         onGoogleClick = actions::onSignInWithGoogleClick,
                     )
                 } else {
@@ -191,13 +191,13 @@ private fun ProfileScreenPreview() = Showcase {
 @ScreenPreviews
 @Composable
 private fun ProfileScreenSigningInPreview() = Showcase {
-    Content(viewState = ProfilePreviewStates.viewState(isSigningIn = true), actions = noOpActions())
+    Content(viewState = ProfilePreviewStates.viewState(signIn = SignInState.Running), actions = noOpActions())
 }
 
 @ScreenPreviews
 @Composable
 private fun ProfileScreenSignInErrorPreview() = Showcase {
-    Content(viewState = ProfilePreviewStates.viewState(signInError = ProfilePreviewStates.signInError()), actions = noOpActions())
+    Content(viewState = ProfilePreviewStates.viewState(signIn = SignInState.Failed), actions = noOpActions())
 }
 
 @ScreenPreviews
@@ -215,13 +215,13 @@ private fun ProfileScreenIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @DarkLightPreviews
 @Composable
 private fun ProfileScreenIosSigningInPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(viewState = ProfilePreviewStates.viewState(isSigningIn = true), actions = noOpActions())
+    Content(viewState = ProfilePreviewStates.viewState(signIn = SignInState.Running), actions = noOpActions())
 }
 
 @DarkLightPreviews
 @Composable
 private fun ProfileScreenIosSignInErrorPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(viewState = ProfilePreviewStates.viewState(signInError = ProfilePreviewStates.signInError()), actions = noOpActions())
+    Content(viewState = ProfilePreviewStates.viewState(signIn = SignInState.Failed), actions = noOpActions())
 }
 
 @DarkLightPreviews

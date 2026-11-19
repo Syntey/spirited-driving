@@ -7,6 +7,7 @@ import com.syntey.spiriteddriving.core.domain.drive.TripHistoryCache
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesCache
 import com.syntey.spiriteddriving.core.platform.binding.Auth
 import com.syntey.spiriteddriving.core.platform.binding.AuthListenerRegistration
@@ -27,7 +28,7 @@ import kotlin.test.assertNull
 class SyncAccountDataOnAccountChangeUseCaseTest {
 
     private val kept = FakeSavedRoutesSource.Recorded
-    private val onBackend = FakeSavedRoutesSource.Recorded.copy(id = "saved-2", name = "Kokořín")
+    private val onBackend = FakeSavedRoutesSource.Recorded.copy(id = SavedRouteId("saved-2"), name = "Kokořín")
     private val keptTrips = PastDrivePage(listOf(FakeTripHistorySource.Recorded), nextCursor = null)
 
     @Test

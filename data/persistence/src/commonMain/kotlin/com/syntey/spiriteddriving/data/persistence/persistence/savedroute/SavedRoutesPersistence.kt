@@ -3,6 +3,7 @@ package com.syntey.spiriteddriving.data.persistence.persistence.savedroute
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesCache
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import com.syntey.spiriteddriving.data.persistence.persistence.route.StoredRoute
@@ -29,7 +30,7 @@ internal class SavedRoutesPersistence(private val jsonPersistence: JsonPersisten
 
     override suspend fun replaceAll(routes: List<SavedRoute>) {
         jsonPersistence.save(LIST_KEY, routes.map { it.toStored() })
-        val ids = routes.mapTo(mutableSetOf()) { it.id }
+        val ids = routes.mapTo(mutableSetOf()) { it.id.value }
         jsonPersistence.update<Map<String, StoredRoute>>(DETAILS_KEY) { stored ->
             stored.orEmpty().filterKeys { it in ids }
         }
@@ -39,29 +40,29 @@ internal class SavedRoutesPersistence(private val jsonPersistence: JsonPersisten
         jsonPersistence.update<List<StoredSavedRoute>>(LIST_KEY) { stored ->
             val current = stored.orEmpty()
             val updated = route.toStored()
-            if (current.any { it.id == route.id }) {
-                current.map { if (it.id == route.id) updated else it }
+            if (current.any { it.id == route.id.value }) {
+                current.map { if (it.id == route.id.value) updated else it }
             } else {
                 current + updated
             }
         }
     }
 
-    override suspend fun remove(id: String) {
+    override suspend fun remove(id: SavedRouteId) {
         jsonPersistence.update<List<StoredSavedRoute>>(LIST_KEY) { stored ->
-            stored.orEmpty().filterNot { it.id == id }
+            stored.orEmpty().filterNot { it.id == id.value }
         }
         jsonPersistence.update<Map<String, StoredRoute>>(DETAILS_KEY) { stored ->
-            stored.orEmpty() - id
+            stored.orEmpty() - id.value
         }
     }
 
-    override suspend fun getRoute(id: String): Route? =
-        jsonPersistence.getCatching<Map<String, StoredRoute>>(DETAILS_KEY)?.get(id)?.toDomain()
+    override suspend fun getRoute(id: SavedRouteId): Route? =
+        jsonPersistence.getCatching<Map<String, StoredRoute>>(DETAILS_KEY)?.get(id.value)?.toDomain()
 
-    override suspend fun putRoute(id: String, route: Route) {
+    override suspend fun putRoute(id: SavedRouteId, route: Route) {
         jsonPersistence.update<Map<String, StoredRoute>>(DETAILS_KEY) { stored ->
-            stored.orEmpty() + (id to route.toStored())
+            stored.orEmpty() + (id.value to route.toStored())
         }
     }
 

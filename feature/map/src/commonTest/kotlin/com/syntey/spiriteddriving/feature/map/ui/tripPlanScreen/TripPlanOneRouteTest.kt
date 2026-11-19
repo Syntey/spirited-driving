@@ -7,6 +7,7 @@ import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
@@ -70,27 +71,34 @@ class TripPlanOneRouteTest {
     }
 
     @Test
-    fun `a saved route's step is saved by its own saved route, not by another saved route of its route`() {
-        val other = FakeSavedRoutesSource.Recorded.copy(id = "saved-2")
+    fun `a saved route's step is saved by its own saved route and not by another one of its route`() {
+        val other = FakeSavedRoutesSource.Recorded.copy(id = SavedRouteId("saved-2"))
 
         assertFalse(stepWith(savedRoutes = listOf(other)).isSelectedRouteSaved)
     }
 
     @Test
     fun `a past drive's step is saved while a saved route has the drive's route ID`() {
-        val saved = FakeSavedRoutesSource.Recorded.copy(routeId = route.id)
+        val saved = FakeSavedRoutesSource.Recorded.copy(route = FakeSavedRoutesSource.Recorded.route.copy(id = route.id))
 
         assertSame(saved, pastStepWith(savedRoutes = listOf(saved)).savedRouteOnScreen)
     }
 
     @Test
     fun `a past drive's step is unsaved once no saved route has its route ID`() {
-        assertFalse(pastStepWith(savedRoutes = listOf(FakeSavedRoutesSource.Recorded.copy(routeId = "other"))).isSelectedRouteSaved)
+        assertFalse(
+            pastStepWith(
+                savedRoutes = listOf(FakeSavedRoutesSource.Recorded.copy(route = FakeSavedRoutesSource.Recorded.route.copy(id = "other"))),
+            ).isSelectedRouteSaved,
+        )
     }
 
     @Test
     fun `a past drive's step is unsaved when only other routes are saved`() {
-        val other = FakeSavedRoutesSource.Recorded.copy(id = "saved-2", routeId = "other-route")
+        val other = FakeSavedRoutesSource.Recorded.copy(
+            id = SavedRouteId("saved-2"),
+            route = FakeSavedRoutesSource.Recorded.route.copy(id = "other-route"),
+        )
 
         assertNull(pastStepWith(savedRoutes = listOf(other)).savedRouteOnScreen)
     }
@@ -105,7 +113,7 @@ class TripPlanOneRouteTest {
     @Test
     fun `a saved route's step is about the saved route its route was saved as`() {
         val old = FakeSavedRoutesSource.Recorded
-        val new = old.copy(id = "saved-new")
+        val new = old.copy(id = SavedRouteId("saved-new"))
         val step = OneRouteStep(origin = OneRouteOrigin.Saved(old), route = route)
 
         assertEquals(OneRouteOrigin.Saved(new), step.savedAs(route.id, new).origin)
@@ -122,16 +130,19 @@ class TripPlanOneRouteTest {
     fun `saving a route other than the step's leaves the step as it is`() {
         val step = OneRouteStep(origin = OneRouteOrigin.Saved(FakeSavedRoutesSource.Recorded), route = route)
 
-        assertEquals(step, step.savedAs(FakeRoutePlanner.Recorded.fastest.id, FakeSavedRoutesSource.Recorded.copy(id = "saved-new")))
+        assertEquals(
+            step,
+            step.savedAs(FakeRoutePlanner.Recorded.fastest.id, FakeSavedRoutesSource.Recorded.copy(id = SavedRouteId("saved-new"))),
+        )
     }
 
     private fun stepWith(savedRoutes: List<SavedRoute>): TripPlanViewState = TripPlanViewState(
-        oneRouteStep = OneRouteStep(origin = OneRouteOrigin.Saved(FakeSavedRoutesSource.Recorded), route = route),
+        sheetStep = OneRouteStep(origin = OneRouteOrigin.Saved(FakeSavedRoutesSource.Recorded), route = route),
         savedRoutes = savedRoutes.toImmutableList(),
     )
 
     private fun pastStepWith(savedRoutes: List<SavedRoute>): TripPlanViewState = TripPlanViewState(
-        oneRouteStep = OneRouteStep(origin = OneRouteOrigin.Past(drive), route = route),
+        sheetStep = OneRouteStep(origin = OneRouteOrigin.Past(drive), route = route),
         savedRoutes = savedRoutes.toImmutableList(),
     )
 

@@ -215,8 +215,8 @@ into it.
 | `:core:ui`            | Theme, shared components, Decompose base classes                      | Glass modifier, per-platform component styles          |
 | `:core:resources`     | Shared strings and images                                             | Attribution texts                                      |
 | `:core:platform`      | Interfaces implemented natively on each platform                      | Location, Firebase sign-in and App Check, local notifications, the in-app browser |
-| `:data:network`       | Ktorfit/Ktor client, DTOs, `NetworkResult`                            | `ApiRoutePlanner`, `ApiPlaceSearch`, `ApiCoverageSource` |
-| `:data:persistence`   | DataStore                                                             | The covered area, recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet |
+| `:data:network`       | Ktorfit/Ktor client, DTOs, `NetworkResult`                            | `ApiRoutePlanner`, `ApiPlaceSearch`, `ApiCoverageSource`, `ApiSavedRoutesSource`, `ApiTripHistorySource` |
+| `:data:persistence`   | DataStore                                                             | The covered area, recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet, saved routes, trip history |
 
 Features that share state share a module: one `TripPlanComponent` drives the map and its sheet, so everything shown
 on the map is `:feature:map`.

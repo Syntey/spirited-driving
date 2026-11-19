@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.feature.routes.domain
 
 import app.futured.arkitekt.crusecases.UseCase
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesSource
 import org.koin.core.annotation.Factory
@@ -10,7 +11,7 @@ import org.koin.core.annotation.Factory
 internal class RenameSavedRouteUseCase(private val savedRoutesSource: SavedRoutesSource, private val savedRoutesCache: SavedRoutesCache) :
     UseCase<RenameSavedRouteUseCase.Args, Unit> {
 
-    data class Args(val id: String, val name: String)
+    data class Args(val id: SavedRouteId, val name: String)
 
     override suspend fun build(args: Args) {
         savedRoutesCache.put(savedRoutesSource.rename(args.id, args.name.trim()))

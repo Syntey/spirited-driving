@@ -1,11 +1,15 @@
 package com.syntey.spiriteddriving.data.persistence.persistence.savedroute
 
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.metres
-import com.syntey.spiriteddriving.core.domain.route.RouteStats
+import com.syntey.spiriteddriving.core.domain.route.RouteSummary
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.data.persistence.persistence.place.StoredPlace
 import com.syntey.spiriteddriving.data.persistence.persistence.place.toDomain
 import com.syntey.spiriteddriving.data.persistence.persistence.place.toStored
+import com.syntey.spiriteddriving.data.persistence.persistence.route.ascentMetres
+import com.syntey.spiriteddriving.data.persistence.persistence.route.curvyDistanceMetres
+import com.syntey.spiriteddriving.data.persistence.persistence.route.routeStatsOf
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
@@ -30,31 +34,30 @@ internal data class StoredSavedRoute(
 )
 
 internal fun SavedRoute.toStored() = StoredSavedRoute(
-    id = id,
+    id = id.value,
     name = name,
     savedAtEpochMillis = savedAt.toEpochMilliseconds(),
-    routeId = routeId,
-    start = start.toStored(),
-    destination = destination.toStored(),
-    durationSeconds = duration.inWholeSeconds,
-    distanceMetres = distance.inWholeMetres.toLong(),
-    funLevel = funLevel,
-    curvyDistanceMetres = stats.curvyDistance.inWholeMetres.toLong(),
-    ascentMetres = stats.ascent.inWholeMetres.toLong(),
+    routeId = route.id,
+    start = route.start.toStored(),
+    destination = route.destination.toStored(),
+    durationSeconds = route.duration.inWholeSeconds,
+    distanceMetres = route.distance.inWholeMetres.toLong(),
+    funLevel = route.funLevel,
+    curvyDistanceMetres = route.stats.curvyDistanceMetres,
+    ascentMetres = route.stats.ascentMetres,
 )
 
 internal fun StoredSavedRoute.toDomain() = SavedRoute(
-    id = id,
+    id = SavedRouteId(id),
     name = name,
     savedAt = Instant.fromEpochMilliseconds(savedAtEpochMillis),
-    routeId = routeId,
-    start = start.toDomain(),
-    destination = destination.toDomain(),
-    duration = durationSeconds.seconds,
-    distance = distanceMetres.toInt().metres,
-    funLevel = funLevel,
-    stats = RouteStats(
-        curvyDistance = curvyDistanceMetres.toInt().metres,
-        ascent = ascentMetres.toInt().metres,
+    route = RouteSummary(
+        id = routeId,
+        start = start.toDomain(),
+        destination = destination.toDomain(),
+        duration = durationSeconds.seconds,
+        distance = distanceMetres.toInt().metres,
+        funLevel = funLevel,
+        stats = routeStatsOf(curvyDistanceMetres, ascentMetres),
     ),
 )

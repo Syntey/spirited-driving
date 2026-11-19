@@ -6,7 +6,7 @@ import com.syntey.spiriteddriving.core.domain.tools.Constants
  * Whether one of these routes, other than [exceptId], is called [name]. Names are compared trimmed and ignoring case, so
  * "Karlštejn castle " is taken by "Karlštejn Castle".
  */
-fun List<SavedRoute>.hasName(name: String, exceptId: String? = null): Boolean =
+fun List<SavedRoute>.hasName(name: String, exceptId: SavedRouteId? = null): Boolean =
     filter { it.id != exceptId }.map { it.name }.containsName(name)
 
 /** Whether any of these names is [name], compared trimmed and ignoring case. */

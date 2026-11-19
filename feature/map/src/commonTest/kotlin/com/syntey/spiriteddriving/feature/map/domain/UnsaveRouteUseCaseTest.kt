@@ -3,6 +3,7 @@ package com.syntey.spiriteddriving.feature.map.domain
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.savedroute.toSavedRoute
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -13,7 +14,7 @@ import kotlin.time.Instant
 class UnsaveRouteUseCaseTest {
 
     private val saved = FakeRoutePlanner.Recorded.funRoutes.first()
-        .toSavedRoute(id = "saved-1", name = "Karlštejn Castle", savedAt = Instant.parse("2026-11-08T09:30:00Z"))
+        .toSavedRoute(id = SavedRouteId("saved-1"), name = "Karlštejn Castle", savedAt = Instant.parse("2026-11-08T09:30:00Z"))
 
     @Test
     fun `the saved route is deleted from the backend`() = runTest {

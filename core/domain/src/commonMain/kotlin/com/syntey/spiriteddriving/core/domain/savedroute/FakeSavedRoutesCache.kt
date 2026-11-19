@@ -7,11 +7,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 /**
  * [SavedRoutesCache] that keeps everything in memory.
  */
-class FakeSavedRoutesCache(routes: List<SavedRoute>? = null, fullRoutes: Map<String, Route> = emptyMap()) : SavedRoutesCache {
+class FakeSavedRoutesCache(routes: List<SavedRoute>? = null, fullRoutes: Map<SavedRouteId, Route> = emptyMap()) : SavedRoutesCache {
 
     private val list = MutableStateFlow(routes)
 
-    var fullRoutes: Map<String, Route> = fullRoutes
+    var fullRoutes: Map<SavedRouteId, Route> = fullRoutes
         private set
 
     override fun observe(): Flow<List<SavedRoute>?> = list
@@ -33,14 +33,14 @@ class FakeSavedRoutesCache(routes: List<SavedRoute>? = null, fullRoutes: Map<Str
         }
     }
 
-    override suspend fun remove(id: String) {
+    override suspend fun remove(id: SavedRouteId) {
         list.value = list.value?.filterNot { it.id == id }
         fullRoutes = fullRoutes - id
     }
 
-    override suspend fun getRoute(id: String): Route? = fullRoutes[id]
+    override suspend fun getRoute(id: SavedRouteId): Route? = fullRoutes[id]
 
-    override suspend fun putRoute(id: String, route: Route) {
+    override suspend fun putRoute(id: SavedRouteId, route: Route) {
         fullRoutes = fullRoutes + (id to route)
     }
 

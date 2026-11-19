@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.feature.routes.model.ui
 
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.resources.measure.distanceText
@@ -17,22 +18,22 @@ class SavedRouteRowTest {
     fun `a row keeps the saved route's id name and fun level`() {
         val row = FakeSavedRoutesSource.Recorded.toRow(DistanceUnit.Kilometres)
 
-        assertEquals("saved-1", row.id)
+        assertEquals(SavedRouteId("saved-1"), row.id)
         assertEquals("Karlštejn Castle", row.name)
-        assertEquals(FakeSavedRoutesSource.Recorded.funLevel, row.funLevel)
+        assertEquals(FakeSavedRoutesSource.Recorded.route.funLevel, row.funLevel)
     }
 
     @Test
     fun `details show the start's area and the duration and distance`() {
         val route = FakeSavedRoutesSource.Recorded
-        val area = route.start.shortArea.orEmpty()
+        val area = route.route.start.shortArea.orEmpty()
 
         assertEquals(
             StringDesc.ResourceFormatted(
                 MR.strings.saved_routes_row,
                 area,
-                durationText(route.duration),
-                distanceText(route.distance, DistanceUnit.Kilometres, isApproximate = false),
+                durationText(route.route.duration),
+                distanceText(route.route.distance, DistanceUnit.Kilometres, isApproximate = false),
             ),
             route.toRow(DistanceUnit.Kilometres).details,
         )
@@ -40,13 +41,17 @@ class SavedRouteRowTest {
 
     @Test
     fun `a start without an area or name leaves the start out`() {
-        val route = FakeSavedRoutesSource.Recorded.copy(start = FakeSavedRoutesSource.Recorded.start.copy(name = null, area = null))
+        val route = FakeSavedRoutesSource.Recorded.copy(
+            route = FakeSavedRoutesSource.Recorded.route.copy(
+                start = FakeSavedRoutesSource.Recorded.route.start.copy(name = null, area = null),
+            ),
+        )
 
         assertEquals(
             StringDesc.ResourceFormatted(
                 MR.strings.saved_routes_row_no_start,
-                durationText(route.duration),
-                distanceText(route.distance, DistanceUnit.Kilometres, isApproximate = false),
+                durationText(route.route.duration),
+                distanceText(route.route.distance, DistanceUnit.Kilometres, isApproximate = false),
             ),
             route.toRow(DistanceUnit.Kilometres).details,
         )

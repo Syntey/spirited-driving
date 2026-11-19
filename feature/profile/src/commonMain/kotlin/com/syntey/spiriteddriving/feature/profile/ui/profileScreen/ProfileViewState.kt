@@ -1,11 +1,10 @@
 package com.syntey.spiriteddriving.feature.profile.ui.profileScreen
 
 import com.syntey.spiriteddriving.feature.profile.model.ui.AccountRow
-import dev.icerock.moko.resources.desc.StringDesc
+import com.syntey.spiriteddriving.feature.profile.model.ui.SignInState
 
-data class ProfileViewState(
-    /** Null when signed out, and the sign-in card shows. */
-    val account: AccountRow? = null,
-    val isSigningIn: Boolean = false,
-    val signInError: StringDesc? = null,
-)
+/**
+ * @property account Null when signed out, and the sign-in card shows.
+ * @property signIn The sign-in card's state: whether a sign-in runs and the error of the last try.
+ */
+data class ProfileViewState(val account: AccountRow? = null, val signIn: SignInState = SignInState())

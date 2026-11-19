@@ -15,8 +15,8 @@ class FakeSavedRoutesSource(routes: List<SavedRoute> = emptyList()) : SavedRoute
 
     var error: Throwable? = null
 
-    val deleted: List<String>
-        field = mutableListOf<String>()
+    val deleted: List<SavedRouteId>
+        field = mutableListOf<SavedRouteId>()
 
     override suspend fun list(): List<SavedRoute> {
         error?.let { throw it }
@@ -25,23 +25,23 @@ class FakeSavedRoutesSource(routes: List<SavedRoute> = emptyList()) : SavedRoute
 
     override suspend fun save(routeId: String, name: String): SavedRoute {
         error?.let { throw it }
-        routes.firstOrNull { it.routeId == routeId }?.let { return it }
-        val saved = recordedRoute(routeId).toSavedRoute(id = "saved-${routes.size + 1}", name = name, savedAt = SAVED_AT)
+        routes.firstOrNull { it.route.id == routeId }?.let { return it }
+        val saved = recordedRoute(routeId).toSavedRoute(id = SavedRouteId("saved-${routes.size + 1}"), name = name, savedAt = SAVED_AT)
         routes = routes + saved
         return saved
     }
 
-    override suspend fun getRoute(id: String, maxHandOffWaypoints: Int): Route {
+    override suspend fun getRoute(id: SavedRouteId, maxHandOffWaypoints: Int): Route {
         error?.let { throw it }
         val saved = routes.firstOrNull { it.id == id } ?: throw SavedRouteNotFoundException()
-        return recordedRoute(saved.routeId)
+        return recordedRoute(saved.route.id)
     }
 
     private fun recordedRoute(routeId: String): Route =
         (listOf(FakeRoutePlanner.Recorded.fastest) + FakeRoutePlanner.Recorded.funRoutes)
             .firstOrNull { it.id == routeId } ?: FakeRoutePlanner.Recorded.funRoutes.first()
 
-    override suspend fun rename(id: String, name: String): SavedRoute {
+    override suspend fun rename(id: SavedRouteId, name: String): SavedRoute {
         error?.let { throw it }
         val saved = routes.firstOrNull { it.id == id } ?: throw SavedRouteNotFoundException()
         val renamed = saved.copy(name = name.trim())
@@ -49,7 +49,7 @@ class FakeSavedRoutesSource(routes: List<SavedRoute> = emptyList()) : SavedRoute
         return renamed
     }
 
-    override suspend fun delete(id: String) {
+    override suspend fun delete(id: SavedRouteId) {
         error?.let { throw it }
         deleted += id
         routes = routes.filterNot { it.id == id }
@@ -60,20 +60,14 @@ class FakeSavedRoutesSource(routes: List<SavedRoute> = emptyList()) : SavedRoute
 
         /** The recorded plan's fun route, saved as "Karlštejn Castle". */
         val Recorded: SavedRoute = FakeRoutePlanner.Recorded.funRoutes.first()
-            .toSavedRoute(id = "saved-1", name = "Karlštejn Castle", savedAt = SAVED_AT)
+            .toSavedRoute(id = SavedRouteId("saved-1"), name = "Karlštejn Castle", savedAt = SAVED_AT)
     }
 }
 
 /** This route as a saved route with [id] and [name]. */
-fun Route.toSavedRoute(id: String, name: String, savedAt: Instant): SavedRoute = SavedRoute(
+fun Route.toSavedRoute(id: SavedRouteId, name: String, savedAt: Instant): SavedRoute = SavedRoute(
     id = id,
     name = name,
     savedAt = savedAt,
-    routeId = this.id,
-    start = start,
-    destination = destination,
-    duration = duration,
-    distance = distance,
-    funLevel = funLevel,
-    stats = stats,
+    route = summary,
 )

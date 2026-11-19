@@ -16,16 +16,15 @@ import com.syntey.spiriteddriving.core.ui.components.NoteCard
 import com.syntey.spiriteddriving.core.ui.components.NoteDefaultColors
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.syntey.spiriteddriving.core.ui.theme.Grid
+import com.syntey.spiriteddriving.feature.profile.model.ui.SignInState
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
-import dev.icerock.moko.resources.desc.StringDesc
 
 /** Profile's sign-in card while signed out: what the account keeps, the error if the last try failed, and the button. */
 @Composable
 internal fun SignInCard(
-    signInError: StringDesc?,
-    isSigningIn: Boolean,
+    signIn: SignInState,
     onGoogleClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -48,9 +47,10 @@ internal fun SignInCard(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(Grid.d4))
-        if (signInError != null) {
+        val error = signIn.error
+        if (error != null) {
             NoteCard(
-                text = signInError.localized(),
+                text = error.localized(),
                 colors = NoteDefaultColors.error(),
                 icon = painterResource(MR.images.warning),
             )
@@ -61,7 +61,7 @@ internal fun SignInCard(
             logo = painterResource(MR.images.google_logo),
             onClick = onGoogleClick,
             modifier = Modifier.fillMaxWidth(),
-            isLoading = isSigningIn,
+            isLoading = signIn.isSigningIn,
         )
     }
 }

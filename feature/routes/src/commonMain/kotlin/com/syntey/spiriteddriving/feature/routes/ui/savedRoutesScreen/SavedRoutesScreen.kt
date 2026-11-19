@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen
 
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,10 +16,10 @@ interface SavedRoutesScreen {
 
     interface Actions {
         /** Tapped a row: shows the route on the map. */
-        fun onRouteClick(id: String)
+        fun onRouteClick(id: SavedRouteId)
 
         /** Chose Rename in a row's menu. */
-        fun onRenameClick(id: String)
+        fun onRenameClick(id: SavedRouteId)
 
         /** Confirmed the rename dialog with [name]. */
         fun onRenameSave(name: String)
@@ -27,13 +28,13 @@ interface SavedRoutesScreen {
         fun onRenameDismiss()
 
         /** Chose Delete in a row's menu, or swiped the row away. */
-        fun onDeleteClick(id: String)
+        fun onDeleteClick(id: SavedRouteId)
 
         /** Tapped Undo on a deleted route's message. */
-        fun onDeleteUndo(id: String)
+        fun onDeleteUndo(id: SavedRouteId)
 
         /** The deleted route's message ended without Undo, so the delete goes through. */
-        fun onDeleteMessageGone(id: String)
+        fun onDeleteMessageGone(id: SavedRouteId)
 
         /** Tapped Try again after the list failed to load. */
         fun onRetry()
@@ -43,13 +44,13 @@ interface SavedRoutesScreen {
 
         companion object {
             fun noOpActions(): Actions = object : Actions {
-                override fun onRouteClick(id: String) = Unit
-                override fun onRenameClick(id: String) = Unit
+                override fun onRouteClick(id: SavedRouteId) = Unit
+                override fun onRenameClick(id: SavedRouteId) = Unit
                 override fun onRenameSave(name: String) = Unit
                 override fun onRenameDismiss() = Unit
-                override fun onDeleteClick(id: String) = Unit
-                override fun onDeleteUndo(id: String) = Unit
-                override fun onDeleteMessageGone(id: String) = Unit
+                override fun onDeleteClick(id: SavedRouteId) = Unit
+                override fun onDeleteUndo(id: SavedRouteId) = Unit
+                override fun onDeleteMessageGone(id: SavedRouteId) = Unit
                 override fun onRetry() = Unit
                 override fun onClose() = Unit
             }

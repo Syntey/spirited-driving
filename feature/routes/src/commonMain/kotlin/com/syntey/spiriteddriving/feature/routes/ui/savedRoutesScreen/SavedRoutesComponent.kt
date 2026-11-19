@@ -6,6 +6,7 @@ import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.lifecycle.doOnCreate
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
@@ -61,25 +62,25 @@ internal class SavedRoutesComponent(
         doOnDestroy { savedRouteDeleter.deleteLater(componentState.value.deletingIds) }
     }
 
-    override fun onRouteClick(id: String) = openOnMap(id)
+    override fun onRouteClick(id: SavedRouteId) = openOnMap(id)
 
-    override fun onRenameClick(id: String) = openRenameDialog(id)
+    override fun onRenameClick(id: SavedRouteId) = openRenameDialog(id)
 
     override fun onRenameSave(name: String) = saveRename(name)
 
     override fun onRenameDismiss() = closeRenameDialog()
 
-    override fun onDeleteClick(id: String) = hideRow(id)
+    override fun onDeleteClick(id: SavedRouteId) = hideRow(id)
 
-    override fun onDeleteUndo(id: String) = restoreRow(id)
+    override fun onDeleteUndo(id: SavedRouteId) = restoreRow(id)
 
-    override fun onDeleteMessageGone(id: String) = deleteRoute(id)
+    override fun onDeleteMessageGone(id: SavedRouteId) = deleteRoute(id)
 
     override fun onRetry() = retry()
 
     override fun onClose() = close()
 
-    private fun openRenameDialog(id: String) {
+    private fun openRenameDialog(id: SavedRouteId) {
         val routes = componentState.value.savedRoutes ?: return
         val route = routes.firstOrNull { it.id == id } ?: return
         val dialog = RenameDialog(
@@ -101,7 +102,7 @@ internal class SavedRoutesComponent(
         componentState.update { it.copy(renameDialog = null) }
     }
 
-    private fun hideRow(id: String) {
+    private fun hideRow(id: SavedRouteId) {
         componentState.update { it.copy(deletingIds = (it.deletingIds + id).toImmutableSet()) }
         sendUiEvent(SavedRoutesUiEvent.RouteDeleted(id))
     }
@@ -141,13 +142,13 @@ internal class SavedRoutesComponent(
         }
     }
 
-    private fun renameRoute(id: String, name: String) = renameSavedRouteUseCase.execute(
+    private fun renameRoute(id: SavedRouteId, name: String) = renameSavedRouteUseCase.execute(
         RenameSavedRouteUseCase.Args(id = id, name = name),
     ) {
         onError { error -> reportChangeError(error, SavedRoutesUiEvent.RenameFailed, "Saved route not renamed") }
     }
 
-    private fun deleteRoute(id: String) = deleteSavedRouteUseCase.execute(id) {
+    private fun deleteRoute(id: SavedRouteId) = deleteSavedRouteUseCase.execute(id) {
         onSuccess { restoreRow(id) }
         onError { error ->
             // The row comes back where it was, and the message says why it's still there
@@ -165,7 +166,7 @@ internal class SavedRoutesComponent(
         }
     }
 
-    private fun restoreRow(id: String) {
+    private fun restoreRow(id: SavedRouteId) {
         componentState.update { it.copy(deletingIds = (it.deletingIds - id).toImmutableSet()) }
     }
 }

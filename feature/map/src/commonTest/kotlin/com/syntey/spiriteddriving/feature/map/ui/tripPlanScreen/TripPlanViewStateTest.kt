@@ -21,6 +21,7 @@ import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
@@ -664,7 +665,7 @@ class TripPlanViewStateTest {
         )
         return TripPlanViewState(
             sheetHeight = SheetHeight.Half,
-            ratingStep = RatingStep(question = question, driveTime = "Today, 14:20".desc(), rating = rating),
+            sheetStep = RatingStep(question = question, driveTime = "Today, 14:20".desc(), rating = rating),
         )
     }
 
@@ -757,7 +758,10 @@ class TripPlanViewStateTest {
     @Test
     fun `the saved routes row counts several saved routes`() {
         val state =
-            TripPlanViewState(isSignedIn = true, savedRoutes = listOf(savedRoute, savedRoute.copy(id = "saved-2")).toImmutableList())
+            TripPlanViewState(
+                isSignedIn = true,
+                savedRoutes = listOf(savedRoute, savedRoute.copy(id = SavedRouteId("saved-2"))).toImmutableList(),
+            )
 
         assertEquals(StringDesc.ResourceFormatted(MR.strings.map_saved_routes_many, 2), state.savedRoutesRowText)
     }
@@ -791,14 +795,14 @@ class TripPlanViewStateTest {
     }
 
     @Test
-    fun `a saved route's step frames its line, or its start and destination while loading`() {
+    fun `a saved route's step frames its line or its start and destination while loading`() {
         val ready = assertNotNull(savedRouteState().routeBounds)
-        assertTrue(ready.holds(savedRoute.start.location))
-        assertTrue(ready.holds(savedRoute.destination.location))
+        assertTrue(ready.holds(savedRoute.route.start.location))
+        assertTrue(ready.holds(savedRoute.route.destination.location))
 
         val loading = assertNotNull(savedRouteState(route = null, status = OneRouteStatus.Loading).routeBounds)
-        assertTrue(loading.holds(savedRoute.start.location))
-        assertTrue(loading.holds(savedRoute.destination.location))
+        assertTrue(loading.holds(savedRoute.route.start.location))
+        assertTrue(loading.holds(savedRoute.route.destination.location))
     }
 
     @Test
@@ -824,7 +828,8 @@ class TripPlanViewStateTest {
 
     @Test
     fun `a saved route's start distance counts from the route's start`() {
-        val farAway = GeoPoint(latitude = savedRoute.start.location.latitude + 0.1, longitude = savedRoute.start.location.longitude)
+        val farAway =
+            GeoPoint(latitude = savedRoute.route.start.location.latitude + 0.1, longitude = savedRoute.route.start.location.longitude)
         val state = savedRouteState().copy(
             locationAccess = LocationAccess.Precise,
             map = RouteMapState(userLocation = farAway),
@@ -844,7 +849,7 @@ class TripPlanViewStateTest {
         route: Route? = savedRouteRoute,
         status: OneRouteStatus = OneRouteStatus.Ready,
     ) = TripPlanViewState(
-        oneRouteStep = OneRouteStep(origin = OneRouteOrigin.Saved(savedRoute), route = route, status = status),
+        sheetStep = OneRouteStep(origin = OneRouteOrigin.Saved(savedRoute), route = route, status = status),
         sheetHeight = SheetHeight.Half,
     )
 
@@ -867,7 +872,7 @@ class TripPlanViewStateTest {
         route: Route? = pastRoute,
         savedRoutes: List<SavedRoute> = emptyList(),
     ) = TripPlanViewState(
-        oneRouteStep = OneRouteStep(origin = OneRouteOrigin.Past(drive), route = route),
+        sheetStep = OneRouteStep(origin = OneRouteOrigin.Past(drive), route = route),
         sheetHeight = SheetHeight.Half,
         savedRoutes = savedRoutes.toImmutableList(),
     )
@@ -893,7 +898,7 @@ class TripPlanViewStateTest {
 
     @Test
     fun `a past drive is saved while a saved route has its route ID`() {
-        val saved = FakeSavedRoutesSource.Recorded.copy(routeId = pastRoute.id)
+        val saved = FakeSavedRoutesSource.Recorded.copy(route = FakeSavedRoutesSource.Recorded.route.copy(id = pastRoute.id))
 
         assertTrue(pastDriveState(savedRoutes = listOf(saved)).isSelectedRouteSaved)
         assertEquals(saved, pastDriveState(savedRoutes = listOf(saved)).savedRouteOnScreen)
@@ -901,7 +906,7 @@ class TripPlanViewStateTest {
 
     @Test
     fun `a past drive is unsaved when no saved route has its route ID`() {
-        val other = FakeSavedRoutesSource.Recorded.copy(routeId = "other-route")
+        val other = FakeSavedRoutesSource.Recorded.copy(route = FakeSavedRoutesSource.Recorded.route.copy(id = "other-route"))
 
         assertFalse(pastDriveState(savedRoutes = listOf(other)).isSelectedRouteSaved)
         assertFalse(pastDriveState().isSelectedRouteSaved)

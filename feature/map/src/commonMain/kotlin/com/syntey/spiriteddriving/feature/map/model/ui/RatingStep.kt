@@ -3,7 +3,12 @@ package com.syntey.spiriteddriving.feature.map.model.ui
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.RatingReason
+import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
+import com.syntey.spiriteddriving.feature.map.tools.boundsOf
+import com.syntey.spiriteddriving.feature.map.tools.midpointAlong
+import com.syntey.spiriteddriving.feature.map.tools.withMinimumSpan
 import dev.icerock.moko.resources.desc.StringDesc
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * The rating step of the sheet, after a drive.
@@ -17,7 +22,26 @@ data class RatingStep(
     val driveTime: StringDesc,
     val rating: Rating? = null,
     val showsReminderOffer: Boolean = false,
-)
+) : SheetStep {
+    override val routeBounds: GeoBounds
+        get() {
+            // A stored line may be empty; the drive's ends frame it then
+            return boundsOf(question.line.ifEmpty { listOf(question.start, question.destination.location) }).withMinimumSpan()
+        }
+
+    override val routeLine: RouteLine?
+        get() {
+            if (question.line.isEmpty()) return null
+            return RouteLine(
+                id = question.driveId,
+                number = question.routeNumber,
+                points = question.line.toImmutableList(),
+                label = null,
+                labelPoint = midpointAlong(question.line),
+                isSelected = true,
+            )
+        }
+}
 
 /** A reason chip of the rating step. */
 data class ReasonChip(val reason: RatingReason, val label: StringDesc, val isSelected: Boolean)

@@ -26,11 +26,11 @@ import com.syntey.spiriteddriving.core.ui.preview.ScreenPreviews
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.feature.profile.model.SignInReason
 import com.syntey.spiriteddriving.feature.profile.model.ui.SignInSheetPreviewStates
+import com.syntey.spiriteddriving.feature.profile.model.ui.SignInState
 import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreen.Actions.Companion.noOpActions
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
-import dev.icerock.moko.resources.desc.desc
 
 /** The sign-in sheet's content. The host draws the sheet, so this has no background of its own. */
 @Composable
@@ -65,7 +65,7 @@ private fun Content(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        viewState.signInError?.let { error ->
+        viewState.signIn.error?.let { error ->
             NoteCard(
                 text = error.localized(),
                 colors = NoteDefaultColors.error(),
@@ -77,7 +77,7 @@ private fun Content(
             logo = painterResource(MR.images.google_logo),
             onClick = actions::onGoogleClick,
             modifier = Modifier.fillMaxWidth(),
-            isLoading = viewState.isSigningIn,
+            isLoading = viewState.signIn.isSigningIn,
         )
     }
 }
@@ -92,7 +92,7 @@ private fun SignInSheetScreenPreview() = Showcase {
 @Composable
 private fun SignInSheetScreenSigningInPreview() = Showcase {
     Content(
-        viewState = SignInSheetPreviewStates.viewState(reason = SignInReason.SavedRoutes, isSigningIn = true),
+        viewState = SignInSheetPreviewStates.viewState(reason = SignInReason.SavedRoutes, signIn = SignInState.Running),
         actions = noOpActions(),
     )
 }
@@ -101,7 +101,7 @@ private fun SignInSheetScreenSigningInPreview() = Showcase {
 @Composable
 private fun SignInSheetScreenErrorPreview() = Showcase {
     Content(
-        viewState = SignInSheetPreviewStates.viewState(signInError = MR.strings.sign_in_failed.desc()),
+        viewState = SignInSheetPreviewStates.viewState(signIn = SignInState.Failed),
         actions = noOpActions(),
     )
 }

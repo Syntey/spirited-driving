@@ -24,7 +24,7 @@ internal class SaveRouteUseCase(private val savedRoutesSource: SavedRoutesSource
 
     override suspend fun build(args: Args): SaveRouteResult {
         val known = savedRoutesCache.get() ?: savedRoutesSource.list().also { savedRoutesCache.replaceAll(it) }
-        return known.firstOrNull { it.routeId == args.route.id }?.let { SaveRouteResult.Saved(it) } ?: saveNew(args, known)
+        return known.firstOrNull { it.route.id == args.route.id }?.let { SaveRouteResult.Saved(it) } ?: saveNew(args, known)
     }
 
     private suspend fun saveNew(args: Args, known: List<SavedRoute>): SaveRouteResult {

@@ -9,6 +9,7 @@ import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.data.persistence.injection.PersistenceModule
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import com.syntey.spiriteddriving.data.persistence.persistence.route.toStored
@@ -113,7 +114,7 @@ class SavedRoutesPersistenceTest {
     fun `a full route with an unknown kind reads as a fun route`() = runTest {
         val jsonPersistence = JsonPersistence(InMemoryDataStore(), PersistenceModule().provideJson())
         val stored = fullRoute.toStored().copy(kind = "SOMETHING_NEW")
-        jsonPersistence.save(SAVED_ROUTE_DETAILS_KEY, mapOf(SAVED_ID to stored))
+        jsonPersistence.save(SAVED_ROUTE_DETAILS_KEY, mapOf(SAVED_ID.value to stored))
 
         assertEquals(fullRoute, SavedRoutesPersistence(jsonPersistence).getRoute(SAVED_ID))
     }
@@ -125,8 +126,8 @@ class SavedRoutesPersistenceTest {
         SavedRoutesPersistence(JsonPersistence(dataStore, PersistenceModule().provideJson()))
 
     private companion object {
-        const val SAVED_ID = "saved-1"
-        const val OTHER_ID = "saved-2"
+        val SAVED_ID = SavedRouteId("saved-1")
+        val OTHER_ID = SavedRouteId("saved-2")
         val SAVED_ROUTES_KEY = stringPreferencesKey("SAVED_ROUTES")
         val SAVED_ROUTE_DETAILS_KEY = stringPreferencesKey("SAVED_ROUTE_DETAILS")
     }

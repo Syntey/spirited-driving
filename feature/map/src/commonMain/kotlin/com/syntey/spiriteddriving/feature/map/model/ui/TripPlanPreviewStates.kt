@@ -15,6 +15,7 @@ import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
@@ -39,7 +40,7 @@ internal object TripPlanPreviewStates {
         override val events: Flow<TripPlanUiEvent> = emptyFlow()
 
         override fun onSignInToSaveFinished(isSignedIn: Boolean) = Unit
-        override fun showSavedRoute(savedRouteId: String) = Unit
+        override fun showSavedRoute(savedRouteId: SavedRouteId) = Unit
         override fun showPastDrive(driveId: String) = Unit
         override fun planNewRoutes(driveId: String) = Unit
     }
@@ -228,7 +229,7 @@ internal object TripPlanPreviewStates {
             status = status,
         )
         return viewState().copy(
-            oneRouteStep = step,
+            sheetStep = step,
             sheetHeight = sheetHeight,
             savedRoutes = listOf(saved).toImmutableList(),
         )
@@ -260,9 +261,13 @@ internal object TripPlanPreviewStates {
             route = route.takeIf { status == OneRouteStatus.Ready },
             status = status,
         )
-        val saved: List<SavedRoute> = if (isSaved) listOf(FakeSavedRoutesSource.Recorded.copy(routeId = route.id)) else emptyList()
+        val saved: List<SavedRoute> = if (isSaved) {
+            listOf(FakeSavedRoutesSource.Recorded.copy(route = FakeSavedRoutesSource.Recorded.route.copy(id = route.id)))
+        } else {
+            emptyList()
+        }
         return viewState().copy(
-            oneRouteStep = step,
+            sheetStep = step,
             sheetHeight = sheetHeight,
             savedRoutes = saved.toImmutableList(),
         )
@@ -312,7 +317,7 @@ internal object TripPlanPreviewStates {
         )
         return viewState().copy(
             sheetHeight = SheetHeight.Half,
-            ratingStep = RatingStep(
+            sheetStep = RatingStep(
                 question = question,
                 driveTime = "Today, 14:20".desc(),
                 rating = rating,

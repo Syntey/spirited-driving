@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.data.network.savedroute
 
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteNotFoundException
 import com.syntey.spiriteddriving.data.network.api.createSpiritedDrivingApi
 import com.syntey.spiriteddriving.data.network.injection.NetworkModule
@@ -39,7 +40,7 @@ class ApiSavedRoutesSourceTest {
 
         val saved = source.list()
 
-        assertEquals(listOf(SAVED_ID), saved.map { it.id })
+        assertEquals(listOf(SavedRouteId(SAVED_ID)), saved.map { it.id })
         assertEquals(HttpMethod.Get, lastRequest?.method)
         assertTrue(lastRequest?.url?.encodedPath?.endsWith("/v1/me/saved-routes") == true, lastRequest?.url.toString())
     }
@@ -62,7 +63,7 @@ class ApiSavedRoutesSourceTest {
 
         val saved = source.save(routeId = ROUTE_ID, name = "Karlštejn Castle")
 
-        assertEquals(SAVED_ID, saved.id)
+        assertEquals(SavedRouteId(SAVED_ID), saved.id)
     }
 
     @Test
@@ -71,14 +72,14 @@ class ApiSavedRoutesSourceTest {
 
         val saved = source.save(routeId = ROUTE_ID, name = "Karlštejn Castle")
 
-        assertEquals(SAVED_ID, saved.id)
+        assertEquals(SavedRouteId(SAVED_ID), saved.id)
     }
 
     @Test
     fun `get sends the hand-off waypoint limit as a query`() = runTest {
         val source = source { respondJson(FULL_SAVED_ROUTE, HttpStatusCode.OK) }
 
-        source.getRoute(id = SAVED_ID, maxHandOffWaypoints = 9)
+        source.getRoute(id = SavedRouteId(SAVED_ID), maxHandOffWaypoints = 9)
 
         assertEquals(HttpMethod.Get, lastRequest?.method)
         assertTrue(lastRequest?.url?.encodedPath?.endsWith("/v1/me/saved-routes/$SAVED_ID") == true, lastRequest?.url.toString())
@@ -89,7 +90,7 @@ class ApiSavedRoutesSourceTest {
     fun `get maps the full route`() = runTest {
         val source = source { respondJson(FULL_SAVED_ROUTE, HttpStatusCode.OK) }
 
-        val route = source.getRoute(id = SAVED_ID, maxHandOffWaypoints = 9)
+        val route = source.getRoute(id = SavedRouteId(SAVED_ID), maxHandOffWaypoints = 9)
 
         assertEquals(ROUTE_ID, route.id)
         assertEquals(3900.seconds, route.duration)
@@ -101,7 +102,7 @@ class ApiSavedRoutesSourceTest {
     fun `get of a missing saved route is thrown as not found`() = runTest {
         val source = source { respondJson("", HttpStatusCode.NotFound) }
 
-        val error = assertFailsWith<SavedRouteNotFoundException> { source.getRoute(id = SAVED_ID, maxHandOffWaypoints = 9) }
+        val error = assertFailsWith<SavedRouteNotFoundException> { source.getRoute(id = SavedRouteId(SAVED_ID), maxHandOffWaypoints = 9) }
 
         val cause = assertIs<NetworkError.HttpError>(error.cause)
         assertEquals(404, cause.statusCode)
@@ -111,25 +112,25 @@ class ApiSavedRoutesSourceTest {
     fun `rename sends the name as the body with PATCH`() = runTest {
         val source = source { respondJson(SUMMARY, HttpStatusCode.OK) }
 
-        val renamed = source.rename(id = SAVED_ID, name = "Castle day")
+        val renamed = source.rename(id = SavedRouteId(SAVED_ID), name = "Castle day")
 
         assertEquals(HttpMethod.Patch, lastRequest?.method)
         assertTrue("\"name\":\"Castle day\"" in requestBody(), requestBody())
-        assertEquals(SAVED_ID, renamed.id)
+        assertEquals(SavedRouteId(SAVED_ID), renamed.id)
     }
 
     @Test
     fun `rename of a missing saved route is thrown as not found`() = runTest {
         val source = source { respondJson("", HttpStatusCode.NotFound) }
 
-        assertFailsWith<SavedRouteNotFoundException> { source.rename(id = SAVED_ID, name = "Castle day") }
+        assertFailsWith<SavedRouteNotFoundException> { source.rename(id = SavedRouteId(SAVED_ID), name = "Castle day") }
     }
 
     @Test
     fun `delete sends DELETE to the saved route's path`() = runTest {
         val source = source { respond(content = "", status = HttpStatusCode.NoContent) }
 
-        source.delete(SAVED_ID)
+        source.delete(SavedRouteId(SAVED_ID))
 
         assertEquals(HttpMethod.Delete, lastRequest?.method)
         assertTrue(lastRequest?.url?.encodedPath?.endsWith("/v1/me/saved-routes/$SAVED_ID") == true, lastRequest?.url.toString())

@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.data.network.savedroute
 
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteNotFoundException
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesSource
 import com.syntey.spiriteddriving.data.network.api.SpiritedDrivingApi
@@ -23,20 +24,20 @@ internal class ApiSavedRoutesSource(private val api: SpiritedDrivingApi) : Saved
     override suspend fun save(routeId: String, name: String): SavedRoute =
         api.saveRoute(SaveRouteRequestDto(routeId = routeId, name = name)).getOrThrowDomainError().toDomain()
 
-    override suspend fun getRoute(id: String, maxHandOffWaypoints: Int): Route {
-        val result = api.getSavedRoute(savedRouteId = id, maxHandOffWaypoints = maxHandOffWaypoints)
+    override suspend fun getRoute(id: SavedRouteId, maxHandOffWaypoints: Int): Route {
+        val result = api.getSavedRoute(savedRouteId = id.value, maxHandOffWaypoints = maxHandOffWaypoints)
         result.throwIfNotFound()
         return result.getOrThrowDomainError().route.toDomain()
     }
 
-    override suspend fun rename(id: String, name: String): SavedRoute {
-        val result = api.renameSavedRoute(savedRouteId = id, request = RenameSavedRouteRequestDto(name = name))
+    override suspend fun rename(id: SavedRouteId, name: String): SavedRoute {
+        val result = api.renameSavedRoute(savedRouteId = id.value, request = RenameSavedRouteRequestDto(name = name))
         result.throwIfNotFound()
         return result.getOrThrowDomainError().toDomain()
     }
 
-    override suspend fun delete(id: String) {
-        api.deleteSavedRoute(savedRouteId = id).getOrThrowDomainError()
+    override suspend fun delete(id: SavedRouteId) {
+        api.deleteSavedRoute(savedRouteId = id.value).getOrThrowDomainError()
     }
 
     // Matched by status: the backend's 404 may come without a Problem code, which getOrThrowDomainError needs

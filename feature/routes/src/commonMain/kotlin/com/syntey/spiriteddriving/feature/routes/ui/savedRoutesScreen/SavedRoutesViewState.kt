@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen
 
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.feature.routes.model.ui.RenameDialog
 import com.syntey.spiriteddriving.feature.routes.model.ui.SavedRouteRow
@@ -18,7 +19,7 @@ data class SavedRoutesViewState(
     val status: SavedRoutesStatus = SavedRoutesStatus.Loading,
     val renameDialog: RenameDialog? = null,
     /** Routes deleted with their Undo still open: they're left out of [routes] until the message ends. */
-    val deletingIds: ImmutableSet<String> = persistentSetOf(),
+    val deletingIds: ImmutableSet<SavedRouteId> = persistentSetOf(),
 ) {
     /** The rows to show, without the routes whose delete is still undoable. */
     val routes: ImmutableList<SavedRouteRow>

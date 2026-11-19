@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.feature.routes.model.ui
 
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import kotlinx.collections.immutable.persistentListOf
 import kotlin.test.Test
 import kotlin.test.assertFalse
@@ -40,7 +41,7 @@ class RenameDialogTest {
     }
 
     private fun dialog() = RenameDialog(
-        savedRouteId = "saved-1",
+        savedRouteId = SavedRouteId("saved-1"),
         currentName = "Karlštejn Castle",
         otherNames = persistentListOf("Křivoklát"),
     )

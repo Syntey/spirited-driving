@@ -18,11 +18,11 @@ interface SavedRoutesSource {
      * The saved route's full route, with a hand-off for at most [maxHandOffWaypoints] waypoints. Throws
      * [SavedRouteNotFoundException] when it's gone, such as deleted on another phone.
      */
-    suspend fun getRoute(id: String, maxHandOffWaypoints: Int): Route
+    suspend fun getRoute(id: SavedRouteId, maxHandOffWaypoints: Int): Route
 
     /** Gives the saved route [name], trimmed by the backend. Throws [SavedRouteNotFoundException] when it's gone. */
-    suspend fun rename(id: String, name: String): SavedRoute
+    suspend fun rename(id: SavedRouteId, name: String): SavedRoute
 
     /** Removes the saved route. Deleting one that's already gone succeeds. */
-    suspend fun delete(id: String)
+    suspend fun delete(id: SavedRouteId)
 }

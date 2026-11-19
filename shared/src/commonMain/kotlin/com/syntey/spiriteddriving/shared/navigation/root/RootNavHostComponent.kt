@@ -3,6 +3,7 @@ package com.syntey.spiriteddriving.shared.navigation.root
 import app.futured.arkitekt.crusecases.execute
 import app.futured.arkitekt.decompose.ext.asStateFlow
 import co.touchlab.kermit.Logger
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.feature.routes.ui.RoutesScreens
 import com.syntey.spiriteddriving.shared.domain.ClaimDrivesOnSignInUseCase
 import com.syntey.spiriteddriving.shared.domain.SyncAccountDataOnAccountChangeUseCase
@@ -11,6 +12,7 @@ import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.AppComponentFactory
 import com.syntey.spiriteddriving.feature.map.ui.MapScreens
+import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
 import com.syntey.spiriteddriving.feature.onboarding.ui.OnboardingScreens
 import com.syntey.spiriteddriving.feature.profile.model.SignInReason
 import com.syntey.spiriteddriving.feature.profile.ui.ProfileScreens
@@ -36,6 +38,8 @@ internal class RootNavHostComponent(
 
     private val logger = Logger.withTag("RootNavHostComponent")
     private val rootNavigator: RootNavHostNavigation = RootNavHostNavigator(::onSignInFinished, ::onSavedRouteChosen)
+    private val mapScreen: TripPlanScreen?
+        get() = (slot.value.child?.instance as? RootChild.Map)?.screen
 
     override val slot: StateFlow<ChildSlot<RootConfig, RootChild>> = childSlot(
         source = rootNavigator.slotNavigator,
@@ -84,7 +88,7 @@ internal class RootNavHostComponent(
 
     private fun onSignInFinished(reason: SignInReason, isSignedIn: Boolean) {
         when (reason) {
-            SignInReason.SaveRoute -> (slot.value.child?.instance as? RootChild.Map)?.screen?.onSignInToSaveFinished(isSignedIn)
+            SignInReason.SaveRoute -> mapScreen?.onSignInToSaveFinished(isSignedIn)
 
             // Saved routes opens once signed in, as the row asked for it; signed out, the sign-in sheet is all that's shown
             SignInReason.SavedRoutes -> if (isSignedIn) rootNavigator.sheetNavigator.activate(RootSheetConfig.SavedRoutes)
@@ -97,7 +101,7 @@ internal class RootNavHostComponent(
     // Profile closes at once; a drive chosen in Trip history or planned from it then shows on the map
     private fun onProfileFinished(result: ProfileResult) {
         rootNavigator.sheetNavigator.dismiss()
-        val map = (slot.value.child?.instance as? RootChild.Map)?.screen
+        val map = mapScreen
         when (result) {
             ProfileResult.Closed -> Unit
             is ProfileResult.ShowPastDrive -> map?.showPastDrive(result.driveId)
@@ -105,8 +109,8 @@ internal class RootNavHostComponent(
         }
     }
 
-    private fun onSavedRouteChosen(savedRouteId: String) {
-        (slot.value.child?.instance as? RootChild.Map)?.screen?.showSavedRoute(savedRouteId)
+    private fun onSavedRouteChosen(savedRouteId: SavedRouteId) {
+        mapScreen?.showSavedRoute(savedRouteId)
     }
 
     private fun checkOnboardingDone() {

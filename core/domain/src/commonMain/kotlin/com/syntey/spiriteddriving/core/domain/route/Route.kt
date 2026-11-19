@@ -48,4 +48,17 @@ data class Route(
     val line: List<GeoPoint>,
     val handOff: HandOff,
     val attribution: String,
-)
+) {
+
+    /** This route without its line, hand-off and attribution. */
+    val summary: RouteSummary
+        get() = RouteSummary(
+            id = id,
+            start = start,
+            destination = destination,
+            duration = duration,
+            distance = distance,
+            funLevel = funLevel,
+            stats = stats,
+        )
+}
