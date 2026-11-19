@@ -829,7 +829,10 @@ internal class TripPlanComponent(
     private fun saveNamedRoute(name: String) {
         val dialog = componentState.value.nameDialog ?: return
         componentState.update { it.copy(nameDialog = null) }
-        val route = componentState.value.planning?.listedRoutes?.firstOrNull { it.id == dialog.routeId } ?: return
+        val state = componentState.value
+        val route = state.driveRoute?.takeIf { it.id == dialog.routeId }
+            ?: state.planning?.listedRoutes?.firstOrNull { it.id == dialog.routeId }
+            ?: return
         saveRoute(route, name)
     }
 

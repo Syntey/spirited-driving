@@ -38,7 +38,7 @@ internal class SignInSheetComponent(
     override val actions: SignInSheetScreen.Actions = this
 
     override fun onGoogleClick() = signIn(SignInProvider.Google)
-    override fun onClose() = finish(isSignedIn = false)
+    override fun onClose() = finish(args.reason, isSignedIn = false)
 
     // Same as Profile's sign-in card: a second tap while one sign-in runs does nothing
     private fun signIn(provider: SignInProvider) {
@@ -47,7 +47,7 @@ internal class SignInSheetComponent(
         signInUseCase.execute(provider) {
             onSuccess { result ->
                 componentState.update { it.copy(isSigningIn = false, signInError = signInErrorFor(result)) }
-                if (result == SignInResult.SignedIn) finish(isSignedIn = true)
+                if (result == SignInResult.SignedIn) finish(args.reason, isSignedIn = true)
             }
             onError { error ->
                 logger.e(error) { "Sign-in failed" }
