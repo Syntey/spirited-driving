@@ -44,14 +44,4 @@ class ShouldOfferReminderUseCaseTest {
         closedNotes,
         DriveReminders(FakePlatformDriveReminders(canOffer = canOffer)),
     )
-
-    private class RecordingClosedNotes(closed: Set<Note> = emptySet()) : ClosedNotes {
-        var closed: Set<Note> = closed
-            private set
-
-        override suspend fun isClosed(note: Note): Boolean = note in closed
-        override suspend fun close(note: Note) {
-            closed += note
-        }
-    }
 }

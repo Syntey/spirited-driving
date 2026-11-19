@@ -113,20 +113,6 @@ class ObserveCoverageUseCaseTest {
         version = "\"kept\"",
     )
 
-    private class InMemoryCoverageCache(private var stored: VersionedCoverage? = null) : CoverageCache {
-        var saves = 0
-            private set
-
-        override suspend fun get(): VersionedCoverage? = stored
-
-        override fun observeVignetteCountries(): Flow<List<CountryCode>?> = flowOf(stored?.coverage?.vignetteCountries)
-
-        override suspend fun save(coverage: VersionedCoverage) {
-            saves++
-            stored = coverage
-        }
-    }
-
     private class FailingCoverageSource : CoverageSource {
         override suspend fun fetch(knownVersion: String?): VersionedCoverage? = error("Backend unreachable")
     }

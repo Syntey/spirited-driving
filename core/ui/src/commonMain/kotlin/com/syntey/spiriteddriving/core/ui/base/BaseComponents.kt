@@ -4,6 +4,7 @@ import app.futured.arkitekt.crusecases.CoroutineScopeOwner
 import app.futured.arkitekt.decompose.navigation.NavigationActions
 import app.futured.arkitekt.decompose.navigation.NavigationActionsProducer
 import app.futured.arkitekt.decompose.presentation.BaseComponent
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 
@@ -24,6 +25,9 @@ abstract class AppComponent<VS : Any, E : Any>(componentContext: AppComponentCon
 
     override val useCaseScope: CoroutineScope = lifecycleScope
     override val useCaseJobPool: MutableMap<Any, Job> = mutableMapOf()
+
+    override fun getWorkerDispatcher(): CoroutineDispatcher =
+        useCaseDispatcher ?: super<CoroutineScopeOwner>.getWorkerDispatcher()
 }
 
 /**

@@ -47,15 +47,4 @@ class HandOffUseCaseTest {
 
         assertEquals(MapsAppResult.Missing, result)
     }
-
-    private class FakePlatformMapsApp(override val kind: MapsAppKind, private val result: MapsAppResult) : PlatformMapsApp {
-        val links = mutableListOf<String>()
-
-        override fun open(link: String, listener: MapsAppListener) {
-            links += link
-            listener.onResult(result)
-        }
-
-        override fun openStore() = Unit
-    }
 }

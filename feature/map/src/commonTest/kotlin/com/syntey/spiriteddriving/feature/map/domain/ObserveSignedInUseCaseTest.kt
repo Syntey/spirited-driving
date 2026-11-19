@@ -71,26 +71,3 @@ class ObserveSignedInUseCaseTest {
 
 private val USER = AuthUser(id = "uid-1", name = "Jan", email = null, provider = SignInProvider.Google)
 private val OTHER_USER = AuthUser(id = "uid-2", name = "Eva", email = null, provider = SignInProvider.Google)
-
-private class FakePlatformAuth(private val initialUser: AuthUser?) : PlatformAuth {
-
-    private var userListener: AuthUserListener? = null
-
-    override fun currentUser(): AuthUser? = initialUser
-
-    override fun addUserListener(listener: AuthUserListener): AuthListenerRegistration {
-        userListener = listener
-        listener.onUser(initialUser)
-        return AuthListenerRegistration { userListener = null }
-    }
-
-    override fun signIn(provider: SignInProvider, listener: SignInListener) = Unit
-
-    override fun signOut() = Unit
-
-    override fun idToken(listener: TokenListener) = listener.onToken(null)
-
-    fun emitUser(user: AuthUser?) {
-        checkNotNull(userListener).onUser(user)
-    }
-}

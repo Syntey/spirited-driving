@@ -1,0 +1,259 @@
+package com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen
+
+import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
+import com.syntey.spiriteddriving.core.domain.drive.FakeDriveRater
+import com.syntey.spiriteddriving.core.domain.drive.FakeDriveRecorder
+import com.syntey.spiriteddriving.core.domain.drive.FakeOpenDriveQuestion
+import com.syntey.spiriteddriving.core.domain.drive.FakeStartedDrives
+import com.syntey.spiriteddriving.core.domain.drive.FakeTripHistoryCache
+import com.syntey.spiriteddriving.core.domain.drive.FakeTripHistorySource
+import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
+import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
+import com.syntey.spiriteddriving.core.domain.place.FakeRecentPlaces
+import com.syntey.spiriteddriving.core.domain.place.Place
+import com.syntey.spiriteddriving.core.domain.place.PlaceSearch
+import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
+import com.syntey.spiriteddriving.core.domain.route.TripPlan
+import com.syntey.spiriteddriving.core.domain.route.TripRequest
+import com.syntey.spiriteddriving.core.domain.route.RoutePlanner
+import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
+import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesCache
+import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
+import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
+import com.syntey.spiriteddriving.core.domain.settings.FakeDistanceUnitSettings
+import com.syntey.spiriteddriving.core.domain.settings.FakeVignetteSettings
+import com.syntey.spiriteddriving.core.platform.binding.Auth
+import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
+import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
+import com.syntey.spiriteddriving.core.platform.binding.LocationFix
+import com.syntey.spiriteddriving.core.platform.binding.LocationPermission
+import com.syntey.spiriteddriving.core.platform.binding.MapsApp
+import com.syntey.spiriteddriving.core.platform.binding.MapsAppKind
+import com.syntey.spiriteddriving.core.platform.binding.MapsAppResult
+import com.syntey.spiriteddriving.core.platform.binding.UserLocation
+import com.syntey.spiriteddriving.core.ui.testing.TestComponentContext
+import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
+import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.DriveSender
+import com.syntey.spiriteddriving.feature.map.domain.FakeBudgetSettings
+import com.syntey.spiriteddriving.feature.map.domain.FakePlatform
+import com.syntey.spiriteddriving.feature.map.domain.FakePlatformAuth
+import com.syntey.spiriteddriving.feature.map.domain.FakePlatformDriveReminders
+import com.syntey.spiriteddriving.feature.map.domain.FakePlatformLocation
+import com.syntey.spiriteddriving.feature.map.domain.FakePlatformLocationPermission
+import com.syntey.spiriteddriving.feature.map.domain.FakePlatformMapsApp
+import com.syntey.spiriteddriving.feature.map.domain.GetBudgetChoiceUseCase
+import com.syntey.spiriteddriving.feature.map.domain.GetDriveQuestionUseCase
+import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
+import com.syntey.spiriteddriving.feature.map.domain.GetPastDriveUseCase
+import com.syntey.spiriteddriving.feature.map.domain.GetRecentPlacesUseCase
+import com.syntey.spiriteddriving.feature.map.domain.HandOffUseCase
+import com.syntey.spiriteddriving.feature.map.domain.InMemoryCoverageCache
+import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
+import com.syntey.spiriteddriving.feature.map.domain.LoadPastDriveRouteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.LoadSavedRouteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.MarkNotDrivenUseCase
+import com.syntey.spiriteddriving.feature.map.domain.NamePointUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveDistanceUnitUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveOpenedReminderUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveSavedRoutesUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveSignedInUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveVignettesUseCase
+import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
+import com.syntey.spiriteddriving.feature.map.domain.OpenMapsAppStoreUseCase
+import com.syntey.spiriteddriving.feature.map.domain.PlanTripUseCase
+import com.syntey.spiriteddriving.feature.map.domain.RateDriveUseCase
+import com.syntey.spiriteddriving.feature.map.domain.RecordingClosedNotes
+import com.syntey.spiriteddriving.feature.map.domain.RemoveRecentPlaceUseCase
+import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
+import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SaveBudgetChoiceUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SaveRouteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SendPendingDrivesUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ShouldOfferReminderUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SkipDriveQuestionUseCase
+import com.syntey.spiriteddriving.feature.map.domain.StartDriveUseCase
+import com.syntey.spiriteddriving.feature.map.domain.TurnOnRemindersUseCase
+import com.syntey.spiriteddriving.feature.map.domain.UnsaveRouteUseCase
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+
+/**
+ * The trip plan screen built from real use cases over fakes, started and on screen. Tests act on [screen] and read its
+ * view state; the other fields are the fakes a test scripts or checks.
+ */
+internal class TripPlanFixture(
+    val screen: TripPlanScreen,
+    val navigation: RecordingTripPlanNavigation,
+    val lifecycle: TestComponentContext,
+    /** The one-time events the screen sent, in order, from the start of the test. */
+    val events: MutableList<TripPlanUiEvent>,
+    val placeSearch: SwitchablePlaceSearch,
+    val routePlanner: SwitchableRoutePlanner,
+    val vignettes: FakeVignetteSettings,
+    val distanceUnits: FakeDistanceUnitSettings,
+    val location: FakePlatformLocation,
+    val locationPermission: FakePlatformLocationPermission,
+)
+
+/**
+ * Builds a [TripPlanComponent] with [recentPlaces] kept and the user's location access at [locationAccess]. Covered area is
+ * Czechia. Nothing is loaded yet: advance the test's time before reading the view state.
+ */
+internal fun TestScope.tripPlanFixture(
+    recentPlaces: List<Place> = emptyList(),
+    locationAccess: LocationAccess = LocationAccess.Denied,
+): TripPlanFixture {
+    val lifecycle = TestComponentContext(useCaseDispatcher = StandardTestDispatcher(testScheduler))
+    val navigation = RecordingTripPlanNavigation()
+    val placeSearch = SwitchablePlaceSearch(FakePlaceSearch())
+    val recents = FakeRecentPlaces(recentPlaces)
+    val location = FakePlatformLocation()
+    val locationPermission = FakePlatformLocationPermission(locationAccess)
+    val permission = LocationPermission(locationPermission)
+    val closedNotes = RecordingClosedNotes()
+    val vignettes = FakeVignetteSettings()
+    val routePlanner = SwitchableRoutePlanner(FakeRoutePlanner())
+    val coverageCache = InMemoryCoverageCache()
+    val budgetSettings = FakeBudgetSettings(choice = null)
+    val distanceUnits = FakeDistanceUnitSettings(DistanceUnit.Kilometres)
+    val platform = FakePlatform()
+    val mapsApp = MapsApp(FakePlatformMapsApp(MapsAppKind.GoogleMaps, MapsAppResult.Opened))
+    val reminders = DriveReminders(FakePlatformDriveReminders())
+    val auth = Auth(FakePlatformAuth(initialUser = null))
+    val openDriveQuestion = FakeOpenDriveQuestion()
+    val startedDrives = FakeStartedDrives()
+    val driveRecorder = FakeDriveRecorder()
+    val driveSender = DriveSender(startedDrives, driveRecorder, FakeDriveRater())
+    val tripHistorySource = FakeTripHistorySource()
+    val tripHistoryCache = FakeTripHistoryCache()
+    val savedRoutesSource = FakeSavedRoutesSource()
+    val savedRoutesCache = FakeSavedRoutesCache()
+
+    val component = TripPlanComponent(
+        componentContext = lifecycle.context,
+        navigation = navigation,
+        getLocationAccessUseCase = GetLocationAccessUseCase(permission),
+        requestLocationAccessUseCase = RequestLocationAccessUseCase(permission),
+        openLocationSettingsUseCase = OpenLocationSettingsUseCase(permission),
+        observeUserLocationUseCase = ObserveUserLocationUseCase(UserLocation(location)),
+        observeCoverageUseCase = ObserveCoverageUseCase(FakeCoverageSource(), coverageCache),
+        requestPreciseLocationUseCase = RequestPreciseLocationUseCase(permission),
+        isNoteClosedUseCase = IsNoteClosedUseCase(closedNotes),
+        closeNoteUseCase = CloseNoteUseCase(closedNotes),
+        searchPlacesUseCase = SearchPlacesUseCase(placeSearch),
+        observeDistanceUnitUseCase = ObserveDistanceUnitUseCase(distanceUnits, platform),
+        observeVignettesUseCase = ObserveVignettesUseCase(vignettes),
+        getRecentPlacesUseCase = GetRecentPlacesUseCase(recents),
+        addRecentPlaceUseCase = AddRecentPlaceUseCase(recents),
+        removeRecentPlaceUseCase = RemoveRecentPlaceUseCase(recents),
+        namePointUseCase = NamePointUseCase(placeSearch),
+        planTripUseCase = PlanTripUseCase(routePlanner, vignettes),
+        getBudgetChoiceUseCase = GetBudgetChoiceUseCase(budgetSettings),
+        saveBudgetChoiceUseCase = SaveBudgetChoiceUseCase(budgetSettings),
+        handOffUseCase = HandOffUseCase(mapsApp),
+        startDriveUseCase = StartDriveUseCase(startedDrives, driveRecorder, openDriveQuestion, tripHistoryCache, reminders),
+        sendPendingDrivesUseCase = SendPendingDrivesUseCase(startedDrives, driveSender),
+        openMapsAppStoreUseCase = OpenMapsAppStoreUseCase(mapsApp),
+        getDriveQuestionUseCase = GetDriveQuestionUseCase(openDriveQuestion, reminders),
+        rateDriveUseCase = RateDriveUseCase(openDriveQuestion, startedDrives, driveSender, reminders),
+        skipDriveQuestionUseCase = SkipDriveQuestionUseCase(openDriveQuestion, reminders),
+        markNotDrivenUseCase = MarkNotDrivenUseCase(openDriveQuestion, startedDrives, driveSender, reminders),
+        observeOpenedReminderUseCase = ObserveOpenedReminderUseCase(reminders, openDriveQuestion),
+        shouldOfferReminderUseCase = ShouldOfferReminderUseCase(closedNotes, reminders),
+        turnOnRemindersUseCase = TurnOnRemindersUseCase(reminders),
+        observeSignedInUseCase = ObserveSignedInUseCase(auth),
+        observeSavedRoutesUseCase = ObserveSavedRoutesUseCase(savedRoutesCache),
+        saveRouteUseCase = SaveRouteUseCase(savedRoutesSource, savedRoutesCache),
+        unsaveRouteUseCase = UnsaveRouteUseCase(savedRoutesSource, savedRoutesCache),
+        loadSavedRouteUseCase = LoadSavedRouteUseCase(savedRoutesSource, savedRoutesCache),
+        getPastDriveUseCase = GetPastDriveUseCase(tripHistoryCache),
+        loadPastDriveRouteUseCase = LoadPastDriveRouteUseCase(tripHistorySource, tripHistoryCache),
+    )
+
+    // Unconfined: a background coroutine doesn't run under advanceUntilIdle, so the event is taken as soon as it's sent
+    val events = mutableListOf<TripPlanUiEvent>()
+    backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { component.events.collect { events += it } }
+    // Destroyed when the test ends, as backgroundScope is cancelled then
+    backgroundScope.launch {
+        try {
+            awaitCancellation()
+        } finally {
+            lifecycle.destroy()
+        }
+    }
+
+    return TripPlanFixture(
+        screen = component,
+        navigation = navigation,
+        lifecycle = lifecycle,
+        events = events,
+        placeSearch = placeSearch,
+        routePlanner = routePlanner,
+        vignettes = vignettes,
+        distanceUnits = distanceUnits,
+        location = location,
+        locationPermission = locationPermission,
+    )
+}
+
+/** Place search that answers like [answers], or throws [failure] instead while it's set. Records the texts it was asked for. */
+internal class SwitchablePlaceSearch(private val answers: PlaceSearch) : PlaceSearch {
+
+    var failure: Throwable? = null
+
+    val searchedTexts = mutableListOf<String>()
+
+    override suspend fun search(text: String, near: GeoPoint?): List<PlaceSuggestion> {
+        searchedTexts += text
+        failure?.let { throw it }
+        return answers.search(text, near)
+    }
+
+    // The backend names a point with the point as the place's location, so a name lands on the point it was asked for
+    override suspend fun placeAt(point: GeoPoint): Place? = answers.placeAt(point)?.copy(location = point)
+}
+
+/** Route planner that answers with [plan] while it's set, and throws [failure] instead while it's set. */
+internal class SwitchableRoutePlanner(private val answers: RoutePlanner) : RoutePlanner {
+
+    var failure: Throwable? = null
+
+    var plan: TripPlan? = null
+
+    override suspend fun plan(request: TripRequest): TripPlan {
+        failure?.let { throw it }
+        return plan ?: answers.plan(request)
+    }
+}
+
+/** Points in the test area: [prague] is the user's location, [pinned] is inside the covered area, [outside] is Dresden. */
+internal object Points {
+    val prague = GeoPoint(latitude = 50.0755, longitude = 14.4378)
+    val pinned = GeoPoint(latitude = 49.9394, longitude = 14.1882)
+    val outside = GeoPoint(latitude = 51.0504, longitude = 13.7373)
+}
+
+/** Gives the user's location a fix at [point] and lets the screen react. */
+internal fun TestScope.sendFix(trip: TripPlanFixture, point: GeoPoint) {
+    trip.location.emit(LocationFix(latitude = point.latitude, longitude = point.longitude))
+    advanceUntilIdle()
+}
+
+/** Types [text] in the destination search, lets the answer show, and returns the first covered suggestion. */
+internal fun TestScope.searchForCovered(trip: TripPlanFixture, text: String = "karlst"): PlaceSuggestion {
+    trip.screen.actions.onSearchTextChange(text)
+    advanceUntilIdle()
+    return firstCovered(trip)
+}
+
+/** The first covered suggestion on screen. */
+internal fun firstCovered(trip: TripPlanFixture): PlaceSuggestion =
+    trip.screen.viewState.value.suggestionRows.first { it.suggestion.isCovered }.suggestion
