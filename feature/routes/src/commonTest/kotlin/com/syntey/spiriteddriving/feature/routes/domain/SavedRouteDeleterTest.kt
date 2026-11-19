@@ -9,7 +9,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class DeleteSavedRoutesLaterUseCaseTest {
+class SavedRouteDeleterTest {
 
     private val routes = listOf(route("a"), route("b"), route("c"))
 
@@ -19,7 +19,7 @@ class DeleteSavedRoutesLaterUseCaseTest {
         val cache = FakeSavedRoutesCache(routes = routes)
         val appWork = FakeAppWork()
 
-        DeleteSavedRoutesLaterUseCase(appWork, DeleteSavedRouteUseCase(source, cache))(setOf("a", "b"))
+        SavedRouteDeleter(appWork, source, cache).deleteLater(setOf("a", "b"))
         appWork.runAll()
 
         assertEquals(listOf("c"), source.routes.map { it.id })
@@ -29,9 +29,8 @@ class DeleteSavedRoutesLaterUseCaseTest {
     @Test
     fun `nothing is deleted before the app work runs`() = runTest {
         val source = FakeSavedRoutesSource(routes = routes)
-        val appWork = FakeAppWork()
 
-        DeleteSavedRoutesLaterUseCase(appWork, DeleteSavedRouteUseCase(source, FakeSavedRoutesCache(routes = routes)))(setOf("a"))
+        SavedRouteDeleter(FakeAppWork(), source, FakeSavedRoutesCache(routes = routes)).deleteLater(setOf("a"))
 
         assertEquals(routes, source.routes)
     }
@@ -42,7 +41,7 @@ class DeleteSavedRoutesLaterUseCaseTest {
         val cache = FakeSavedRoutesCache(routes = routes)
         val appWork = FakeAppWork()
 
-        DeleteSavedRoutesLaterUseCase(appWork, DeleteSavedRouteUseCase(source, cache))(setOf("a"))
+        SavedRouteDeleter(appWork, source, cache).deleteLater(setOf("a"))
         appWork.runAll()
 
         assertEquals(routes, cache.get())

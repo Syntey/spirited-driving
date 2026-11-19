@@ -10,12 +10,13 @@ import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.feature.routes.domain.DeleteSavedRouteUseCase
-import com.syntey.spiriteddriving.feature.routes.domain.DeleteSavedRoutesLaterUseCase
 import com.syntey.spiriteddriving.feature.routes.domain.ObserveDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.routes.domain.ObserveSavedRoutesUseCase
 import com.syntey.spiriteddriving.feature.routes.domain.RefreshSavedRoutesUseCase
 import com.syntey.spiriteddriving.feature.routes.domain.RenameSavedRouteUseCase
+import com.syntey.spiriteddriving.feature.routes.domain.SavedRouteDeleter
 import com.syntey.spiriteddriving.feature.routes.model.ui.RenameDialog
+import com.syntey.spiriteddriving.feature.routes.model.ui.SavedRoutesStatus
 import dev.icerock.moko.resources.desc.StringDesc
 import dev.icerock.moko.resources.desc.desc
 import kotlinx.collections.immutable.toImmutableList
@@ -35,7 +36,7 @@ internal class SavedRoutesComponent(
     private val refreshSavedRoutesUseCase: RefreshSavedRoutesUseCase,
     private val renameSavedRouteUseCase: RenameSavedRouteUseCase,
     private val deleteSavedRouteUseCase: DeleteSavedRouteUseCase,
-    private val deleteSavedRoutesLaterUseCase: DeleteSavedRoutesLaterUseCase,
+    private val savedRouteDeleter: SavedRouteDeleter,
 ) : ScreenComponent<SavedRoutesViewState, SavedRoutesUiEvent, SavedRoutesScreenNavigation>(
     componentContext = componentContext,
     defaultState = SavedRoutesViewState(),
@@ -57,12 +58,28 @@ internal class SavedRoutesComponent(
             refresh()
         }
         // The deletes still hidden were confirmed by closing the list, and its own work stops with it
-        doOnDestroy { deleteSavedRoutesLaterUseCase(componentState.value.deletingIds) }
+        doOnDestroy { savedRouteDeleter.deleteLater(componentState.value.deletingIds) }
     }
 
     override fun onRouteClick(id: String) = openOnMap(id)
 
-    override fun onRenameClick(id: String) {
+    override fun onRenameClick(id: String) = openRenameDialog(id)
+
+    override fun onRenameSave(name: String) = saveRename(name)
+
+    override fun onRenameDismiss() = closeRenameDialog()
+
+    override fun onDeleteClick(id: String) = hideRow(id)
+
+    override fun onDeleteUndo(id: String) = restoreRow(id)
+
+    override fun onDeleteMessageGone(id: String) = deleteRoute(id)
+
+    override fun onRetry() = retry()
+
+    override fun onClose() = close()
+
+    private fun openRenameDialog(id: String) {
         val routes = componentState.value.savedRoutes ?: return
         val route = routes.firstOrNull { it.id == id } ?: return
         val dialog = RenameDialog(
@@ -73,32 +90,26 @@ internal class SavedRoutesComponent(
         componentState.update { it.copy(renameDialog = dialog) }
     }
 
-    override fun onRenameSave(name: String) {
+    private fun saveRename(name: String) {
         val dialog = componentState.value.renameDialog ?: return
         if (!dialog.canSave(name)) return
         componentState.update { it.copy(renameDialog = null) }
         renameRoute(id = dialog.savedRouteId, name = name)
     }
 
-    override fun onRenameDismiss() {
+    private fun closeRenameDialog() {
         componentState.update { it.copy(renameDialog = null) }
     }
 
-    override fun onDeleteClick(id: String) {
+    private fun hideRow(id: String) {
         componentState.update { it.copy(deletingIds = (it.deletingIds + id).toImmutableSet()) }
         sendUiEvent(SavedRoutesUiEvent.RouteDeleted(id))
     }
 
-    override fun onDeleteUndo(id: String) = restoreRow(id)
-
-    override fun onDeleteMessageGone(id: String) = deleteRoute(id)
-
-    override fun onRetry() {
+    private fun retry() {
         componentState.update { it.copy(status = SavedRoutesStatus.Loading) }
         refresh()
     }
-
-    override fun onClose() = close()
 
     private fun observeSavedRoutes() = observeSavedRoutesUseCase.execute {
         onNext { routes ->
@@ -133,14 +144,7 @@ internal class SavedRoutesComponent(
     private fun renameRoute(id: String, name: String) = renameSavedRouteUseCase.execute(
         RenameSavedRouteUseCase.Args(id = id, name = name),
     ) {
-        onError { error ->
-            if (error is OfflineException) {
-                sendUiEvent(SavedRoutesUiEvent.ChangesOffline)
-            } else {
-                logger.e(error) { "Saved route not renamed" }
-                sendUiEvent(SavedRoutesUiEvent.RenameFailed)
-            }
-        }
+        onError { error -> reportChangeError(error, SavedRoutesUiEvent.RenameFailed, "Saved route not renamed") }
     }
 
     private fun deleteRoute(id: String) = deleteSavedRouteUseCase.execute(id) {
@@ -148,12 +152,16 @@ internal class SavedRoutesComponent(
         onError { error ->
             // The row comes back where it was, and the message says why it's still there
             restoreRow(id)
-            if (error is OfflineException) {
-                sendUiEvent(SavedRoutesUiEvent.ChangesOffline)
-            } else {
-                logger.e(error) { "Saved route not deleted" }
-                sendUiEvent(SavedRoutesUiEvent.DeleteFailed)
-            }
+            reportChangeError(error, SavedRoutesUiEvent.DeleteFailed, "Saved route not deleted")
+        }
+    }
+
+    private fun reportChangeError(error: Throwable, failed: SavedRoutesUiEvent, logMessage: String) {
+        if (error is OfflineException) {
+            sendUiEvent(SavedRoutesUiEvent.ChangesOffline)
+        } else {
+            logger.e(error) { logMessage }
+            sendUiEvent(failed)
         }
     }
 

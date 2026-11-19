@@ -1,6 +1,8 @@
 package com.syntey.spiriteddriving.feature.routes.model.ui
 
-import com.syntey.spiriteddriving.core.domain.savedroute.SAVED_ROUTE_NAME_MAX_LENGTH
+import com.syntey.spiriteddriving.core.domain.savedroute.containsName
+import com.syntey.spiriteddriving.core.domain.savedroute.isSavableName
+import com.syntey.spiriteddriving.core.domain.tools.Constants
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -12,15 +14,12 @@ import kotlinx.collections.immutable.ImmutableList
  */
 data class RenameDialog(val savedRouteId: String, val currentName: String, val otherNames: ImmutableList<String>) {
 
+    /** The most characters the field takes. */
+    val maxLength: Int get() = Constants.SavedRoutes.NAME_MAX_LENGTH
+
     /** Whether [name] may be saved: not blank, not longer than the maximum, changed, and not a name in use. */
-    fun canSave(name: String): Boolean {
-        val trimmed = name.trim()
-        return trimmed.isNotEmpty() && trimmed.length <= SAVED_ROUTE_NAME_MAX_LENGTH && trimmed != currentName && !isTaken(name)
-    }
+    fun canSave(name: String): Boolean = isSavableName(name) && name.trim() != currentName && !isTaken(name)
 
     /** Whether [name] is the name of another saved route, compared trimmed and ignoring case. */
-    fun isTaken(name: String): Boolean {
-        val key = name.trim().lowercase()
-        return otherNames.any { it.trim().lowercase() == key }
-    }
+    fun isTaken(name: String): Boolean = otherNames.containsName(name)
 }

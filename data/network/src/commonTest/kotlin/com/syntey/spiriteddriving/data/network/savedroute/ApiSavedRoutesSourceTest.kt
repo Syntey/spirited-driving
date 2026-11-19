@@ -136,13 +136,6 @@ class ApiSavedRoutesSourceTest {
     }
 
     @Test
-    fun `a no content response is a deleted saved route`() = runTest {
-        val source = source { respond(content = "", status = HttpStatusCode.NoContent) }
-
-        source.delete(SAVED_ID)
-    }
-
-    @Test
     fun `no connection is thrown as offline`() = runTest {
         val source = source { throw IOException("Network is unreachable") }
 

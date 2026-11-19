@@ -3,7 +3,6 @@ package com.syntey.spiriteddriving.feature.routes.model.ui
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
-import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesStatus
 import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesViewState
 import kotlinx.collections.immutable.toImmutableList
 

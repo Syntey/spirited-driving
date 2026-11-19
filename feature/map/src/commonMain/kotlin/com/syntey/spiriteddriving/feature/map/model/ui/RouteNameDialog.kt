@@ -1,6 +1,8 @@
 package com.syntey.spiriteddriving.feature.map.model.ui
 
-import com.syntey.spiriteddriving.core.domain.savedroute.SAVED_ROUTE_NAME_MAX_LENGTH
+import com.syntey.spiriteddriving.core.domain.savedroute.containsName
+import com.syntey.spiriteddriving.core.domain.savedroute.isSavableName
+import com.syntey.spiriteddriving.core.domain.tools.Constants
 import com.syntey.spiriteddriving.core.resources.*
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
@@ -18,15 +20,12 @@ data class RouteNameDialog(val routeId: String, val takenName: String, val sugge
     /** "You already have a route called Karlštejn Castle." */
     val message: StringDesc get() = StringDesc.ResourceFormatted(MR.strings.saved_routes_name_taken_message, takenName)
 
+    /** The most characters the field takes. */
+    val maxLength: Int get() = Constants.SavedRoutes.NAME_MAX_LENGTH
+
     /** Whether [name] may be saved: not blank, not longer than the maximum, and not a name in use. */
-    fun canSave(name: String): Boolean {
-        val trimmed = name.trim()
-        return trimmed.isNotEmpty() && trimmed.length <= SAVED_ROUTE_NAME_MAX_LENGTH && !isTaken(name)
-    }
+    fun canSave(name: String): Boolean = isSavableName(name) && !isTaken(name)
 
     /** Whether [name] is a name in use, compared trimmed and ignoring case. */
-    fun isTaken(name: String): Boolean {
-        val key = name.trim().lowercase()
-        return takenNames.any { it.trim().lowercase() == key }
-    }
+    fun isTaken(name: String): Boolean = takenNames.containsName(name)
 }

@@ -76,7 +76,6 @@ import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.GeoPolygon
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
-import com.syntey.spiriteddriving.core.domain.savedroute.SAVED_ROUTE_NAME_MAX_LENGTH
 import com.syntey.spiriteddriving.core.ui.components.DragHandle
 import com.syntey.spiriteddriving.core.ui.components.RouteLabel
 import com.syntey.spiriteddriving.core.ui.components.TextFieldDialog
@@ -166,7 +165,7 @@ private fun RouteNameDialog(dialog: RouteNameDialog, actions: TripPlanScreen.Act
             dismissLabel = stringResource(MR.strings.generic_cancel),
             error = { text -> takenError.takeIf { dialog.isTaken(text) } },
             canConfirm = dialog::canSave,
-            maxLength = SAVED_ROUTE_NAME_MAX_LENGTH,
+            maxLength = dialog.maxLength,
             onConfirm = actions::onRouteNameSave,
             onDismiss = actions::onRouteNameDismiss,
         )

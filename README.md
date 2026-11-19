@@ -93,8 +93,9 @@ What the project shows:
 ```
 
 - **`:feature:*`** holds a feature's components, Compose screens and iOS view controllers: `:feature:onboarding`
-  (first launch), `:feature:map` (the map, search and route planning) and `:feature:profile` (profile, settings and
-  account). It depends on `:core:*` modules only, so features never see each other or the data implementations.
+  (first launch), `:feature:map` (the map, search and route planning), `:feature:profile` (profile, settings and
+  account) and `:feature:routes` (saved routes). It depends on `:core:*` modules only, so features
+  never see each other or the data implementations.
 - **`:data:*`** holds the network client and local storage, and implements the interfaces in `:core:domain`. It
   depends on `:core:*` modules only.
 - **`:core:*`** holds domain types and interfaces, the theme and Decompose base classes, shared strings and images,

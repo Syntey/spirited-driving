@@ -17,7 +17,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.syntey.spiriteddriving.core.domain.savedroute.SAVED_ROUTE_NAME_MAX_LENGTH
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.AndroidTopBar
 import com.syntey.spiriteddriving.core.ui.components.AppScaffold
@@ -42,6 +41,7 @@ import com.syntey.spiriteddriving.core.ui.tools.EventsEffect
 import com.syntey.spiriteddriving.core.ui.tools.onEvent
 import com.syntey.spiriteddriving.feature.routes.model.ui.RenameDialog
 import com.syntey.spiriteddriving.feature.routes.model.ui.SavedRouteRow
+import com.syntey.spiriteddriving.feature.routes.model.ui.SavedRoutesStatus
 import com.syntey.spiriteddriving.feature.routes.model.ui.SavedRoutesPreviewStates
 import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesScreen.Actions.Companion.noOpActions
 import dev.icerock.moko.resources.compose.localized
@@ -211,7 +211,7 @@ private fun RenameTextDialog(dialog: RenameDialog, actions: SavedRoutesScreen.Ac
             dismissLabel = stringResource(MR.strings.generic_cancel),
             error = { text -> takenError.takeIf { dialog.isTaken(text) } },
             canConfirm = dialog::canSave,
-            maxLength = SAVED_ROUTE_NAME_MAX_LENGTH,
+            maxLength = dialog.maxLength,
             onConfirm = actions::onRenameSave,
             onDismiss = actions::onRenameDismiss,
         )

@@ -23,7 +23,7 @@ class SavedRouteRowTest {
     }
 
     @Test
-    fun `details show the start's area, the duration and the distance`() {
+    fun `details show the start's area and the duration and distance`() {
         val route = FakeSavedRoutesSource.Recorded
         val area = route.start.shortArea.orEmpty()
 

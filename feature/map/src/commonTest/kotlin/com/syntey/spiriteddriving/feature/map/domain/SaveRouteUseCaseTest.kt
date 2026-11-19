@@ -83,7 +83,7 @@ class SaveRouteUseCaseTest {
     }
 
     @Test
-    fun `a given name is saved as typed, trimmed`() = runTest {
+    fun `a given name is saved trimmed`() = runTest {
         val source = FakeSavedRoutesSource()
 
         val saved = assertIs<SaveRouteResult.Saved>(

@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen
+package com.syntey.spiriteddriving.feature.routes.model.ui
 
 /** What the list shows besides its rows. */
 enum class SavedRoutesStatus {

@@ -13,6 +13,31 @@ class SavedRouteNamesTest {
     }
 
     @Test
+    fun `a different name is not taken`() {
+        assertFalse(listOf("Karlštejn Castle").containsName("Karlštejn Castle Tower"))
+    }
+
+    @Test
+    fun `containsName ignores case and surrounding spaces`() {
+        assertTrue(listOf("Karlštejn Castle").containsName("  karlštejn castle "))
+    }
+
+    @Test
+    fun `a blank name is not savable`() {
+        assertFalse(isSavableName("   "))
+    }
+
+    @Test
+    fun `a name of the most characters is savable`() {
+        assertTrue(isSavableName("a".repeat(40)))
+    }
+
+    @Test
+    fun `a name one character over the most is not savable`() {
+        assertFalse(isSavableName("a".repeat(41)))
+    }
+
+    @Test
     fun `a route's own name isn't taken for it`() {
         assertFalse(listOf(route("1", "Karlštejn Castle")).hasName("Karlštejn Castle", exceptId = "1"))
     }
