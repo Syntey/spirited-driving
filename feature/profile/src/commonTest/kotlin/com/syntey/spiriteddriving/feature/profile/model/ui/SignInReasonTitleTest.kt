@@ -17,4 +17,9 @@ class SignInReasonTitleTest {
     fun `the saved routes row asks to sign in to keep routes for later`() {
         assertEquals(MR.strings.sign_in_sheet_title_saved_routes.desc(), SignInReason.SavedRoutes.title())
     }
+
+    @Test
+    fun `the trip history row asks to sign in to see the trip history`() {
+        assertEquals(MR.strings.sign_in_sheet_title_trip_history.desc(), SignInReason.TripHistory.title())
+    }
 }

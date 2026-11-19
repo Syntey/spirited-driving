@@ -7,6 +7,7 @@ import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +26,16 @@ interface TripPlanScreen {
     fun onSignInToSaveFinished(isSignedIn: Boolean)
 
     /** Called by navigation when a saved route was chosen in Saved routes: it shows on the map, ready to drive. */
-    fun showSavedRoute(savedRouteId: String)
+    fun showSavedRoute(savedRouteId: SavedRouteId)
+
+    /** Called by navigation when a drive was chosen in Trip history: its route shows on the map, ready to drive. */
+    fun showPastDrive(driveId: String)
+
+    /**
+     * Called by navigation when Plan new routes was tapped in Trip history: plans to the drive's destination from where the user
+     * is now, with the budget last used.
+     */
+    fun planNewRoutes(driveId: String)
 
     // Each tap and drag on the screen is a function here
     @Suppress("TooManyFunctions")
@@ -139,10 +149,10 @@ interface TripPlanScreen {
         fun onSavedRoutesClick()
 
         /** Closed the saved route's step: its close button, or Back on Android. */
-        fun onSavedRouteClose()
+        fun onOneRouteClose()
 
         /** Tapped Try again after the saved route didn't load. */
-        fun onSavedRouteRetry()
+        fun onOneRouteRetry()
 
         /** Tapped Save in the name dialog, with the name typed. */
         fun onRouteNameSave(name: String)
@@ -190,8 +200,8 @@ interface TripPlanScreen {
                 override fun onRouteNameSave(name: String) = Unit
                 override fun onRouteNameDismiss() = Unit
                 override fun onSavedRoutesClick() = Unit
-                override fun onSavedRouteClose() = Unit
-                override fun onSavedRouteRetry() = Unit
+                override fun onOneRouteClose() = Unit
+                override fun onOneRouteRetry() = Unit
             }
         }
     }

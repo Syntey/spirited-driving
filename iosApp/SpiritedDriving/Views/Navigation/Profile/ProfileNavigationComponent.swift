@@ -3,9 +3,11 @@ import SwiftUI
 
 struct ProfileNavigationComponent: View {
     private let navHost: ProfileNavHost
+    @State private var model: ProfileNavigationComponentModel
 
     init(navHost: ProfileNavHost) {
         self.navHost = navHost
+        _model = State(initialValue: ProfileNavigationComponentModel(navHost))
     }
 
     var body: some View {
@@ -35,8 +37,22 @@ struct ProfileNavigationComponent: View {
                     LicencesComponent(entry.screen)
                 case let .licenceText(entry):
                     LicenceTextComponent(entry.screen)
+                case let .tripHistory(entry):
+                    TripHistoryComponent(entry.screen)
                 }
             }
         )
+        .sheet(item: $model.sheetItem) { item in
+            sheetContent(item.instance)
+        }
+    }
+
+    @ViewBuilder
+    private func sheetContent(_ child: ProfileSheetChild) -> some View {
+        switch onEnum(of: child) {
+        case let .signIn(entry):
+            SignInSheetComponent(entry.screen)
+                .presentationDetents([.medium])
+        }
     }
 }

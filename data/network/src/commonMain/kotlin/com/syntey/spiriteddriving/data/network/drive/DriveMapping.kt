@@ -38,3 +38,12 @@ private fun RatingReason.toCode(): String = when (this) {
     RatingReason.TookTooLong -> Constants.RatingReasonCode.TOOK_TOO_LONG
     RatingReason.MapsAppWentAnotherWay -> Constants.RatingReasonCode.MAPS_APP_WENT_ANOTHER_WAY
 }
+
+// Read back from the same codes as the enum-to-code mapping above, so each code is written once
+private val thumbsByCode = Thumb.entries.associateBy { it.toCode() }
+
+private val ratingReasonsByCode = RatingReason.entries.associateBy { it.toCode() }
+
+internal fun String.toThumb(): Thumb? = thumbsByCode[this]
+
+internal fun String.toRatingReason(): RatingReason? = ratingReasonsByCode[this]

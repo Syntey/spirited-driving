@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.shared.domain
 
 import app.futured.arkitekt.crusecases.FlowUseCase
 import co.touchlab.kermit.Logger
+import com.syntey.spiriteddriving.core.domain.drive.TripHistoryCache
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesSource
@@ -15,20 +16,22 @@ import org.koin.core.annotation.Factory
 import org.koin.core.annotation.Provided
 
 /**
- * Keeps the saved routes on the device in step with the account. Every sign-in, sign-out and account switch clears them,
- * and so does a start signed out, so one user's routes never show to the next; only the user already signed in at start
- * keeps them, to see them offline. Then, while signed in, the list is loaded from the backend, so Save shows Saved for a
- * route saved on another phone. One flow does both, so a load never lands before the clear. Failures are logged, and the
- * next change tries again.
+ * Keeps the account's data on the device in step with the account. Every sign-in, sign-out and account switch clears the
+ * kept saved routes and trip history, and so does a start signed out, so one user's data never shows to the next; only
+ * the user already signed in at start keeps them, to see them offline. Then, while signed in, the saved routes are loaded
+ * from the backend, so Save shows Saved for a route saved on another phone; trip history loads when its list opens. One
+ * flow does both, so a load never lands before the clear. Each clear is tried on its own, so one failing doesn't skip the
+ * other, and failures are logged; the next change tries again.
  */
 @Factory
-internal class SyncSavedRoutesOnAccountChangeUseCase(
+internal class SyncAccountDataOnAccountChangeUseCase(
     @Provided private val auth: Auth,
     private val savedRoutesSource: SavedRoutesSource,
     private val savedRoutesCache: SavedRoutesCache,
+    private val tripHistoryCache: TripHistoryCache,
 ) : FlowUseCase<Unit, Unit> {
 
-    private val logger = Logger.withTag("SyncSavedRoutesOnAccountChangeUseCase")
+    private val logger = Logger.withTag("SyncAccountDataOnAccountChangeUseCase")
 
     override fun build(args: Unit): Flow<Unit> = auth.user
         .map { it?.id }
@@ -39,13 +42,18 @@ internal class SyncSavedRoutesOnAccountChangeUseCase(
             if (id != null) load()
         }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun clear() {
+        tryClear("Saved routes not cleared") { savedRoutesCache.clear() }
+        tryClear("Trip history not cleared") { tripHistoryCache.clear() }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun tryClear(message: String, clear: suspend () -> Unit) {
         try {
-            savedRoutesCache.clear()
+            clear()
         } catch (error: Exception) {
             if (error is CancellationException) throw error
-            logger.e(error) { "Saved routes not cleared" }
+            logger.e(error) { message }
         }
     }
 

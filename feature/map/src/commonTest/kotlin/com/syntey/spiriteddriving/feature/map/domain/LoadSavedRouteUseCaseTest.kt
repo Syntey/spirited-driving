@@ -29,7 +29,7 @@ class LoadSavedRouteUseCaseTest {
 
         val loaded = LoadSavedRouteUseCase(source, FakeSavedRoutesCache(routes = listOf(saved))).build(saved.id)
 
-        assertEquals(saved.routeId, loaded.id)
+        assertEquals(saved.route.id, loaded.id)
     }
 
     @Test

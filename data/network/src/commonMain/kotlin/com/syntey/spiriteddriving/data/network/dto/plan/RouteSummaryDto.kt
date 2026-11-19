@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 internal data class RouteSummaryDto(
     @SerialName("id") val id: String,
+    @SerialName("kind") val kind: String,
     @SerialName("start") val start: PlaceDto,
     @SerialName("destination") val destination: PlaceDto,
     @SerialName("durationSeconds") val durationSeconds: Int,

@@ -3,6 +3,10 @@ package com.syntey.spiriteddriving.shared.navigation.profile
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
+import com.syntey.spiriteddriving.feature.profile.model.SignInReason
 import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreen
 import com.syntey.spiriteddriving.feature.profile.ui.accountScreen.AccountScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.aboutScreen.AboutScreen
@@ -18,6 +22,11 @@ import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreen
 import com.syntey.spiriteddriving.feature.profile.ui.profileScreen.ProfileScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreen
 import com.syntey.spiriteddriving.feature.profile.ui.settingsScreen.SettingsScreenNavigation
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetArgs
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreen
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreenNavigation
+import com.syntey.spiriteddriving.feature.routes.ui.tripHistoryScreen.TripHistoryScreen
+import com.syntey.spiriteddriving.feature.routes.ui.tripHistoryScreen.TripHistoryScreenNavigation
 
 internal interface ProfileNavHostNavigation :
     ProfileScreenNavigation,
@@ -26,13 +35,17 @@ internal interface ProfileNavHostNavigation :
     AboutScreenNavigation,
     AccountScreenNavigation,
     LicencesScreenNavigation,
-    LicenceTextScreenNavigation {
+    LicenceTextScreenNavigation,
+    TripHistoryScreenNavigation,
+    SignInSheetScreenNavigation {
     val stackNavigator: StackNavigation<ProfileConfig>
+    val sheetNavigator: SlotNavigation<ProfileSheetConfig>
 }
 
-internal class ProfileNavHostNavigator(private val onClosed: () -> Unit, private val onAccountDeleted: () -> Unit) :
+internal class ProfileNavHostNavigator(private val onFinished: (ProfileResult) -> Unit, private val onAccountDeleted: () -> Unit) :
     ProfileNavHostNavigation {
     override val stackNavigator: StackNavigation<ProfileConfig> = StackNavigation()
+    override val sheetNavigator: SlotNavigation<ProfileSheetConfig> = SlotNavigation()
 
     override fun ProfileScreen.openSettings() = stackNavigator.pushNew(ProfileConfig.Settings)
 
@@ -41,6 +54,23 @@ internal class ProfileNavHostNavigator(private val onClosed: () -> Unit, private
     override fun ProfileScreen.openAbout() = stackNavigator.pushNew(ProfileConfig.About)
 
     override fun ProfileScreen.openAccount() = stackNavigator.pushNew(ProfileConfig.Account)
+
+    override fun ProfileScreen.openTripHistory() = stackNavigator.pushNew(ProfileConfig.TripHistory)
+
+    // The sign-in sheet's only reason here is Trip history, so finishing it signed in opens that
+    override fun ProfileScreen.openSignInForTripHistory() =
+        sheetNavigator.activate(ProfileSheetConfig.SignIn(SignInSheetArgs(SignInReason.TripHistory)))
+
+    override fun SignInSheetScreen.finish(reason: SignInReason, isSignedIn: Boolean) {
+        sheetNavigator.dismiss()
+        if (isSignedIn) stackNavigator.pushNew(ProfileConfig.TripHistory)
+    }
+
+    override fun TripHistoryScreen.pop() = stackNavigator.pop()
+
+    override fun TripHistoryScreen.openOnMap(driveId: String) = onFinished(ProfileResult.ShowPastDrive(driveId))
+
+    override fun TripHistoryScreen.planNewRoutes(driveId: String) = onFinished(ProfileResult.PlanNewRoutes(driveId))
 
     override fun AboutScreen.openLicences() = stackNavigator.pushNew(ProfileConfig.Licences)
 
@@ -51,7 +81,7 @@ internal class ProfileNavHostNavigator(private val onClosed: () -> Unit, private
     override fun LicencesScreen.openLicenceText(args: LicenceTextArgs) =
         stackNavigator.pushNew(ProfileConfig.LicenceText(args))
 
-    override fun ProfileScreen.close() = onClosed()
+    override fun ProfileScreen.close() = onFinished(ProfileResult.Closed)
 
     override fun SettingsScreen.pop() = stackNavigator.pop()
 

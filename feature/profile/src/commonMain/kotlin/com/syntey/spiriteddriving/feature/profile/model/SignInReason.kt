@@ -10,4 +10,7 @@ enum class SignInReason {
 
     /** The Saved routes row on the map */
     SavedRoutes,
+
+    /** The Trip history row in Profile */
+    TripHistory,
 }

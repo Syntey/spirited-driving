@@ -30,6 +30,14 @@ class PlaceTest {
     }
 
     @Test
+    fun `the short area is the name when the first part of the area already holds it`() {
+        assertEquals(
+            "Beroun",
+            Place(name = "Beroun", area = "okres Beroun, Středočeský kraj", location = POINT).shortArea,
+        )
+    }
+
+    @Test
     fun `the short area of a place without an area is its name`() {
         assertEquals("Vinohradská 12", Place(name = "Vinohradská 12", area = null, location = POINT).shortArea)
     }

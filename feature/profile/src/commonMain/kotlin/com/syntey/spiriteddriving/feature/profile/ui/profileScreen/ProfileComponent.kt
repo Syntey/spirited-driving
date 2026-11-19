@@ -11,7 +11,7 @@ import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.feature.profile.domain.ObserveAccountUseCase
 import com.syntey.spiriteddriving.feature.profile.domain.SignInUseCase
-import com.syntey.spiriteddriving.feature.profile.model.ui.signInErrorFor
+import com.syntey.spiriteddriving.feature.profile.model.ui.SignInState
 import com.syntey.spiriteddriving.feature.profile.model.ui.toAccountRow
 import dev.icerock.moko.resources.desc.StringDesc
 import dev.icerock.moko.resources.desc.desc
@@ -54,6 +54,9 @@ internal class ProfileComponent(
     override fun onAboutClick() = openAbout()
     override fun onSignInWithGoogleClick() = signIn(SignInProvider.Google)
     override fun onAccountClick() = openAccount()
+    override fun onTripHistoryClick() {
+        if (componentState.value.account != null) openTripHistory() else openSignInForTripHistory()
+    }
     override fun onAccountDeleted() = sendUiEvent(ProfileUiEvent.AccountDeleted)
 
     private fun observeAccount() = observeAccountUseCase.execute {
@@ -62,7 +65,7 @@ internal class ProfileComponent(
                 if (user == null) {
                     state.copy(account = null)
                 } else {
-                    state.copy(account = user.toAccountRow(), isSigningIn = false, signInError = null)
+                    state.copy(account = user.toAccountRow(), signIn = SignInState())
                 }
             }
         }
@@ -70,15 +73,16 @@ internal class ProfileComponent(
     }
 
     private fun signIn(provider: SignInProvider) {
-        if (componentState.value.isSigningIn) return
-        componentState.update { it.copy(isSigningIn = true, signInError = null) }
+        // A second tap while one sign-in runs does nothing
+        if (componentState.value.signIn.isSigningIn) return
+        componentState.update { it.copy(signIn = SignInState.Running) }
         signInUseCase.execute(provider) {
             onSuccess { result ->
-                componentState.update { it.copy(isSigningIn = false, signInError = signInErrorFor(result)) }
+                componentState.update { it.copy(signIn = SignInState.after(result)) }
             }
             onError { error ->
                 logger.e(error) { "Sign-in failed" }
-                componentState.update { it.copy(isSigningIn = false, signInError = MR.strings.sign_in_failed.desc()) }
+                componentState.update { it.copy(signIn = SignInState.Failed) }
             }
         }
     }

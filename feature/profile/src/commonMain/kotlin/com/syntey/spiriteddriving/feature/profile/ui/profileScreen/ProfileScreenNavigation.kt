@@ -8,6 +8,12 @@ interface ProfileScreenNavigation : NavigationActions {
     fun ProfileScreen.openAbout()
     fun ProfileScreen.openAccount()
 
+    /** Opens Trip history, for a signed-in user. */
+    fun ProfileScreen.openTripHistory()
+
+    /** Asks a signed-out user to sign in, then opens Trip history. */
+    fun ProfileScreen.openSignInForTripHistory()
+
     /** Closes Profile and its screens. */
     fun ProfileScreen.close()
 }

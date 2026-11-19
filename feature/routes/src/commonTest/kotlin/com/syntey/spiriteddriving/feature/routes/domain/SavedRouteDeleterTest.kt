@@ -4,6 +4,7 @@ import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.work.FakeAppWork
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -19,18 +20,18 @@ class SavedRouteDeleterTest {
         val cache = FakeSavedRoutesCache(routes = routes)
         val appWork = FakeAppWork()
 
-        SavedRouteDeleter(appWork, source, cache).deleteLater(setOf("a", "b"))
+        SavedRouteDeleter(appWork, source, cache).deleteLater(setOf(SavedRouteId("a"), SavedRouteId("b")))
         appWork.runAll()
 
-        assertEquals(listOf("c"), source.routes.map { it.id })
-        assertEquals(listOf("c"), cache.get()?.map { it.id })
+        assertEquals(listOf(SavedRouteId("c")), source.routes.map { it.id })
+        assertEquals(listOf(SavedRouteId("c")), cache.get()?.map { it.id })
     }
 
     @Test
     fun `nothing is deleted before the app work runs`() = runTest {
         val source = FakeSavedRoutesSource(routes = routes)
 
-        SavedRouteDeleter(FakeAppWork(), source, FakeSavedRoutesCache(routes = routes)).deleteLater(setOf("a"))
+        SavedRouteDeleter(FakeAppWork(), source, FakeSavedRoutesCache(routes = routes)).deleteLater(setOf(SavedRouteId("a")))
 
         assertEquals(routes, source.routes)
     }
@@ -41,11 +42,11 @@ class SavedRouteDeleterTest {
         val cache = FakeSavedRoutesCache(routes = routes)
         val appWork = FakeAppWork()
 
-        SavedRouteDeleter(appWork, source, cache).deleteLater(setOf("a"))
+        SavedRouteDeleter(appWork, source, cache).deleteLater(setOf(SavedRouteId("a")))
         appWork.runAll()
 
         assertEquals(routes, cache.get())
     }
 
-    private fun route(id: String): SavedRoute = FakeSavedRoutesSource.Recorded.copy(id = id)
+    private fun route(id: String): SavedRoute = FakeSavedRoutesSource.Recorded.copy(id = SavedRouteId(id))
 }

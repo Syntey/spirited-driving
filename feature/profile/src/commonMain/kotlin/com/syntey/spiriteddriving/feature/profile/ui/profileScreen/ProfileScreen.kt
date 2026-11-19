@@ -35,6 +35,9 @@ interface ProfileScreen {
         /** Tapped the Account row, which shows the signed-in user. */
         fun onAccountClick()
 
+        /** Tapped the Trip history row. */
+        fun onTripHistoryClick()
+
         /** Tapped the back button in the bar. */
         fun onBack()
 
@@ -46,6 +49,7 @@ interface ProfileScreen {
                 override fun onAboutClick() = Unit
                 override fun onSignInWithGoogleClick() = Unit
                 override fun onAccountClick() = Unit
+                override fun onTripHistoryClick() = Unit
                 override fun onBack() = Unit
             }
         }

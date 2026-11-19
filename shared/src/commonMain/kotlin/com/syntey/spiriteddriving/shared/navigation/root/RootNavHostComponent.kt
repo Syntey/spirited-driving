@@ -3,18 +3,21 @@ package com.syntey.spiriteddriving.shared.navigation.root
 import app.futured.arkitekt.crusecases.execute
 import app.futured.arkitekt.decompose.ext.asStateFlow
 import co.touchlab.kermit.Logger
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.feature.routes.ui.RoutesScreens
 import com.syntey.spiriteddriving.shared.domain.ClaimDrivesOnSignInUseCase
-import com.syntey.spiriteddriving.shared.domain.SyncSavedRoutesOnAccountChangeUseCase
+import com.syntey.spiriteddriving.shared.domain.SyncAccountDataOnAccountChangeUseCase
 import com.syntey.spiriteddriving.shared.domain.IsOnboardingDoneUseCase
 import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.AppComponentFactory
 import com.syntey.spiriteddriving.feature.map.ui.MapScreens
+import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
 import com.syntey.spiriteddriving.feature.onboarding.ui.OnboardingScreens
 import com.syntey.spiriteddriving.feature.profile.model.SignInReason
 import com.syntey.spiriteddriving.feature.profile.ui.ProfileScreens
 import com.syntey.spiriteddriving.shared.navigation.profile.ProfileNavHostComponent
+import com.syntey.spiriteddriving.shared.navigation.profile.ProfileResult
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
@@ -29,12 +32,14 @@ internal class RootNavHostComponent(
     @InjectedParam componentContext: AppComponentContext,
     private val isOnboardingDoneUseCase: IsOnboardingDoneUseCase,
     private val claimDrivesOnSignInUseCase: ClaimDrivesOnSignInUseCase,
-    private val syncSavedRoutesOnAccountChangeUseCase: SyncSavedRoutesOnAccountChangeUseCase,
+    private val syncAccountDataOnAccountChangeUseCase: SyncAccountDataOnAccountChangeUseCase,
 ) : AppComponent<RootNavHostViewState, Nothing>(componentContext, RootNavHostViewState),
     RootNavHost {
 
     private val logger = Logger.withTag("RootNavHostComponent")
     private val rootNavigator: RootNavHostNavigation = RootNavHostNavigator(::onSignInFinished, ::onSavedRouteChosen)
+    private val mapScreen: TripPlanScreen?
+        get() = (slot.value.child?.instance as? RootChild.Map)?.screen
 
     override val slot: StateFlow<ChildSlot<RootConfig, RootChild>> = childSlot(
         source = rootNavigator.slotNavigator,
@@ -59,10 +64,7 @@ internal class RootNavHostComponent(
         childFactory = { config, childCtx ->
             when (config) {
                 RootSheetConfig.Profile -> RootSheetChild.Profile(
-                    AppComponentFactory.createAppComponent<ProfileNavHostComponent>(
-                        childCtx,
-                        { rootNavigator.sheetNavigator.dismiss() },
-                    ),
+                    AppComponentFactory.createAppComponent<ProfileNavHostComponent>(childCtx, ::onProfileFinished),
                 )
 
                 RootSheetConfig.SavedRoutes -> RootSheetChild.SavedRoutes(
@@ -80,21 +82,35 @@ internal class RootNavHostComponent(
         doOnCreate {
             checkOnboardingDone()
             claimDrivesOnSignIn()
-            syncSavedRoutesOnAccountChange()
+            syncAccountDataOnAccountChange()
         }
     }
 
     private fun onSignInFinished(reason: SignInReason, isSignedIn: Boolean) {
         when (reason) {
-            SignInReason.SaveRoute -> (slot.value.child?.instance as? RootChild.Map)?.screen?.onSignInToSaveFinished(isSignedIn)
+            SignInReason.SaveRoute -> mapScreen?.onSignInToSaveFinished(isSignedIn)
 
             // Saved routes opens once signed in, as the row asked for it; signed out, the sign-in sheet is all that's shown
             SignInReason.SavedRoutes -> if (isSignedIn) rootNavigator.sheetNavigator.activate(RootSheetConfig.SavedRoutes)
+
+            // Trip history's sign-in sheet opens over Profile, which finishes it itself
+            SignInReason.TripHistory -> Unit
         }
     }
 
-    private fun onSavedRouteChosen(savedRouteId: String) {
-        (slot.value.child?.instance as? RootChild.Map)?.screen?.showSavedRoute(savedRouteId)
+    // Profile closes at once; a drive chosen in Trip history or planned from it then shows on the map
+    private fun onProfileFinished(result: ProfileResult) {
+        rootNavigator.sheetNavigator.dismiss()
+        val map = mapScreen
+        when (result) {
+            ProfileResult.Closed -> Unit
+            is ProfileResult.ShowPastDrive -> map?.showPastDrive(result.driveId)
+            is ProfileResult.PlanNewRoutes -> map?.planNewRoutes(result.driveId)
+        }
+    }
+
+    private fun onSavedRouteChosen(savedRouteId: SavedRouteId) {
+        mapScreen?.showSavedRoute(savedRouteId)
     }
 
     private fun checkOnboardingDone() {
@@ -119,9 +135,9 @@ internal class RootNavHostComponent(
         }
     }
 
-    private fun syncSavedRoutesOnAccountChange() {
-        syncSavedRoutesOnAccountChangeUseCase.execute {
-            onError { error -> logger.e(error) { "Saved routes not cleared on sign-out" } }
+    private fun syncAccountDataOnAccountChange() {
+        syncAccountDataOnAccountChangeUseCase.execute {
+            onError { error -> logger.e(error) { "Account data not cleared on sign-out" } }
         }
     }
 }

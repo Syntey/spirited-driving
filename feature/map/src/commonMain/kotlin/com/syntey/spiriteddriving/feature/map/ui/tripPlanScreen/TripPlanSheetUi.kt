@@ -48,14 +48,14 @@ import com.syntey.spiriteddriving.core.ui.tools.onEvent
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen.Actions.Companion.noOpActions
 import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedRatingStep
 import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedRoutePlanning
-import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedSavedRoute
+import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedOneRoute
 import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
 import com.syntey.spiriteddriving.feature.map.ui.components.RatingStepBody
 import com.syntey.spiriteddriving.feature.map.ui.components.RatingStepHeader
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningBody
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningHeader
-import com.syntey.spiriteddriving.feature.map.ui.components.SavedRouteBody
-import com.syntey.spiriteddriving.feature.map.ui.components.SavedRouteHeader
+import com.syntey.spiriteddriving.feature.map.ui.components.OneRouteBody
+import com.syntey.spiriteddriving.feature.map.ui.components.OneRouteHeader
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchResults
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchRow
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
@@ -116,7 +116,7 @@ internal fun Content(
     val currentIsPlanning by rememberUpdatedState(isPlanning)
     val rating = viewState.ratingStep
     val reportCollapsedHeight by rememberUpdatedState(onCollapsedHeightChange)
-    val savedRoute = viewState.savedRouteStep
+    val oneRoute = viewState.oneRouteStep
     val collapsedHeights = remember { CollapsedHeights() }
     val shownHeight = collapsedHeights.shownBy(viewState)
     LaunchedEffect(shownHeight) { shownHeight?.let(reportCollapsedHeight) }
@@ -128,8 +128,8 @@ internal fun Content(
         MeasuredPlanning(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.planning = it })
         if (rating != null) {
             RatingLayout(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.rating = it })
-        } else if (savedRoute != null) {
-            SavedRouteLayout(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.savedRoute = it })
+        } else if (oneRoute != null) {
+            OneRouteLayout(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.oneRoute = it })
         } else if (planning != null && viewState.sheetHeight == SheetHeight.Collapsed) {
             CollapsedRoutePlanning(viewState = viewState, actions = actions)
         } else {
@@ -225,12 +225,12 @@ private class CollapsedHeights {
     var search by mutableStateOf<Dp?>(null)
     var planning by mutableStateOf<Dp?>(null)
     var rating by mutableStateOf<Dp?>(null)
-    var savedRoute by mutableStateOf<Dp?>(null)
+    var oneRoute by mutableStateOf<Dp?>(null)
 
     // The rating step takes the place of the others, and a saved route's step that of search and planning
     fun shownBy(viewState: TripPlanViewState): Dp? = when {
         viewState.ratingStep != null -> rating
-        viewState.savedRouteStep != null -> savedRoute
+        viewState.oneRouteStep != null -> oneRoute
         viewState.planning != null -> planning
         else -> search
     }
@@ -238,10 +238,10 @@ private class CollapsedHeights {
 
 // A saved route's step replaces the search and planning, and is measured the same way as the rating step
 @Composable
-private fun ColumnScope.SavedRouteLayout(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
+private fun ColumnScope.OneRouteLayout(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
     val style = MapPlatformStyle.current
     val density = LocalDensity.current
-    CollapsedSavedRoute(
+    CollapsedOneRoute(
         viewState = viewState,
         actions = actions,
         modifier = Modifier
@@ -249,14 +249,14 @@ private fun ColumnScope.SavedRouteLayout(viewState: TripPlanViewState, actions: 
             .clearAndSetSemantics {},
     )
     if (viewState.sheetHeight == SheetHeight.Collapsed) {
-        CollapsedSavedRoute(viewState = viewState, actions = actions)
+        CollapsedOneRoute(viewState = viewState, actions = actions)
     } else {
         Column(
             Modifier.fillMaxSize().padding(style.sheetContentPadding),
             verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
         ) {
-            SavedRouteHeader(viewState = viewState, actions = actions)
-            SavedRouteBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
+            OneRouteHeader(viewState = viewState, actions = actions)
+            OneRouteBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
         }
     }
 }

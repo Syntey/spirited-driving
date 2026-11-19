@@ -1,8 +1,13 @@
 package com.syntey.spiriteddriving.shared.domain
 
+import com.syntey.spiriteddriving.core.domain.drive.FakeTripHistoryCache
+import com.syntey.spiriteddriving.core.domain.drive.FakeTripHistorySource
+import com.syntey.spiriteddriving.core.domain.drive.PastDrivePage
+import com.syntey.spiriteddriving.core.domain.drive.TripHistoryCache
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesCache
 import com.syntey.spiriteddriving.core.platform.binding.Auth
 import com.syntey.spiriteddriving.core.platform.binding.AuthListenerRegistration
@@ -20,10 +25,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-class SyncSavedRoutesOnAccountChangeUseCaseTest {
+class SyncAccountDataOnAccountChangeUseCaseTest {
 
     private val kept = FakeSavedRoutesSource.Recorded
-    private val onBackend = FakeSavedRoutesSource.Recorded.copy(id = "saved-2", name = "Kokořín")
+    private val onBackend = FakeSavedRoutesSource.Recorded.copy(id = SavedRouteId("saved-2"), name = "Kokořín")
+    private val keptTrips = PastDrivePage(listOf(FakeTripHistorySource.Recorded), nextCursor = null)
 
     @Test
     fun `signed in at start replaces the kept routes with the backend's`() = runTest {
@@ -47,6 +53,16 @@ class SyncSavedRoutesOnAccountChangeUseCaseTest {
     }
 
     @Test
+    fun `signed in at start keeps the kept trip history`() = runTest {
+        val trips = FakeTripHistoryCache(page = keptTrips)
+        start(useCase(SwitchableAuth(user = USER), FakeSavedRoutesCache(), FakeSavedRoutesSource(), trips))
+
+        runCurrent()
+
+        assertEquals(keptTrips, trips.get())
+    }
+
+    @Test
     fun `sign out clears the saved routes`() = runTest {
         val cache = FakeSavedRoutesCache(routes = listOf(kept))
         val auth = SwitchableAuth(user = USER)
@@ -57,6 +73,19 @@ class SyncSavedRoutesOnAccountChangeUseCaseTest {
         runCurrent()
 
         assertNull(cache.get())
+    }
+
+    @Test
+    fun `sign out clears the trip history`() = runTest {
+        val trips = FakeTripHistoryCache(page = keptTrips)
+        val auth = SwitchableAuth(user = USER)
+        start(useCase(auth, FakeSavedRoutesCache(), FakeSavedRoutesSource(), trips))
+        runCurrent()
+
+        auth.emit(null)
+        runCurrent()
+
+        assertNull(trips.get())
     }
 
     @Test
@@ -75,6 +104,19 @@ class SyncSavedRoutesOnAccountChangeUseCaseTest {
     }
 
     @Test
+    fun `switching account clears the trip history`() = runTest {
+        val trips = FakeTripHistoryCache(page = keptTrips)
+        val auth = SwitchableAuth(user = USER)
+        start(useCase(auth, FakeSavedRoutesCache(), FakeSavedRoutesSource(), trips))
+        runCurrent()
+
+        auth.emit(OTHER_USER)
+        runCurrent()
+
+        assertNull(trips.get())
+    }
+
+    @Test
     fun `signed out at start clears leftover saved routes`() = runTest {
         val cache = FakeSavedRoutesCache(routes = listOf(kept))
         start(useCase(SwitchableAuth(user = null), cache, FakeSavedRoutesSource()))
@@ -82,6 +124,16 @@ class SyncSavedRoutesOnAccountChangeUseCaseTest {
         runCurrent()
 
         assertNull(cache.get())
+    }
+
+    @Test
+    fun `signed out at start clears leftover trip history`() = runTest {
+        val trips = FakeTripHistoryCache(page = keptTrips)
+        start(useCase(SwitchableAuth(user = null), FakeSavedRoutesCache(), FakeSavedRoutesSource(), trips))
+
+        runCurrent()
+
+        assertNull(trips.get())
     }
 
     @Test
@@ -113,12 +165,35 @@ class SyncSavedRoutesOnAccountChangeUseCaseTest {
         assertNull(cache.get())
     }
 
-    private fun TestScope.start(useCase: SyncSavedRoutesOnAccountChangeUseCase) {
+    @Test
+    fun `a failing saved routes clear does not skip the trip history`() = runTest {
+        val trips = FakeTripHistoryCache(page = keptTrips)
+        val cache = FailingOnceSavedRoutesCache(FakeSavedRoutesCache(routes = listOf(kept)))
+        val auth = SwitchableAuth(user = USER)
+        start(useCase(auth, cache, FakeSavedRoutesSource(), trips))
+        runCurrent()
+
+        auth.emit(null)
+        runCurrent()
+
+        assertNull(trips.get())
+    }
+
+    private fun TestScope.start(useCase: SyncAccountDataOnAccountChangeUseCase) {
         backgroundScope.launch { useCase.build(Unit).collect { } }
     }
 
-    private fun useCase(auth: SwitchableAuth, cache: SavedRoutesCache, source: FakeSavedRoutesSource) =
-        SyncSavedRoutesOnAccountChangeUseCase(auth = Auth(auth), savedRoutesSource = source, savedRoutesCache = cache)
+    private fun useCase(
+        auth: SwitchableAuth,
+        cache: SavedRoutesCache,
+        source: FakeSavedRoutesSource,
+        tripHistoryCache: TripHistoryCache = FakeTripHistoryCache(),
+    ) = SyncAccountDataOnAccountChangeUseCase(
+        auth = Auth(auth),
+        savedRoutesSource = source,
+        savedRoutesCache = cache,
+        tripHistoryCache = tripHistoryCache,
+    )
 }
 
 private class FailingOnceSavedRoutesCache(private val delegate: SavedRoutesCache) : SavedRoutesCache by delegate {

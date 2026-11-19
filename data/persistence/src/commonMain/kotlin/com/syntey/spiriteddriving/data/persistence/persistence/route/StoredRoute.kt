@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.data.persistence.persistence.savedroute
+package com.syntey.spiriteddriving.data.persistence.persistence.route
 
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.metres
 import com.syntey.spiriteddriving.core.domain.route.HandOff
@@ -50,8 +50,8 @@ internal fun Route.toStored() = StoredRoute(
     extraDurationSeconds = extraDuration.inWholeSeconds,
     extraDistanceMetres = extraDistance.inWholeMetres.toLong(),
     funLevel = funLevel,
-    curvyDistanceMetres = stats.curvyDistance.inWholeMetres.toLong(),
-    ascentMetres = stats.ascent.inWholeMetres.toLong(),
+    curvyDistanceMetres = stats.curvyDistanceMetres,
+    ascentMetres = stats.ascentMetres,
     line = line.map { it.toStored() },
     handOffWaypoints = handOff.waypoints.map { it.toStored() },
     followedShare = handOff.followedShare,
@@ -69,10 +69,7 @@ internal fun StoredRoute.toDomain() = Route(
     extraDuration = extraDurationSeconds.seconds,
     extraDistance = extraDistanceMetres.toInt().metres,
     funLevel = funLevel,
-    stats = RouteStats(
-        curvyDistance = curvyDistanceMetres.toInt().metres,
-        ascent = ascentMetres.toInt().metres,
-    ),
+    stats = routeStatsOf(curvyDistanceMetres, ascentMetres),
     line = line.map { it.toDomain() },
     handOff = HandOff(
         waypoints = handOffWaypoints.map { it.toDomain() },
@@ -80,3 +77,17 @@ internal fun StoredRoute.toDomain() = Route(
     ),
     attribution = attribution,
 )
+
+/** Builds route stats from the metres the stored format keeps. */
+internal fun routeStatsOf(curvyDistanceMetres: Long, ascentMetres: Long) = RouteStats(
+    curvyDistance = curvyDistanceMetres.toInt().metres,
+    ascent = ascentMetres.toInt().metres,
+)
+
+/** The curvy distance in whole metres, as the stored format keeps it. */
+internal val RouteStats.curvyDistanceMetres: Long
+    get() = curvyDistance.inWholeMetres.toLong()
+
+/** The ascent in whole metres, as the stored format keeps it. */
+internal val RouteStats.ascentMetres: Long
+    get() = ascent.inWholeMetres.toLong()

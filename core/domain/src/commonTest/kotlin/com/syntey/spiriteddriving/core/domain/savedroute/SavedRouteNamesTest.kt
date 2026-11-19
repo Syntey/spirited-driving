@@ -39,7 +39,7 @@ class SavedRouteNamesTest {
 
     @Test
     fun `a route's own name isn't taken for it`() {
-        assertFalse(listOf(route("1", "Karlštejn Castle")).hasName("Karlštejn Castle", exceptId = "1"))
+        assertFalse(listOf(route("1", "Karlštejn Castle")).hasName("Karlštejn Castle", exceptId = SavedRouteId("1")))
     }
 
     @Test
@@ -79,5 +79,5 @@ class SavedRouteNamesTest {
         assertEquals("Hrad Karlštejn and the Berounka valley 2", routes.freeNameFor(name, startArea = "Smíchov"))
     }
 
-    private fun route(id: String, name: String) = FakeSavedRoutesSource.Recorded.copy(id = id, name = name)
+    private fun route(id: String, name: String) = FakeSavedRoutesSource.Recorded.copy(id = SavedRouteId(id), name = name)
 }

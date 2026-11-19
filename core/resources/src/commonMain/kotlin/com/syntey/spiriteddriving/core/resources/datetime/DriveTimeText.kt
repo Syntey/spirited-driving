@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.map.tools
+package com.syntey.spiriteddriving.core.resources.datetime
 
 import com.syntey.spiriteddriving.core.resources.*
 import dev.icerock.moko.resources.StringResource
@@ -9,8 +9,8 @@ import kotlin.time.Instant
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.minus
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.toLocalDateTime
 
 /**
@@ -18,7 +18,7 @@ import kotlinx.datetime.toLocalDateTime
  * back. Time is 24-hour, with two-digit minutes. The app asks only within 48 hours of the hand-off, so a weekday is never
  * ambiguous: it always falls within the last week.
  */
-internal fun driveTimeText(startedAt: Instant, now: Instant, timeZone: TimeZone): StringDesc {
+fun driveTimeText(startedAt: Instant, now: Instant, timeZone: TimeZone): StringDesc {
     val started = startedAt.toLocalDateTime(timeZone)
     val time = clockText(hour = started.hour, minute = started.minute)
     return when (val day = driveDay(started.date, now, timeZone)) {
@@ -29,7 +29,7 @@ internal fun driveTimeText(startedAt: Instant, now: Instant, timeZone: TimeZone)
 }
 
 /** The day a drive started on, as the reminder bubble shows it: "Today", "Yesterday", or the weekday. */
-internal fun driveDayText(startedAt: Instant, now: Instant, timeZone: TimeZone): StringDesc {
+fun driveDayText(startedAt: Instant, now: Instant, timeZone: TimeZone): StringDesc {
     val started = startedAt.toLocalDateTime(timeZone).date
     return when (val day = driveDay(started, now, timeZone)) {
         DriveDay.Today -> MR.strings.drive_feedback_today_day.desc()
@@ -37,6 +37,42 @@ internal fun driveDayText(startedAt: Instant, now: Instant, timeZone: TimeZone):
         is DriveDay.Weekday -> weekdayResource(day.day).desc()
     }
 }
+
+/**
+ * When a drive started, for a past drive's header: "Thu 5 Nov, 14:20". The pattern is a skeleton, so each language orders its
+ * parts itself. It's formatted in the phone's time zone.
+ */
+fun driveDateTimeText(startedAt: Instant): StringDesc = startedAt.desc("EEEdMMMHmm")
+
+/**
+ * The day a drive started on, for the trip history list: "Today", "Yesterday", or "Thu 5 Nov". The pattern is a skeleton, so
+ * each language orders its parts itself. It's formatted in the phone's time zone.
+ */
+fun driveDateText(startedAt: Instant, now: Instant, timeZone: TimeZone): StringDesc =
+    driveDateTextWith(startedAt, now, timeZone, pattern = "EEE d MMM")
+
+/** The same day as [driveDateText], spelled out for a screen reader: "Today", "Yesterday", or "Thursday 5 November". */
+fun driveDateSpokenText(startedAt: Instant, now: Instant, timeZone: TimeZone): StringDesc =
+    driveDateTextWith(startedAt, now, timeZone, pattern = "EEEE d MMMM")
+
+private fun driveDateTextWith(startedAt: Instant, now: Instant, timeZone: TimeZone, pattern: String): StringDesc {
+    val started = startedAt.toLocalDateTime(timeZone).date
+    return when (driveDay(started, now, timeZone)) {
+        DriveDay.Today -> MR.strings.drive_feedback_today_day.desc()
+        DriveDay.Yesterday -> MR.strings.drive_feedback_yesterday_day.desc()
+        is DriveDay.Weekday -> startedAt.desc(pattern)
+    }
+}
+
+/**
+ * The month header of a trip history section: "November" in the current year, "October 2025" before it. The pattern is a
+ * skeleton; the year is shown only when it isn't this year.
+ */
+fun monthHeaderText(startedAt: Instant, now: Instant, timeZone: TimeZone): StringDesc =
+    startedAt.desc(monthHeaderPattern(startedAt, now, timeZone))
+
+internal fun monthHeaderPattern(startedAt: Instant, now: Instant, timeZone: TimeZone): String =
+    if (startedAt.toLocalDateTime(timeZone).year == now.toLocalDateTime(timeZone).year) "LLLL" else "LLLL yyyy"
 
 // The day a drive started on, relative to today; shared by the time and the day text so they never disagree
 private fun driveDay(started: LocalDate, now: Instant, timeZone: TimeZone): DriveDay {

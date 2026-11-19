@@ -5,7 +5,7 @@ import kotlin.time.Instant
 
 /**
  * Creates a [StringDesc] that formats the given [instant] using the provided [pattern].
- * The formatting will be localized according to the user's locale.
+ * The formatting will be localized in the app's language, using the phone's region when the phone is in that language.
  *
  * This is a factory function for [DateTimeStringDesc].
  *
@@ -30,7 +30,7 @@ fun StringDesc.Companion.DateTime(instant: Instant, pattern: String): StringDesc
  * [UTS#35 Unicode Locale Data Markup Language (LDML)](http://www.unicode.org/reports/tr35/)
  * standard.
  * @return A [StringDesc] instance that will format the [Instant] according to the specified
- * pattern and the user's current locale.
+ * pattern, localized in the app's language, using the phone's region when the phone is in that language.
  *
  * For example, template "MMMMd" produces:
  * - "December 31" for "en_US" locale
@@ -45,7 +45,7 @@ fun Instant.desc(pattern: String) = StringDesc.Companion.DateTime(this, pattern)
  * A [StringDesc] implementation which translates provided [Instant] into localized date-time string.
  *
  * Formats provided [Instant] using pattern in [UTS#35 Unicode Locale Data Markup Language (LDML)](http://www.unicode.org/reports/tr35/)
- * localized according to user's locale.
+ * localized in the app's language, using the phone's region when the phone is in that language.
  *
  * For example, template "MMMMd" produces:
  * - "December 31" for "en_US" locale

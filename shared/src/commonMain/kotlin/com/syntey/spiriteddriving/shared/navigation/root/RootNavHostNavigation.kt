@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.shared.navigation.root
 
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesScreen
 import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesScreenNavigation
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
@@ -28,7 +29,7 @@ internal interface RootNavHostNavigation :
  */
 internal class RootNavHostNavigator(
     private val onSignInFinished: (SignInReason, Boolean) -> Unit,
-    private val onSavedRouteChosen: (String) -> Unit,
+    private val onSavedRouteChosen: (SavedRouteId) -> Unit,
 ) : RootNavHostNavigation {
     override val slotNavigator: SlotNavigation<RootConfig> = SlotNavigation()
     override val sheetNavigator: SlotNavigation<RootSheetConfig> = SlotNavigation()
@@ -40,7 +41,7 @@ internal class RootNavHostNavigator(
     override fun SavedRoutesScreen.close() = sheetNavigator.dismiss()
 
     // The list closes, and the map shows the route on its own
-    override fun SavedRoutesScreen.openOnMap(savedRouteId: String) {
+    override fun SavedRoutesScreen.openOnMap(savedRouteId: SavedRouteId) {
         sheetNavigator.dismiss()
         onSavedRouteChosen(savedRouteId)
     }

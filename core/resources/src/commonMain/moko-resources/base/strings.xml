@@ -3,6 +3,8 @@
 
     <!-- App -->
     <string name="app_name">Spirited Driving</string>
+    <!-- The language of these strings, as a BCP 47 tag; dates are formatted in it -->
+    <string name="app_language">en</string>
 
     <!-- Generic -->
     <string name="generic_cancel">Cancel</string>
@@ -120,6 +122,9 @@
     <string name="map_saved_routes_one">1 saved route</string>
     <string name="map_saved_routes_many">%1$d saved routes</string>
     <string name="saved_route_starts_in">Starts in %1$s.</string>
+    <string name="map_past_drive_subtitle">%1$s · From %2$s</string>
+    <string name="map_past_drive_subtitle_no_start">%1$s</string>
+    <string name="one_route_offline_text">Opening the route needs a connection.</string>
     <string name="saved_routes_rename">Rename</string>
     <string name="saved_routes_delete">Delete</string>
     <string name="saved_routes_more">More for %1$s</string>
@@ -179,6 +184,39 @@
     <string name="planning_budget_miles">mi</string>
     <string name="planning_budget_miles_description">Miles</string>
 
+    <!-- Trip history -->
+    <string name="trip_history_title">Trip history</string>
+    <string name="trip_history_row">%1$s · From %2$s · %3$s</string>
+    <string name="trip_history_row_fastest">%1$s · From %2$s · Fastest · %3$s</string>
+    <string name="trip_history_row_no_start">%1$s · %2$s</string>
+    <string name="trip_history_row_fastest_no_start">%1$s · Fastest · %2$s</string>
+    <string name="trip_history_rate">Rate</string>
+    <string name="trip_history_rate_label">Rate the drive to %1$s</string>
+    <string name="trip_history_rated_good">rated Good</string>
+    <string name="trip_history_rated_not_good">rated Not good</string>
+    <string name="trip_history_description">%1$s, %2$s, from %3$s, %4$s</string>
+    <string name="trip_history_description_no_start">%1$s, %2$s, %3$s</string>
+    <string name="trip_history_description_rated">%1$s, %2$s</string>
+    <string name="trip_history_empty_title">No drives yet</string>
+    <string name="trip_history_empty_text">Routes you drive show up here, so you can drive them again.</string>
+    <string name="trip_history_offline_title">You\'re offline</string>
+    <string name="trip_history_offline_text">Trip history needs a connection.</string>
+    <string name="trip_history_failed_title">Trip history didn\'t load</string>
+    <string name="trip_history_failed_text">Something went wrong on our side. Try again.</string>
+    <string name="trip_history_loading">Loading</string>
+    <string name="trip_history_delete">Delete</string>
+    <string name="trip_history_plan">Plan new routes</string>
+    <string name="trip_history_more">More for %1$s</string>
+    <string name="trip_history_deleted">Drive deleted</string>
+    <string name="trip_history_undo">Undo</string>
+    <string name="trip_history_offline_changes">You\'re offline. Changes need a connection.</string>
+    <string name="trip_history_delete_failed">The drive wasn\'t deleted. Try again.</string>
+    <string name="trip_history_clear">Clear trip history</string>
+    <string name="trip_history_clear_title">Clear trip history?</string>
+    <string name="trip_history_clear_text">All your drives and their ratings are deleted for good.</string>
+    <string name="trip_history_clear_confirm">Clear</string>
+    <string name="trip_history_clear_failed">Trip history wasn\'t cleared. Try again.</string>
+
     <!-- Profile -->
     <string name="profile_screen_title">Profile</string>
     <string name="profile_settings">Settings</string>
@@ -189,6 +227,7 @@
     <string name="profile_about">About Spirited Driving</string>
     <string name="profile_sign_in_title">Sign in</string>
     <string name="profile_sign_in_text">Your saved routes and trip history stay with your account, on any phone. Drives from this phone come along.</string>
+    <string name="profile_trip_history">Trip history</string>
     <string name="profile_account">Account</string>
     <string name="profile_account_signed_in_with_google">Signed in with Google</string>
     <string name="profile_account_signed_in_with_apple">Signed in with Apple</string>
@@ -213,6 +252,7 @@
     <string name="sign_in_other_provider_google">This email already has an account that uses Google. Continue with Google to sign in.</string>
     <string name="sign_in_sheet_title_save_route">Sign in to save this route</string>
     <string name="sign_in_sheet_title_saved_routes">Sign in to keep routes for later</string>
+    <string name="sign_in_sheet_title_trip_history">Sign in to see your trip history</string>
 
     <!-- About -->
     <string name="about_screen_title">About</string>

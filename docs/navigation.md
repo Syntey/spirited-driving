@@ -71,7 +71,7 @@ The profile button in the top right corner of the map opens Profile, signed in o
 - [Trip history](features/trip-history/README.md). Choosing a drive returns to the map with that route on its own in
   the sheet; planning new routes opens Route planning to the same destination, from where the user is now. Rating a
   past drive opens a sheet over the list and returns to it
-  ([design](features/trip-history/design.md#rating-sheet)).
+  ([design](features/trip-history/README.md#design)).
 - [Settings](features/settings/README.md): units, vignettes and drive reminders. It works the same signed in or out.
 - Rate Spirited Driving and Send feedback, and About with the legal pages, licences and version
   ([Settings design](features/settings/README.md#design)).

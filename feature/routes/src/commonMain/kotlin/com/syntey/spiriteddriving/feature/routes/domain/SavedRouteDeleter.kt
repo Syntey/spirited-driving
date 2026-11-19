@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.feature.routes.domain
 
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.work.AppWork
@@ -16,7 +17,7 @@ internal class SavedRouteDeleter(
     private val savedRoutesCache: SavedRoutesCache,
 ) {
 
-    fun deleteLater(ids: Collection<String>) {
+    fun deleteLater(ids: Collection<SavedRouteId>) {
         ids.forEach { id ->
             appWork.launch {
                 savedRoutesSource.delete(id)

@@ -22,13 +22,13 @@ interface SavedRoutesCache {
     suspend fun put(route: SavedRoute)
 
     /** Removes the saved route and its full route. */
-    suspend fun remove(id: String)
+    suspend fun remove(id: SavedRouteId)
 
     /** The full route kept for the saved route [id], or `null` when there's none or it can't be read. */
-    suspend fun getRoute(id: String): Route?
+    suspend fun getRoute(id: SavedRouteId): Route?
 
     /** Keeps [route] as the full route of the saved route [id]. */
-    suspend fun putRoute(id: String, route: Route)
+    suspend fun putRoute(id: SavedRouteId, route: Route)
 
     /** Removes everything kept. */
     suspend fun clear()

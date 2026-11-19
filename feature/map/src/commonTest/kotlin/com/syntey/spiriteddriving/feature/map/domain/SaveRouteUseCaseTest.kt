@@ -5,6 +5,7 @@ import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.toSavedRoute
 import kotlinx.coroutines.test.runTest
@@ -27,7 +28,7 @@ class SaveRouteUseCaseTest {
 
         val saved = assertIs<SaveRouteResult.Saved>(result).savedRoute
         assertEquals(route.destination.name, saved.name)
-        assertEquals(route.id, saved.routeId)
+        assertEquals(route.id, saved.route.id)
     }
 
     @Test
@@ -54,7 +55,7 @@ class SaveRouteUseCaseTest {
 
     @Test
     fun `a route already saved is returned without saving it again`() = runTest {
-        val existing = route.toSavedRoute(id = "saved-9", name = "Old name", savedAt = SAVED_AT)
+        val existing = route.toSavedRoute(id = SavedRouteId("saved-9"), name = "Old name", savedAt = SAVED_AT)
         val source = FakeSavedRoutesSource(routes = listOf(existing))
 
         val result = saveRoute(route, source = source, cache = FakeSavedRoutesCache(routes = listOf(existing)))
@@ -65,7 +66,7 @@ class SaveRouteUseCaseTest {
 
     @Test
     fun `a taken name asks for a free one instead of saving`() = runTest {
-        val taken = route.toSavedRoute(id = "saved-1", name = route.destination.name.orEmpty(), savedAt = SAVED_AT)
+        val taken = route.toSavedRoute(id = SavedRouteId("saved-1"), name = route.destination.name.orEmpty(), savedAt = SAVED_AT)
         val other = FakeRoutePlanner.Recorded.fastest
         val source = FakeSavedRoutesSource(routes = listOf(taken))
 
@@ -95,7 +96,7 @@ class SaveRouteUseCaseTest {
 
     @Test
     fun `a given name that is taken asks for a free one instead of saving`() = runTest {
-        val taken = route.toSavedRoute(id = "saved-1", name = "Sunday loop", savedAt = SAVED_AT)
+        val taken = route.toSavedRoute(id = SavedRouteId("saved-1"), name = "Sunday loop", savedAt = SAVED_AT)
         val other = FakeRoutePlanner.Recorded.fastest
         val source = FakeSavedRoutesSource(routes = listOf(taken))
 
@@ -109,7 +110,7 @@ class SaveRouteUseCaseTest {
 
     @Test
     fun `the saved routes are read from the backend when nothing is kept`() = runTest {
-        val existing = route.toSavedRoute(id = "saved-9", name = "Old name", savedAt = SAVED_AT)
+        val existing = route.toSavedRoute(id = SavedRouteId("saved-9"), name = "Old name", savedAt = SAVED_AT)
         val cache = FakeSavedRoutesCache(routes = null)
 
         val result = saveRoute(route, source = FakeSavedRoutesSource(routes = listOf(existing)), cache = cache)

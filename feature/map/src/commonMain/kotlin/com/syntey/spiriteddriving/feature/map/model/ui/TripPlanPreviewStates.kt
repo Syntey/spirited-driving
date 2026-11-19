@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.feature.map.model.ui
 
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
+import com.syntey.spiriteddriving.core.domain.drive.PastDrive
 import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.kilometres
@@ -10,8 +11,11 @@ import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
+import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
@@ -36,7 +40,9 @@ internal object TripPlanPreviewStates {
         override val events: Flow<TripPlanUiEvent> = emptyFlow()
 
         override fun onSignInToSaveFinished(isSignedIn: Boolean) = Unit
-        override fun showSavedRoute(savedRouteId: String) = Unit
+        override fun showSavedRoute(savedRouteId: SavedRouteId) = Unit
+        override fun showPastDrive(driveId: String) = Unit
+        override fun planNewRoutes(driveId: String) = Unit
     }
 
     fun viewState(locationAccess: LocationAccess? = LocationAccess.Precise, followsUser: Boolean = true) = TripPlanViewState(
@@ -212,20 +218,58 @@ internal object TripPlanPreviewStates {
     )
 
     /** A saved route's step: loaded from the Recorded saved route, which is saved, so Saved shows. */
-    fun savedRouteViewState(
-        status: SavedRouteStatus = SavedRouteStatus.Ready,
+    fun oneRouteViewState(
+        status: OneRouteStatus = OneRouteStatus.Ready,
         sheetHeight: SheetHeight = SheetHeight.Half,
     ): TripPlanViewState {
         val saved = FakeSavedRoutesSource.Recorded
-        val step = SavedRouteStep(
-            savedRoute = saved,
-            route = FakeRoutePlanner.Recorded.funRoutes.first().takeIf { status == SavedRouteStatus.Ready },
+        val step = OneRouteStep(
+            origin = OneRouteOrigin.Saved(saved),
+            route = FakeRoutePlanner.Recorded.funRoutes.first().takeIf { status == OneRouteStatus.Ready },
             status = status,
         )
         return viewState().copy(
-            savedRouteStep = step,
+            sheetStep = step,
             sheetHeight = sheetHeight,
             savedRoutes = listOf(saved).toImmutableList(),
+        )
+    }
+
+    /**
+     * A past drive's step: the drive's route, loaded, and not saved unless [isSaved], when the route is saved under the drive's
+     * route ID. Its start is Smíchov, and it started on 5 November.
+     */
+    fun pastDriveViewState(
+        isSaved: Boolean = false,
+        status: OneRouteStatus = OneRouteStatus.Ready,
+        sheetHeight: SheetHeight = SheetHeight.Half,
+    ): TripPlanViewState {
+        val route = FakeRoutePlanner.Recorded.funRoutes.first()
+        val drive = PastDrive(
+            id = "preview-drive",
+            startedAt = Instant.parse("2026-11-05T13:20:00Z"),
+            routeId = route.id,
+            kind = RouteKind.Fun,
+            start = Place(name = null, area = "Smíchov, Prague", location = PRAGUE_START),
+            destination = route.destination,
+            duration = route.duration,
+            distance = route.distance,
+            funLevel = route.funLevel,
+        )
+        val step = OneRouteStep(
+            origin = OneRouteOrigin.Past(drive),
+            route = route.takeIf { status == OneRouteStatus.Ready },
+            status = status,
+        )
+        val saved: List<SavedRoute> = if (isSaved) {
+            listOf(FakeSavedRoutesSource.Recorded.copy(route = FakeSavedRoutesSource.Recorded.route.copy(id = route.id)))
+        } else {
+            emptyList()
+        }
+        return viewState().copy(
+            sheetStep = step,
+            sheetHeight = sheetHeight,
+            savedRoutes = saved.toImmutableList(),
         )
     }
 
@@ -273,7 +317,7 @@ internal object TripPlanPreviewStates {
         )
         return viewState().copy(
             sheetHeight = SheetHeight.Half,
-            ratingStep = RatingStep(
+            sheetStep = RatingStep(
                 question = question,
                 driveTime = "Today, 14:20".desc(),
                 rating = rating,
