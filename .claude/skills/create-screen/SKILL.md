@@ -147,9 +147,11 @@ private fun {Name}ScreenPreview() = Showcase {
 }
 ```
 
-- The screen draws only its content: no top bar, back button or system insets. The navigation hosts draw those. A
-  screen that draws behind the system bars, like First launch with its full-screen illustration, keeps its own
-  controls clear of them with `WindowInsets.safeDrawing`.
+- A screen with a bar owns it: it exposes `title: StringDesc` on its contract and wraps its content in `AppScaffold`
+  with an `AndroidTopBar` (title, and back or close from an action), which shows on Android only. On iOS the host's
+  native navigation bar shows the same `title`. See `SettingsScreenUi`. A screen that draws behind the system bars,
+  like First launch with its full-screen illustration, keeps its own controls clear of them with
+  `WindowInsets.safeDrawing`.
 - Colors, type and shapes come from the theme (`MaterialTheme.*`, `AppTheme.*` for what Material has no slot for),
   never literal values. Icons are `painterResource(MR.images.…)` from `:core:resources`, and `:core:ui` components take
   their texts and icons as parameters. A value from a design's Platforms table comes from `AppTheme.platformStyle`, which holds

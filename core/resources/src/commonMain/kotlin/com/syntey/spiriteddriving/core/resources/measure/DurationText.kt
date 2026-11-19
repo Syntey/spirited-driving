@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.map.tools
+package com.syntey.spiriteddriving.core.resources.measure
 
 import com.syntey.spiriteddriving.core.resources.*
 import dev.icerock.moko.resources.desc.ResourceFormatted
@@ -12,7 +12,7 @@ import kotlin.time.DurationUnit
  * [duration] as the sheet shows it, rounded to whole minutes, at least one: "38 min", "1 h 5 min" or "2 h". The app's English
  * text, so the hours are short.
  */
-internal fun durationText(duration: Duration): StringDesc {
+fun durationText(duration: Duration): StringDesc {
     val minutes = max(1, duration.toDouble(DurationUnit.MINUTES).roundToInt())
     val hours = minutes / MINUTES_PER_HOUR
     val remainingMinutes = minutes % MINUTES_PER_HOUR

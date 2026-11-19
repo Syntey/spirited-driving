@@ -1,7 +1,10 @@
 package com.syntey.spiriteddriving.shared.navigation.root
 
+import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesScreen
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
 import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreen
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetArgs
+import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreen
 import com.syntey.spiriteddriving.shared.navigation.profile.ProfileNavHost
 import com.arkivanov.decompose.router.slot.ChildSlot
 import kotlinx.coroutines.flow.StateFlow
@@ -30,11 +33,21 @@ sealed interface RootSheetConfig {
 
     @Serializable
     data object Profile : RootSheetConfig
+
+    @Serializable
+    data object SavedRoutes : RootSheetConfig
+
+    @Serializable
+    data class SignIn(val args: SignInSheetArgs) : RootSheetConfig
 }
 
 sealed interface RootSheetChild {
 
     data class Profile(val navHost: ProfileNavHost) : RootSheetChild
+
+    data class SignIn(val screen: SignInSheetScreen) : RootSheetChild
+
+    data class SavedRoutes(val screen: SavedRoutesScreen) : RootSheetChild
 }
 
 sealed interface RootChild {

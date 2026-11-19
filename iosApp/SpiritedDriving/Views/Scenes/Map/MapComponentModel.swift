@@ -21,6 +21,11 @@ protocol MapComponentModelProtocol: AnyObject {
     var driveDialog: DriveDialog? { get }
     /// Whether the drive dialog's alert is shown. SwiftUI sets it to false when the alert goes away; that dismisses the dialog.
     var isDriveDialogPresented: Bool { get set }
+    /// The name dialog, shown when the destination's name is taken; nil when there's none.
+    var nameDialog: RouteNameDialog? { get }
+    /// Whether the name dialog's alert is shown. SwiftUI sets it to false when the alert goes away; that dismisses the dialog.
+    var isNameDialogPresented: Bool { get set }
+    var nameDialogMessage: String { get }
     var showsReminder: Bool { get }
     /// The number of the reminded route; null without a reminder.
     var reminderNumber: Int? { get }
@@ -36,6 +41,8 @@ protocol MapComponentModelProtocol: AnyObject {
     func onMapsAppStoreClick()
     func onReminderClick()
     func onReminderDismiss()
+    func onRouteNameSave(_ name: String)
+    func onRouteNameDismiss()
 }
 
 @Observable
@@ -63,6 +70,16 @@ final class MapComponentModel: MapComponentModelProtocol {
         set {
             if !newValue, viewState.driveDialog != nil {
                 screen.actions.onDriveDialogDismiss()
+            }
+        }
+    }
+    var nameDialog: RouteNameDialog? { viewState.nameDialog }
+    var nameDialogMessage: String { viewState.nameDialog?.message.localized() ?? "" }
+    var isNameDialogPresented: Bool {
+        get { viewState.nameDialog != nil }
+        set {
+            if !newValue, viewState.nameDialog != nil {
+                screen.actions.onRouteNameDismiss()
             }
         }
     }
@@ -160,6 +177,14 @@ final class MapComponentModel: MapComponentModelProtocol {
     func onReminderDismiss() {
         screen.actions.onReminderDismiss()
     }
+
+    func onRouteNameSave(_ name: String) {
+        screen.actions.onRouteNameSave(name: name)
+    }
+
+    func onRouteNameDismiss() {
+        screen.actions.onRouteNameDismiss()
+    }
 }
 
 #if DEBUG
@@ -198,6 +223,9 @@ final class MapComponentModelMock: MapComponentModelProtocol {
     var showsMapButtons = true
     var driveDialog: DriveDialog?
     var isDriveDialogPresented = false
+    var nameDialog: RouteNameDialog?
+    var nameDialogMessage = ""
+    var isNameDialogPresented = false
     var showsReminder = true
     var reminderNumber: Int? = 1
     var reminderText = "Karlštejn Castle · Yesterday"
@@ -215,5 +243,7 @@ final class MapComponentModelMock: MapComponentModelProtocol {
     func onMapsAppStoreClick() {}
     func onReminderClick() {}
     func onReminderDismiss() {}
+    func onRouteNameSave(_ name: String) {}
+    func onRouteNameDismiss() {}
 }
 #endif

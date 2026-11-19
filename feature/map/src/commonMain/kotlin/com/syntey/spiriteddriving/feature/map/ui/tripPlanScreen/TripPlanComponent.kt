@@ -18,6 +18,7 @@ import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
 import com.syntey.spiriteddriving.core.domain.route.OutsideCoverageException
 import com.syntey.spiriteddriving.core.domain.route.Route
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
@@ -32,6 +33,7 @@ import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetRecentPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.HandOffUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
+import com.syntey.spiriteddriving.feature.map.domain.LoadSavedRouteUseCase
 import com.syntey.spiriteddriving.feature.map.domain.NamePointUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveDistanceUnitUseCase
@@ -52,6 +54,11 @@ import com.syntey.spiriteddriving.feature.map.domain.DrivePrompt
 import com.syntey.spiriteddriving.feature.map.domain.GetDriveQuestionUseCase
 import com.syntey.spiriteddriving.feature.map.domain.MarkNotDrivenUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveOpenedReminderUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveSavedRoutesUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveSignedInUseCase
+import com.syntey.spiriteddriving.feature.map.domain.SaveRouteResult
+import com.syntey.spiriteddriving.feature.map.domain.SaveRouteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.UnsaveRouteUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ShouldOfferReminderUseCase
 import com.syntey.spiriteddriving.feature.map.domain.TurnOnRemindersUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RateDriveUseCase
@@ -63,8 +70,11 @@ import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
 import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
+import com.syntey.spiriteddriving.feature.map.model.ui.RouteNameDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
+import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStatus
+import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
@@ -118,6 +128,11 @@ internal class TripPlanComponent(
     private val observeOpenedReminderUseCase: ObserveOpenedReminderUseCase,
     private val shouldOfferReminderUseCase: ShouldOfferReminderUseCase,
     private val turnOnRemindersUseCase: TurnOnRemindersUseCase,
+    private val observeSignedInUseCase: ObserveSignedInUseCase,
+    private val observeSavedRoutesUseCase: ObserveSavedRoutesUseCase,
+    private val saveRouteUseCase: SaveRouteUseCase,
+    private val unsaveRouteUseCase: UnsaveRouteUseCase,
+    private val loadSavedRouteUseCase: LoadSavedRouteUseCase,
 ) : ScreenComponent<TripPlanViewState, TripPlanUiEvent, TripPlanScreenNavigation>(
     componentContext = componentContext,
     defaultState = TripPlanViewState(),
@@ -128,15 +143,20 @@ internal class TripPlanComponent(
 
     private val logger = Logger.withTag("TripPlanComponent")
 
+    // The route Save was tapped on while signed out, saved once the sign-in sheet closes signed in
+    private var pendingSaveRouteId: String? = null
+
     override val viewState: StateFlow<TripPlanViewState> = componentState
     override val actions: TripPlanScreen.Actions = this
 
-    // Back closes the innermost step first: the rating step, then the start step, then route planning,
+    // Back closes the innermost step first: the rating step, then a saved route, then the start step, then route planning,
     // then the search while the sheet is pulled up
     private val backCallback = BackCallback(isEnabled = false) {
         val state = componentState.value
         if (state.ratingStep != null) {
             closeRatingStep()
+        } else if (state.savedRouteStep != null) {
+            onSavedRouteClose()
         } else if (state.startSearch != null) {
             closeStartSearch()
         } else if (state.planning != null) {
@@ -163,6 +183,8 @@ internal class TripPlanComponent(
         readFirstDriveNote()
         sendPendingDrives()
         observeOpenedReminder()
+        observeSignedIn()
+        observeSavedRoutes()
     }
 
     // Observed, so a unit picked in Settings applies while the map is under the Profile sheet
@@ -384,6 +406,8 @@ internal class TripPlanComponent(
             pickStart(point)
             return
         }
+        // A new trip replaces the saved route on screen
+        closeSavedRouteStep()
         componentState.update { it.copy(map = it.map.withPickedPoint(point)) }
         startPlanning(unnamedPlace(point))
         namePoint(point) { place ->
@@ -450,6 +474,71 @@ internal class TripPlanComponent(
 
     override fun onPlanningRetry() = plan()
 
+    // The saved route's route is loaded in place of a plan; the start and destination pins frame it until it is
+    override fun showSavedRoute(savedRouteId: String) {
+        val savedRoute = componentState.value.savedRoutes.firstOrNull { it.id == savedRouteId } ?: return
+        if (componentState.value.ratingStep != null) closeRatingStep()
+        useCaseJobPool[planTripUseCase]?.cancel()
+        restoreDestinationSearch()
+        clearSearch()
+        componentState.update {
+            it.copy(
+                planning = null,
+                startSearch = null,
+                savedRouteStep = SavedRouteStep(savedRoute = savedRoute),
+                map = it.map.copy(start = savedRoute.start.location, destination = savedRoute.destination.location),
+            )
+        }
+        setSheetHeight(SheetHeight.Half)
+        loadSavedRoute(savedRouteId)
+    }
+
+    override fun onSavedRouteRetry() {
+        val savedRouteId = componentState.value.savedRouteStep?.savedRoute?.id ?: return
+        loadSavedRoute(savedRouteId)
+    }
+
+    override fun onSavedRouteClose() {
+        closeSavedRouteStep()
+        setSheetHeight(SheetHeight.Collapsed)
+    }
+
+    // Leaves the pins to the caller: a new trip sets its own
+    private fun closeSavedRouteStep() {
+        useCaseJobPool[loadSavedRouteUseCase]?.cancel()
+        componentState.update { it.copy(savedRouteStep = null, map = it.map.copy(destination = null, start = null)) }
+    }
+
+    override fun onSavedRoutesClick() {
+        if (componentState.value.isSignedIn) openSavedRoutes() else openSignInForSavedRoutes()
+    }
+
+    private fun loadSavedRoute(savedRouteId: String) {
+        updateSavedRouteStep(savedRouteId) { it.copy(status = SavedRouteStatus.Loading) }
+        loadSavedRouteUseCase.execute(savedRouteId) {
+            onSuccess { route ->
+                updateSavedRouteStep(savedRouteId) { it.copy(route = route, status = SavedRouteStatus.Ready) }
+            }
+            onError { error ->
+                val status = if (error is OfflineException) {
+                    SavedRouteStatus.Offline
+                } else {
+                    logger.e(error) { "Saved route not loaded" }
+                    SavedRouteStatus.Failed
+                }
+                updateSavedRouteStep(savedRouteId) { it.copy(status = status) }
+            }
+        }
+    }
+
+    // Changes the step only while it's still the step of this saved route: it may have closed meanwhile
+    private fun updateSavedRouteStep(savedRouteId: String, change: (SavedRouteStep) -> SavedRouteStep) {
+        componentState.update { state ->
+            val step = state.savedRouteStep?.takeIf { it.savedRoute.id == savedRouteId } ?: return@update state
+            state.copy(savedRouteStep = change(step))
+        }
+    }
+
     override fun onProfileClick() = openProfile()
 
     override fun onPreciseLocationClick() = askForPreciseLocation()
@@ -464,7 +553,7 @@ internal class TripPlanComponent(
 
     override fun onDriveClick() {
         val state = componentState.value
-        val route = state.planning?.selectedRoute ?: return
+        val route = state.driveRoute ?: return
         if (state.isFirstDriveExplained) {
             handOff(route)
         } else {
@@ -474,7 +563,7 @@ internal class TripPlanComponent(
 
     // Closing the note comes before the hand-off, so the dialog doesn't come back when the maps app turns out to be missing
     override fun onFirstDriveConfirm() {
-        val route = componentState.value.planning?.selectedRoute
+        val route = componentState.value.driveRoute
         componentState.update { it.copy(driveDialog = null, isFirstDriveExplained = true) }
         closeNoteUseCase.execute(Note.FirstDrive) {
             onError { error -> logger.e(error) { "First drive note not closed" } }
@@ -516,9 +605,10 @@ internal class TripPlanComponent(
     }
 
     private fun showDrivePrompt(prompt: DrivePrompt) {
-        val planning = componentState.value.planning
-        // A trip planned after the hand-off isn't thrown away
-        val canReplacePlanning = planning == null || planning.isHandedOff
+        val state = componentState.value
+        // A trip planned or a saved route opened after the hand-off isn't thrown away
+        val canReplacePlanning = (state.planning == null || state.planning.isHandedOff) &&
+            (state.savedRouteStep == null || state.savedRouteStep.isHandedOff)
         if (prompt.kind == DrivePrompt.Kind.RatingStep && canReplacePlanning) {
             openRatingStep(prompt.question)
         } else {
@@ -548,11 +638,13 @@ internal class TripPlanComponent(
     // The step takes the place of the search and of any planning, and the map shows the drive's ends
     private fun openRatingStep(question: DriveQuestion) {
         useCaseJobPool[planTripUseCase]?.cancel()
+        useCaseJobPool[loadSavedRouteUseCase]?.cancel()
         val now = Clock.System.now()
         componentState.update {
             it.copy(
                 planning = null,
                 startSearch = null,
+                savedRouteStep = null,
                 reminder = null,
                 ratingStep = RatingStep(
                     question = question,
@@ -655,7 +747,13 @@ internal class TripPlanComponent(
                 when (result) {
                     MapsAppResult.Opened -> {
                         // A new drive replaces the reminder about an earlier one
-                        componentState.update { it.copy(planning = it.planning?.copy(isHandedOff = true), reminder = null) }
+                        componentState.update {
+                            it.copy(
+                                planning = it.planning?.copy(isHandedOff = true),
+                                savedRouteStep = it.savedRouteStep?.copy(isHandedOff = true),
+                                reminder = null,
+                            )
+                        }
                         startDrive(route)
                     }
 
@@ -682,6 +780,110 @@ internal class TripPlanComponent(
     // Drives from an earlier start without a connection; offline is expected here, so it isn't logged
     private fun sendPendingDrives() = sendPendingDrivesUseCase.execute {
         onError { error -> if (error !is OfflineException) logger.e(error) { "Pending drives not sent" } }
+    }
+
+    private fun observeSignedIn() = observeSignedInUseCase.execute {
+        onNext { isSignedIn -> componentState.update { it.copy(isSignedIn = isSignedIn) } }
+        onError { error -> logger.e(error) { "Sign-in not observed" } }
+    }
+
+    private fun observeSavedRoutes() = observeSavedRoutesUseCase.execute {
+        onNext { routes -> componentState.update { it.copy(savedRoutes = routes.toImmutableList()) } }
+        onError { error -> logger.e(error) { "Saved routes not observed" } }
+    }
+
+    override fun onSaveClick() = toggleSavedRoute()
+
+    override fun onRouteNameSave(name: String) = saveNamedRoute(name)
+
+    override fun onRouteNameDismiss() = componentState.update { it.copy(nameDialog = null) }
+
+    // Saving waits for the sign-in: the route is saved once the sheet closes signed in, and closing it leaves it unsaved
+    override fun onSignInToSaveFinished(isSignedIn: Boolean) {
+        val routeId = pendingSaveRouteId
+        pendingSaveRouteId = null
+        if (!isSignedIn || routeId == null) return
+        val state = componentState.value
+        val route = state.driveRoute?.takeIf { it.id == routeId } ?: return
+        saveRoute(route, name = state.savedRouteStep?.savedRoute?.name)
+    }
+
+    // A saved route's step saves its route under the saved route's name, and is checked against that saved route
+    private fun toggleSavedRoute() {
+        val state = componentState.value
+        val route = state.driveRoute?.takeUnless { state.isSavingRoute } ?: return
+        if (!state.isSignedIn) {
+            pendingSaveRouteId = route.id
+            openSignInToSaveRoute()
+            return
+        }
+        val step = state.savedRouteStep
+        val saved = if (step == null) {
+            state.savedRoutes.firstOrNull { it.routeId == route.id }
+        } else {
+            state.savedRoutes.firstOrNull { it.id == step.savedRoute.id }
+        }
+        if (saved != null) removeRoute(saved.id) else saveRoute(route, name = step?.savedRoute?.name)
+    }
+
+    private fun saveNamedRoute(name: String) {
+        val dialog = componentState.value.nameDialog ?: return
+        componentState.update { it.copy(nameDialog = null) }
+        val state = componentState.value
+        val route = state.driveRoute?.takeIf { it.id == dialog.routeId }
+            ?: state.planning?.listedRoutes?.firstOrNull { it.id == dialog.routeId }
+            ?: return
+        saveRoute(route, name)
+    }
+
+    private fun saveRoute(route: Route, name: String?) {
+        setSavingRoute(true)
+        saveRouteUseCase.execute(SaveRouteUseCase.Args(route = route, name = name)) {
+            onSuccess { result ->
+                setSavingRoute(false)
+                when (result) {
+                    is SaveRouteResult.NameTaken -> showNameDialog(route.id, result)
+                    is SaveRouteResult.Saved -> keepSavedStep(route.id, result.savedRoute)
+                }
+            }
+            onError { error ->
+                setSavingRoute(false)
+                if (error is OfflineException) {
+                    sendUiEvent(TripPlanUiEvent.SaveRouteOffline)
+                } else {
+                    logger.e(error) { "Route not saved" }
+                    sendUiEvent(TripPlanUiEvent.SaveRouteFailed)
+                }
+            }
+        }
+    }
+
+    private fun setSavingRoute(isSaving: Boolean) = componentState.update { it.copy(isSavingRoute = isSaving) }
+
+    // Saving a saved route's route again makes a new saved route, which the step is about from then on
+    private fun keepSavedStep(routeId: String, savedRoute: SavedRoute) = componentState.update { state ->
+        val step = state.savedRouteStep?.takeIf { it.route?.id == routeId } ?: return@update state
+        state.copy(savedRouteStep = step.copy(savedRoute = savedRoute))
+    }
+
+    private fun showNameDialog(routeId: String, taken: SaveRouteResult.NameTaken) = componentState.update {
+        it.copy(nameDialog = RouteNameDialog(routeId, taken.takenName, taken.suggestion, taken.takenNames.toImmutableList()))
+    }
+
+    private fun removeRoute(savedRouteId: String) {
+        setSavingRoute(true)
+        unsaveRouteUseCase.execute(savedRouteId) {
+            onSuccess { setSavingRoute(false) }
+            onError { error ->
+                setSavingRoute(false)
+                if (error is OfflineException) {
+                    sendUiEvent(TripPlanUiEvent.RemoveRouteOffline)
+                } else {
+                    logger.e(error) { "Route not removed" }
+                    sendUiEvent(TripPlanUiEvent.RemoveRouteFailed)
+                }
+            }
+        }
     }
 
     override fun onMyLocationClick() = useMyLocation()
@@ -767,7 +969,10 @@ internal class TripPlanComponent(
 
     private fun syncBackCallback() {
         val state = componentState.value
-        backCallback.isEnabled = state.sheetHeight != SheetHeight.Collapsed || state.planning != null || state.ratingStep != null
+        backCallback.isEnabled = state.sheetHeight != SheetHeight.Collapsed ||
+            state.planning != null ||
+            state.ratingStep != null ||
+            state.savedRouteStep != null
     }
 
     // The first covered area sets the overview; until it's loaded the map shows the launch region, undimmed

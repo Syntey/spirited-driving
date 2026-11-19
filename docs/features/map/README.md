@@ -1,6 +1,6 @@
 # Map
 
-> **Status:** partly built, MVP. Last updated 2026-11-16.
+> **Status:** built, MVP. Last updated 2026-11-17.
 
 The primary screen, inspired by Waze: a full-screen map around the user, with the destination search on it.
 
@@ -30,8 +30,10 @@ The primary screen, inspired by Waze: a full-screen map around the user, with th
 
 The screen is `TripPlanComponent` in `:feature:map`. `MapScreenUi` draws it on Android and `MapComponent` on iOS, around
 the sheet's shared content, `TripPlanSheetUi` ([Architecture](../../architecture.md#how-the-map-screen-is-built)). The
-code holds its layout, sizes and copy; these are the decisions behind it. What isn't built yet, the half sheet's content, is
-still in [design.md](design.md).
+code holds its layout, sizes and copy; these are the decisions behind it.
+
+- **The half sheet starts with the Saved routes row,** its own group above the recent places, while the field is
+  empty ([Saved routes](../saved-routes/README.md#design)).
 
 - **The map follows the user** whenever location access is on, so it opens where they are. Panning stops it, and the
   locate button brings it back. The map doesn't turn with the heading.

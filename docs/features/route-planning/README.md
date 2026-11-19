@@ -1,6 +1,6 @@
 # Route planning
 
-> **Status:** partly built, MVP. Last updated 2026-11-13.
+> **Status:** partly built, MVP. Last updated 2026-11-17.
 
 The core of the app: from a start, a destination and a detour budget to a list of available routes.
 
@@ -40,8 +40,10 @@ The core of the app: from a start, a destination and a detour budget to a list o
 
 Route planning is a step of the map's sheet: `TripPlanComponent` in `:feature:map` holds it, `TripPlanSheetUi` draws
 the sheet on both platforms, and each platform's map draws the routes. The code holds its layout and copy; these are
-the decisions behind it. What isn't built yet, Save, is still in [design.md](design.md). Drive is in
-[Drive](../drive/README.md#design).
+the decisions behind it. Drive is in [Drive](../drive/README.md#design), and Save in
+[Saved routes](../saved-routes/README.md#design).
+
+- **Save is tonal, next to Drive,** and disabled whenever Drive is.
 
 - **Cancel, not an X, closes it,** back to the search as it was: an X on a sheet reads as dismissing it, but the map's
   sheet stays and only steps back.

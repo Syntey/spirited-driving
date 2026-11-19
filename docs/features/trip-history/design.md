@@ -1,15 +1,15 @@
 # Trip history screens
 
-> **Status:** draft, being iterated. Last updated 2026-11-14.
+> **Status:** draft, being iterated. Last updated 2026-11-17.
 >
 > The design for [Trip history](README.md): the list, rating a past drive, deleting and clearing, and a past drive
 > on the map. Uses the [Theme](../../theme.md); the list opens from [Profile](../account/README.md#design)
-> ([Navigation](../../navigation.md#profile)). It looks and works like [Saved routes](../saved-routes/design.md).
+> ([Navigation](../../navigation.md#profile)). It looks and works like [Saved routes](../saved-routes/README.md#design).
 
 ## List
 
 Opens from the Trip history row in Profile. Signed out, that row opens the
-[sign-in sheet](../account/design.md#sign-in-sheet) instead.
+[sign-in sheet](../account/README.md#design) instead.
 
 - **Order:** newest first, by when the drive was handed off, under a header for each month: "November" in the
   current year, "October 2025" before it.
@@ -59,20 +59,20 @@ in a row:
 
 ## A past drive on the map
 
-The one-route step of the map's sheet, as for a [saved route](../saved-routes/design.md#a-saved-route-on-the-map):
+The one-route step of the map's sheet, as for a [saved route](../saved-routes/README.md#design):
 the route on its own, the same map, notes, sheet heights and attribution, with these differences:
 
 - **Header:** the destination's name, with "Thu 5 Nov, 14:20 · From Smíchov" below it.
-- **Save** (tonal) or **Saved**, and **Drive**. Save works as in [Route planning](../route-planning/design.md#save):
+- **Save** (tonal) or **Saved**, and **Drive**. Save works as in [Saved routes](../saved-routes/README.md#design):
   the route is saved under the destination's name, and when that name is taken the user names it first
-  ([Saved routes](../saved-routes/design.md#saving)). Tapping Saved removes it from saved routes.
+  ([Saved routes](../saved-routes/README.md#design)). Tapping Saved removes it from saved routes.
 - Driving it records a new drive, which goes to the top of the history.
 
 Close and Back (Android) go to the search step.
 
 ## Plan new routes
 
-- **Plan new routes** in the row's menu closes Profile and opens [Route planning](../route-planning/design.md) to
+- **Plan new routes** in the row's menu closes Profile and opens [Route planning](../route-planning/README.md) to
   the drive's destination, with the budget last used.
 - **Start:** the user's location when the drive started there; otherwise the start the user picked by hand. Without
   a usable location, the search for the start comes first, as for any plan

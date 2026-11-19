@@ -78,11 +78,13 @@ import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.DragHandle
 import com.syntey.spiriteddriving.core.ui.components.RouteLabel
+import com.syntey.spiriteddriving.core.ui.components.TextFieldDialog
 import com.syntey.spiriteddriving.core.ui.components.Showcase
 import com.syntey.spiriteddriving.core.ui.preview.ScreenPreviews
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
+import com.syntey.spiriteddriving.feature.map.model.ui.RouteNameDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteLine
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
@@ -93,6 +95,7 @@ import com.syntey.spiriteddriving.feature.map.ui.components.routeColor
 import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen.Actions.Companion.noOpActions
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
+import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.stringResource
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlinx.collections.immutable.ImmutableList
@@ -146,6 +149,27 @@ fun MapScreenUi(screen: TripPlanScreen, modifier: Modifier = Modifier) {
         TripPlanSheetUi(screen = screen, onCollapsedHeightChange = onCollapsedHeightChange)
     }, modifier = modifier)
     DriveDialog(dialog = viewState.driveDialog, actions = screen.actions)
+    viewState.nameDialog?.let { dialog -> RouteNameDialog(dialog = dialog, actions = screen.actions) }
+}
+
+@Composable
+private fun RouteNameDialog(dialog: RouteNameDialog, actions: TripPlanScreen.Actions) {
+    val takenError = stringResource(MR.strings.saved_routes_name_taken)
+    // Keyed by the dialog, so a new one starts with its own suggestion rather than the text of the last
+    key(dialog) {
+        TextFieldDialog(
+            title = stringResource(MR.strings.saved_routes_name_title),
+            message = dialog.message.localized(),
+            initialText = dialog.suggestion,
+            confirmLabel = stringResource(MR.strings.planning_save),
+            dismissLabel = stringResource(MR.strings.generic_cancel),
+            error = { text -> takenError.takeIf { dialog.isTaken(text) } },
+            canConfirm = dialog::canSave,
+            maxLength = dialog.maxLength,
+            onConfirm = actions::onRouteNameSave,
+            onDismiss = actions::onRouteNameDismiss,
+        )
+    }
 }
 
 @Composable
@@ -169,9 +193,9 @@ private fun Content(
             SheetHeight.Half -> maxHeight / 2
             SheetHeight.Full -> null
         }
-        // While planning, the routes are framed above the sheet; the collapsed height otherwise, so the camera doesn't move as the
-        // sheet is dragged
-        val fitBottomPadding = sheetCover.takeIf { viewState.planning != null }
+        // While planning or showing a saved route, the routes are framed above the sheet; the collapsed height otherwise, so the
+        // camera doesn't move as the sheet is dragged
+        val fitBottomPadding = sheetCover.takeIf { viewState.planning != null || viewState.savedRouteStep != null }
         // The reminder sits above the collapsed sheet, so the map's logo and legal notice move up with it
         val reminderHeight = if (viewState.showsReminder) REMINDER_GAP + Grid.d14 else Grid.d0
         Map(

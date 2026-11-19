@@ -1,6 +1,6 @@
 # Spirited Driving: Navigation
 
-> **Status:** draft, being iterated. Last updated 2026-11-08.
+> **Status:** draft, being iterated. Last updated 2026-11-17.
 >
 > How the user moves between [features](overview.md#features).
 
@@ -37,7 +37,7 @@ The map stays on screen while the user searches and plans. A sheet at the bottom
    ([design](features/destination-search/README.md#design)).
 3. **One route.** A route chosen from Saved routes or Trip history shows on its own, with its details and Drive.
    There is no budget: the route isn't planned again
-   ([design](features/saved-routes/design.md#a-saved-route-on-the-map)).
+   ([design](features/saved-routes/README.md#design)).
 4. **Drive.** Starting a drive hands off to the phone's maps app ([Drive](features/drive/README.md)).
 5. **After the drive.** Coming back once the drive is likely over, the sheet asks how the route was
    ([Drive feedback](features/drive-feedback/README.md)). Answering or closing it returns to search.
@@ -79,7 +79,7 @@ The profile button in the top right corner of the map opens Profile, signed in o
 ## Sign-in
 
 Opening a feature that needs an account while signed out shows the sign-in sheet: a title saying what asked, such
-as "Sign in to save this route", and the sign-in buttons ([Account design](features/account/design.md#sign-in-sheet)).
+as "Sign in to save this route", and the sign-in buttons ([Account design](features/account/README.md#design)).
 After signing in, the feature opens; closing the sheet leaves the user where they were. This covers the Saved routes
 row, saving a route and Trip history.
 

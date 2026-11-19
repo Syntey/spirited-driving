@@ -9,6 +9,7 @@ import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
 import com.syntey.spiriteddriving.core.domain.route.Route
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
@@ -22,10 +23,13 @@ import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
 import com.syntey.spiriteddriving.feature.map.model.ui.ReasonChip
 import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
+import com.syntey.spiriteddriving.feature.map.model.ui.RouteNameDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.UseBudgetButton
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
 import com.syntey.spiriteddriving.feature.map.model.ui.RecentPlaceRow
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
+import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStatus
+import com.syntey.spiriteddriving.feature.map.model.ui.SavedRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteLine
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteRow
@@ -36,9 +40,9 @@ import com.syntey.spiriteddriving.feature.map.model.ui.SuggestionRow
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
 import com.syntey.spiriteddriving.feature.map.tools.budgetText
 import com.syntey.spiriteddriving.feature.map.tools.distanceChips
-import com.syntey.spiriteddriving.feature.map.tools.distanceText
-import com.syntey.spiriteddriving.feature.map.tools.durationText
-import com.syntey.spiriteddriving.feature.map.tools.heightText
+import com.syntey.spiriteddriving.core.resources.measure.distanceText
+import com.syntey.spiriteddriving.core.resources.measure.durationText
+import com.syntey.spiriteddriving.core.resources.measure.heightText
 import com.syntey.spiriteddriving.feature.map.tools.label
 import com.syntey.spiriteddriving.feature.map.tools.matchedRanges
 import com.syntey.spiriteddriving.feature.map.tools.midpointAlong
@@ -66,6 +70,11 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
  * @property isFirstDriveExplained Whether the user went past the first-drive dialog.
  * @property ratingStep The rating step after a drive; null otherwise. It takes the sheet's place of the search and route planning.
  * @property reminder The reminder about the drive not rated yet; null when there's none.
+ * @property isSignedIn Whether a user is signed in; Save needs one.
+ * @property savedRoutes The kept saved routes, which the selected route is checked against.
+ * @property isSavingRoute Whether a route is being saved or removed; Save shows its progress meanwhile.
+ * @property nameDialog The dialog asking for a name, shown when the destination's name is taken; null when there's none.
+ * @property savedRouteStep The one-route step of a saved route; null otherwise. It takes the sheet's place of the search and planning.
  */
 data class TripPlanViewState(
     val locationAccess: LocationAccess? = null,
@@ -81,6 +90,11 @@ data class TripPlanViewState(
     val isFirstDriveExplained: Boolean = false,
     val ratingStep: RatingStep? = null,
     val reminder: ReminderBubble? = null,
+    val isSignedIn: Boolean = false,
+    val savedRoutes: ImmutableList<SavedRoute> = persistentListOf(),
+    val isSavingRoute: Boolean = false,
+    val nameDialog: RouteNameDialog? = null,
+    val savedRouteStep: SavedRouteStep? = null,
 ) {
     val locateButton: LocateButton get() = LocateButton.of(locationAccess, map.followsUser)
 
@@ -114,7 +128,7 @@ data class TripPlanViewState(
         }
 
     /** The profile and locate buttons hide while planning, as the planned routes take the map, and during the rating step. */
-    val showsMapButtons: Boolean get() = planning == null && ratingStep == null
+    val showsMapButtons: Boolean get() = planning == null && ratingStep == null && savedRouteStep == null
 
     /**
      * The area the map frames: all the planned routes' lines once they have points; otherwise, and while planning, the start,
@@ -127,6 +141,12 @@ data class TripPlanViewState(
                 // A stored line may be empty; the drive's ends frame it then
                 val question = step.question
                 return boundsOf(question.line.ifEmpty { listOf(question.start, question.destination.location) }).withMinimumSpan()
+            }
+            savedRouteStep?.let { step ->
+                // Until the route is loaded, the saved start and destination frame the map
+                val line = step.route?.line.orEmpty()
+                return boundsOf(line.ifEmpty { listOf(step.savedRoute.start.location, step.savedRoute.destination.location) })
+                    .withMinimumSpan()
             }
             val planning = planning ?: return null
             val points = if (planning.plan != null) planning.listedRoutes.flatMap { it.line } else emptyList()
@@ -183,15 +203,10 @@ data class TripPlanViewState(
             val planning = planning ?: return persistentListOf()
             // The fun routes come first in the listed routes, so a fun route's number is its place in the list
             return planning.listedRoutes.mapIndexed { index, route ->
-                RouteRow(
-                    id = route.id,
+                routeRow(
+                    route = route,
                     number = (index + 1).takeIf { route.kind == RouteKind.Fun },
                     extra = extraText(route, planning.budget),
-                    duration = durationText(route.duration),
-                    distance = distanceText(route.distance, distanceUnit, isApproximate = false),
-                    curvyDistance = distanceText(route.stats.curvyDistance, distanceUnit, isApproximate = false),
-                    ascent = heightText(route.stats.ascent, distanceUnit),
-                    funLevel = route.funLevel,
                     isSelected = route.id == planning.selectedRouteId,
                 )
             }.toImmutableList()
@@ -200,8 +215,44 @@ data class TripPlanViewState(
     /** The selected route as the route list shows it; null without a plan. */
     val selectedRouteRow: RouteRow? get() = routeRows.firstOrNull { it.isSelected }
 
-    /** Drive is offered once a route is selected. */
-    val isDriveEnabled: Boolean get() = planning?.selectedRoute != null
+    /** The saved route's route as its step's summary shows it: numbered 1, without an extra; null until it's loaded. */
+    val savedRouteRow: RouteRow?
+        get() {
+            val route = savedRouteStep?.route ?: return null
+            return routeRow(route = route, number = 1, extra = null, isSelected = true)
+        }
+
+    /**
+     * The route Drive hands off: the saved route's while its step is open, else the selected planned route. Null while there's
+     * none to drive, such as while the saved route is still loading.
+     */
+    val driveRoute: Route? get() = savedRouteStep?.route ?: planning?.selectedRoute
+
+    /**
+     * Whether the route on screen is saved, by its route ID for a plan, and by the saved route's own ID for a saved route's step,
+     * since saving it again makes a new one.
+     */
+    val isSelectedRouteSaved: Boolean
+        get() {
+            savedRouteStep?.let { step -> return savedRoutes.any { it.id == step.savedRoute.id } }
+            val routeId = planning?.selectedRouteId ?: return false
+            return savedRoutes.any { it.routeId == routeId }
+        }
+
+    /** Drive is offered once a route is selected, or a saved route's route is loaded. */
+    val isDriveEnabled: Boolean get() = driveRoute != null
+
+    /** The Saved routes row's second line in the search step: signed out, none, one, or how many. */
+    val savedRoutesRowText: StringDesc
+        get() = when {
+            !isSignedIn -> MR.strings.sign_in_sheet_title_saved_routes.desc()
+            savedRoutes.isEmpty() -> MR.strings.map_saved_routes_none.desc()
+            savedRoutes.size == 1 -> MR.strings.map_saved_routes_one.desc()
+            else -> StringDesc.ResourceFormatted(MR.strings.map_saved_routes_many, savedRoutes.size)
+        }
+
+    /** The Saved routes row shows in the search step while the field is blank, above the recent places. */
+    val showsSavedRoutesRow: Boolean get() = startSearch == null && search.text.isBlank()
 
     /**
      * How far the selected route starts from the user, when that's more than [Constants.Drive.START_ELSEWHERE_DISTANCE]; null
@@ -209,7 +260,7 @@ data class TripPlanViewState(
      */
     val startDistance: Length?
         get() {
-            val start = planning?.selectedRoute?.start?.location ?: return null
+            val start = driveRoute?.start?.location ?: return null
             val from = map.userLocation ?: return null
             return from.distanceTo(start).takeIf { it > Constants.Drive.START_ELSEWHERE_DISTANCE }
         }
@@ -230,6 +281,20 @@ data class TripPlanViewState(
                         points = question.line.toImmutableList(),
                         label = null,
                         labelPoint = midpointAlong(question.line),
+                        isSelected = true,
+                    ),
+                )
+            }
+            savedRouteStep?.let { step ->
+                val line = step.route?.line.orEmpty()
+                if (line.isEmpty()) return persistentListOf()
+                return persistentListOf(
+                    RouteLine(
+                        id = step.savedRoute.id,
+                        number = 1,
+                        points = line.toImmutableList(),
+                        label = null,
+                        labelPoint = midpointAlong(line),
                         isSelected = true,
                     ),
                 )
@@ -269,6 +334,7 @@ data class TripPlanViewState(
         get() = reminder != null &&
             ratingStep == null &&
             planning == null &&
+            savedRouteStep == null &&
             startSearch == null &&
             sheetHeight == SheetHeight.Collapsed
 
@@ -338,6 +404,18 @@ data class TripPlanViewState(
             northEast = GeoPoint(latitude = centreLat + halfLat, longitude = centreLon + halfLon),
         )
     }
+
+    private fun routeRow(route: Route, number: Int?, extra: StringDesc?, isSelected: Boolean): RouteRow = RouteRow(
+        id = route.id,
+        number = number,
+        extra = extra,
+        duration = durationText(route.duration),
+        distance = distanceText(route.distance, distanceUnit, isApproximate = false),
+        curvyDistance = distanceText(route.stats.curvyDistance, distanceUnit, isApproximate = false),
+        ascent = heightText(route.stats.ascent, distanceUnit),
+        funLevel = route.funLevel,
+        isSelected = isSelected,
+    )
 
     // The fastest route is the reference, so it has no extra over itself
     private fun extraText(route: Route, budget: Budget): StringDesc? {

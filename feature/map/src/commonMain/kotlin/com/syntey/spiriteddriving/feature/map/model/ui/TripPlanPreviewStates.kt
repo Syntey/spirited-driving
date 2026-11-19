@@ -10,6 +10,7 @@ import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
+import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
@@ -33,6 +34,9 @@ internal object TripPlanPreviewStates {
         override val viewState: StateFlow<TripPlanViewState> = MutableStateFlow(state)
         override val actions: TripPlanScreen.Actions = TripPlanScreen.Actions.noOpActions()
         override val events: Flow<TripPlanUiEvent> = emptyFlow()
+
+        override fun onSignInToSaveFinished(isSignedIn: Boolean) = Unit
+        override fun showSavedRoute(savedRouteId: String) = Unit
     }
 
     fun viewState(locationAccess: LocationAccess? = LocationAccess.Precise, followsUser: Boolean = true) = TripPlanViewState(
@@ -206,6 +210,24 @@ internal object TripPlanPreviewStates {
     fun planningFailedViewState(): TripPlanViewState = planningState(
         RoutePlanningState(destination = DESTINATION, budget = BUDGET, status = PlanningStatus.Failed),
     )
+
+    /** A saved route's step: loaded from the Recorded saved route, which is saved, so Saved shows. */
+    fun savedRouteViewState(
+        status: SavedRouteStatus = SavedRouteStatus.Ready,
+        sheetHeight: SheetHeight = SheetHeight.Half,
+    ): TripPlanViewState {
+        val saved = FakeSavedRoutesSource.Recorded
+        val step = SavedRouteStep(
+            savedRoute = saved,
+            route = FakeRoutePlanner.Recorded.funRoutes.first().takeIf { status == SavedRouteStatus.Ready },
+            status = status,
+        )
+        return viewState().copy(
+            savedRouteStep = step,
+            sheetHeight = sheetHeight,
+            savedRoutes = listOf(saved).toImmutableList(),
+        )
+    }
 
     private fun planningState(planning: RoutePlanningState): TripPlanViewState = viewState().copy(
         sheetHeight = SheetHeight.Half,
