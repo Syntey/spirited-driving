@@ -92,7 +92,7 @@ class RouteLineTest {
         val origin = GeoPoint(latitude = 50.0, longitude = 14.0)
         val destination = GeoPoint(latitude = 49.5, longitude = 14.5)
         val state = MapSheetViewState(
-            map = RouteMapState(userLocation = origin),
+            baseMap = RouteMapState(userLocation = origin),
             planning = RoutePlanningState(destination = place(destination), budget = Budget.Time(45.minutes)),
         )
 
@@ -122,7 +122,7 @@ class RouteLineTest {
             )
         }
         val state = MapSheetViewState(
-            map = RouteMapState(userLocation = origin),
+            baseMap = RouteMapState(userLocation = origin),
             planning = RoutePlanningState(destination = place(destination), budget = Budget.Time(45.minutes)).withPlan(emptyPlan),
         )
 

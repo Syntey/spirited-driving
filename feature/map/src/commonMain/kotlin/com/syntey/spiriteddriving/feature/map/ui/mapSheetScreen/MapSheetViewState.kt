@@ -63,6 +63,7 @@ import kotlinx.collections.immutable.toImmutableList
 import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 /**
+ * @property baseMap The map from the component's own location, coverage and following, without pins; [map] adds the pins.
  * @property locationAccess What the user allows; null until it's read on start.
  * @property isPreciseLocationNoteClosed Whether the user closed the "Precise location is off" note. True until it's read, so
  *   the note doesn't flash.
@@ -83,7 +84,7 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
  */
 data class MapSheetViewState(
     val locationAccess: LocationAccess? = null,
-    val map: RouteMapState = RouteMapState(),
+    val baseMap: RouteMapState = RouteMapState(),
     val isPreciseLocationNoteClosed: Boolean = true,
     val sheetHeight: SheetHeight = SheetHeight.Collapsed,
     val search: SearchState = SearchState(),
@@ -100,6 +101,17 @@ data class MapSheetViewState(
     val isSavingRoute: Boolean = false,
     val nameDialog: RouteNameDialog? = null,
 ) {
+    /**
+     * The map the screen shows: [baseMap] with the pins of the step being shown, the sheet step's when there is one, else the
+     * planning's.
+     */
+    val map: RouteMapState
+        get() {
+            val step = sheetStep
+            if (step != null) return baseMap.copy(start = step.start, destination = step.destination)
+            return baseMap.copy(start = planning?.start?.location, destination = planning?.destination?.location)
+        }
+
     /** The rating step after a drive; null otherwise. */
     val ratingStep: RatingStep? get() = sheetStep as? RatingStep
 

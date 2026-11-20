@@ -80,7 +80,7 @@ class MapSheetViewStateTest {
     fun `the precise location note hides while the user is outside the covered area`() {
         val dresden = GeoPoint(latitude = 51.05, longitude = 13.74)
         val state = approximate(isPreciseLocationNoteClosed = false).let {
-            it.copy(map = it.map.copy(userLocation = dresden, coveredArea = FakeCoverageSource.Czechia.area))
+            it.copy(baseMap = it.baseMap.copy(userLocation = dresden, coveredArea = FakeCoverageSource.Czechia.area))
         }
 
         assertFalse(state.showsPreciseLocationNote)
@@ -140,7 +140,7 @@ class MapSheetViewStateTest {
     fun `a recent row shows its distance`() {
         val state = MapSheetViewState(
             locationAccess = LocationAccess.Precise,
-            map = RouteMapState(userLocation = origin),
+            baseMap = RouteMapState(userLocation = origin),
             search = SearchState(recentPlaces = listOf(karlstejn.place).toImmutableList()),
         )
 
@@ -150,7 +150,7 @@ class MapSheetViewStateTest {
     @Test
     fun `a recent row outside a loaded covered area is not covered`() {
         val state = MapSheetViewState(
-            map = RouteMapState(coveredArea = FakeCoverageSource.Czechia.area),
+            baseMap = RouteMapState(coveredArea = FakeCoverageSource.Czechia.area),
             search = SearchState(recentPlaces = listOf(dresden).toImmutableList()),
         )
 
@@ -166,7 +166,7 @@ class MapSheetViewStateTest {
 
     @Test
     fun `a precise location in the covered area is usable`() {
-        val state = MapSheetViewState(locationAccess = LocationAccess.Precise, map = RouteMapState(userLocation = origin))
+        val state = MapSheetViewState(locationAccess = LocationAccess.Precise, baseMap = RouteMapState(userLocation = origin))
 
         assertTrue(state.hasUsableLocation)
     }
@@ -178,14 +178,14 @@ class MapSheetViewStateTest {
 
     @Test
     fun `an approximate location isn't usable`() {
-        val state = MapSheetViewState(locationAccess = LocationAccess.Approximate, map = RouteMapState(userLocation = origin))
+        val state = MapSheetViewState(locationAccess = LocationAccess.Approximate, baseMap = RouteMapState(userLocation = origin))
 
         assertFalse(state.hasUsableLocation)
     }
 
     @Test
     fun `a location without access isn't usable`() {
-        val state = MapSheetViewState(locationAccess = LocationAccess.Denied, map = RouteMapState(userLocation = origin))
+        val state = MapSheetViewState(locationAccess = LocationAccess.Denied, baseMap = RouteMapState(userLocation = origin))
 
         assertFalse(state.hasUsableLocation)
     }
@@ -194,7 +194,7 @@ class MapSheetViewStateTest {
     fun `a precise location outside a loaded covered area isn't usable`() {
         val state = MapSheetViewState(
             locationAccess = LocationAccess.Precise,
-            map = RouteMapState(userLocation = dresdenPoint, coveredArea = FakeCoverageSource.Czechia.area),
+            baseMap = RouteMapState(userLocation = dresdenPoint, coveredArea = FakeCoverageSource.Czechia.area),
         )
 
         assertFalse(state.hasUsableLocation)
@@ -202,7 +202,7 @@ class MapSheetViewStateTest {
 
     @Test
     fun `the my location row is absent without the start step`() {
-        assertNull(MapSheetViewState(locationAccess = LocationAccess.Precise, map = RouteMapState(userLocation = origin)).myLocationRow)
+        assertNull(MapSheetViewState(locationAccess = LocationAccess.Precise, baseMap = RouteMapState(userLocation = origin)).myLocationRow)
     }
 
     @Test
@@ -231,7 +231,7 @@ class MapSheetViewStateTest {
     @Test
     fun `the my location row is outside the covered area when the user is outside it`() {
         val state = startStep(access = LocationAccess.Precise, from = dresdenPoint).let {
-            it.copy(map = it.map.copy(coveredArea = FakeCoverageSource.Czechia.area))
+            it.copy(baseMap = it.baseMap.copy(coveredArea = FakeCoverageSource.Czechia.area))
         }
 
         assertEquals(MyLocationRow.OutsideCoveredArea, state.myLocationRow)
@@ -240,7 +240,7 @@ class MapSheetViewStateTest {
     @Test
     fun `the my location row is available with precise access in the covered area`() {
         val state = startStep(access = LocationAccess.Precise, from = origin).let {
-            it.copy(map = it.map.copy(coveredArea = FakeCoverageSource.Czechia.area))
+            it.copy(baseMap = it.baseMap.copy(coveredArea = FakeCoverageSource.Czechia.area))
         }
 
         assertEquals(MyLocationRow.Available, state.myLocationRow)
@@ -251,7 +251,7 @@ class MapSheetViewStateTest {
         val start = GeoPoint(latitude = 49.0, longitude = 12.0)
         val state = MapSheetViewState(
             locationAccess = LocationAccess.Precise,
-            map = RouteMapState(userLocation = origin),
+            baseMap = RouteMapState(userLocation = origin),
             planning = RoutePlanningState(
                 destination = dresden,
                 start = Place(name = null, area = null, location = start),
@@ -274,7 +274,7 @@ class MapSheetViewStateTest {
 
     @Test
     fun `the start distance is null without a selected route`() {
-        val state = planning(Budget.Time(30.minutes)).let { it.copy(map = RouteMapState(userLocation = origin)) }
+        val state = planning(Budget.Time(30.minutes)).let { it.copy(baseMap = RouteMapState(userLocation = origin)) }
 
         assertNull(state.startDistance)
     }
@@ -681,7 +681,7 @@ class MapSheetViewStateTest {
         val movedStart = Place(name = null, area = null, location = start)
         val plan = recorded.copy(funRoutes = recorded.funRoutes.map { it.copy(start = movedStart) })
         return MapSheetViewState(
-            map = RouteMapState(userLocation = from),
+            baseMap = RouteMapState(userLocation = from),
             planning = RoutePlanningState(destination = dresden, budget = Budget.Time(30.minutes)).withPlan(plan),
         )
     }
@@ -704,7 +704,7 @@ class MapSheetViewStateTest {
 
     private fun startStep(access: LocationAccess?, from: GeoPoint?, text: String = "") = MapSheetViewState(
         locationAccess = access,
-        map = RouteMapState(userLocation = from),
+        baseMap = RouteMapState(userLocation = from),
         search = SearchState(text = text),
         startSearch = StartSearch(destinationSearch = SearchState(), closesPlanning = false),
     )
@@ -717,7 +717,7 @@ class MapSheetViewStateTest {
     private fun stateWithSearch(access: LocationAccess?, from: GeoPoint?, unit: DistanceUnit = DistanceUnit.Kilometres) =
         MapSheetViewState(
             locationAccess = access,
-            map = RouteMapState(userLocation = from),
+            baseMap = RouteMapState(userLocation = from),
             search = SearchState(text = "karlst", suggestions = listOf(karlstejn).toImmutableList()),
             distanceUnit = unit,
         )
@@ -832,7 +832,7 @@ class MapSheetViewStateTest {
             GeoPoint(latitude = savedRoute.route.start.location.latitude + 0.1, longitude = savedRoute.route.start.location.longitude)
         val state = savedRouteState().copy(
             locationAccess = LocationAccess.Precise,
-            map = RouteMapState(userLocation = farAway),
+            baseMap = RouteMapState(userLocation = farAway),
         )
 
         assertNotNull(state.startDistance)

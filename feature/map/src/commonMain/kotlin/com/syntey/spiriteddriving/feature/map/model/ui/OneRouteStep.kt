@@ -2,6 +2,7 @@ package com.syntey.spiriteddriving.feature.map.model.ui
 
 import com.syntey.spiriteddriving.core.domain.drive.PastDrive
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
+import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
@@ -24,6 +25,10 @@ data class OneRouteStep(
     val status: OneRouteStatus = OneRouteStatus.Loading,
     val isHandedOff: Boolean = false,
 ) : SheetStep {
+    override val start: GeoPoint get() = origin.start.location
+
+    override val destination: GeoPoint get() = origin.destination.location
+
     override val routeBounds: GeoBounds
         get() {
             // Until the route is loaded, the start and destination of its origin frame the map

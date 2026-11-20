@@ -47,7 +47,7 @@ internal object MapSheetPreviewStates {
 
     fun viewState(locationAccess: LocationAccess? = LocationAccess.Precise, followsUser: Boolean = true) = MapSheetViewState(
         locationAccess = locationAccess,
-        map = RouteMapState(showsUserLocation = locationAccess.allowsLocation, followsUser = followsUser),
+        baseMap = RouteMapState(showsUserLocation = locationAccess.allowsLocation, followsUser = followsUser),
     )
 
     fun approximateViewState(): MapSheetViewState =
@@ -88,7 +88,7 @@ internal object MapSheetPreviewStates {
         val state = viewState()
         return state.copy(
             sheetHeight = SheetHeight.Full,
-            map = state.map.copy(userLocation = PRAGUE),
+            baseMap = state.baseMap.copy(userLocation = PRAGUE),
             search = SearchState(text = "karlst", suggestions = FakePlaceSearch.Recorded.toImmutableList()),
         )
     }
@@ -98,7 +98,7 @@ internal object MapSheetPreviewStates {
         val state = viewState()
         return state.copy(
             sheetHeight = SheetHeight.Half,
-            map = state.map.copy(userLocation = PRAGUE),
+            baseMap = state.baseMap.copy(userLocation = PRAGUE),
             search = SearchState(recentPlaces = recentPlaces),
         )
     }
@@ -108,7 +108,7 @@ internal object MapSheetPreviewStates {
         val state = viewState()
         return state.copy(
             sheetHeight = SheetHeight.Full,
-            map = state.map.copy(userLocation = PRAGUE),
+            baseMap = state.baseMap.copy(userLocation = PRAGUE),
             search = SearchState(
                 text = "karlst",
                 suggestions = FakePlaceSearch.Recorded.toImmutableList(),
@@ -149,7 +149,7 @@ internal object MapSheetPreviewStates {
         val state = viewState(locationAccess = locationAccess)
         return state.copy(
             sheetHeight = SheetHeight.Full,
-            map = state.map.copy(userLocation = PRAGUE),
+            baseMap = state.baseMap.copy(userLocation = PRAGUE),
             planning = RoutePlanningState(destination = DESTINATION, budget = BUDGET),
             startSearch = StartSearch(destinationSearch = SearchState(), closesPlanning = false),
             search = SearchState(recentPlaces = recentPlaces),
@@ -187,7 +187,7 @@ internal object MapSheetPreviewStates {
 
     /** [plannedViewState] with the user about 12 km north of the start, so Drive says the maps app takes them there first. */
     fun plannedFarStartViewState(): MapSheetViewState = plannedViewState().let { state ->
-        state.copy(map = state.map.copy(userLocation = FAR_FROM_START))
+        state.copy(baseMap = state.baseMap.copy(userLocation = FAR_FROM_START))
     }
 
     /**
@@ -275,7 +275,7 @@ internal object MapSheetPreviewStates {
 
     private fun planningState(planning: RoutePlanningState): MapSheetViewState = viewState().copy(
         sheetHeight = SheetHeight.Half,
-        map = RouteMapState(showsUserLocation = true, userLocation = PRAGUE_START),
+        baseMap = RouteMapState(showsUserLocation = true, userLocation = PRAGUE_START),
         planning = planning,
     )
 
@@ -350,7 +350,7 @@ internal object MapSheetPreviewStates {
         val dresden = GeoPoint(latitude = 51.05, longitude = 13.74)
         return MapSheetViewState(
             locationAccess = LocationAccess.Precise,
-            map = RouteMapState(
+            baseMap = RouteMapState(
                 showsUserLocation = true,
                 followsUser = false,
                 userLocation = dresden,

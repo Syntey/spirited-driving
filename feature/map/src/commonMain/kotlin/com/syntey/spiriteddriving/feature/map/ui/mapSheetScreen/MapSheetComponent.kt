@@ -288,7 +288,7 @@ internal class MapSheetComponent(
             useStart(place)
             return
         }
-        componentState.update { it.copy(map = it.map.withDestination(place.location)) }
+        componentState.update { it.copy(baseMap = it.baseMap.framing(place.location)) }
         startPlanning(place)
     }
 
@@ -380,7 +380,7 @@ internal class MapSheetComponent(
     private fun useStart(start: Place?) {
         restoreDestinationSearch()
         componentState.update {
-            it.copy(planning = it.planning?.copy(start = start), map = it.map.copy(start = start?.location))
+            it.copy(planning = it.planning?.copy(start = start))
         }
         setSheetHeight(SheetHeight.Half)
         plan()
@@ -394,7 +394,7 @@ internal class MapSheetComponent(
     }
 
     override fun onLocateClick() = locate()
-    override fun onMapPanned() = componentState.update { it.copy(map = it.map.copy(followsUser = false)) }
+    override fun onMapPanned() = componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = false)) }
 
     // The pin drops at once; the name comes later and only reaches the recent places, and the planning header
     // The rating step is about the drive just made, not a new trip, so a long press doesn't start one
@@ -413,7 +413,7 @@ internal class MapSheetComponent(
         }
         // A new trip replaces the saved route on screen
         closeOneRouteStep()
-        componentState.update { it.copy(map = it.map.withPickedPoint(point)) }
+        componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = false)) }
         startPlanning(unnamedPlace(point))
         namePoint(point) { place ->
             componentState.update { state ->
@@ -472,7 +472,7 @@ internal class MapSheetComponent(
 
     override fun onRoutePlanningClose() {
         useCaseJobPool[planTripUseCase]?.cancel()
-        componentState.update { it.copy(planning = null, startSearch = null, map = it.map.copy(destination = null, start = null)) }
+        componentState.update { it.copy(planning = null, startSearch = null) }
         // Full brings the search back as it was, without the keyboard: the keyboard only comes from focusing the field
         setSheetHeight(SheetHeight.Full)
     }
@@ -511,11 +511,7 @@ internal class MapSheetComponent(
                 planning = null,
                 startSearch = null,
                 sheetStep = OneRouteStep(origin = origin),
-                map = it.map.copy(
-                    start = origin.start.location,
-                    destination = origin.destination.location,
-                    followsUser = false,
-                ),
+                baseMap = it.baseMap.copy(followsUser = false),
             )
         }
         setSheetHeight(SheetHeight.Half)
@@ -544,15 +540,9 @@ internal class MapSheetComponent(
         setSheetHeight(SheetHeight.Collapsed)
     }
 
-    // Leaves the pins to the caller: a new trip sets its own
     private fun closeOneRouteStep() {
         cancelOneRouteLoads()
-        componentState.update {
-            it.copy(
-                sheetStep = it.sheetStep.takeUnless { step -> step is OneRouteStep },
-                map = it.map.copy(destination = null, start = null),
-            )
-        }
+        componentState.update { it.copy(sheetStep = it.sheetStep.takeUnless { step -> step is OneRouteStep }) }
     }
 
     private fun closeSheetStep() {
@@ -725,7 +715,7 @@ internal class MapSheetComponent(
                     question = question,
                     driveTime = driveTimeText(question.startedAt, now, TimeZone.currentSystemDefault()),
                 ),
-                map = it.map.copy(destination = question.destination.location, start = question.start, followsUser = false),
+                baseMap = it.baseMap.copy(followsUser = false),
             )
         }
         setSheetHeight(SheetHeight.Half)
@@ -808,12 +798,7 @@ internal class MapSheetComponent(
     }
 
     private fun hideRatingStep() {
-        componentState.update {
-            it.copy(
-                sheetStep = it.sheetStep.takeUnless { step -> step is RatingStep },
-                map = it.map.copy(destination = null, start = null),
-            )
-        }
+        componentState.update { it.copy(sheetStep = it.sheetStep.takeUnless { step -> step is RatingStep }) }
         setSheetHeight(SheetHeight.Collapsed)
     }
 
@@ -992,7 +977,7 @@ internal class MapSheetComponent(
 
     private fun locate() = when (componentState.value.locateButton) {
         LocateButton.Following -> Unit
-        LocateButton.NotFollowing -> componentState.update { it.copy(map = it.map.copy(followsUser = true)) }
+        LocateButton.NotFollowing -> componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = true)) }
         LocateButton.NoAccess -> askForLocationAccess()
     }
 
@@ -1062,7 +1047,7 @@ internal class MapSheetComponent(
 
     // The first covered area sets the overview; until it's loaded the map shows the launch region, undimmed
     private fun loadCoverage() = observeCoverageUseCase.execute {
-        onNext { coverage -> componentState.update { it.copy(map = it.map.withCoverage(coverage)) } }
+        onNext { coverage -> componentState.update { it.copy(baseMap = it.baseMap.withCoverage(coverage)) } }
         onError { error -> logger.e(error) { "Covered area not loaded" } }
     }
 
@@ -1100,7 +1085,7 @@ internal class MapSheetComponent(
     }
 
     private fun applyLocationAccess(access: LocationAccess) {
-        componentState.update { it.copy(locationAccess = access, map = it.map.withAccess(access)) }
+        componentState.update { it.copy(locationAccess = access, baseMap = it.baseMap.withAccess(access)) }
         if (access.allowsLocation) startLocationUpdates() else stopLocationUpdates()
     }
 
@@ -1109,8 +1094,8 @@ internal class MapSheetComponent(
         if (useCaseJobPool[observeUserLocationUseCase]?.isActive == true) return
         observeUserLocationUseCase.executeWithLifecycle {
             onNext { point ->
-                val wasUnknown = componentState.value.map.userLocation == null
-                componentState.update { it.copy(map = it.map.withUserLocation(point)) }
+                val wasUnknown = componentState.value.baseMap.userLocation == null
+                componentState.update { it.copy(baseMap = it.baseMap.withUserLocation(point)) }
                 if (wasUnknown) planWaitingForLocation()
             }
             onError { error -> logger.e(error) { "Location updates failed" } }
