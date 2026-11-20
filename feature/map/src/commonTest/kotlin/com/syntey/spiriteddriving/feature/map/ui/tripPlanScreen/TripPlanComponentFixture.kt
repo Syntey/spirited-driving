@@ -7,6 +7,9 @@ import com.syntey.spiriteddriving.core.domain.drive.FakeOpenDriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.FakeStartedDrives
 import com.syntey.spiriteddriving.core.domain.drive.FakeTripHistoryCache
 import com.syntey.spiriteddriving.core.domain.drive.FakeTripHistorySource
+import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
+import com.syntey.spiriteddriving.core.domain.drive.PastDrive
+import com.syntey.spiriteddriving.core.domain.drive.PastDrivePage
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.FakePlaceSearch
 import com.syntey.spiriteddriving.core.domain.place.FakeRecentPlaces
@@ -19,10 +22,13 @@ import com.syntey.spiriteddriving.core.domain.route.RoutePlanner
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
+import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.domain.settings.FakeDistanceUnitSettings
 import com.syntey.spiriteddriving.core.domain.settings.FakeVignetteSettings
+import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.Auth
+import com.syntey.spiriteddriving.core.platform.binding.AuthUser
 import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.platform.binding.LocationFix
@@ -30,6 +36,7 @@ import com.syntey.spiriteddriving.core.platform.binding.LocationPermission
 import com.syntey.spiriteddriving.core.platform.binding.MapsApp
 import com.syntey.spiriteddriving.core.platform.binding.MapsAppKind
 import com.syntey.spiriteddriving.core.platform.binding.MapsAppResult
+import com.syntey.spiriteddriving.core.platform.binding.SignInProvider
 import com.syntey.spiriteddriving.core.platform.binding.UserLocation
 import com.syntey.spiriteddriving.core.ui.testing.TestComponentContext
 import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
@@ -101,6 +108,8 @@ internal class TripPlanFixture(
     val distanceUnits: FakeDistanceUnitSettings,
     val location: FakePlatformLocation,
     val locationPermission: FakePlatformLocationPermission,
+    val auth: FakePlatformAuth,
+    val savedRoutesSource: FakeSavedRoutesSource,
 )
 
 /**
@@ -110,6 +119,12 @@ internal class TripPlanFixture(
 internal fun TestScope.tripPlanFixture(
     recentPlaces: List<Place> = emptyList(),
     locationAccess: LocationAccess = LocationAccess.Denied,
+    signedIn: Boolean = false,
+    savedRoutes: List<SavedRoute> = emptyList(),
+    pastDrives: List<PastDrive> = emptyList(),
+    initiallyClosed: Set<Note> = emptySet(),
+    mapsAppResult: MapsAppResult = MapsAppResult.Opened,
+    driveQuestion: DriveQuestion? = null,
 ): TripPlanFixture {
     val lifecycle = TestComponentContext(useCaseDispatcher = StandardTestDispatcher(testScheduler))
     val navigation = RecordingTripPlanNavigation()
@@ -118,24 +133,25 @@ internal fun TestScope.tripPlanFixture(
     val location = FakePlatformLocation()
     val locationPermission = FakePlatformLocationPermission(locationAccess)
     val permission = LocationPermission(locationPermission)
-    val closedNotes = RecordingClosedNotes()
+    val closedNotes = RecordingClosedNotes(initiallyClosed)
     val vignettes = FakeVignetteSettings()
     val routePlanner = SwitchableRoutePlanner(FakeRoutePlanner())
     val coverageCache = InMemoryCoverageCache()
     val budgetSettings = FakeBudgetSettings(choice = null)
     val distanceUnits = FakeDistanceUnitSettings(DistanceUnit.Kilometres)
     val platform = FakePlatform()
-    val mapsApp = MapsApp(FakePlatformMapsApp(MapsAppKind.GoogleMaps, MapsAppResult.Opened))
+    val mapsApp = MapsApp(FakePlatformMapsApp(MapsAppKind.GoogleMaps, mapsAppResult))
     val reminders = DriveReminders(FakePlatformDriveReminders())
-    val auth = Auth(FakePlatformAuth(initialUser = null))
-    val openDriveQuestion = FakeOpenDriveQuestion()
+    val platformAuth = FakePlatformAuth(initialUser = if (signedIn) TEST_USER else null)
+    val auth = Auth(platformAuth)
+    val openDriveQuestion = FakeOpenDriveQuestion(driveQuestion)
     val startedDrives = FakeStartedDrives()
     val driveRecorder = FakeDriveRecorder()
     val driveSender = DriveSender(startedDrives, driveRecorder, FakeDriveRater())
-    val tripHistorySource = FakeTripHistorySource()
-    val tripHistoryCache = FakeTripHistoryCache()
-    val savedRoutesSource = FakeSavedRoutesSource()
-    val savedRoutesCache = FakeSavedRoutesCache()
+    val tripHistorySource = FakeTripHistorySource(pastDrives)
+    val tripHistoryCache = FakeTripHistoryCache(PastDrivePage(pastDrives, nextCursor = null))
+    val savedRoutesSource = FakeSavedRoutesSource(savedRoutes)
+    val savedRoutesCache = FakeSavedRoutesCache(savedRoutes)
 
     val component = TripPlanComponent(
         componentContext = lifecycle.context,
@@ -201,6 +217,8 @@ internal fun TestScope.tripPlanFixture(
         distanceUnits = distanceUnits,
         location = location,
         locationPermission = locationPermission,
+        auth = platformAuth,
+        savedRoutesSource = savedRoutesSource,
     )
 }
 
@@ -233,6 +251,9 @@ internal class SwitchableRoutePlanner(private val answers: RoutePlanner) : Route
         return plan ?: answers.plan(request)
     }
 }
+
+/** The signed-in user when a test starts signed in. */
+internal val TEST_USER = AuthUser(id = "user-1", name = null, email = null, provider = SignInProvider.Google)
 
 /** Points in the test area: [prague] is the user's location, [pinned] is inside the covered area, [outside] is Dresden. */
 internal object Points {
