@@ -1,5 +1,6 @@
 package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
 
+import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
@@ -10,6 +11,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -200,6 +202,24 @@ class MapSheetStartSearchTest {
         assertNotNull(state.planning)
     }
 
+    @Test
+    fun `a recent place removed in the start search is gone from the destination search once the start search closes`() =
+        runTest(main.dispatcher) {
+            val trip = mapSheetFixture(locationAccess = LocationAccess.Precise, recentPlaces = listOf(recentPlace))
+            advanceUntilIdle()
+            sendFix(trip, Points.prague)
+            trip.screen.actions.onSuggestionClick(searchForCovered(trip))
+            advanceUntilIdle()
+            trip.screen.actions.onStartClick()
+
+            trip.screen.actions.onRecentPlaceRemove(recentPlace)
+            advanceUntilIdle()
+            trip.screen.actions.onSearchClose()
+            advanceUntilIdle()
+
+            assertFalse(recentPlace in trip.screen.viewState.value.recentRows.map { it.place })
+        }
+
     /** A trip planned from the user's location at Prague, with the destination's first covered suggestion chosen. */
     private fun kotlinx.coroutines.test.TestScope.planFromPrague(): MapSheetFixture {
         val trip = mapSheetFixture(locationAccess = LocationAccess.Precise)
@@ -230,3 +250,9 @@ class MapSheetStartSearchTest {
         return trip
     }
 }
+
+private val recentPlace = Place(
+    name = "Karlštejn",
+    area = "Budňany, Central Bohemian Region",
+    location = Points.pinned,
+)

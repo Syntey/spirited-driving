@@ -123,7 +123,7 @@ internal class PlaceSearchComponent(
         host.onPlaceChosen(suggestion.place)
     }
 
-    // A recent place counts as covered until the covered area is loaded, as it was covered when chosen
+    // A recent place counts as covered until the covered area is loaded, since it was covered when it was chosen
     fun onRecentPlaceClick(place: Place) {
         if (!host.covers(place.location)) {
             host.onNotCovered()

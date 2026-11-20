@@ -52,6 +52,8 @@ import com.syntey.spiriteddriving.feature.map.ui.components.RatingLayout
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningBody
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningHeader
 import com.syntey.spiriteddriving.feature.map.ui.components.OneRouteLayout
+import com.syntey.spiriteddriving.feature.map.ui.components.PlaceSearchHeader
+import com.syntey.spiriteddriving.feature.map.ui.components.PlaceSearchResults
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchResults
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchRow
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight

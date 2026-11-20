@@ -6,7 +6,8 @@ import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The steps the map sheet holds in its child stack, as configurations. Not serialized: nothing survives process death, as before.
+ * The steps the map sheet holds in its child stack, as configurations. Not serialized, so the steps don't survive process death
+ * and the configurations can hold domain types that aren't serializable.
  */
 internal sealed interface SheetStepConfig {
 
@@ -48,19 +49,29 @@ internal sealed interface SheetStepChild {
     /** The state the step shows, which the parent's view state follows. */
     val state: StateFlow<*>
 
-    class PlaceSearch(val component: PlaceSearchComponent) : SheetStepChild {
+    /** The kind of sheet the step draws, which the parent's map and sheet content switch on. */
+    val activeStep: ActiveSheetStep
+
+    /**
+     * @property isStart Whether this is the start search pushed over route planning rather than the destination search.
+     */
+    class PlaceSearch(val component: PlaceSearchComponent, isStart: Boolean) : SheetStepChild {
         override val state: StateFlow<*> get() = component.viewState
+        override val activeStep: ActiveSheetStep = if (isStart) ActiveSheetStep.StartSearch else ActiveSheetStep.Search
     }
 
     class RoutePlanning(val component: RoutePlanningComponent) : SheetStepChild {
         override val state: StateFlow<*> get() = component.viewState
+        override val activeStep: ActiveSheetStep get() = ActiveSheetStep.RoutePlanning
     }
 
     class OneRoute(val component: OneRouteComponent) : SheetStepChild {
         override val state: StateFlow<*> get() = component.viewState
+        override val activeStep: ActiveSheetStep get() = ActiveSheetStep.OneRoute
     }
 
     class Rating(val component: RatingComponent) : SheetStepChild {
         override val state: StateFlow<*> get() = component.viewState
+        override val activeStep: ActiveSheetStep get() = ActiveSheetStep.Rating
     }
 }

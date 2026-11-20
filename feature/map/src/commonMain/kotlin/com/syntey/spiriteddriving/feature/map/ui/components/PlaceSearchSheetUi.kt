@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
+package com.syntey.spiriteddriving.feature.map.ui.components
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
@@ -18,9 +18,10 @@ import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningPreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
-import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
-import com.syntey.spiriteddriving.feature.map.ui.components.SearchResults
-import com.syntey.spiriteddriving.feature.map.ui.components.SearchRow
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.ActiveSheetStep
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource

@@ -56,6 +56,21 @@ class CombinedStateFlowTest {
     }
 
     @Test
+    fun `collect emits a change in a source that only the changes reach`() = runTest {
+        val parent = MutableStateFlow("parent")
+        val child = MutableStateFlow("first")
+        // Nothing reads the value before the collector starts, so the child's change reaches the collector through changes alone
+        val derived = derivedStateFlow(changes = merge(parent, child)) { "${parent.value}/${child.value}" }
+        val emitted = mutableListOf<String>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { derived.collect { emitted += it } }
+
+        child.value = "second"
+        advanceUntilIdle()
+
+        assertEquals(listOf("parent/first", "parent/second"), emitted)
+    }
+
+    @Test
     fun `collect skips a change that leaves the value the same`() = runTest {
         val a = MutableStateFlow(1)
         val b = MutableStateFlow(0)

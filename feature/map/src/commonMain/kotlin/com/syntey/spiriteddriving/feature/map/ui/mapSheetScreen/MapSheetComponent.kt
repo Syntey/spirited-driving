@@ -13,6 +13,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnStart
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
+import com.syntey.spiriteddriving.core.domain.drive.PastDrive
 import com.syntey.spiriteddriving.core.domain.drive.RatingReason
 import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
@@ -115,7 +116,7 @@ internal class MapSheetComponent(
 
     private val stepNavigation = StackNavigation<SheetStepConfig>()
 
-    // The root is the destination search, which stays alive under the steps pushed over it, so coming back shows it as it was
+    // The root is the destination search. The steps pushed over it keep it alive, with its text, suggestions and status unchanged
     private val stack: StateFlow<ChildStack<SheetStepConfig, SheetStepChild>> = childStack(
         source = stepNavigation,
         serializer = null,
@@ -126,10 +127,12 @@ internal class MapSheetComponent(
             when (config) {
                 SheetStepConfig.DestinationSearch -> SheetStepChild.PlaceSearch(
                     PlaceSearchComponentFactory.createComponent(childCtx, host, PlaceSearchComponent.Args(isStart = false)),
+                    isStart = false,
                 )
 
                 is SheetStepConfig.StartSearch -> SheetStepChild.PlaceSearch(
                     PlaceSearchComponentFactory.createComponent(childCtx, host, PlaceSearchComponent.Args(isStart = true)),
+                    isStart = true,
                 )
 
                 is SheetStepConfig.RoutePlanning -> SheetStepChild.RoutePlanning(
@@ -191,7 +194,7 @@ internal class MapSheetComponent(
     ) { project() }
 
     // The kind of the step on top, which the sheet's content switches on
-    override val activeStep: StateFlow<ActiveSheetStep> = derivedStateFlow(changes = stack) { activeSheetStep() }
+    override val activeStep: StateFlow<ActiveSheetStep> = derivedStateFlow(changes = stack) { stack.value.active.instance.activeStep }
 
     override val actions: MapSheetScreen.Actions = this
 
@@ -283,7 +286,7 @@ internal class MapSheetComponent(
 
     override fun onStartClick() = openStartSearch(closesPlanning = false)
 
-    // The destination search stays under the start search, so closing the step brings it back as it was
+    // The destination search stays under the start search, so closing the start search leaves it with its state unchanged
     private fun openStartSearch(closesPlanning: Boolean) {
         stepNavigation.navigate { it + SheetStepConfig.StartSearch(closesPlanning) }
         setSheetHeight(SheetHeight.Full)
@@ -312,7 +315,7 @@ internal class MapSheetComponent(
     }
 
     override fun onLocateClick() = locate()
-    override fun onMapPanned() = componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = false)) }
+    override fun onMapPanned() = stopFollowing()
 
     // The rating step is about the drive just made, not a new trip, so a long press doesn't start one
     override fun onMapLongPress(point: GeoPoint) {
@@ -328,7 +331,7 @@ internal class MapSheetComponent(
             pickStart(point)
             return
         }
-        componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = false)) }
+        stopFollowing()
         // Replaces a saved route or a past drive on screen, as the trip replaces everything above the root
         startPlanning(unnamedPlace(point))
         routePlanningChild()?.nameDestination(point)
@@ -353,10 +356,10 @@ internal class MapSheetComponent(
 
     override fun onRoutePlanningClose() = closeRoutePlanning()
 
-    // Pops the start search and planning, and brings the search back as it was
+    // Pops the start search and planning, leaving the destination search with its state unchanged
     private fun closeRoutePlanning() {
         popToRoot()
-        // Full brings the search back as it was, without the keyboard: the keyboard only comes from focusing the field
+        // Full keeps the search's state and leaves the keyboard down: the keyboard only comes up from focusing the field
         setSheetHeight(SheetHeight.Full)
     }
 
@@ -371,27 +374,27 @@ internal class MapSheetComponent(
     }
 
     // Nothing shows when the drive isn't kept on the device, as the list it was chosen from is what keeps it
-    override fun showPastDrive(driveId: String) {
+    override fun showPastDrive(driveId: String) = readPastDrive(driveId) { showOneRoute(OneRouteOrigin.Past(it)) }
+
+    // Plans from the user's current location, and the rating step, a route on its own and the search make way for it
+    override fun planNewRoutes(driveId: String) = readPastDrive(driveId) { planTripTo(it.destination) }
+
+    private fun readPastDrive(driveId: String, onDrive: (PastDrive) -> Unit) {
         getPastDriveUseCase.execute(driveId) {
-            onSuccess { drive -> drive?.let { showOneRoute(OneRouteOrigin.Past(it)) } }
+            onSuccess { drive -> drive?.let(onDrive) }
             onError { error -> logger.e(error) { "Past drive not read" } }
         }
     }
 
-    // Plans from where the user is now, as a new trip does, so the rating step, a route on its own and the search make way
-    override fun planNewRoutes(driveId: String) {
-        getPastDriveUseCase.execute(driveId) {
-            onSuccess { drive -> drive?.let { planTripTo(it.destination) } }
-            onError { error -> logger.e(error) { "Past drive not read" } }
-        }
-    }
+    // The map stops moving with the user, as the user has moved it or a step shows a route or drive instead
+    private fun stopFollowing() = componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = false)) }
 
     // Replaces everything above the root search, which is cleared, so the route is the only step over it
     private fun showOneRoute(origin: OneRouteOrigin) {
         ratingChild()?.close()
         stepNavigation.navigate { listOf(it.first(), SheetStepConfig.OneRoute(origin)) }
         rootPlaceSearch().clear()
-        componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = false)) }
+        stopFollowing()
         setSheetHeight(SheetHeight.Half)
     }
 
@@ -527,9 +530,8 @@ internal class MapSheetComponent(
     // The step takes the place of the search and of any planning, and the map shows the drive's ends
     private fun openRatingStep(question: DriveQuestion) {
         stepNavigation.navigate { listOf(it.first(), SheetStepConfig.Rating(question)) }
-        componentState.update {
-            it.copy(reminder = null, baseMap = it.baseMap.copy(followsUser = false))
-        }
+        componentState.update { it.copy(reminder = null) }
+        stopFollowing()
         setSheetHeight(SheetHeight.Half)
     }
 
@@ -699,14 +701,6 @@ internal class MapSheetComponent(
         )
     }
 
-    private fun activeSheetStep(): ActiveSheetStep = when (stack.value.active.configuration) {
-        SheetStepConfig.DestinationSearch -> ActiveSheetStep.Search
-        is SheetStepConfig.StartSearch -> ActiveSheetStep.StartSearch
-        is SheetStepConfig.RoutePlanning -> ActiveSheetStep.RoutePlanning
-        is SheetStepConfig.OneRoute -> ActiveSheetStep.OneRoute
-        is SheetStepConfig.Rating -> ActiveSheetStep.Rating
-    }
-
     // A step closes by popping, and the sheet collapses over the search it leaves
     private fun closeStep() {
         stepNavigation.pop()
@@ -746,7 +740,7 @@ internal class MapSheetComponent(
     }
 
     private fun placeSearches(): List<PlaceSearchComponent> =
-        stack.value.items.map { (it.instance as SheetStepChild.PlaceSearch).component }
+        stack.value.items.map { it.instance }.filterIsInstance<SheetStepChild.PlaceSearch>().map { it.component }
 
     // The topmost place search: the start search when it's open, else the destination search, even under route planning
     private fun activePlaceSearch(): PlaceSearchComponent =
