@@ -49,8 +49,8 @@ Rate a drive, and mark a drive as not driven.
 
 ## Design
 
-The rating step and the reminder bubble are part of the map's screen, held by `TripPlanComponent` in `:feature:map`;
-the notification is the drive reminders binding in `:core:platform`. The code holds their layout, sizes and copy;
+The rating step and the reminder bubble are part of the map's screen: `RatingComponent` is a step of
+`MapSheetComponent` in `:feature:map`; the notification is the drive reminders binding in `:core:platform`. The code holds their layout, sizes and copy;
 these are the decisions behind them.
 
 - **The phone keeps one open question,** about the newest drive, with what the step shows: the route's line, number,

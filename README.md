@@ -130,7 +130,7 @@ and a native sheet on iOS, and only the sheet's content is shared Compose.
 Navigation("Root") {
     Slot {
         Screen("Onboarding") // First launch, until the vignette is answered
-        Screen("TripPlan") // The map and its sheet, with Profile and its screens over it
+        Screen("Map") // The map and its sheet, with Profile and its screens over it
     }
 }
 ```

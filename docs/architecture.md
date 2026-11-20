@@ -95,11 +95,13 @@ map buttons are native on iOS, so the sheet and buttons are real Liquid Glass ov
 shared Compose on both platforms.
 
 ```
-:feature:map   TripPlanComponent ──► RouteMapState (routes, markers, camera)
-                                 └─► sheet state (search, budget, routes)
+:feature:map   MapSheetComponent ──► child stack of sheet steps (search, start search, route planning,
+                                 │      one route, rating) ──► each step's own component
+                                 ├─► DriveHandOffComponent, RouteSavingComponent (Drive and Save)
+                                 └─► MapSheetViewState ──► RouteMapState (base map + the active step's pins, lines, bounds)
 
-Android        :feature:map   MapScreenUi: GoogleMap + bottom sheet { TripPlanSheetUi }           maps-compose
-iOS            iosApp         MapComponent: MKMapView + native sheet { ComposeView(TripPlanSheetUi) } SwiftUI, MapKit
+Android        :feature:map   MapScreenUi: GoogleMap + bottom sheet { MapSheetUi }                 maps-compose
+iOS            iosApp         MapComponent: MKMapView + native sheet { ComposeView(MapSheetUi) }   SwiftUI, MapKit
 ```
 
 - `RouteMapState` is an immutable model in common code: route lines (points, and whether a line is the baseline,
@@ -111,13 +113,27 @@ iOS            iosApp         MapComponent: MKMapView + native sheet { ComposeVi
   Android, `CLLocationManager` on iOS), only while the screen is started. Whether the map follows the user is
   `RouteMapState.followsUser`: on Android the map's camera moves with each location, on iOS it sets MapKit's own
   tracking mode, and MapKit leaving that mode when the user pans is reported back.
-- `TripPlanSheetUi` is the sheet's content and its steps (search, route planning, one route), shared by both
-  platforms: the search field, budget chips and route cards.
+- `MapSheetComponent` is the parent of the map screen. It holds the user's location, the covered area, the sheet's
+  height, the distance unit and the reminder. Its sheet is a child stack of sheet steps, each a `SheetStepConfig` with
+  its own component: the destination search is the root and stays alive under the steps pushed over it, the start
+  search is pushed over route planning to pick the start, and route planning, one route and the rating are pushed over
+  the root, replacing what's above it. The steps are `PlaceSearchComponent`, `RoutePlanningComponent`,
+  `OneRouteComponent` and `RatingComponent`.
+- A step reaches the parent only through `MapSheetHost`, an internal interface the parent implements: the user's
+  location, the sheet's height, whether the start search is open, the covered area, and events such as a place chosen
+  or a step closed. A step never sees the parent's other children.
+- Drive (`DriveHandOffComponent`) and Save (`RouteSavingComponent`) are children of the parent rather than steps. Each
+  lives as long as the sheet, with its own use case scope, and reports back to the parent through a listener.
+- `MapSheetViewState` is built from the parent's state, the state of Drive and Save, and the active step's state. Its
+  `map` is the parent's base map with the pins, route lines and camera bounds of the step on top, or of route planning
+  while it's the active one. Each platform's map draws `RouteMapState`, so both read one view state.
+- `MapSheetUi` is the sheet's content and its steps, shared by both platforms: the search field, budget chips and route
+  cards. It reads `MapSheetViewState` and calls the parent's actions through `MapSheetScreen`.
 - **Android:** `MapScreenUi` (`:feature:map`, Android source set) draws the map with `maps-compose`, and the sheet
   and map buttons as solid Compose surfaces.
 - **iOS:** `MapComponent` in Swift renders `RouteMapState` on an `MKMapView` with `MKPolyline` and annotations, and
   shows the map buttons with native glass. The sheet is a native sheet that stays open, with detents, and the map
-  stays usable behind it. It hosts `TripPlanSheetUi` as a Compose view controller with a transparent background,
+  stays usable behind it. It hosts `MapSheetUi` as a Compose view controller with a transparent background,
   so the native glass shows through. Screens opened from the map open as sheets stacked on it
   ([Navigation](navigation.md#screens-over-the-map)).
 - Haze is used where Compose content is behind, such as a list scrolling under a header (see
@@ -207,7 +223,7 @@ into it.
 | `:androidApp`         | Android entry point, draws the navigation hosts                       | Maps API key (see [Configuration](#configuration))     |
 | `iosApp`              | SwiftUI shell: native navigation, hosts Compose screens               | `MapComponent` (MapKit map, native sheet, glass map buttons), Firebase sign-in |
 | `:shared`             | Navigation hosts, Koin graph, logging, crash reporting, iOS framework | Wiring of `RoutePlanner` and `PlaceSearch` to their implementations |
-| `:feature:map`        | [Map](features/map/README.md), [Destination search](features/destination-search/README.md), [Route planning](features/route-planning/README.md), [Drive](features/drive/README.md), [Drive feedback](features/drive-feedback/README.md) | `TripPlanComponent`, its use cases, `TripPlanSheetUi`, Android `MapScreenUi` |
+| `:feature:map`        | [Map](features/map/README.md), [Destination search](features/destination-search/README.md), [Route planning](features/route-planning/README.md), [Drive](features/drive/README.md), [Drive feedback](features/drive-feedback/README.md) | `MapSheetComponent` and its step components, its use cases, `MapSheetUi`, Android `MapScreenUi` |
 | `:feature:routes`     | [Saved routes](features/saved-routes/README.md), [Trip history](features/trip-history/README.md) | `SavedRoutesComponent`, `TripHistoryComponent`, their use cases |
 | `:feature:profile`    | Profile, [Settings](features/settings/README.md), [Account](features/account/README.md) |                     |
 | `:feature:onboarding` | [First launch](features/first-launch/README.md)                       |                                                        |
@@ -218,7 +234,7 @@ into it.
 | `:data:network`       | Ktorfit/Ktor client, DTOs, `NetworkResult`                            | `ApiRoutePlanner`, `ApiPlaceSearch`, `ApiCoverageSource`, `ApiSavedRoutesSource`, `ApiTripHistorySource` |
 | `:data:persistence`   | DataStore                                                             | The covered area, recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet, saved routes, trip history |
 
-Features that share state share a module: one `TripPlanComponent` drives the map and its sheet, so everything shown
+Features that share state share a module: one `MapSheetComponent` drives the map and its sheet, so everything shown
 on the map is `:feature:map`.
 
 `:feature:*` and `:data:*` modules depend on `:core:*` modules only, and the build fails otherwise (see "Modules" in

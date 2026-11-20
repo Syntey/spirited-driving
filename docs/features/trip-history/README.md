@@ -39,7 +39,7 @@ keep it.
 
 The list is `TripHistoryComponent` in `:feature:routes`, pushed inside the Profile sheet on iOS and full screen on
 Android. A past drive on the map is the map's one-route step, as for a [saved route](../saved-routes/README.md#design),
-held by `TripPlanComponent` in `:feature:map`. The code holds their layout, sizes and copy; these are the decisions
+held by `MapSheetComponent` in `:feature:map`. The code holds their layout, sizes and copy; these are the decisions
 behind them.
 
 - **Signed out, the Trip history row opens the sign-in sheet over Profile,** and the list opens after signing in

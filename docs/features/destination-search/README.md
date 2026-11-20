@@ -41,8 +41,8 @@ Most searches are for a place the user already knows, so search is built to find
 
 ## Design
 
-The search is a step of the map's sheet: `TripPlanComponent` in `:feature:map` holds it, and `TripPlanSheetUi` draws
-the field, recent places and the suggestions on both platforms. The code holds its layout and copy; these are the
+The search is a step of the map's sheet: `PlaceSearchComponent`, a child of `MapSheetComponent` in `:feature:map`, and
+`MapSheetUi` draws the field, recent places and the suggestions on both platforms. The code holds its layout and copy; these are the
 decisions behind it. What isn't built yet is still in [design.md](design.md).
 
 - **Tapping the field moves the sheet to full height,** with the keyboard. Dragging the sheet lower or scrolling the
