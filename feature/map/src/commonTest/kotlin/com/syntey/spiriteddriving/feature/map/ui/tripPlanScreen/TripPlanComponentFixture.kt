@@ -85,6 +85,9 @@ import com.syntey.spiriteddriving.feature.map.domain.SkipDriveQuestionUseCase
 import com.syntey.spiriteddriving.feature.map.domain.StartDriveUseCase
 import com.syntey.spiriteddriving.feature.map.domain.TurnOnRemindersUseCase
 import com.syntey.spiriteddriving.feature.map.domain.UnsaveRouteUseCase
+import kotlin.time.Clock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -108,6 +111,10 @@ internal class TripPlanFixture(
     val distanceUnits: FakeDistanceUnitSettings,
     val location: FakePlatformLocation,
     val locationPermission: FakePlatformLocationPermission,
+    /** The drive question the screen is asked about on start, as the drive recorder left it. */
+    val openDriveQuestion: FakeOpenDriveQuestion,
+    /** The platform's drive notifications: a test taps one with [FakePlatformDriveReminders.tap]. */
+    val driveReminders: FakePlatformDriveReminders,
     val auth: FakePlatformAuth,
     val savedRoutesSource: FakeSavedRoutesSource,
 )
@@ -125,6 +132,7 @@ internal fun TestScope.tripPlanFixture(
     initiallyClosed: Set<Note> = emptySet(),
     mapsAppResult: MapsAppResult = MapsAppResult.Opened,
     driveQuestion: DriveQuestion? = null,
+    canOfferReminders: Boolean = false,
 ): TripPlanFixture {
     val lifecycle = TestComponentContext(useCaseDispatcher = StandardTestDispatcher(testScheduler))
     val navigation = RecordingTripPlanNavigation()
@@ -141,7 +149,8 @@ internal fun TestScope.tripPlanFixture(
     val distanceUnits = FakeDistanceUnitSettings(DistanceUnit.Kilometres)
     val platform = FakePlatform()
     val mapsApp = MapsApp(FakePlatformMapsApp(MapsAppKind.GoogleMaps, mapsAppResult))
-    val reminders = DriveReminders(FakePlatformDriveReminders())
+    val platformReminders = FakePlatformDriveReminders(canOffer = canOfferReminders)
+    val reminders = DriveReminders(platformReminders)
     val platformAuth = FakePlatformAuth(initialUser = if (signedIn) TEST_USER else null)
     val auth = Auth(platformAuth)
     val openDriveQuestion = FakeOpenDriveQuestion(driveQuestion)
@@ -217,6 +226,8 @@ internal fun TestScope.tripPlanFixture(
         distanceUnits = distanceUnits,
         location = location,
         locationPermission = locationPermission,
+        openDriveQuestion = openDriveQuestion,
+        driveReminders = platformReminders,
         auth = platformAuth,
         savedRoutesSource = savedRoutesSource,
     )
@@ -278,3 +289,29 @@ internal fun TestScope.searchForCovered(trip: TripPlanFixture, text: String = "k
 /** The first covered suggestion on screen. */
 internal fun firstCovered(trip: TripPlanFixture): PlaceSuggestion =
     trip.screen.viewState.value.suggestionRows.first { it.suggestion.isCovered }.suggestion
+
+/** Stops the screen and starts it again, as when the app goes to the background and comes back: the drive question is asked again. */
+internal fun TestScope.returnToScreen(trip: TripPlanFixture) {
+    trip.lifecycle.stop()
+    trip.lifecycle.start()
+    advanceUntilIdle()
+}
+
+/**
+ * The question of a drive on the first fun route, started [startedAgo] ago and planned for [duration]. Started [startedAgo] ago
+ * puts the question in the rating step or the reminder bubble, as the planned time is what the screen counts from.
+ */
+internal fun TestScope.driveQuestion(startedAgo: Duration, duration: Duration = 20.minutes): DriveQuestion {
+    val route = FakeRoutePlanner.Recorded.funRoutes.first()
+    return DriveQuestion(
+        driveId = "drive",
+        startedAt = Clock.System.now() - startedAgo,
+        routeNumber = 1,
+        start = route.start.location,
+        destination = route.destination,
+        duration = duration,
+        distance = route.distance,
+        line = route.line,
+        attribution = route.attribution,
+    )
+}
