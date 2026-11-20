@@ -60,6 +60,7 @@ import com.syntey.spiriteddriving.feature.map.ui.components.SearchResults
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchRow
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
+import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningPreviewStates
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 import kotlinx.coroutines.launch
@@ -312,7 +313,7 @@ private fun MapSheetOutsideIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun MapSheetPlannedFromPickedStartPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.plannedFromPickedStartViewState(),
+        viewState = RoutePlanningPreviewStates.plannedFromPickedStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -323,7 +324,7 @@ private fun MapSheetPlannedFromPickedStartPreview() = Showcase {
 @Composable
 private fun MapSheetPlannedFromPickedStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = MapSheetPreviewStates.plannedFromPickedStartViewState(),
+        viewState = RoutePlanningPreviewStates.plannedFromPickedStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),

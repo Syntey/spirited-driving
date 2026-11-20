@@ -182,6 +182,19 @@ internal fun TestScope.mapSheetFixture(
                         closeNoteUseCase = CloseNoteUseCase(closedNotes),
                     )
                 }
+                factory { (context: AppComponentContext, host: MapSheetHost, args: RoutePlanningComponent.Args) ->
+                    RoutePlanningComponent(
+                        componentContext = context,
+                        host = host,
+                        args = args,
+                        planTripUseCase = PlanTripUseCase(routePlanner, vignettes),
+                        getBudgetChoiceUseCase = GetBudgetChoiceUseCase(budgetSettings),
+                        saveBudgetChoiceUseCase = SaveBudgetChoiceUseCase(budgetSettings),
+                        observeDistanceUnitUseCase = ObserveDistanceUnitUseCase(distanceUnits, platform),
+                        observeVignettesUseCase = ObserveVignettesUseCase(vignettes),
+                        namePointUseCase = NamePointUseCase(placeSearch),
+                    )
+                }
                 factory { (context: AppComponentContext, host: MapSheetHost, args: PlaceSearchComponent.Args) ->
                     PlaceSearchComponent(
                         componentContext = context,
@@ -219,11 +232,6 @@ internal fun TestScope.mapSheetFixture(
         isNoteClosedUseCase = IsNoteClosedUseCase(closedNotes),
         closeNoteUseCase = CloseNoteUseCase(closedNotes),
         observeDistanceUnitUseCase = ObserveDistanceUnitUseCase(distanceUnits, platform),
-        observeVignettesUseCase = ObserveVignettesUseCase(vignettes),
-        namePointUseCase = NamePointUseCase(placeSearch),
-        planTripUseCase = PlanTripUseCase(routePlanner, vignettes),
-        getBudgetChoiceUseCase = GetBudgetChoiceUseCase(budgetSettings),
-        saveBudgetChoiceUseCase = SaveBudgetChoiceUseCase(budgetSettings),
         sendPendingDrivesUseCase = SendPendingDrivesUseCase(startedDrives, driveSender),
         getDriveQuestionUseCase = GetDriveQuestionUseCase(openDriveQuestion, reminders),
         rateDriveUseCase = RateDriveUseCase(openDriveQuestion, startedDrives, driveSender, reminders),

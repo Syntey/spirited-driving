@@ -89,6 +89,7 @@ import com.syntey.spiriteddriving.feature.map.model.ui.RouteLine
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
+import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningPreviewStates
 import com.syntey.spiriteddriving.feature.map.ui.components.MapStyles
 import com.syntey.spiriteddriving.feature.map.ui.components.ReminderBubbleContent
 import com.syntey.spiriteddriving.feature.map.ui.components.routeColor
@@ -671,7 +672,7 @@ private fun MapScreenOutsidePreview() {
 @ScreenPreviews
 @Composable
 private fun MapScreenPlannedPreview() {
-    val state = MapSheetPreviewStates.plannedViewState()
+    val state = RoutePlanningPreviewStates.plannedViewState()
     Showcase {
         Content(
             viewState = state,

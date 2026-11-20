@@ -16,6 +16,7 @@ import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
+import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningPreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchResults
@@ -251,7 +252,7 @@ private fun MapSheetSearchDistancesIosPreview() = Showcase(platform = UiPlatform
 @Composable
 private fun MapSheetStartPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.startStepViewState(),
+        viewState = RoutePlanningPreviewStates.startStepViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -262,7 +263,7 @@ private fun MapSheetStartPreview() = Showcase {
 @Composable
 private fun MapSheetStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = MapSheetPreviewStates.startStepViewState(),
+        viewState = RoutePlanningPreviewStates.startStepViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -273,7 +274,7 @@ private fun MapSheetStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun MapSheetStartApproximatePreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
+        viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -284,7 +285,7 @@ private fun MapSheetStartApproximatePreview() = Showcase {
 @Composable
 private fun MapSheetStartApproximateIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = MapSheetPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
+        viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -295,7 +296,7 @@ private fun MapSheetStartApproximateIosPreview() = Showcase(platform = UiPlatfor
 @Composable
 private fun MapSheetStartNoAccessPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.startStepViewState(locationAccess = null),
+        viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = null),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -306,7 +307,7 @@ private fun MapSheetStartNoAccessPreview() = Showcase {
 @Composable
 private fun MapSheetStartNoAccessIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = MapSheetPreviewStates.startStepViewState(locationAccess = null),
+        viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = null),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),

@@ -11,6 +11,9 @@ internal interface MapSheetHost {
     /** The user's location, once it's known. */
     val userLocation: GeoPoint?
 
+    /** Whether the start search is open, which route planning waits on for its start. */
+    val isStartSearchOpen: Boolean
+
     /** Asks for the sheet to be pulled to [height]. */
     fun requestSheetHeight(height: SheetHeight)
 
@@ -22,6 +25,9 @@ internal interface MapSheetHost {
 
     /** A place was chosen: a destination, or the start while the start search is open. */
     fun onPlaceChosen(place: Place)
+
+    /** A picked point was named, or failed to be named with its coordinates; the destination search keeps the place. */
+    fun onPlaceNamed(place: Place)
 
     /** The recent places changed; every place search shows them. */
     fun onRecentPlacesChanged(places: List<Place>)
