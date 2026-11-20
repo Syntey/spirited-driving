@@ -3,6 +3,7 @@ package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
 import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
+import com.arkivanov.decompose.childContext
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnStart
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
@@ -26,6 +27,7 @@ import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.platform.binding.MapsAppResult
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
+import com.syntey.spiriteddriving.core.ui.base.combineStates
 import com.syntey.spiriteddriving.core.ui.base.executeWithLifecycle
 import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
@@ -122,10 +124,7 @@ internal class MapSheetComponent(
     private val planTripUseCase: PlanTripUseCase,
     private val getBudgetChoiceUseCase: GetBudgetChoiceUseCase,
     private val saveBudgetChoiceUseCase: SaveBudgetChoiceUseCase,
-    private val handOffUseCase: HandOffUseCase,
-    private val startDriveUseCase: StartDriveUseCase,
     private val sendPendingDrivesUseCase: SendPendingDrivesUseCase,
-    private val openMapsAppStoreUseCase: OpenMapsAppStoreUseCase,
     private val getDriveQuestionUseCase: GetDriveQuestionUseCase,
     private val rateDriveUseCase: RateDriveUseCase,
     private val skipDriveQuestionUseCase: SkipDriveQuestionUseCase,
@@ -133,10 +132,6 @@ internal class MapSheetComponent(
     private val observeOpenedReminderUseCase: ObserveOpenedReminderUseCase,
     private val shouldOfferReminderUseCase: ShouldOfferReminderUseCase,
     private val turnOnRemindersUseCase: TurnOnRemindersUseCase,
-    private val observeSignedInUseCase: ObserveSignedInUseCase,
-    private val observeSavedRoutesUseCase: ObserveSavedRoutesUseCase,
-    private val saveRouteUseCase: SaveRouteUseCase,
-    private val unsaveRouteUseCase: UnsaveRouteUseCase,
     private val loadSavedRouteUseCase: LoadSavedRouteUseCase,
     private val getPastDriveUseCase: GetPastDriveUseCase,
     private val loadPastDriveRouteUseCase: LoadPastDriveRouteUseCase,
@@ -150,10 +145,52 @@ internal class MapSheetComponent(
 
     private val logger = Logger.withTag("MapSheetComponent")
 
-    // The route Save was tapped on while signed out, saved once the sign-in sheet closes signed in
-    private var pendingSaveRouteId: String? = null
+    // Drive and Save live as long as the sheet, each with its own use case scope, so they stay out of the navigation
+    private val driveListener = object : DriveHandOffComponent.Listener {
+        override fun onHandedOff() {
+            // A new drive replaces the reminder about an earlier one
+            componentState.update {
+                it.copy(
+                    planning = it.planning?.copy(isHandedOff = true),
+                    sheetStep = it.sheetStep.let { step ->
+                        if (step is OneRouteStep) step.copy(isHandedOff = true) else step
+                    },
+                    reminder = null,
+                )
+            }
+        }
+    }
 
-    override val viewState: StateFlow<MapSheetViewState> = componentState
+    private val saveListener = object : RouteSavingComponent.Listener {
+        override fun openSignInToSaveRoute() = openSignInForSaving()
+        override fun onSaved(routeId: String, savedRoute: SavedRoute) = pointStepAtSavedRoute(routeId, savedRoute)
+        override fun onSaveEvent(event: MapSheetUiEvent) = sendUiEvent(event)
+    }
+
+    private val driveHandOff: DriveHandOffComponent = DriveHandOffComponentFactory.createComponent(
+        childContext("driveHandOff"),
+        driveListener,
+    )
+
+    private val routeSaving: RouteSavingComponent = RouteSavingComponentFactory.createComponent(
+        childContext("routeSaving"),
+        saveListener,
+    )
+
+    override val viewState: StateFlow<MapSheetViewState> = combineStates(
+        componentState,
+        driveHandOff.viewState,
+        routeSaving.viewState,
+    ) { state, drive, save ->
+        state.copy(
+            isFirstDriveExplained = drive.isFirstDriveExplained,
+            driveDialog = drive.dialog,
+            isSignedIn = save.isSignedIn,
+            savedRoutes = save.savedRoutes,
+            isSavingRoute = save.isSaving,
+            nameDialog = save.nameDialog,
+        )
+    }
     override val actions: MapSheetScreen.Actions = this
 
     // Back closes the innermost step first: the rating step, then a saved route, then the start step, then route planning,
@@ -185,11 +222,8 @@ internal class MapSheetComponent(
         observeVignettes()
         readRecentPlaces()
         readBudgetChoice()
-        readFirstDriveNote()
         sendPendingDrives()
         observeOpenedReminder()
-        observeSignedIn()
-        observeSavedRoutes()
     }
 
     // Observed, so a unit picked in Settings applies while the map is under the Profile sheet
@@ -481,7 +515,7 @@ internal class MapSheetComponent(
 
     // A saved route's route is loaded in place of a plan; the start and destination pins frame it until it is
     override fun showSavedRoute(savedRouteId: SavedRouteId) {
-        val savedRoute = componentState.value.savedRoutes.firstOrNull { it.id == savedRouteId } ?: return
+        val savedRoute = viewState.value.savedRoutes.firstOrNull { it.id == savedRouteId } ?: return
         showOneRoute(OneRouteOrigin.Saved(savedRoute))
     }
 
@@ -559,7 +593,7 @@ internal class MapSheetComponent(
     }
 
     override fun onSavedRoutesClick() {
-        if (componentState.value.isSignedIn) openSavedRoutes() else openSignInForSavedRoutes()
+        if (viewState.value.isSignedIn) openSavedRoutes() else openSignInForSavedRoutes()
     }
 
     private fun loadOneRoute(origin: OneRouteOrigin) = when (origin) {
@@ -618,33 +652,16 @@ internal class MapSheetComponent(
     }
 
     override fun onDriveClick() {
-        val state = componentState.value
+        val state = viewState.value
         val route = state.driveRoute ?: return
-        if (state.isFirstDriveExplained) {
-            handOff(route)
-        } else {
-            componentState.update { it.copy(driveDialog = DriveDialog.FirstDrive) }
-        }
+        driveHandOff.drive(route, routeNumber = state.routeRows.firstOrNull { it.id == route.id }?.number)
     }
 
-    // Closing the note comes before the hand-off, so the dialog doesn't come back when the maps app turns out to be missing
-    override fun onFirstDriveConfirm() {
-        val route = componentState.value.driveRoute
-        componentState.update { it.copy(driveDialog = null, isFirstDriveExplained = true) }
-        closeNoteUseCase.execute(Note.FirstDrive) {
-            onError { error -> logger.e(error) { "First drive note not closed" } }
-        }
-        route?.let(::handOff)
-    }
+    override fun onFirstDriveConfirm() = driveHandOff.onFirstDriveConfirm()
 
-    override fun onDriveDialogDismiss() = componentState.update { it.copy(driveDialog = null) }
+    override fun onDriveDialogDismiss() = driveHandOff.onDialogDismiss()
 
-    override fun onMapsAppStoreClick() {
-        componentState.update { it.copy(driveDialog = null) }
-        openMapsAppStoreUseCase.execute {
-            onError { error -> logger.e(error) { "Maps app store not opened" } }
-        }
-    }
+    override fun onMapsAppStoreClick() = driveHandOff.onMapsAppStoreClick()
 
     override fun onRatingThumbClick(thumb: Thumb) = pickThumb(thumb)
 
@@ -812,149 +829,35 @@ internal class MapSheetComponent(
         hideRatingStep()
     }
 
-    private fun handOff(route: Route) {
-        handOffUseCase.execute(route) {
-            onSuccess { result ->
-                when (result) {
-                    MapsAppResult.Opened -> {
-                        // A new drive replaces the reminder about an earlier one
-                        componentState.update {
-                            it.copy(
-                                planning = it.planning?.copy(isHandedOff = true),
-                                sheetStep = it.sheetStep.let { step ->
-                                    if (step is OneRouteStep) step.copy(isHandedOff = true) else step
-                                },
-                                reminder = null,
-                            )
-                        }
-                        startDrive(route)
-                    }
-
-                    MapsAppResult.Missing -> componentState.update { it.copy(driveDialog = DriveDialog.MapsAppMissing) }
-                }
-            }
-            onError { error -> logger.e(error) { "Route not handed off" } }
-        }
-    }
-
-    // Errors are only logged: the drive stays stored and is recorded on a later try
-    private fun startDrive(route: Route) {
-        val routeNumber = componentState.value.routeRows.firstOrNull { it.id == route.id }?.number
-        startDriveUseCase.execute(StartDriveUseCase.Args(route = route, routeNumber = routeNumber, at = Clock.System.now())) {
-            onError { error -> if (error !is OfflineException) logger.e(error) { "Drive not started" } }
-        }
-    }
-
-    private fun readFirstDriveNote() = isNoteClosedUseCase.execute(Note.FirstDrive) {
-        onSuccess { isClosed -> componentState.update { it.copy(isFirstDriveExplained = isClosed) } }
-        onError { error -> logger.e(error) { "First drive note not read" } }
-    }
-
     // Drives from an earlier start without a connection; offline is expected here, so it isn't logged
     private fun sendPendingDrives() = sendPendingDrivesUseCase.execute {
         onError { error -> if (error !is OfflineException) logger.e(error) { "Pending drives not sent" } }
     }
 
-    private fun observeSignedIn() = observeSignedInUseCase.execute {
-        onNext { isSignedIn -> componentState.update { it.copy(isSignedIn = isSignedIn) } }
-        onError { error -> logger.e(error) { "Sign-in not observed" } }
-    }
-
-    private fun observeSavedRoutes() = observeSavedRoutesUseCase.execute {
-        onNext { routes -> componentState.update { it.copy(savedRoutes = routes.toImmutableList()) } }
-        onError { error -> logger.e(error) { "Saved routes not observed" } }
-    }
-
-    override fun onSaveClick() = toggleSavedRoute()
-
-    override fun onRouteNameSave(name: String) = saveNamedRoute(name)
-
-    override fun onRouteNameDismiss() = componentState.update { it.copy(nameDialog = null) }
-
-    // Saving waits for the sign-in: the route is saved once the sheet closes signed in, and closing it leaves it unsaved
-    override fun onSignInToSaveFinished(isSignedIn: Boolean) = continueSaveAfterSignIn(isSignedIn)
-
-    private fun continueSaveAfterSignIn(isSignedIn: Boolean) {
-        val routeId = pendingSaveRouteId
-        pendingSaveRouteId = null
-        if (!isSignedIn || routeId == null) return
-        val state = componentState.value
-        val route = state.driveRoute?.takeIf { it.id == routeId } ?: return
-        saveRoute(route, name = (state.oneRouteStep?.origin as? OneRouteOrigin.Saved)?.savedRoute?.name)
-    }
-
     // A saved route's step saves its route under the saved route's name, and is checked against that saved route; a past drive's
     // step saves under the destination's name, and is checked against the drive's route
-    private fun toggleSavedRoute() {
-        val state = componentState.value
-        val route = state.driveRoute?.takeUnless { state.isSavingRoute } ?: return
-        if (!state.isSignedIn) {
-            pendingSaveRouteId = route.id
-            openSignInToSaveRoute()
-            return
-        }
-        val saved = state.savedRouteOnScreen
-        if (saved != null) {
-            removeRoute(saved.id)
-        } else {
-            saveRoute(route, name = (state.oneRouteStep?.origin as? OneRouteOrigin.Saved)?.savedRoute?.name)
-        }
+    override fun onSaveClick() {
+        val state = viewState.value
+        val route = state.driveRoute ?: return
+        routeSaving.toggle(route, name = savedRouteName(state), savedOnScreen = state.savedRouteOnScreen)
     }
 
-    private fun saveNamedRoute(name: String) {
-        val dialog = componentState.value.nameDialog ?: return
-        componentState.update { it.copy(nameDialog = null) }
-        val route = componentState.value.routeOnScreen(dialog.routeId) ?: return
-        saveRoute(route, name)
+    override fun onRouteNameSave(name: String) = routeSaving.onNameSave(name) { routeId -> viewState.value.routeOnScreen(routeId) }
+
+    override fun onRouteNameDismiss() = routeSaving.onNameDismiss()
+
+    // Saving waits for the sign-in: the route is saved once the sheet closes signed in, and closing it leaves it unsaved
+    override fun onSignInToSaveFinished(isSignedIn: Boolean) {
+        val state = viewState.value
+        routeSaving.onSignInFinished(isSignedIn, routeOnScreen = state.driveRoute, name = savedRouteName(state))
     }
 
-    private fun saveRoute(route: Route, name: String?) {
-        setSavingRoute(true)
-        saveRouteUseCase.execute(SaveRouteUseCase.Args(route = route, name = name)) {
-            onSuccess { result ->
-                setSavingRoute(false)
-                when (result) {
-                    is SaveRouteResult.NameTaken -> showNameDialog(route.id, result)
-                    is SaveRouteResult.Saved -> pointStepAtSavedRoute(route.id, result.savedRoute)
-                }
-            }
-            onError { error ->
-                setSavingRoute(false)
-                reportSaveError(error, MapSheetUiEvent.SaveRouteOffline, MapSheetUiEvent.SaveRouteFailed, "Route not saved")
-            }
-        }
-    }
-
-    private fun setSavingRoute(isSaving: Boolean) = componentState.update { it.copy(isSavingRoute = isSaving) }
+    private fun openSignInForSaving() = openSignInToSaveRoute()
 
     // Saving a saved route's route again makes a new saved route, which the step is about from then on
     private fun pointStepAtSavedRoute(routeId: String, savedRoute: SavedRoute) = componentState.update { state ->
         val step = state.oneRouteStep ?: return@update state
         state.copy(sheetStep = step.savedAs(routeId, savedRoute))
-    }
-
-    private fun reportSaveError(error: Throwable, offline: MapSheetUiEvent, failed: MapSheetUiEvent, logMessage: String) {
-        if (error is OfflineException) {
-            sendUiEvent(offline)
-        } else {
-            logger.e(error) { logMessage }
-            sendUiEvent(failed)
-        }
-    }
-
-    private fun showNameDialog(routeId: String, taken: SaveRouteResult.NameTaken) = componentState.update {
-        it.copy(nameDialog = RouteNameDialog(routeId, taken.takenName, taken.suggestion, taken.takenNames.toImmutableList()))
-    }
-
-    private fun removeRoute(savedRouteId: SavedRouteId) {
-        setSavingRoute(true)
-        unsaveRouteUseCase.execute(savedRouteId) {
-            onSuccess { setSavingRoute(false) }
-            onError { error ->
-                setSavingRoute(false)
-                reportSaveError(error, MapSheetUiEvent.RemoveRouteOffline, MapSheetUiEvent.RemoveRouteFailed, "Route not removed")
-            }
-        }
     }
 
     override fun onMyLocationClick() = useMyLocation()
@@ -1120,6 +1023,10 @@ internal class MapSheetComponent(
 // The recent places as the search keeps them, with the rest of the search state kept as it is
 private fun MapSheetViewState.withRecentPlaces(places: List<Place>): MapSheetViewState =
     copy(search = search.copy(recentPlaces = places.toImmutableList()))
+
+// The name a saved route's step saves under: its saved route's name, or none for any other step
+private fun savedRouteName(state: MapSheetViewState): String? =
+    (state.oneRouteStep?.origin as? OneRouteOrigin.Saved)?.savedRoute?.name
 
 // An unnamed point's area is only its coordinates for the header; without both, the backend names it
 private fun forBackend(place: Place): Place =

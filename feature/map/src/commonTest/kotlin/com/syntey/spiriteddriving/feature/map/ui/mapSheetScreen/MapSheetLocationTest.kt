@@ -8,6 +8,8 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class MapSheetLocationTest {
 
@@ -92,5 +94,18 @@ class MapSheetLocationTest {
         val state = trip.screen.viewState.value
         assertEquals(LocationAccess.DeniedForGood, state.locationAccess)
         assertEquals(LocateButton.NoAccess, state.locateButton)
+    }
+
+    @Test
+    fun `the precise location note shows with approximate access and closing it hides it`() = runTest(main.dispatcher) {
+        val trip = mapSheetFixture(locationAccess = LocationAccess.Approximate)
+        advanceUntilIdle()
+        sendFix(trip, Points.prague)
+        assertTrue(trip.screen.viewState.value.showsPreciseLocationNote)
+
+        trip.screen.actions.onPreciseLocationNoteClose()
+        advanceUntilIdle()
+
+        assertFalse(trip.screen.viewState.value.showsPreciseLocationNote)
     }
 }

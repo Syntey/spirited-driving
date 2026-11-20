@@ -38,7 +38,11 @@ import com.syntey.spiriteddriving.core.platform.binding.MapsAppKind
 import com.syntey.spiriteddriving.core.platform.binding.MapsAppResult
 import com.syntey.spiriteddriving.core.platform.binding.SignInProvider
 import com.syntey.spiriteddriving.core.platform.binding.UserLocation
+import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.testing.TestComponentContext
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
 import com.syntey.spiriteddriving.feature.map.domain.DriveSender
@@ -162,6 +166,36 @@ internal fun TestScope.mapSheetFixture(
     val savedRoutesSource = FakeSavedRoutesSource(savedRoutes)
     val savedRoutesCache = FakeSavedRoutesCache(savedRoutes)
 
+    // The child components are built by their generated factories, which resolve from the global Koin, so Koin is started with
+    // the same fakes the parent gets
+    startKoin {
+        modules(
+            module {
+                factory { (context: AppComponentContext, listener: DriveHandOffComponent.Listener) ->
+                    DriveHandOffComponent(
+                        componentContext = context,
+                        listener = listener,
+                        handOffUseCase = HandOffUseCase(mapsApp),
+                        startDriveUseCase = StartDriveUseCase(startedDrives, driveRecorder, openDriveQuestion, tripHistoryCache, reminders),
+                        openMapsAppStoreUseCase = OpenMapsAppStoreUseCase(mapsApp),
+                        isNoteClosedUseCase = IsNoteClosedUseCase(closedNotes),
+                        closeNoteUseCase = CloseNoteUseCase(closedNotes),
+                    )
+                }
+                factory { (context: AppComponentContext, listener: RouteSavingComponent.Listener) ->
+                    RouteSavingComponent(
+                        componentContext = context,
+                        listener = listener,
+                        observeSignedInUseCase = ObserveSignedInUseCase(auth),
+                        observeSavedRoutesUseCase = ObserveSavedRoutesUseCase(savedRoutesCache),
+                        saveRouteUseCase = SaveRouteUseCase(savedRoutesSource, savedRoutesCache),
+                        unsaveRouteUseCase = UnsaveRouteUseCase(savedRoutesSource, savedRoutesCache),
+                    )
+                }
+            },
+        )
+    }
+
     val component = MapSheetComponent(
         componentContext = lifecycle.context,
         navigation = navigation,
@@ -183,10 +217,7 @@ internal fun TestScope.mapSheetFixture(
         planTripUseCase = PlanTripUseCase(routePlanner, vignettes),
         getBudgetChoiceUseCase = GetBudgetChoiceUseCase(budgetSettings),
         saveBudgetChoiceUseCase = SaveBudgetChoiceUseCase(budgetSettings),
-        handOffUseCase = HandOffUseCase(mapsApp),
-        startDriveUseCase = StartDriveUseCase(startedDrives, driveRecorder, openDriveQuestion, tripHistoryCache, reminders),
         sendPendingDrivesUseCase = SendPendingDrivesUseCase(startedDrives, driveSender),
-        openMapsAppStoreUseCase = OpenMapsAppStoreUseCase(mapsApp),
         getDriveQuestionUseCase = GetDriveQuestionUseCase(openDriveQuestion, reminders),
         rateDriveUseCase = RateDriveUseCase(openDriveQuestion, startedDrives, driveSender, reminders),
         skipDriveQuestionUseCase = SkipDriveQuestionUseCase(openDriveQuestion, reminders),
@@ -194,10 +225,6 @@ internal fun TestScope.mapSheetFixture(
         observeOpenedReminderUseCase = ObserveOpenedReminderUseCase(reminders, openDriveQuestion),
         shouldOfferReminderUseCase = ShouldOfferReminderUseCase(closedNotes, reminders),
         turnOnRemindersUseCase = TurnOnRemindersUseCase(reminders),
-        observeSignedInUseCase = ObserveSignedInUseCase(auth),
-        observeSavedRoutesUseCase = ObserveSavedRoutesUseCase(savedRoutesCache),
-        saveRouteUseCase = SaveRouteUseCase(savedRoutesSource, savedRoutesCache),
-        unsaveRouteUseCase = UnsaveRouteUseCase(savedRoutesSource, savedRoutesCache),
         loadSavedRouteUseCase = LoadSavedRouteUseCase(savedRoutesSource, savedRoutesCache),
         getPastDriveUseCase = GetPastDriveUseCase(tripHistoryCache),
         loadPastDriveRouteUseCase = LoadPastDriveRouteUseCase(tripHistorySource, tripHistoryCache),
@@ -212,6 +239,7 @@ internal fun TestScope.mapSheetFixture(
             awaitCancellation()
         } finally {
             lifecycle.destroy()
+            stopKoin()
         }
     }
 
