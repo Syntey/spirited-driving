@@ -2,37 +2,30 @@ package com.syntey.spiriteddriving.core.ui.base
 
 import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 
 /**
- * A [StateFlow] that combines three others with [transform]. Its [StateFlow.value] is computed from the sources' current values
- * on each read, so a read right after a change sees it; collectors get each distinct combined value as the sources change.
+ * A [StateFlow] that [compute] builds from the states it reads. Its [StateFlow.value] is computed on each read, so a read right
+ * after a change sees it; collectors get each distinct value as [changes] emits, which is when something it reads may have changed.
  */
-fun <A, B, C, R> combineStates(
-    a: StateFlow<A>,
-    b: StateFlow<B>,
-    c: StateFlow<C>,
-    transform: (A, B, C) -> R,
-): StateFlow<R> = CombinedStateFlow(a, b, c, transform)
+fun <T> derivedStateFlow(changes: Flow<*>, compute: () -> T): StateFlow<T> = DerivedStateFlow(changes, compute)
 
 @OptIn(ExperimentalForInheritanceCoroutinesApi::class)
-private class CombinedStateFlow<A, B, C, R>(
-    private val a: StateFlow<A>,
-    private val b: StateFlow<B>,
-    private val c: StateFlow<C>,
-    private val transform: (A, B, C) -> R,
-) : StateFlow<R> {
+private class DerivedStateFlow<T>(private val changes: Flow<*>, private val compute: () -> T) : StateFlow<T> {
 
-    override val value: R get() = transform(a.value, b.value, c.value)
+    override val value: T get() = compute()
 
-    override val replayCache: List<R> get() = listOf(value)
+    override val replayCache: List<T> get() = listOf(value)
 
-    // Never completes, as a StateFlow doesn't: it waits to be cancelled once the sources' changes are passed on
-    override suspend fun collect(collector: FlowCollector<R>): Nothing {
-        combine(a, b, c) { valueA, valueB, valueC -> transform(valueA, valueB, valueC) }
+    // Never completes, as a StateFlow doesn't: it waits to be cancelled once the changes are passed on
+    override suspend fun collect(collector: FlowCollector<T>): Nothing {
+        changes.map { compute() }
+            .onStart { emit(compute()) }
             .distinctUntilChanged()
             .collect(collector)
         awaitCancellation()

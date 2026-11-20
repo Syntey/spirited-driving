@@ -2,8 +2,14 @@ package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
 
 import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
+import app.futured.arkitekt.decompose.ext.asStateFlow
 import co.touchlab.kermit.Logger
 import com.arkivanov.decompose.childContext
+import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.navigate
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnStart
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
@@ -24,17 +30,14 @@ import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
-import com.syntey.spiriteddriving.core.platform.binding.MapsAppResult
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
-import com.syntey.spiriteddriving.core.ui.base.combineStates
+import com.syntey.spiriteddriving.core.ui.base.derivedStateFlow
 import com.syntey.spiriteddriving.core.ui.base.executeWithLifecycle
-import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetBudgetChoiceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetPastDriveUseCase
-import com.syntey.spiriteddriving.feature.map.domain.GetRecentPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.HandOffUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
 import com.syntey.spiriteddriving.feature.map.domain.LoadPastDriveRouteUseCase
@@ -47,13 +50,10 @@ import com.syntey.spiriteddriving.feature.map.domain.ObserveVignettesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenMapsAppStoreUseCase
 import com.syntey.spiriteddriving.feature.map.domain.PlanTripUseCase
-import com.syntey.spiriteddriving.feature.map.domain.RemoveRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SaveBudgetChoiceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
-import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SendPendingDrivesUseCase
-import com.syntey.spiriteddriving.feature.map.domain.SearchPlacesUseCase.SearchUpdate
 import com.syntey.spiriteddriving.feature.map.domain.StartDriveUseCase
 import com.syntey.spiriteddriving.feature.map.domain.DrivePrompt
 import com.syntey.spiriteddriving.feature.map.domain.GetDriveQuestionUseCase
@@ -77,22 +77,21 @@ import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
 import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteNameDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
-import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
-import com.syntey.spiriteddriving.feature.map.model.ui.SearchStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.savedAs
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
-import com.syntey.spiriteddriving.feature.map.tools.Constants
 import com.syntey.spiriteddriving.core.resources.datetime.driveDayText
 import com.syntey.spiriteddriving.core.resources.datetime.driveTimeText
 import com.syntey.spiriteddriving.feature.map.tools.inUnit
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.TimeZone
 import org.koin.core.annotation.Factory
@@ -114,12 +113,8 @@ internal class MapSheetComponent(
     private val requestPreciseLocationUseCase: RequestPreciseLocationUseCase,
     private val isNoteClosedUseCase: IsNoteClosedUseCase,
     private val closeNoteUseCase: CloseNoteUseCase,
-    private val searchPlacesUseCase: SearchPlacesUseCase,
     private val observeDistanceUnitUseCase: ObserveDistanceUnitUseCase,
     private val observeVignettesUseCase: ObserveVignettesUseCase,
-    private val getRecentPlacesUseCase: GetRecentPlacesUseCase,
-    private val addRecentPlaceUseCase: AddRecentPlaceUseCase,
-    private val removeRecentPlaceUseCase: RemoveRecentPlaceUseCase,
     private val namePointUseCase: NamePointUseCase,
     private val planTripUseCase: PlanTripUseCase,
     private val getBudgetChoiceUseCase: GetBudgetChoiceUseCase,
@@ -144,6 +139,38 @@ internal class MapSheetComponent(
     MapSheetScreen.Actions {
 
     private val logger = Logger.withTag("MapSheetComponent")
+
+    // What the sheet's steps reach on this parent
+    private val host = object : MapSheetHost {
+        override val userLocation: GeoPoint? get() = componentState.value.map.userLocation
+        override fun requestSheetHeight(height: SheetHeight) = setSheetHeight(height)
+        override fun covers(point: GeoPoint): Boolean = componentState.value.map.covers(point)
+        override fun onNotCovered() = sendUiEvent(MapSheetUiEvent.NotCovered)
+        override fun onPlaceChosen(place: Place) = choose(place)
+        override fun onRecentPlacesChanged(places: List<Place>) = placeSearches().forEach { it.showRecentPlaces(places) }
+    }
+
+    private val stepNavigation = StackNavigation<SheetStepConfig>()
+
+    // The root is the destination search, which stays alive under the steps pushed over it, so coming back shows it as it was
+    private val stack: StateFlow<ChildStack<SheetStepConfig, SheetStepChild>> = childStack(
+        source = stepNavigation,
+        serializer = null,
+        key = "sheetSteps",
+        initialConfiguration = SheetStepConfig.DestinationSearch,
+        handleBackButton = false,
+        childFactory = { config, childCtx ->
+            when (config) {
+                SheetStepConfig.DestinationSearch -> SheetStepChild.PlaceSearch(
+                    PlaceSearchComponentFactory.createComponent(childCtx, host, PlaceSearchComponent.Args(isStart = false)),
+                )
+
+                is SheetStepConfig.StartSearch -> SheetStepChild.PlaceSearch(
+                    PlaceSearchComponentFactory.createComponent(childCtx, host, PlaceSearchComponent.Args(isStart = true)),
+                )
+            }
+        },
+    ).asStateFlow()
 
     // Drive and Save live as long as the sheet, each with its own use case scope, so they stay out of the navigation
     private val driveListener = object : DriveHandOffComponent.Listener {
@@ -177,20 +204,17 @@ internal class MapSheetComponent(
         saveListener,
     )
 
-    override val viewState: StateFlow<MapSheetViewState> = combineStates(
-        componentState,
-        driveHandOff.viewState,
-        routeSaving.viewState,
-    ) { state, drive, save ->
-        state.copy(
-            isFirstDriveExplained = drive.isFirstDriveExplained,
-            driveDialog = drive.dialog,
-            isSignedIn = save.isSignedIn,
-            savedRoutes = save.savedRoutes,
-            isSavingRoute = save.isSaving,
-            nameDialog = save.nameDialog,
-        )
-    }
+    // Projected from the parent's state, the dialogs of Drive and Save, and the step on top of the stack, and followed as each changes
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val viewState: StateFlow<MapSheetViewState> = derivedStateFlow(
+        changes = merge(
+            componentState,
+            driveHandOff.viewState,
+            routeSaving.viewState,
+            stack.flatMapLatest { stack -> combine(stack.items.map { it.instance.state }) { } },
+        ),
+    ) { project() }
+
     override val actions: MapSheetScreen.Actions = this
 
     // Back closes the innermost step first: the rating step, then a saved route, then the start step, then route planning,
@@ -199,7 +223,7 @@ internal class MapSheetComponent(
         val state = componentState.value
         if (state.sheetStep != null) {
             closeSheetStep()
-        } else if (state.startSearch != null) {
+        } else if (isStartSearchOpen()) {
             closeStartSearch()
         } else if (state.planning != null) {
             onRoutePlanningClose()
@@ -220,7 +244,6 @@ internal class MapSheetComponent(
         readPreciseLocationNote()
         observeDistanceUnit()
         observeVignettes()
-        readRecentPlaces()
         readBudgetChoice()
         sendPendingDrives()
         observeOpenedReminder()
@@ -258,67 +281,39 @@ internal class MapSheetComponent(
         }
     }
 
-    private fun readRecentPlaces() = getRecentPlacesUseCase.execute {
-        onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
-        onError { error -> logger.e(error) { "Recent places not read" } }
-    }
-
     private fun readBudgetChoice() = getBudgetChoiceUseCase.execute {
         // Snapped to the unit in use, and not saved again: the kept choice is snapped on each read
         onSuccess { choice -> componentState.update { it.copy(budgetChoice = choice.inUnit(it.distanceUnit)) } }
         onError { error -> logger.e(error) { "Budget choice not read" } }
     }
 
-    override fun onSearchFocus() = setSheetHeight(SheetHeight.Full)
+    override fun onSearchFocus() = activePlaceSearch().onFocus()
 
-    override fun onSearchTextChange(text: String) {
-        componentState.update { it.copy(search = it.search.copy(text = text)) }
-        search(text)
-    }
+    override fun onSearchTextChange(text: String) = activePlaceSearch().onTextChange(text)
 
-    override fun onSearchClear() = clearSearch()
+    override fun onSearchClear() = activePlaceSearch().clear()
 
-    override fun onSearchRetry() = search(componentState.value.search.text)
+    override fun onSearchRetry() = activePlaceSearch().onRetry()
 
     override fun onSearchClose() = closeSearchStep()
 
     // The start step has no collapsed layout, so dragging it down closes it
     override fun onSheetHeightChange(height: SheetHeight) {
-        if (componentState.value.startSearch != null && height == SheetHeight.Collapsed) closeStartSearch()
+        if (isStartSearchOpen() && height == SheetHeight.Collapsed) closeStartSearch()
         setSheetHeight(height)
     }
 
-    override fun onSuggestionClick(suggestion: PlaceSuggestion) {
-        if (!suggestion.isCovered) {
-            sendUiEvent(MapSheetUiEvent.NotCovered)
-            return
-        }
-        choose(suggestion.place)
-    }
+    override fun onSuggestionClick(suggestion: PlaceSuggestion) = activePlaceSearch().onSuggestionClick(suggestion)
 
-    // A recent place counts as covered until the covered area is loaded, as it was covered when chosen
-    override fun onRecentPlaceClick(place: Place) {
-        if (!componentState.value.map.covers(place.location)) {
-            sendUiEvent(MapSheetUiEvent.NotCovered)
-            return
-        }
-        choose(place)
-    }
+    override fun onRecentPlaceClick(place: Place) = activePlaceSearch().onRecentPlaceClick(place)
 
-    // Hidden at once, so the row doesn't wait for the removal to be saved
-    override fun onRecentPlaceRemove(place: Place) {
-        componentState.update { it.withRecentPlaces(it.search.recentPlaces.filterNot { recent -> recent == place }) }
-        removeRecentPlaceUseCase.execute(place) {
-            onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
-            onError { error -> logger.e(error) { "Recent place not removed" } }
-        }
-    }
+    override fun onRecentPlaceRemove(place: Place) = activePlaceSearch().onRecentPlaceRemove(place)
 
     private fun choose(place: Place) {
         // A point still being named would otherwise land on top of the recent places after this one
         useCaseJobPool[namePointUseCase]?.cancel()
-        keep(place)
-        if (componentState.value.startSearch != null) {
+        rootPlaceSearch().keep(place)
+        if (isStartSearchOpen()) {
             useStart(place)
             return
         }
@@ -344,7 +339,7 @@ internal class MapSheetComponent(
     private fun plan() {
         val state = componentState.value
         // The step plans when it closes, so there's nothing to show the plan in until then
-        val planning = state.planning?.takeIf { state.startSearch == null } ?: return
+        val planning = state.planning?.takeIf { !isStartSearchOpen() } ?: return
         // Reset before waiting for the user's location, so an earlier plan doesn't stay up meanwhile
         componentState.update {
             it.copy(planning = planning.copy(status = PlanningStatus.Planning, plan = null, selectedRouteId = null))
@@ -379,52 +374,36 @@ internal class MapSheetComponent(
 
     override fun onStartClick() = openStartSearch(closesPlanning = false)
 
-    // The destination search is kept, so closing the step brings it back as it was
+    // The destination search stays under the start search, so closing the step brings it back as it was
     private fun openStartSearch(closesPlanning: Boolean) {
-        useCaseJobPool[searchPlacesUseCase]?.cancel()
-        componentState.update {
-            it.copy(
-                startSearch = StartSearch(destinationSearch = it.search, closesPlanning = closesPlanning),
-                search = SearchState(recentPlaces = it.search.recentPlaces),
-            )
-        }
+        stepNavigation.navigate { it + SheetStepConfig.StartSearch(closesPlanning) }
         setSheetHeight(SheetHeight.Full)
     }
 
-    // Returns the step that was open, or null; recent places may have changed meanwhile, so the current ones stay
-    private fun restoreDestinationSearch(): StartSearch? {
-        val closed = componentState.value.startSearch ?: return null
-        useCaseJobPool[searchPlacesUseCase]?.cancel()
-        componentState.update {
-            it.copy(startSearch = null, search = closed.destinationSearch.copy(recentPlaces = it.search.recentPlaces))
-        }
-        return closed
+    // Pops the start search if it's the step on top, and returns the step it was
+    private fun popStartSearch(): SheetStepConfig.StartSearch? {
+        val config = stack.value.active.configuration as? SheetStepConfig.StartSearch ?: return null
+        stepNavigation.pop()
+        return config
     }
 
     private fun closeStartSearch() {
-        val closed = restoreDestinationSearch() ?: return
+        val closed = popStartSearch() ?: return
         if (closed.closesPlanning) onRoutePlanningClose() else setSheetHeight(SheetHeight.Half)
     }
 
     private fun closeSearchStep() {
-        if (componentState.value.startSearch != null) closeStartSearch() else closeSearch()
+        if (isStartSearchOpen()) closeStartSearch() else closeSearch()
     }
 
     // A null start is the user's location
     private fun useStart(start: Place?) {
-        restoreDestinationSearch()
+        popStartSearch()
         componentState.update {
             it.copy(planning = it.planning?.copy(start = start))
         }
         setSheetHeight(SheetHeight.Half)
         plan()
-    }
-
-    private fun keep(place: Place) {
-        addRecentPlaceUseCase.execute(place) {
-            onSuccess { places -> componentState.update { it.withRecentPlaces(places) } }
-            onError { error -> logger.e(error) { "Recent place not kept" } }
-        }
     }
 
     override fun onLocateClick() = locate()
@@ -441,7 +420,7 @@ internal class MapSheetComponent(
             sendUiEvent(MapSheetUiEvent.NotCovered)
             return
         }
-        if (componentState.value.startSearch != null) {
+        if (isStartSearchOpen()) {
             pickStart(point)
             return
         }
@@ -471,12 +450,12 @@ internal class MapSheetComponent(
     private fun namePoint(point: GeoPoint, onNamed: (Place) -> Unit) {
         namePointUseCase.execute(point) {
             onSuccess { place ->
-                keep(place)
+                rootPlaceSearch().keep(place)
                 onNamed(place)
             }
             onError { error ->
                 if (error !is OfflineException) logger.e(error) { "Point not named" }
-                keep(unnamedPlace(point))
+                rootPlaceSearch().keep(unnamedPlace(point))
             }
         }
     }
@@ -506,7 +485,8 @@ internal class MapSheetComponent(
 
     override fun onRoutePlanningClose() {
         useCaseJobPool[planTripUseCase]?.cancel()
-        componentState.update { it.copy(planning = null, startSearch = null) }
+        popStartSearch()
+        componentState.update { it.copy(planning = null) }
         // Full brings the search back as it was, without the keyboard: the keyboard only comes from focusing the field
         setSheetHeight(SheetHeight.Full)
     }
@@ -538,12 +518,11 @@ internal class MapSheetComponent(
     private fun showOneRoute(origin: OneRouteOrigin) {
         if (componentState.value.ratingStep != null) closeRatingStep()
         useCaseJobPool[planTripUseCase]?.cancel()
-        restoreDestinationSearch()
-        clearSearch()
+        popStartSearch()
+        rootPlaceSearch().clear()
         componentState.update {
             it.copy(
                 planning = null,
-                startSearch = null,
                 sheetStep = OneRouteStep(origin = origin),
                 baseMap = it.baseMap.copy(followsUser = false),
             )
@@ -555,8 +534,8 @@ internal class MapSheetComponent(
     private fun planTripTo(destination: Place) {
         if (componentState.value.ratingStep != null) closeRatingStep()
         closeOneRouteStep()
-        restoreDestinationSearch()
-        clearSearch()
+        popStartSearch()
+        rootPlaceSearch().clear()
         onRecentPlaceClick(destination)
     }
 
@@ -722,11 +701,11 @@ internal class MapSheetComponent(
     private fun openRatingStep(question: DriveQuestion) {
         useCaseJobPool[planTripUseCase]?.cancel()
         cancelOneRouteLoads()
+        popStartSearch()
         val now = Clock.System.now()
         componentState.update {
             it.copy(
                 planning = null,
-                startSearch = null,
                 reminder = null,
                 sheetStep = RatingStep(
                     question = question,
@@ -863,7 +842,7 @@ internal class MapSheetComponent(
     override fun onMyLocationClick() = useMyLocation()
 
     private fun useMyLocation() {
-        when (componentState.value.myLocationRow) {
+        when (viewState.value.myLocationRow) {
             MyLocationRow.Available -> useStart(null)
             MyLocationRow.NeedsPreciseLocation -> askForPreciseLocation(then = ::useMyLocationOnceUsable)
             MyLocationRow.NeedsLocationAccess -> askForLocationAccess(then = ::useMyLocationOnceUsable)
@@ -875,7 +854,7 @@ internal class MapSheetComponent(
     // Access given in the prompt makes the user's location the start, unless it's still not usable or the step has closed
     private fun useMyLocationOnceUsable() {
         val state = componentState.value
-        if (state.startSearch != null && state.hasUsableLocation) useStart(null)
+        if (isStartSearchOpen() && state.hasUsableLocation) useStart(null)
     }
 
     private fun locate() = when (componentState.value.locateButton) {
@@ -884,54 +863,8 @@ internal class MapSheetComponent(
         LocateButton.NoAccess -> askForLocationAccess()
     }
 
-    // Each search cancels the one before, which may still wait for the pause in typing, so only the current text's answer shows
-    private fun search(text: String) {
-        val isLongEnough = text.trim().length >= Constants.Search.MIN_LENGTH
-        componentState.update { state ->
-            state.copy(
-                search = if (isLongEnough) {
-                    state.search.copy(status = SearchStatus.Searching, isSlow = false)
-                } else {
-                    state.search.copy(status = SearchStatus.Idle, suggestions = persistentListOf(), isSlow = false)
-                },
-            )
-        }
-        val args = SearchPlacesUseCase.Args(text, near = componentState.value.map.userLocation)
-        searchPlacesUseCase.execute(args) {
-            onNext { update ->
-                componentState.update { state ->
-                    val current = state.search
-                    state.copy(
-                        search = when (update) {
-                            SearchUpdate.Slow -> current.copy(isSlow = true)
-
-                            is SearchUpdate.Found -> current.copy(
-                                suggestions = update.suggestions.toImmutableList(),
-                                status = if (isLongEnough) SearchStatus.Found else SearchStatus.Idle,
-                                isSlow = false,
-                            )
-                        },
-                    )
-                }
-            }
-            onError { error ->
-                val isOffline = error is OfflineException
-                if (!isOffline) logger.e(error) { "Place search failed" }
-                val status = if (isOffline) SearchStatus.Offline else SearchStatus.Failed
-                componentState.update { state ->
-                    state.copy(search = state.search.copy(status = status, suggestions = persistentListOf(), isSlow = false))
-                }
-            }
-        }
-    }
-
-    private fun clearSearch() {
-        useCaseJobPool[searchPlacesUseCase]?.cancel()
-        componentState.update { it.copy(search = SearchState(recentPlaces = it.search.recentPlaces)) }
-    }
-
     private fun closeSearch() {
-        clearSearch()
+        rootPlaceSearch().clear()
         setSheetHeight(SheetHeight.Collapsed)
     }
 
@@ -1010,7 +943,7 @@ internal class MapSheetComponent(
     private fun planWaitingForLocation() {
         val state = componentState.value
         val planning = state.planning ?: return
-        val waits = planning.start == null && state.startSearch == null && planning.status == PlanningStatus.Planning
+        val waits = planning.start == null && !isStartSearchOpen() && planning.status == PlanningStatus.Planning
         if (waits && planning.plan == null) plan()
     }
 
@@ -1018,11 +951,34 @@ internal class MapSheetComponent(
     private fun stopLocationUpdates() {
         useCaseJobPool[observeUserLocationUseCase]?.cancel()
     }
-}
 
-// The recent places as the search keeps them, with the rest of the search state kept as it is
-private fun MapSheetViewState.withRecentPlaces(places: List<Place>): MapSheetViewState =
-    copy(search = search.copy(recentPlaces = places.toImmutableList()))
+    // The parent's own state, with the dialogs of Drive and Save, and the search and start of the step on top of the stack
+    private fun project(): MapSheetViewState {
+        val drive = driveHandOff.viewState.value
+        val save = routeSaving.viewState.value
+        val active = stack.value.active.configuration
+        return componentState.value.copy(
+            search = activePlaceSearch().viewState.value.search,
+            startSearch = (active as? SheetStepConfig.StartSearch)?.let { StartSearch(closesPlanning = it.closesPlanning) },
+            isFirstDriveExplained = drive.isFirstDriveExplained,
+            driveDialog = drive.dialog,
+            isSignedIn = save.isSignedIn,
+            savedRoutes = save.savedRoutes,
+            isSavingRoute = save.isSaving,
+            nameDialog = save.nameDialog,
+        )
+    }
+
+    // The start search is the step on top when it's open, and then it takes the map's picks and Back
+    private fun isStartSearchOpen(): Boolean = stack.value.active.configuration is SheetStepConfig.StartSearch
+
+    private fun placeSearches(): List<PlaceSearchComponent> =
+        stack.value.items.map { (it.instance as SheetStepChild.PlaceSearch).component }
+
+    private fun activePlaceSearch(): PlaceSearchComponent = (stack.value.active.instance as SheetStepChild.PlaceSearch).component
+
+    private fun rootPlaceSearch(): PlaceSearchComponent = (stack.value.items.first().instance as SheetStepChild.PlaceSearch).component
+}
 
 // The name a saved route's step saves under: its saved route's name, or none for any other step
 private fun savedRouteName(state: MapSheetViewState): String? =

@@ -182,6 +182,17 @@ internal fun TestScope.mapSheetFixture(
                         closeNoteUseCase = CloseNoteUseCase(closedNotes),
                     )
                 }
+                factory { (context: AppComponentContext, host: MapSheetHost, args: PlaceSearchComponent.Args) ->
+                    PlaceSearchComponent(
+                        componentContext = context,
+                        host = host,
+                        args = args,
+                        searchPlacesUseCase = SearchPlacesUseCase(placeSearch),
+                        getRecentPlacesUseCase = GetRecentPlacesUseCase(recents),
+                        addRecentPlaceUseCase = AddRecentPlaceUseCase(recents),
+                        removeRecentPlaceUseCase = RemoveRecentPlaceUseCase(recents),
+                    )
+                }
                 factory { (context: AppComponentContext, listener: RouteSavingComponent.Listener) ->
                     RouteSavingComponent(
                         componentContext = context,
@@ -207,12 +218,8 @@ internal fun TestScope.mapSheetFixture(
         requestPreciseLocationUseCase = RequestPreciseLocationUseCase(permission),
         isNoteClosedUseCase = IsNoteClosedUseCase(closedNotes),
         closeNoteUseCase = CloseNoteUseCase(closedNotes),
-        searchPlacesUseCase = SearchPlacesUseCase(placeSearch),
         observeDistanceUnitUseCase = ObserveDistanceUnitUseCase(distanceUnits, platform),
         observeVignettesUseCase = ObserveVignettesUseCase(vignettes),
-        getRecentPlacesUseCase = GetRecentPlacesUseCase(recents),
-        addRecentPlaceUseCase = AddRecentPlaceUseCase(recents),
-        removeRecentPlaceUseCase = RemoveRecentPlaceUseCase(recents),
         namePointUseCase = NamePointUseCase(placeSearch),
         planTripUseCase = PlanTripUseCase(routePlanner, vignettes),
         getBudgetChoiceUseCase = GetBudgetChoiceUseCase(budgetSettings),

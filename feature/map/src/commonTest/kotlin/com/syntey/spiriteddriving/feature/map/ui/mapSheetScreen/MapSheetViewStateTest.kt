@@ -706,7 +706,7 @@ class MapSheetViewStateTest {
         locationAccess = access,
         baseMap = RouteMapState(userLocation = from),
         search = SearchState(text = text),
-        startSearch = StartSearch(destinationSearch = SearchState(), closesPlanning = false),
+        startSearch = StartSearch(closesPlanning = false),
     )
 
     // 4.2 km north of origin
@@ -775,7 +775,7 @@ class MapSheetViewStateTest {
     fun `the saved routes row hides while typing and in the start step`() {
         assertFalse(MapSheetViewState(search = SearchState(text = "Kar")).showsSavedRoutesRow)
         assertFalse(
-            MapSheetViewState(startSearch = StartSearch(destinationSearch = SearchState(), closesPlanning = false)).showsSavedRoutesRow,
+            MapSheetViewState(startSearch = StartSearch(closesPlanning = false)).showsSavedRoutesRow,
         )
     }
 

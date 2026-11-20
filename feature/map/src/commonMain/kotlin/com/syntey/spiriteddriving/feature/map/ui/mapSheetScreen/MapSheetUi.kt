@@ -111,7 +111,6 @@ internal fun Content(
     val currentSheetHeight by rememberUpdatedState(viewState.sheetHeight)
     // The start step replaces the planning layout until it closes; the planning height stays measured while planning
     val planning = viewState.planning?.takeIf { viewState.startSearch == null }
-    val isStartStep = viewState.startSearch != null
     val isPlanning = viewState.planning != null
     val currentIsPlanning by rememberUpdatedState(isPlanning)
     val rating = viewState.ratingStep
@@ -151,29 +150,13 @@ internal fun Content(
                 if (planning != null) {
                     RoutePlanningHeader(planning = planning, actions = actions)
                 } else {
-                    if (isStartStep) {
-                        StartStepTo(destination = viewState.planning?.destination)
-                    } else if (viewState.sheetHeight == SheetHeight.Collapsed) {
-                        CollapsedNotes(viewState, actions)
-                    }
-                    SearchRow(viewState = viewState, actions = actions)
+                    PlaceSearchHeader(viewState = viewState, actions = actions)
                 }
             }
             if (planning != null) {
                 RoutePlanningBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
             } else {
-                // Always there below the top part, so pulling the sheet up reveals it as it grows
-                SearchResults(
-                    viewState = viewState,
-                    onSuggestionClick = actions::onSuggestionClick,
-                    onRecentPlaceClick = actions::onRecentPlaceClick,
-                    onRecentPlaceRemove = actions::onRecentPlaceRemove,
-                    onSearchRetry = actions::onSearchRetry,
-                    myLocationRow = viewState.myLocationRow,
-                    onMyLocationClick = actions::onMyLocationClick,
-                    onSavedRoutesClick = actions::onSavedRoutesClick,
-                    modifier = Modifier.weight(1f),
-                )
+                PlaceSearchResults(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
             }
         }
     }
@@ -261,45 +244,6 @@ private fun ColumnScope.OneRouteLayout(viewState: MapSheetViewState, actions: Ma
     }
 }
 
-// The notes above the search field, shown while the sheet is collapsed
-@Composable
-private fun CollapsedNotes(viewState: MapSheetViewState, actions: MapSheetScreen.Actions) {
-    val style = MapPlatformStyle.current
-    if (viewState.map.isOutsideCoveredArea) {
-        NoteCard(
-            title = stringResource(MR.strings.map_outside_title),
-            text = stringResource(MR.strings.map_outside_text),
-            icon = painterResource(MR.images.map),
-        )
-    }
-    if (viewState.showsPreciseLocationNote) {
-        NoteCard(
-            title = stringResource(MR.strings.map_precise_title),
-            text = stringResource(MR.strings.map_precise_text),
-            icon = painterResource(style.preciseLocationIcon),
-            actionLabel = stringResource(MR.strings.map_precise_action),
-            onAction = actions::onPreciseLocationClick,
-            close = IconAction(
-                icon = painterResource(MR.images.close),
-                label = stringResource(MR.strings.generic_close),
-                onClick = actions::onPreciseLocationNoteClose,
-            ),
-        )
-    }
-}
-
-// The destination above the start step's field, so the user knows which trip the start is for
-@Composable
-private fun StartStepTo(destination: Place?) {
-    Text(
-        text = stringResource(MR.strings.search_start_to, destination?.name ?: stringResource(MR.strings.search_point_on_map)),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-    )
-}
-
 // Measures the content at the height it needs without placing it, so the collapsed sheet's height is known before the
 // sheet gets there. Unplaced, it isn't drawn and takes no space.
 private fun Modifier.measureOnly(onHeight: (Int) -> Unit): Modifier = layout { measurable, constraints ->
@@ -366,226 +310,6 @@ private fun MapSheetOutsideIosPreview() = Showcase(platform = UiPlatform.Ios) {
 
 @ComponentPreviews
 @Composable
-private fun MapSheetSearchPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.searchViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.searchViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchEmptyPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.viewState().copy(sheetHeight = SheetHeight.Half),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchEmptyIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.viewState().copy(sheetHeight = SheetHeight.Half),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchOfflinePreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.offlineViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchOfflineIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.offlineViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchFailedPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.failedViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchFailedIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.failedViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchNoResultsPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.noResultsViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchNoResultsIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.noResultsViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchSlowPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.slowSearchViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchSlowIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.slowSearchViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchDistancesPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.searchDistancesViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetSearchDistancesIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.searchDistancesViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetStartPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.startStepViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.startStepViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetStartApproximatePreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetStartApproximateIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetStartNoAccessPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.startStepViewState(locationAccess = null),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetStartNoAccessIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.startStepViewState(locationAccess = null),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
 private fun MapSheetPlannedFromPickedStartPreview() = Showcase {
     Content(
         viewState = MapSheetPreviewStates.plannedFromPickedStartViewState(),
@@ -600,72 +324,6 @@ private fun MapSheetPlannedFromPickedStartPreview() = Showcase {
 private fun MapSheetPlannedFromPickedStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
         viewState = MapSheetPreviewStates.plannedFromPickedStartViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetRecentPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.recentViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetRecentIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.recentViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetRecentSearchPreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.recentSearchViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetRecentSearchIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.recentSearchViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetRecentOfflinePreview() = Showcase {
-    Content(
-        viewState = MapSheetPreviewStates.recentOfflineViewState(),
-        actions = noOpActions(),
-        onCollapsedHeightChange = {},
-        modifier = Modifier.height(Grid.d100),
-    )
-}
-
-@ComponentPreviews
-@Composable
-private fun MapSheetRecentOfflineIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(
-        viewState = MapSheetPreviewStates.recentOfflineViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),

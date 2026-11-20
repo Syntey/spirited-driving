@@ -151,7 +151,7 @@ internal object MapSheetPreviewStates {
             sheetHeight = SheetHeight.Full,
             baseMap = state.baseMap.copy(userLocation = PRAGUE),
             planning = RoutePlanningState(destination = DESTINATION, budget = BUDGET),
-            startSearch = StartSearch(destinationSearch = SearchState(), closesPlanning = false),
+            startSearch = StartSearch(closesPlanning = false),
             search = SearchState(recentPlaces = recentPlaces),
         )
     }

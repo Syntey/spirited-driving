@@ -1,6 +1,7 @@
 package com.syntey.spiriteddriving.core.ui.base
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -15,42 +16,53 @@ class CombinedStateFlowTest {
         val a = MutableStateFlow(1)
         val b = MutableStateFlow("x")
         val c = MutableStateFlow(true)
-        val combined = combineStates(a, b, c) { valueA, valueB, valueC -> "$valueA$valueB$valueC" }
+        val derived = derivedStateFlow(changes = merge(a, b, c)) { "${a.value}${b.value}${c.value}" }
 
-        assertEquals("1xtrue", combined.value)
+        assertEquals("1xtrue", derived.value)
 
         a.value = 2
-        assertEquals("2xtrue", combined.value)
+        assertEquals("2xtrue", derived.value)
 
         c.value = false
         b.value = "y"
-        assertEquals("2yfalse", combined.value)
+        assertEquals("2yfalse", derived.value)
     }
 
     @Test
-    fun `collect emits each distinct combined value as the sources change`() = runTest {
+    fun `collect starts with the current value`() = runTest {
+        val source = MutableStateFlow(4)
+        val derived = derivedStateFlow(changes = source) { source.value * 2 }
+        val emitted = mutableListOf<Int>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { derived.collect { emitted += it } }
+
+        advanceUntilIdle()
+
+        assertEquals(listOf(8), emitted)
+    }
+
+    @Test
+    fun `collect emits each distinct value as the changes come`() = runTest {
         val a = MutableStateFlow(1)
         val b = MutableStateFlow(0)
-        val c = MutableStateFlow(0)
-        val combined = combineStates(a, b, c) { valueA, valueB, valueC -> valueA + valueB + valueC }
+        val derived = derivedStateFlow(changes = merge(a, b)) { a.value + b.value }
         val emitted = mutableListOf<Int>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { combined.collect { emitted += it } }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { derived.collect { emitted += it } }
 
         a.value = 2
         b.value = 3
-        c.value = 3
         advanceUntilIdle()
 
-        assertEquals(listOf(1, 2, 5, 8), emitted)
+        assertEquals(listOf(1, 2, 5), emitted)
     }
 
     @Test
-    fun `collect skips a change that leaves the combined value the same`() = runTest {
+    fun `collect skips a change that leaves the value the same`() = runTest {
         val a = MutableStateFlow(1)
-        // Only the parity of a counts, so a change of a by two, or of b, leaves the combined value the same
-        val combined = combineStates(a, MutableStateFlow(0), MutableStateFlow(0)) { valueA, _, _ -> valueA % 2 }
+        val b = MutableStateFlow(0)
+        // Only the parity of a counts, so a change of a by two, or of b, leaves the value the same
+        val derived = derivedStateFlow(changes = merge(a, b)) { a.value % 2 }
         val emitted = mutableListOf<Int>()
-        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { combined.collect { emitted += it } }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { derived.collect { emitted += it } }
 
         a.value = 3
         a.value = 4
