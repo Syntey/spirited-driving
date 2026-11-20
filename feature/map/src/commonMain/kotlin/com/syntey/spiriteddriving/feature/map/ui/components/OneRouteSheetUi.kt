@@ -2,6 +2,12 @@ package com.syntey.spiriteddriving.feature.map.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Dp
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.measureOnly
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,9 +32,10 @@ import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
-import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
+import com.syntey.spiriteddriving.feature.map.model.ui.OneRoutePreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.ActiveSheetStep
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
@@ -177,7 +184,8 @@ private fun OneRouteStartNote(viewState: MapSheetViewState) {
 @Composable
 private fun OneRouteReadyPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.oneRouteViewState(),
+        step = ActiveSheetStep.OneRoute,
+        viewState = OneRoutePreviewStates.oneRouteViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -188,7 +196,8 @@ private fun OneRouteReadyPreview() = Showcase {
 @Composable
 private fun OneRouteReadyIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = MapSheetPreviewStates.oneRouteViewState(),
+        step = ActiveSheetStep.OneRoute,
+        viewState = OneRoutePreviewStates.oneRouteViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -199,7 +208,8 @@ private fun OneRouteReadyIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun OneRoutePastDrivePreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.pastDriveViewState(),
+        step = ActiveSheetStep.OneRoute,
+        viewState = OneRoutePreviewStates.pastDriveViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -210,7 +220,8 @@ private fun OneRoutePastDrivePreview() = Showcase {
 @Composable
 private fun OneRoutePastDriveIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = MapSheetPreviewStates.pastDriveViewState(),
+        step = ActiveSheetStep.OneRoute,
+        viewState = OneRoutePreviewStates.pastDriveViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -221,7 +232,8 @@ private fun OneRoutePastDriveIosPreview() = Showcase(platform = UiPlatform.Ios) 
 @Composable
 private fun OneRouteLoadingPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.oneRouteViewState(status = OneRouteStatus.Loading),
+        step = ActiveSheetStep.OneRoute,
+        viewState = OneRoutePreviewStates.oneRouteViewState(status = OneRouteStatus.Loading),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -232,7 +244,8 @@ private fun OneRouteLoadingPreview() = Showcase {
 @Composable
 private fun OneRouteOfflinePreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.oneRouteViewState(status = OneRouteStatus.Offline),
+        step = ActiveSheetStep.OneRoute,
+        viewState = OneRoutePreviewStates.oneRouteViewState(status = OneRouteStatus.Offline),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -243,9 +256,35 @@ private fun OneRouteOfflinePreview() = Showcase {
 @Composable
 private fun OneRouteCollapsedPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.oneRouteViewState(sheetHeight = SheetHeight.Collapsed),
+        step = ActiveSheetStep.OneRoute,
+        viewState = OneRoutePreviewStates.oneRouteViewState(sheetHeight = SheetHeight.Collapsed),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
     )
+}
+
+// A saved route's step replaces the search and planning, and is measured the same way as the rating step
+@Composable
+internal fun ColumnScope.OneRouteLayout(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
+    val style = MapPlatformStyle.current
+    val density = LocalDensity.current
+    CollapsedOneRoute(
+        viewState = viewState,
+        actions = actions,
+        modifier = Modifier
+            .measureOnly { height -> onCollapsedHeight(with(density) { height.toDp() }) }
+            .clearAndSetSemantics {},
+    )
+    if (viewState.sheetHeight == SheetHeight.Collapsed) {
+        CollapsedOneRoute(viewState = viewState, actions = actions)
+    } else {
+        Column(
+            Modifier.fillMaxSize().padding(style.sheetContentPadding),
+            verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
+        ) {
+            OneRouteHeader(viewState = viewState, actions = actions)
+            OneRouteBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
+        }
+    }
 }

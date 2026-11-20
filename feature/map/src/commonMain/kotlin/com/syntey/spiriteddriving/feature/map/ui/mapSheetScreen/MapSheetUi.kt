@@ -46,16 +46,12 @@ import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.core.ui.tools.EventsEffect
 import com.syntey.spiriteddriving.core.ui.tools.onEvent
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
-import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedRatingStep
 import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedRoutePlanning
-import com.syntey.spiriteddriving.feature.map.ui.components.CollapsedOneRoute
 import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
-import com.syntey.spiriteddriving.feature.map.ui.components.RatingStepBody
-import com.syntey.spiriteddriving.feature.map.ui.components.RatingStepHeader
+import com.syntey.spiriteddriving.feature.map.ui.components.RatingLayout
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningBody
 import com.syntey.spiriteddriving.feature.map.ui.components.RoutePlanningHeader
-import com.syntey.spiriteddriving.feature.map.ui.components.OneRouteBody
-import com.syntey.spiriteddriving.feature.map.ui.components.OneRouteHeader
+import com.syntey.spiriteddriving.feature.map.ui.components.OneRouteLayout
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchResults
 import com.syntey.spiriteddriving.feature.map.ui.components.SearchRow
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
@@ -73,6 +69,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun MapSheetUi(screen: MapSheetScreen, onCollapsedHeightChange: (Dp) -> Unit, modifier: Modifier = Modifier) {
     val viewState by screen.viewState.collectAsStateWithLifecycle()
+    val activeStep by screen.activeStep.collectAsStateWithLifecycle()
     val hostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val notCoveredMessage = stringResource(MR.strings.search_not_covered_message)
@@ -90,6 +87,7 @@ fun MapSheetUi(screen: MapSheetScreen, onCollapsedHeightChange: (Dp) -> Unit, mo
     Box(modifier) {
         Content(
             viewState = viewState,
+            step = activeStep,
             actions = screen.actions,
             onCollapsedHeightChange = onCollapsedHeightChange,
             modifier = Modifier.fillMaxSize(),
@@ -101,6 +99,7 @@ fun MapSheetUi(screen: MapSheetScreen, onCollapsedHeightChange: (Dp) -> Unit, mo
 @Composable
 internal fun Content(
     viewState: MapSheetViewState,
+    step: ActiveSheetStep,
     actions: MapSheetScreen.Actions,
     onCollapsedHeightChange: (Dp) -> Unit,
     modifier: Modifier = Modifier,
@@ -114,11 +113,9 @@ internal fun Content(
     val planning = viewState.planning?.takeIf { viewState.startSearch == null }
     val isPlanning = viewState.planning != null
     val currentIsPlanning by rememberUpdatedState(isPlanning)
-    val rating = viewState.ratingStep
     val reportCollapsedHeight by rememberUpdatedState(onCollapsedHeightChange)
-    val oneRoute = viewState.oneRouteStep
     val collapsedHeights = remember { CollapsedHeights() }
-    val shownHeight = collapsedHeights.shownBy(viewState)
+    val shownHeight = collapsedHeights.shownBy(step, viewState)
     LaunchedEffect(shownHeight) { shownHeight?.let(reportCollapsedHeight) }
     // The keyboard comes with the full height: dragging the sheet lower or closing the search hides it
     LaunchedEffect(viewState.sheetHeight) {
@@ -126,9 +123,9 @@ internal fun Content(
     }
     Column(modifier.fillMaxSize()) {
         MeasuredPlanning(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.planning = it })
-        if (rating != null) {
+        if (step == ActiveSheetStep.Rating) {
             RatingLayout(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.rating = it })
-        } else if (oneRoute != null) {
+        } else if (step == ActiveSheetStep.OneRoute) {
             OneRouteLayout(viewState = viewState, actions = actions, onCollapsedHeight = { collapsedHeights.oneRoute = it })
         } else if (planning != null && viewState.sheetHeight == SheetHeight.Collapsed) {
             CollapsedRoutePlanning(viewState = viewState, actions = actions)
@@ -163,32 +160,6 @@ internal fun Content(
     }
 }
 
-// The rating step takes the place of the search and planning. Its collapsed layout is measured unplaced first, as planning's
-// is, so the sheet's collapsed height is known before the sheet gets there.
-@Composable
-private fun ColumnScope.RatingLayout(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
-    val style = MapPlatformStyle.current
-    val density = LocalDensity.current
-    CollapsedRatingStep(
-        viewState = viewState,
-        actions = actions,
-        modifier = Modifier
-            .measureOnly { height -> onCollapsedHeight(with(density) { height.toDp() }) }
-            .clearAndSetSemantics {},
-    )
-    if (viewState.sheetHeight == SheetHeight.Collapsed) {
-        CollapsedRatingStep(viewState = viewState, actions = actions)
-    } else {
-        Column(
-            Modifier.fillMaxSize().padding(style.sheetContentPadding),
-            verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
-        ) {
-            RatingStepHeader(viewState = viewState, actions = actions)
-            RatingStepBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
-        }
-    }
-}
-
 // Planning's collapsed layout, measured unplaced while planning, so its height is known before the sheet gets there
 @Composable
 private fun MeasuredPlanning(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
@@ -212,42 +183,17 @@ private class CollapsedHeights {
     var oneRoute by mutableStateOf<Dp?>(null)
 
     // The rating step takes the place of the others, and a saved route's step that of search and planning
-    fun shownBy(viewState: MapSheetViewState): Dp? = when {
-        viewState.ratingStep != null -> rating
-        viewState.oneRouteStep != null -> oneRoute
+    fun shownBy(step: ActiveSheetStep, viewState: MapSheetViewState): Dp? = when {
+        step == ActiveSheetStep.Rating -> rating
+        step == ActiveSheetStep.OneRoute -> oneRoute
         viewState.planning != null -> planning
         else -> search
     }
 }
 
-// A saved route's step replaces the search and planning, and is measured the same way as the rating step
-@Composable
-private fun ColumnScope.OneRouteLayout(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
-    val style = MapPlatformStyle.current
-    val density = LocalDensity.current
-    CollapsedOneRoute(
-        viewState = viewState,
-        actions = actions,
-        modifier = Modifier
-            .measureOnly { height -> onCollapsedHeight(with(density) { height.toDp() }) }
-            .clearAndSetSemantics {},
-    )
-    if (viewState.sheetHeight == SheetHeight.Collapsed) {
-        CollapsedOneRoute(viewState = viewState, actions = actions)
-    } else {
-        Column(
-            Modifier.fillMaxSize().padding(style.sheetContentPadding),
-            verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
-        ) {
-            OneRouteHeader(viewState = viewState, actions = actions)
-            OneRouteBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
-        }
-    }
-}
-
 // Measures the content at the height it needs without placing it, so the collapsed sheet's height is known before the
 // sheet gets there. Unplaced, it isn't drawn and takes no space.
-private fun Modifier.measureOnly(onHeight: (Int) -> Unit): Modifier = layout { measurable, constraints ->
+internal fun Modifier.measureOnly(onHeight: (Int) -> Unit): Modifier = layout { measurable, constraints ->
     val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity))
     onHeight(placeable.height)
     layout(0, 0) {}
@@ -256,19 +202,22 @@ private fun Modifier.measureOnly(onHeight: (Int) -> Unit): Modifier = layout { m
 @ComponentPreviews
 @Composable
 private fun MapSheetPreview() = Showcase {
-    Content(viewState = MapSheetViewState(), actions = noOpActions(), onCollapsedHeightChange = {}, modifier = Modifier.height(Grid.d100))
+    Content(viewState = MapSheetViewState(), step = ActiveSheetStep.Search, actions = noOpActions(), onCollapsedHeightChange = {
+    }, modifier = Modifier.height(Grid.d100))
 }
 
 @ComponentPreviews
 @Composable
 private fun MapSheetIosPreview() = Showcase(platform = UiPlatform.Ios) {
-    Content(viewState = MapSheetViewState(), actions = noOpActions(), onCollapsedHeightChange = {}, modifier = Modifier.height(Grid.d100))
+    Content(viewState = MapSheetViewState(), step = ActiveSheetStep.Search, actions = noOpActions(), onCollapsedHeightChange = {
+    }, modifier = Modifier.height(Grid.d100))
 }
 
 @ComponentPreviews
 @Composable
 private fun MapSheetPreciseLocationPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.approximateViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -280,6 +229,7 @@ private fun MapSheetPreciseLocationPreview() = Showcase {
 @Composable
 private fun MapSheetPreciseLocationIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.approximateViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -291,6 +241,7 @@ private fun MapSheetPreciseLocationIosPreview() = Showcase(platform = UiPlatform
 @Composable
 private fun MapSheetOutsidePreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.outsideViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -302,6 +253,7 @@ private fun MapSheetOutsidePreview() = Showcase {
 @Composable
 private fun MapSheetOutsideIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.outsideViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -313,6 +265,7 @@ private fun MapSheetOutsideIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun MapSheetPlannedFromPickedStartPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedFromPickedStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -324,6 +277,7 @@ private fun MapSheetPlannedFromPickedStartPreview() = Showcase {
 @Composable
 private fun MapSheetPlannedFromPickedStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedFromPickedStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},

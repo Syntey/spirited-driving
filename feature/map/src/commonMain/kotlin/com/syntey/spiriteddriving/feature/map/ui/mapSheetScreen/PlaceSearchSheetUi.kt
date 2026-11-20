@@ -98,6 +98,7 @@ private fun StartStepTo(destination: Place?) {
 @Composable
 private fun MapSheetSearchPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.searchViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -109,6 +110,7 @@ private fun MapSheetSearchPreview() = Showcase {
 @Composable
 private fun MapSheetSearchIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.searchViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -120,6 +122,7 @@ private fun MapSheetSearchIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun MapSheetSearchEmptyPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.viewState().copy(sheetHeight = SheetHeight.Half),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -131,6 +134,7 @@ private fun MapSheetSearchEmptyPreview() = Showcase {
 @Composable
 private fun MapSheetSearchEmptyIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.viewState().copy(sheetHeight = SheetHeight.Half),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -142,6 +146,7 @@ private fun MapSheetSearchEmptyIosPreview() = Showcase(platform = UiPlatform.Ios
 @Composable
 private fun MapSheetSearchOfflinePreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.offlineViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -153,6 +158,7 @@ private fun MapSheetSearchOfflinePreview() = Showcase {
 @Composable
 private fun MapSheetSearchOfflineIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.offlineViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -164,6 +170,7 @@ private fun MapSheetSearchOfflineIosPreview() = Showcase(platform = UiPlatform.I
 @Composable
 private fun MapSheetSearchFailedPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.failedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -175,6 +182,7 @@ private fun MapSheetSearchFailedPreview() = Showcase {
 @Composable
 private fun MapSheetSearchFailedIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.failedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -186,6 +194,7 @@ private fun MapSheetSearchFailedIosPreview() = Showcase(platform = UiPlatform.Io
 @Composable
 private fun MapSheetSearchNoResultsPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.noResultsViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -197,6 +206,7 @@ private fun MapSheetSearchNoResultsPreview() = Showcase {
 @Composable
 private fun MapSheetSearchNoResultsIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.noResultsViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -208,6 +218,7 @@ private fun MapSheetSearchNoResultsIosPreview() = Showcase(platform = UiPlatform
 @Composable
 private fun MapSheetSearchSlowPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.slowSearchViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -219,6 +230,7 @@ private fun MapSheetSearchSlowPreview() = Showcase {
 @Composable
 private fun MapSheetSearchSlowIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.slowSearchViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -230,6 +242,7 @@ private fun MapSheetSearchSlowIosPreview() = Showcase(platform = UiPlatform.Ios)
 @Composable
 private fun MapSheetSearchDistancesPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.searchDistancesViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -241,6 +254,7 @@ private fun MapSheetSearchDistancesPreview() = Showcase {
 @Composable
 private fun MapSheetSearchDistancesIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.searchDistancesViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -252,6 +266,7 @@ private fun MapSheetSearchDistancesIosPreview() = Showcase(platform = UiPlatform
 @Composable
 private fun MapSheetStartPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.StartSearch,
         viewState = RoutePlanningPreviewStates.startStepViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -263,6 +278,7 @@ private fun MapSheetStartPreview() = Showcase {
 @Composable
 private fun MapSheetStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.StartSearch,
         viewState = RoutePlanningPreviewStates.startStepViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -274,6 +290,7 @@ private fun MapSheetStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun MapSheetStartApproximatePreview() = Showcase {
     Content(
+        step = ActiveSheetStep.StartSearch,
         viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -285,6 +302,7 @@ private fun MapSheetStartApproximatePreview() = Showcase {
 @Composable
 private fun MapSheetStartApproximateIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.StartSearch,
         viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -296,6 +314,7 @@ private fun MapSheetStartApproximateIosPreview() = Showcase(platform = UiPlatfor
 @Composable
 private fun MapSheetStartNoAccessPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.StartSearch,
         viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = null),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -307,6 +326,7 @@ private fun MapSheetStartNoAccessPreview() = Showcase {
 @Composable
 private fun MapSheetStartNoAccessIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.StartSearch,
         viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = null),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -318,6 +338,7 @@ private fun MapSheetStartNoAccessIosPreview() = Showcase(platform = UiPlatform.I
 @Composable
 private fun MapSheetRecentPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.recentViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -329,6 +350,7 @@ private fun MapSheetRecentPreview() = Showcase {
 @Composable
 private fun MapSheetRecentIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.recentViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -340,6 +362,7 @@ private fun MapSheetRecentIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun MapSheetRecentSearchPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.recentSearchViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -351,6 +374,7 @@ private fun MapSheetRecentSearchPreview() = Showcase {
 @Composable
 private fun MapSheetRecentSearchIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.recentSearchViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -362,6 +386,7 @@ private fun MapSheetRecentSearchIosPreview() = Showcase(platform = UiPlatform.Io
 @Composable
 private fun MapSheetRecentOfflinePreview() = Showcase {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.recentOfflineViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -373,6 +398,7 @@ private fun MapSheetRecentOfflinePreview() = Showcase {
 @Composable
 private fun MapSheetRecentOfflineIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.Search,
         viewState = MapSheetPreviewStates.recentOfflineViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},

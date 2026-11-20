@@ -2,6 +2,13 @@ package com.syntey.spiriteddriving.feature.map.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Dp
+import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.measureOnly
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,8 +39,9 @@ import com.syntey.spiriteddriving.core.ui.components.ThumbContent
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
-import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
+import com.syntey.spiriteddriving.feature.map.model.ui.RatingPreviewStates
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.ActiveSheetStep
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
@@ -185,7 +193,8 @@ private fun RatingStepThumbs(rating: Rating?, actions: MapSheetScreen.Actions) {
 @Composable
 private fun RatingStepPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.ratingViewState(),
+        step = ActiveSheetStep.Rating,
+        viewState = RatingPreviewStates.ratingViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -196,7 +205,8 @@ private fun RatingStepPreview() = Showcase {
 @Composable
 private fun RatingStepIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = MapSheetPreviewStates.ratingViewState(),
+        step = ActiveSheetStep.Rating,
+        viewState = RatingPreviewStates.ratingViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -207,7 +217,8 @@ private fun RatingStepIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun RatingStepGoodPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.ratingViewState(
+        step = ActiveSheetStep.Rating,
+        viewState = RatingPreviewStates.ratingViewState(
             Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews)),
         ),
         actions = noOpActions(),
@@ -220,7 +231,8 @@ private fun RatingStepGoodPreview() = Showcase {
 @Composable
 private fun RatingStepGoodIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = MapSheetPreviewStates.ratingViewState(
+        step = ActiveSheetStep.Rating,
+        viewState = RatingPreviewStates.ratingViewState(
             Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews)),
         ),
         actions = noOpActions(),
@@ -233,7 +245,8 @@ private fun RatingStepGoodIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun RatingStepNotGoodPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
+        step = ActiveSheetStep.Rating,
+        viewState = RatingPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -244,7 +257,8 @@ private fun RatingStepNotGoodPreview() = Showcase {
 @Composable
 private fun RatingStepNotGoodIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = MapSheetPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
+        step = ActiveSheetStep.Rating,
+        viewState = RatingPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -255,7 +269,8 @@ private fun RatingStepNotGoodIosPreview() = Showcase(platform = UiPlatform.Ios) 
 @Composable
 private fun RatingStepGoodReminderOfferPreview() = Showcase {
     Content(
-        viewState = MapSheetPreviewStates.ratingViewState(
+        step = ActiveSheetStep.Rating,
+        viewState = RatingPreviewStates.ratingViewState(
             Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews)),
             showsReminderOffer = true,
         ),
@@ -268,5 +283,31 @@ private fun RatingStepGoodReminderOfferPreview() = Showcase {
 @ComponentPreviews
 @Composable
 private fun RatingStepCollapsedPreview() = Showcase {
-    CollapsedRatingStep(viewState = MapSheetPreviewStates.ratingViewState(), actions = noOpActions())
+    CollapsedRatingStep(viewState = RatingPreviewStates.ratingViewState(), actions = noOpActions())
+}
+
+// The rating step takes the place of the search and planning. Its collapsed layout is measured unplaced first, as planning's
+// is, so the sheet's collapsed height is known before the sheet gets there.
+@Composable
+internal fun ColumnScope.RatingLayout(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
+    val style = MapPlatformStyle.current
+    val density = LocalDensity.current
+    CollapsedRatingStep(
+        viewState = viewState,
+        actions = actions,
+        modifier = Modifier
+            .measureOnly { height -> onCollapsedHeight(with(density) { height.toDp() }) }
+            .clearAndSetSemantics {},
+    )
+    if (viewState.sheetHeight == SheetHeight.Collapsed) {
+        CollapsedRatingStep(viewState = viewState, actions = actions)
+    } else {
+        Column(
+            Modifier.fillMaxSize().padding(style.sheetContentPadding),
+            verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
+        ) {
+            RatingStepHeader(viewState = viewState, actions = actions)
+            RatingStepBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
+        }
+    }
 }

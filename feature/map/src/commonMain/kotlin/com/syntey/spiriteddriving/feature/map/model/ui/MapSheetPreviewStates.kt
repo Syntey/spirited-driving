@@ -19,6 +19,7 @@ import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.ActiveSheetStep
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetUiEvent
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
@@ -34,8 +35,12 @@ import kotlinx.coroutines.flow.emptyFlow
 /** Sample view states that the previews share: one per sheet state, so the object has more functions than the limit. */
 @Suppress("TooManyFunctions")
 internal object MapSheetPreviewStates {
-    fun screen(state: MapSheetViewState = viewState()): MapSheetScreen = object : MapSheetScreen {
+    fun screen(
+        state: MapSheetViewState = viewState(),
+        step: ActiveSheetStep = ActiveSheetStep.Search,
+    ): MapSheetScreen = object : MapSheetScreen {
         override val viewState: StateFlow<MapSheetViewState> = MutableStateFlow(state)
+        override val activeStep: StateFlow<ActiveSheetStep> = MutableStateFlow(step)
         override val actions: MapSheetScreen.Actions = MapSheetScreen.Actions.noOpActions()
         override val events: Flow<MapSheetUiEvent> = emptyFlow()
 
@@ -144,94 +149,11 @@ internal object MapSheetPreviewStates {
         ),
     ).toImmutableList()
 
-    /** A saved route's step: loaded from the Recorded saved route, which is saved, so Saved shows. */
-    fun oneRouteViewState(
-        status: OneRouteStatus = OneRouteStatus.Ready,
-        sheetHeight: SheetHeight = SheetHeight.Half,
-    ): MapSheetViewState {
-        val saved = FakeSavedRoutesSource.Recorded
-        val step = OneRouteStep(
-            origin = OneRouteOrigin.Saved(saved),
-            route = FakeRoutePlanner.Recorded.funRoutes.first().takeIf { status == OneRouteStatus.Ready },
-            status = status,
-        )
-        return viewState().copy(
-            sheetStep = step,
-            sheetHeight = sheetHeight,
-            savedRoutes = listOf(saved).toImmutableList(),
-        )
-    }
-
-    /**
-     * A past drive's step: the drive's route, loaded, and not saved unless [isSaved], when the route is saved under the drive's
-     * route ID. Its start is Smíchov, and it started on 5 November.
-     */
-    fun pastDriveViewState(
-        isSaved: Boolean = false,
-        status: OneRouteStatus = OneRouteStatus.Ready,
-        sheetHeight: SheetHeight = SheetHeight.Half,
-    ): MapSheetViewState {
-        val route = FakeRoutePlanner.Recorded.funRoutes.first()
-        val drive = PastDrive(
-            id = "preview-drive",
-            startedAt = Instant.parse("2026-11-05T13:20:00Z"),
-            routeId = route.id,
-            kind = RouteKind.Fun,
-            start = Place(name = null, area = "Smíchov, Prague", location = PRAGUE_START),
-            destination = route.destination,
-            duration = route.duration,
-            distance = route.distance,
-            funLevel = route.funLevel,
-        )
-        val step = OneRouteStep(
-            origin = OneRouteOrigin.Past(drive),
-            route = route.takeIf { status == OneRouteStatus.Ready },
-            status = status,
-        )
-        val saved: List<SavedRoute> = if (isSaved) {
-            listOf(FakeSavedRoutesSource.Recorded.copy(route = FakeSavedRoutesSource.Recorded.route.copy(id = route.id)))
-        } else {
-            emptyList()
-        }
-        return viewState().copy(
-            sheetStep = step,
-            sheetHeight = sheetHeight,
-            savedRoutes = saved.toImmutableList(),
-        )
-    }
-
-    private val PRAGUE_START = GeoPoint(latitude = 50.0755, longitude = 14.4378)
-
     // The view state test reads these two from here; the others are in RoutePlanningPreviewStates
     fun planningViewState(): MapSheetViewState = RoutePlanningPreviewStates.planningViewState()
 
     /** A plan with three fun routes and the fastest one; route 1 is selected. */
     fun plannedViewState(): MapSheetViewState = RoutePlanningPreviewStates.plannedViewState()
-
-    /** The rating step after a drive to Karlštejn Castle along the first fun route, with [rating] picked so far. */
-    fun ratingViewState(rating: Rating? = null, showsReminderOffer: Boolean = false): MapSheetViewState {
-        val route = FakeRoutePlanner.Recorded.funRoutes.first()
-        val question = DriveQuestion(
-            driveId = "preview",
-            startedAt = Instant.parse("2026-11-16T13:20:00Z"),
-            routeNumber = 1,
-            start = route.start.location,
-            destination = route.destination,
-            duration = route.duration,
-            distance = route.distance,
-            line = route.line,
-            attribution = route.attribution,
-        )
-        return viewState().copy(
-            sheetHeight = SheetHeight.Half,
-            sheetStep = RatingStep(
-                question = question,
-                driveTime = "Today, 14:20".desc(),
-                rating = rating,
-                showsReminderOffer = showsReminderOffer,
-            ),
-        )
-    }
 
     /** The reminder over the collapsed search, for a named destination or an unnamed one, which reads as a point on the map. */
     fun reminderViewState(destinationName: String? = "Karlštejn Castle"): MapSheetViewState {

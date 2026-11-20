@@ -13,7 +13,6 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnStart
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
-import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.RatingReason
 import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
@@ -22,62 +21,42 @@ import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.BudgetKind
-import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
-import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.ScreenComponent
 import com.syntey.spiriteddriving.core.ui.base.derivedStateFlow
 import com.syntey.spiriteddriving.core.ui.base.executeWithLifecycle
+import com.syntey.spiriteddriving.core.resources.datetime.driveDayText
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.DrivePrompt
+import com.syntey.spiriteddriving.feature.map.domain.GetDriveQuestionUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.GetPastDriveUseCase
-import com.syntey.spiriteddriving.feature.map.domain.HandOffUseCase
 import com.syntey.spiriteddriving.feature.map.domain.IsNoteClosedUseCase
-import com.syntey.spiriteddriving.feature.map.domain.LoadPastDriveRouteUseCase
-import com.syntey.spiriteddriving.feature.map.domain.LoadSavedRouteUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveCoverageUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveDistanceUnitUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveOpenedReminderUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ObserveUserLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.OpenLocationSettingsUseCase
-import com.syntey.spiriteddriving.feature.map.domain.OpenMapsAppStoreUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestLocationAccessUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RequestPreciseLocationUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SendPendingDrivesUseCase
-import com.syntey.spiriteddriving.feature.map.domain.StartDriveUseCase
-import com.syntey.spiriteddriving.feature.map.domain.DrivePrompt
-import com.syntey.spiriteddriving.feature.map.domain.GetDriveQuestionUseCase
-import com.syntey.spiriteddriving.feature.map.domain.MarkNotDrivenUseCase
-import com.syntey.spiriteddriving.feature.map.domain.ObserveOpenedReminderUseCase
-import com.syntey.spiriteddriving.feature.map.domain.ObserveSavedRoutesUseCase
-import com.syntey.spiriteddriving.feature.map.domain.ObserveSignedInUseCase
-import com.syntey.spiriteddriving.feature.map.domain.SaveRouteResult
-import com.syntey.spiriteddriving.feature.map.domain.SaveRouteUseCase
-import com.syntey.spiriteddriving.feature.map.domain.UnsaveRouteUseCase
-import com.syntey.spiriteddriving.feature.map.domain.ShouldOfferReminderUseCase
-import com.syntey.spiriteddriving.feature.map.domain.TurnOnRemindersUseCase
-import com.syntey.spiriteddriving.feature.map.domain.RateDriveUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SkipDriveQuestionUseCase
 import com.syntey.spiriteddriving.feature.map.domain.unnamedPlace
-import com.syntey.spiriteddriving.feature.map.model.ui.DriveDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
+import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
+import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
 import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
-import com.syntey.spiriteddriving.feature.map.model.ui.RouteNameDialog
-import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
-import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStatus
-import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
-import com.syntey.spiriteddriving.feature.map.model.ui.savedAs
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
-import com.syntey.spiriteddriving.core.resources.datetime.driveDayText
-import com.syntey.spiriteddriving.core.resources.datetime.driveTimeText
+import com.syntey.spiriteddriving.feature.map.tools.Constants
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -107,18 +86,12 @@ internal class MapSheetComponent(
     private val observeDistanceUnitUseCase: ObserveDistanceUnitUseCase,
     private val sendPendingDrivesUseCase: SendPendingDrivesUseCase,
     private val getDriveQuestionUseCase: GetDriveQuestionUseCase,
-    private val rateDriveUseCase: RateDriveUseCase,
     private val skipDriveQuestionUseCase: SkipDriveQuestionUseCase,
-    private val markNotDrivenUseCase: MarkNotDrivenUseCase,
     private val observeOpenedReminderUseCase: ObserveOpenedReminderUseCase,
-    private val shouldOfferReminderUseCase: ShouldOfferReminderUseCase,
-    private val turnOnRemindersUseCase: TurnOnRemindersUseCase,
-    private val loadSavedRouteUseCase: LoadSavedRouteUseCase,
     private val getPastDriveUseCase: GetPastDriveUseCase,
-    private val loadPastDriveRouteUseCase: LoadPastDriveRouteUseCase,
-) : ScreenComponent<MapSheetViewState, MapSheetUiEvent, MapSheetScreenNavigation>(
+) : ScreenComponent<MapSheetState, MapSheetUiEvent, MapSheetScreenNavigation>(
     componentContext = componentContext,
-    defaultState = MapSheetViewState(),
+    defaultState = MapSheetState(),
 ),
     MapSheetScreen,
     MapSheetScreenNavigation by navigation,
@@ -128,10 +101,12 @@ internal class MapSheetComponent(
 
     // What the sheet's steps reach on this parent
     private val host = object : MapSheetHost {
-        override val userLocation: GeoPoint? get() = componentState.value.map.userLocation
+        override val userLocation: GeoPoint? get() = componentState.value.baseMap.userLocation
         override val isStartSearchOpen: Boolean get() = isStartSearchOpen()
+        override val sheetHeight: SheetHeight get() = componentState.value.sheetHeight
         override fun requestSheetHeight(height: SheetHeight) = setSheetHeight(height)
-        override fun covers(point: GeoPoint): Boolean = componentState.value.map.covers(point)
+        override fun onStepClosed() = closeStep()
+        override fun covers(point: GeoPoint): Boolean = componentState.value.baseMap.covers(point)
         override fun onNotCovered() = sendUiEvent(MapSheetUiEvent.NotCovered)
         override fun onPlaceChosen(place: Place) = choose(place)
         override fun onPlaceNamed(place: Place) = rootPlaceSearch().keep(place)
@@ -164,6 +139,14 @@ internal class MapSheetComponent(
                         RoutePlanningComponent.Args(config.destination, config.waitsForStart),
                     ),
                 )
+
+                is SheetStepConfig.OneRoute -> SheetStepChild.OneRoute(
+                    OneRouteComponentFactory.createComponent(childCtx, host, OneRouteComponent.Args(config.origin)),
+                )
+
+                is SheetStepConfig.Rating -> SheetStepChild.Rating(
+                    RatingComponentFactory.createComponent(childCtx, host, RatingComponent.Args(config.question)),
+                )
             }
         },
     ).asStateFlow()
@@ -173,20 +156,16 @@ internal class MapSheetComponent(
         override fun onHandedOff() {
             // A new drive replaces the reminder about an earlier one
             routePlanningChild()?.markHandedOff()
-            componentState.update {
-                it.copy(
-                    sheetStep = it.sheetStep.let { step ->
-                        if (step is OneRouteStep) step.copy(isHandedOff = true) else step
-                    },
-                    reminder = null,
-                )
-            }
+            oneRouteChild()?.markHandedOff()
+            componentState.update { it.copy(reminder = null) }
         }
     }
 
     private val saveListener = object : RouteSavingComponent.Listener {
         override fun openSignInToSaveRoute() = openSignInForSaving()
-        override fun onSaved(routeId: String, savedRoute: SavedRoute) = pointStepAtSavedRoute(routeId, savedRoute)
+        override fun onSaved(routeId: String, savedRoute: SavedRoute) {
+            oneRouteChild()?.savedAs(routeId, savedRoute)
+        }
         override fun onSaveEvent(event: MapSheetUiEvent) = sendUiEvent(event)
     }
 
@@ -211,14 +190,16 @@ internal class MapSheetComponent(
         ),
     ) { project() }
 
+    // The kind of the step on top, which the sheet's content switches on
+    override val activeStep: StateFlow<ActiveSheetStep> = derivedStateFlow(changes = stack) { activeSheetStep() }
+
     override val actions: MapSheetScreen.Actions = this
 
     // Back closes the innermost step first: the rating step, then a saved route, then the start step, then route planning,
     // then the search while the sheet is pulled up
     private val backCallback = BackCallback(isEnabled = false) {
-        val state = componentState.value
-        if (state.sheetStep != null) {
-            closeSheetStep()
+        if (isStepOpen()) {
+            closeStepOnTop()
         } else if (isStartSearchOpen()) {
             closeStartSearch()
         } else if (isRoutePlanningOpen()) {
@@ -291,7 +272,7 @@ internal class MapSheetComponent(
     // Replaces everything above the root, so the trip is the only step over the search. Without a usable location the trip waits
     // for a start, so the start step opens and closing it closes planning
     private fun startPlanning(destination: Place) {
-        val usable = componentState.value.hasUsableLocation
+        val usable = viewState.value.hasUsableLocation
         stepNavigation.navigate { listOf(it.first(), SheetStepConfig.RoutePlanning(destination, waitsForStart = !usable)) }
         if (usable) {
             setSheetHeight(SheetHeight.Half)
@@ -335,11 +316,11 @@ internal class MapSheetComponent(
 
     // The rating step is about the drive just made, not a new trip, so a long press doesn't start one
     override fun onMapLongPress(point: GeoPoint) {
-        if (componentState.value.ratingStep == null) pressMap(point)
+        if (!isRatingOpen()) pressMap(point)
     }
 
     private fun pressMap(point: GeoPoint) {
-        if (!componentState.value.map.covers(point)) {
+        if (!componentState.value.baseMap.covers(point)) {
             sendUiEvent(MapSheetUiEvent.NotCovered)
             return
         }
@@ -347,9 +328,8 @@ internal class MapSheetComponent(
             pickStart(point)
             return
         }
-        // A new trip replaces the saved route on screen
-        closeOneRouteStep()
         componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = false)) }
+        // Replaces a saved route or a past drive on screen, as the trip replaces everything above the root
         startPlanning(unnamedPlace(point))
         routePlanningChild()?.nameDestination(point)
     }
@@ -406,109 +386,42 @@ internal class MapSheetComponent(
         }
     }
 
+    // Replaces everything above the root search, which is cleared, so the route is the only step over it
     private fun showOneRoute(origin: OneRouteOrigin) {
-        if (componentState.value.ratingStep != null) closeRatingStep()
-        popToRoot()
+        ratingChild()?.close()
+        stepNavigation.navigate { listOf(it.first(), SheetStepConfig.OneRoute(origin)) }
         rootPlaceSearch().clear()
-        componentState.update {
-            it.copy(
-                sheetStep = OneRouteStep(origin = origin),
-                baseMap = it.baseMap.copy(followsUser = false),
-            )
-        }
+        componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = false)) }
         setSheetHeight(SheetHeight.Half)
-        loadOneRoute(origin)
     }
 
     private fun planTripTo(destination: Place) {
-        if (componentState.value.ratingStep != null) closeRatingStep()
+        ratingChild()?.close()
         closeOneRouteStep()
         popStartSearch()
         rootPlaceSearch().clear()
-        if (!componentState.value.map.covers(destination.location)) {
+        if (!componentState.value.baseMap.covers(destination.location)) {
             sendUiEvent(MapSheetUiEvent.NotCovered)
             return
         }
         planTo(destination)
     }
 
-    override fun onOneRouteRetry() = retryOneRoute()
-
-    override fun onOneRouteClose() = closeOneRoute()
-
-    private fun retryOneRoute() {
-        val origin = componentState.value.oneRouteStep?.origin ?: return
-        loadOneRoute(origin)
+    override fun onOneRouteRetry() {
+        oneRouteChild()?.onRetry()
     }
 
-    private fun closeOneRoute() {
-        closeOneRouteStep()
-        setSheetHeight(SheetHeight.Collapsed)
+    override fun onOneRouteClose() {
+        oneRouteChild()?.close()
     }
 
+    // Pops a saved route's or a past drive's step without collapsing the sheet, as planning takes its place
     private fun closeOneRouteStep() {
-        cancelOneRouteLoads()
-        componentState.update { it.copy(sheetStep = it.sheetStep.takeUnless { step -> step is OneRouteStep }) }
-    }
-
-    private fun closeSheetStep() {
-        when (componentState.value.sheetStep) {
-            is RatingStep -> closeRatingStep()
-            is OneRouteStep -> closeOneRoute()
-            null -> Unit
-        }
-    }
-
-    private fun cancelOneRouteLoads() {
-        useCaseJobPool[loadSavedRouteUseCase]?.cancel()
-        useCaseJobPool[loadPastDriveRouteUseCase]?.cancel()
+        if (oneRouteChild() != null) stepNavigation.pop()
     }
 
     override fun onSavedRoutesClick() {
         if (viewState.value.isSignedIn) openSavedRoutes() else openSignInForSavedRoutes()
-    }
-
-    private fun loadOneRoute(origin: OneRouteOrigin) = when (origin) {
-        is OneRouteOrigin.Saved -> loadSavedRoute(origin.savedRoute.id)
-        is OneRouteOrigin.Past -> loadPastDriveRoute(origin.drive.id)
-    }
-
-    private fun loadSavedRoute(savedRouteId: SavedRouteId) {
-        updateOneRouteStep(savedRouteId.value) { it.copy(status = OneRouteStatus.Loading) }
-        loadSavedRouteUseCase.execute(savedRouteId) {
-            onSuccess { route -> showLoadedRoute(savedRouteId.value, route) }
-            onError { error -> showLoadFailure(savedRouteId.value, error, "Saved route not loaded") }
-        }
-    }
-
-    private fun loadPastDriveRoute(driveId: String) {
-        updateOneRouteStep(driveId) { it.copy(status = OneRouteStatus.Loading) }
-        loadPastDriveRouteUseCase.execute(driveId) {
-            onSuccess { route -> showLoadedRoute(driveId, route) }
-            onError { error -> showLoadFailure(driveId, error, "Past drive route not loaded") }
-        }
-    }
-
-    private fun showLoadedRoute(originId: String, route: Route) {
-        updateOneRouteStep(originId) { it.copy(route = route, status = OneRouteStatus.Ready) }
-    }
-
-    private fun showLoadFailure(originId: String, error: Throwable, message: String) {
-        val status = if (error is OfflineException) {
-            OneRouteStatus.Offline
-        } else {
-            logger.e(error) { message }
-            OneRouteStatus.Failed
-        }
-        updateOneRouteStep(originId) { it.copy(status = status) }
-    }
-
-    // Changes the step only while it's still the step of this origin: it may have closed meanwhile
-    private fun updateOneRouteStep(originId: String, change: (OneRouteStep) -> OneRouteStep) {
-        componentState.update { state ->
-            val step = state.oneRouteStep?.takeIf { it.origin.id == originId } ?: return@update state
-            state.copy(sheetStep = change(step))
-        }
     }
 
     override fun onProfileClick() = openProfile()
@@ -535,24 +448,36 @@ internal class MapSheetComponent(
 
     override fun onMapsAppStoreClick() = driveHandOff.onMapsAppStoreClick()
 
-    override fun onRatingThumbClick(thumb: Thumb) = pickThumb(thumb)
+    override fun onRatingThumbClick(thumb: Thumb) {
+        ratingChild()?.onThumbClick(thumb)
+    }
 
-    override fun onRatingReasonClick(reason: RatingReason) = toggleReason(reason)
+    override fun onRatingReasonClick(reason: RatingReason) {
+        ratingChild()?.onReasonClick(reason)
+    }
 
-    override fun onRatingDone() = closeRatingStep()
+    override fun onRatingDone() {
+        ratingChild()?.close()
+    }
 
-    override fun onRatingClose() = closeRatingStep()
+    override fun onRatingClose() {
+        ratingChild()?.close()
+    }
 
-    override fun onNotDrivenClick() = markNotDriven()
+    override fun onNotDrivenClick() {
+        ratingChild()?.onNotDriven()
+    }
 
     override fun onReminderClick() = openReminder()
 
     override fun onReminderDismiss() = dismissReminder()
 
-    override fun onReminderOfferClick() = turnOnReminders()
+    override fun onReminderOfferClick() {
+        ratingChild()?.onReminderOfferClick()
+    }
 
     private fun askAboutDrive() {
-        if (componentState.value.ratingStep != null) return
+        if (isRatingOpen()) return
         getDriveQuestionUseCase.execute(Clock.System.now()) {
             onSuccess { prompt -> if (prompt != null) showDrivePrompt(prompt) }
             onError { error -> logger.e(error) { "Drive question not read" } }
@@ -560,17 +485,25 @@ internal class MapSheetComponent(
     }
 
     private fun showDrivePrompt(prompt: DrivePrompt) {
-        val state = componentState.value
-        // A trip planned or a saved route opened after the hand-off isn't thrown away
-        val planning = viewState.value.planning
-        val canRatingStepTakeOver = (planning == null || planning.isHandedOff) &&
-            (state.oneRouteStep?.isHandedOff ?: true)
-        if (prompt.kind == DrivePrompt.Kind.RatingStep && canRatingStepTakeOver) {
+        if (prompt.kind == DrivePrompt.Kind.RatingStep && canRatingStepTakeOver()) {
             openRatingStep(prompt.question)
         } else {
             // A rating step that can't take the planning's place waits as the reminder, so the question isn't lost while
             // the user plans another trip
             showReminder(prompt.question)
+        }
+    }
+
+    // A trip planned or a saved route opened after the hand-off isn't thrown away: the rating step waits for the trip or the route
+    // that was handed off, the one on top of the stack, and takes the place of the search when there's none
+    private fun canRatingStepTakeOver(): Boolean {
+        val drivenStep = stack.value.items.lastOrNull {
+            it.instance is SheetStepChild.RoutePlanning || it.instance is SheetStepChild.OneRoute
+        }
+        return when (val child = drivenStep?.instance) {
+            is SheetStepChild.RoutePlanning -> child.component.viewState.value.planning.isHandedOff
+            is SheetStepChild.OneRoute -> child.component.viewState.value.step.isHandedOff
+            else -> true
         }
     }
 
@@ -593,111 +526,20 @@ internal class MapSheetComponent(
 
     // The step takes the place of the search and of any planning, and the map shows the drive's ends
     private fun openRatingStep(question: DriveQuestion) {
-        cancelOneRouteLoads()
-        popToRoot()
-        val now = Clock.System.now()
+        stepNavigation.navigate { listOf(it.first(), SheetStepConfig.Rating(question)) }
         componentState.update {
-            it.copy(
-                reminder = null,
-                sheetStep = RatingStep(
-                    question = question,
-                    driveTime = driveTimeText(question.startedAt, now, TimeZone.currentSystemDefault()),
-                ),
-                baseMap = it.baseMap.copy(followsUser = false),
-            )
+            it.copy(reminder = null, baseMap = it.baseMap.copy(followsUser = false))
         }
         setSheetHeight(SheetHeight.Half)
-    }
-
-    // Tapping the thumb already picked changes nothing and sends nothing
-    private fun pickThumb(thumb: Thumb) {
-        val step = componentState.value.ratingStep ?: return
-        if (step.rating?.thumb == thumb) return
-        updateRating(Rating(thumb))
-        // The reasons come below the thumbs, so a collapsed sheet opens to show them
-        if (componentState.value.sheetHeight == SheetHeight.Collapsed) setSheetHeight(SheetHeight.Half)
-        sendRating()
-        if (step.rating == null) offerReminder()
-    }
-
-    // Asked after the first thumb only: the offer is for the user who has just rated a drive
-    private fun offerReminder() = shouldOfferReminderUseCase.execute {
-        onSuccess { shouldOffer -> if (shouldOffer) showReminderOffer() }
-        onError { error -> logger.e(error) { "Reminder offer not read" } }
-    }
-
-    private fun showReminderOffer() = updateRatingStep { it.copy(showsReminderOffer = true) }
-
-    // Hidden at once, so the offer doesn't wait for the settings to open
-    private fun turnOnReminders() {
-        updateRatingStep { it.copy(showsReminderOffer = false) }
-        turnOnRemindersUseCase.execute {
-            onError { error -> logger.e(error) { "Reminders not turned on" } }
-        }
     }
 
     // A tap on a drive's notification opens its rating step, even over planning, as the user asked for it; the step that
     // already shows that drive stays as it is
     private fun observeOpenedReminder() = observeOpenedReminderUseCase.execute {
         onNext { question ->
-            if (componentState.value.ratingStep?.question?.driveId != question.driveId) openRatingStep(question)
+            if (ratingStep()?.question?.driveId != question.driveId) openRatingStep(question)
         }
         onError { error -> logger.e(error) { "Opened reminder not observed" } }
-    }
-
-    // Only the reasons of the picked thumb can be picked
-    private fun toggleReason(reason: RatingReason) {
-        val rating = componentState.value.ratingStep?.rating ?: return
-        if (reason.thumb != rating.thumb) return
-        val reasons = if (reason in rating.reasons) rating.reasons - reason else rating.reasons + reason
-        updateRating(Rating(rating.thumb, reasons))
-        sendRating()
-    }
-
-    private fun updateRating(rating: Rating) = updateRatingStep { it.copy(rating = rating) }
-
-    // Changes the step only while the rating step is open, as a tap may arrive after it closed
-    private fun updateRatingStep(change: (RatingStep) -> RatingStep) {
-        componentState.update { state ->
-            val step = state.sheetStep as? RatingStep ?: return@update state
-            state.copy(sheetStep = change(step))
-        }
-    }
-
-    // Each send cancels the one before, as a repeated execute does, so the latest rating is the one kept
-    private fun sendRating() {
-        val step = componentState.value.ratingStep ?: return
-        val rating = step.rating ?: return
-        rateDriveUseCase.execute(RateDriveUseCase.Args(driveId = step.question.driveId, rating = rating)) {
-            // Offline, the rating is sent later, so it isn't logged
-            onError { error -> if (error !is OfflineException) logger.e(error) { "Rating not sent" } }
-        }
-    }
-
-    // A step closed without a thumb drops the drive's question, so it isn't asked about again
-    private fun closeRatingStep() {
-        val step = componentState.value.ratingStep ?: return
-        if (step.rating == null) skipDriveQuestion(step.question.driveId)
-        hideRatingStep()
-    }
-
-    private fun skipDriveQuestion(driveId: String) = skipDriveQuestionUseCase.execute(driveId) {
-        onError { error -> logger.e(error) { "Drive question not skipped" } }
-    }
-
-    private fun hideRatingStep() {
-        componentState.update { it.copy(sheetStep = it.sheetStep.takeUnless { step -> step is RatingStep }) }
-        setSheetHeight(SheetHeight.Collapsed)
-    }
-
-    // Marked not driven, the question is already cleared, so the step closes without a skip
-    private fun markNotDriven() {
-        val step = componentState.value.ratingStep ?: return
-        markNotDrivenUseCase.execute(step.question.driveId) {
-            // Offline, the removal is sent later, so it isn't logged
-            onError { error -> if (error !is OfflineException) logger.e(error) { "Drive not marked as not driven" } }
-        }
-        hideRatingStep()
     }
 
     // Drives from an earlier start without a connection; offline is expected here, so it isn't logged
@@ -725,12 +567,6 @@ internal class MapSheetComponent(
 
     private fun openSignInForSaving() = openSignInToSaveRoute()
 
-    // Saving a saved route's route again makes a new saved route, which the step is about from then on
-    private fun pointStepAtSavedRoute(routeId: String, savedRoute: SavedRoute) = componentState.update { state ->
-        val step = state.oneRouteStep ?: return@update state
-        state.copy(sheetStep = step.savedAs(routeId, savedRoute))
-    }
-
     override fun onMyLocationClick() = useMyLocation()
 
     private fun useMyLocation() {
@@ -745,11 +581,10 @@ internal class MapSheetComponent(
 
     // Access given in the prompt makes the user's location the start, unless it's still not usable or the step has closed
     private fun useMyLocationOnceUsable() {
-        val state = componentState.value
-        if (isStartSearchOpen() && state.hasUsableLocation) useStart(null)
+        if (isStartSearchOpen() && viewState.value.hasUsableLocation) useStart(null)
     }
 
-    private fun locate() = when (componentState.value.locateButton) {
+    private fun locate() = when (viewState.value.locateButton) {
         LocateButton.Following -> Unit
         LocateButton.NotFollowing -> componentState.update { it.copy(baseMap = it.baseMap.copy(followsUser = true)) }
         LocateButton.NoAccess -> askForLocationAccess()
@@ -770,7 +605,7 @@ internal class MapSheetComponent(
         val state = componentState.value
         backCallback.isEnabled = state.sheetHeight != SheetHeight.Collapsed ||
             isRoutePlanningOpen() ||
-            state.sheetStep != null
+            isStepOpen()
     }
 
     // The first covered area sets the overview; until it's loaded the map shows the launch region, undimmed
@@ -835,18 +670,26 @@ internal class MapSheetComponent(
         useCaseJobPool[observeUserLocationUseCase]?.cancel()
     }
 
-    // The parent's own state, with the dialogs of Drive and Save, and the search and start of the step on top of the stack
+    // The parent's own state, with the dialogs of Drive and Save, the search and start of the step on top of the stack, and the
+    // rating or one-route step on top
     private fun project(): MapSheetViewState {
         val drive = driveHandOff.viewState.value
         val save = routeSaving.viewState.value
         val active = stack.value.active.configuration
         val planning = routePlanningChild()?.viewState?.value
-        return componentState.value.copy(
+        val state = componentState.value
+        return MapSheetViewState(
+            locationAccess = state.locationAccess,
+            baseMap = state.baseMap,
+            isPreciseLocationNoteClosed = state.isPreciseLocationNoteClosed,
+            sheetHeight = state.sheetHeight,
             search = activePlaceSearch().viewState.value.search,
-            startSearch = (active as? SheetStepConfig.StartSearch)?.let { StartSearch(closesPlanning = it.closesPlanning) },
+            distanceUnit = planning?.distanceUnit ?: state.distanceUnit,
             planning = planning?.planning,
-            budgetChoice = planning?.budgetChoice ?: componentState.value.budgetChoice,
-            distanceUnit = planning?.distanceUnit ?: componentState.value.distanceUnit,
+            startSearch = (active as? SheetStepConfig.StartSearch)?.let { StartSearch(closesPlanning = it.closesPlanning) },
+            budgetChoice = planning?.budgetChoice ?: Constants.Budgets.DEFAULT_CHOICE,
+            reminder = state.reminder,
+            sheetStep = ratingStep() ?: oneRouteStep(),
             isFirstDriveExplained = drive.isFirstDriveExplained,
             driveDialog = drive.dialog,
             isSignedIn = save.isSignedIn,
@@ -856,10 +699,46 @@ internal class MapSheetComponent(
         )
     }
 
+    private fun activeSheetStep(): ActiveSheetStep = when (stack.value.active.configuration) {
+        SheetStepConfig.DestinationSearch -> ActiveSheetStep.Search
+        is SheetStepConfig.StartSearch -> ActiveSheetStep.StartSearch
+        is SheetStepConfig.RoutePlanning -> ActiveSheetStep.RoutePlanning
+        is SheetStepConfig.OneRoute -> ActiveSheetStep.OneRoute
+        is SheetStepConfig.Rating -> ActiveSheetStep.Rating
+    }
+
+    // A step closes by popping, and the sheet collapses over the search it leaves
+    private fun closeStep() {
+        stepNavigation.pop()
+        setSheetHeight(SheetHeight.Collapsed)
+    }
+
+    // Closes the rating or one-route step on top, as its close button does
+    private fun closeStepOnTop() {
+        when (val child = stack.value.active.instance) {
+            is SheetStepChild.Rating -> child.component.close()
+            is SheetStepChild.OneRoute -> child.component.close()
+            else -> Unit
+        }
+    }
+
     // The start search is the step on top when it's open, and then it takes the map's picks and Back
     private fun isStartSearchOpen(): Boolean = stack.value.active.configuration is SheetStepConfig.StartSearch
 
     private fun isRoutePlanningOpen(): Boolean = routePlanningChild() != null
+
+    // The rating step or a saved route's or a past drive's step is the step on top when it's open
+    private fun isStepOpen(): Boolean = isRatingOpen() || oneRouteChild() != null
+
+    private fun isRatingOpen(): Boolean = ratingChild() != null
+
+    private fun ratingChild(): RatingComponent? = (stack.value.active.instance as? SheetStepChild.Rating)?.component
+
+    private fun oneRouteChild(): OneRouteComponent? = (stack.value.active.instance as? SheetStepChild.OneRoute)?.component
+
+    private fun ratingStep(): RatingStep? = ratingChild()?.viewState?.value?.step
+
+    private fun oneRouteStep(): OneRouteStep? = oneRouteChild()?.viewState?.value?.step
 
     // Pops everything above the root search: the start search, route planning, and a saved route's or the rating step's
     private fun popToRoot() {
@@ -878,6 +757,11 @@ internal class MapSheetComponent(
     // The route planning step, when it's in the stack, under the start search too
     private fun routePlanningChild(): RoutePlanningComponent? =
         stack.value.items.firstNotNullOfOrNull { (it.instance as? SheetStepChild.RoutePlanning)?.component }
+
+    // Skipping the question of a drive, as the reminder bubble's dismiss does
+    private fun skipDriveQuestion(driveId: String) = skipDriveQuestionUseCase.execute(driveId) {
+        onError { error -> logger.e(error) { "Drive question not skipped" } }
+    }
 }
 
 // The name a saved route's step saves under: its saved route's name, or none for any other step

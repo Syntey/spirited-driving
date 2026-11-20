@@ -17,6 +17,9 @@ import kotlinx.coroutines.flow.StateFlow
  */
 interface MapSheetScreen {
     val viewState: StateFlow<MapSheetViewState>
+
+    /** The kind of the sheet step on top, which decides the sheet's content. */
+    val activeStep: StateFlow<ActiveSheetStep>
     val actions: Actions
 
     /** One-time events for the screen, such as an explanation after a tap. */

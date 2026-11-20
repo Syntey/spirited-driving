@@ -14,8 +14,14 @@ internal interface MapSheetHost {
     /** Whether the start search is open, which route planning waits on for its start. */
     val isStartSearchOpen: Boolean
 
+    /** How far the sheet is pulled up now. */
+    val sheetHeight: SheetHeight
+
     /** Asks for the sheet to be pulled to [height]. */
     fun requestSheetHeight(height: SheetHeight)
+
+    /** The step on top is done or closed: it's popped, and the sheet collapses. */
+    fun onStepClosed()
 
     /** Whether [point] is in the covered area. */
     fun covers(point: GeoPoint): Boolean

@@ -40,6 +40,7 @@ import com.syntey.spiriteddriving.core.platform.binding.SignInProvider
 import com.syntey.spiriteddriving.core.platform.binding.UserLocation
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.testing.TestComponentContext
+import com.syntey.spiriteddriving.core.domain.work.AppWork
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
@@ -165,6 +166,12 @@ internal fun TestScope.mapSheetFixture(
     val tripHistoryCache = FakeTripHistoryCache(PastDrivePage(pastDrives, nextCursor = null))
     val savedRoutesSource = FakeSavedRoutesSource(savedRoutes)
     val savedRoutesCache = FakeSavedRoutesCache(savedRoutes)
+    // Runs what's launched on the test's time, as the app's runs it past the screen's close
+    val appWork = object : AppWork {
+        override fun launch(block: suspend () -> Unit) {
+            backgroundScope.launch { block() }
+        }
+    }
 
     // The child components are built by their generated factories, which resolve from the global Koin, so Koin is started with
     // the same fakes the parent gets
@@ -206,6 +213,28 @@ internal fun TestScope.mapSheetFixture(
                         removeRecentPlaceUseCase = RemoveRecentPlaceUseCase(recents),
                     )
                 }
+                factory { (context: AppComponentContext, host: MapSheetHost, args: OneRouteComponent.Args) ->
+                    OneRouteComponent(
+                        componentContext = context,
+                        host = host,
+                        args = args,
+                        loadSavedRouteUseCase = LoadSavedRouteUseCase(savedRoutesSource, savedRoutesCache),
+                        loadPastDriveRouteUseCase = LoadPastDriveRouteUseCase(tripHistorySource, tripHistoryCache),
+                    )
+                }
+                factory { (context: AppComponentContext, host: MapSheetHost, args: RatingComponent.Args) ->
+                    RatingComponent(
+                        componentContext = context,
+                        host = host,
+                        args = args,
+                        appWork = appWork,
+                        rateDriveUseCase = RateDriveUseCase(openDriveQuestion, startedDrives, driveSender, reminders),
+                        skipDriveQuestionUseCase = SkipDriveQuestionUseCase(openDriveQuestion, reminders),
+                        markNotDrivenUseCase = MarkNotDrivenUseCase(openDriveQuestion, startedDrives, driveSender, reminders),
+                        shouldOfferReminderUseCase = ShouldOfferReminderUseCase(closedNotes, reminders),
+                        turnOnRemindersUseCase = TurnOnRemindersUseCase(reminders),
+                    )
+                }
                 factory { (context: AppComponentContext, listener: RouteSavingComponent.Listener) ->
                     RouteSavingComponent(
                         componentContext = context,
@@ -234,15 +263,9 @@ internal fun TestScope.mapSheetFixture(
         observeDistanceUnitUseCase = ObserveDistanceUnitUseCase(distanceUnits, platform),
         sendPendingDrivesUseCase = SendPendingDrivesUseCase(startedDrives, driveSender),
         getDriveQuestionUseCase = GetDriveQuestionUseCase(openDriveQuestion, reminders),
-        rateDriveUseCase = RateDriveUseCase(openDriveQuestion, startedDrives, driveSender, reminders),
         skipDriveQuestionUseCase = SkipDriveQuestionUseCase(openDriveQuestion, reminders),
-        markNotDrivenUseCase = MarkNotDrivenUseCase(openDriveQuestion, startedDrives, driveSender, reminders),
         observeOpenedReminderUseCase = ObserveOpenedReminderUseCase(reminders, openDriveQuestion),
-        shouldOfferReminderUseCase = ShouldOfferReminderUseCase(closedNotes, reminders),
-        turnOnRemindersUseCase = TurnOnRemindersUseCase(reminders),
-        loadSavedRouteUseCase = LoadSavedRouteUseCase(savedRoutesSource, savedRoutesCache),
         getPastDriveUseCase = GetPastDriveUseCase(tripHistoryCache),
-        loadPastDriveRouteUseCase = LoadPastDriveRouteUseCase(tripHistorySource, tripHistoryCache),
     )
 
     // Unconfined: a background coroutine doesn't run under advanceUntilIdle, so the event is taken as soon as it's sent

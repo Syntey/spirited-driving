@@ -5,6 +5,7 @@ import com.syntey.spiriteddriving.core.ui.components.Showcase
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.ActiveSheetStep
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
 import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningPreviewStates
@@ -452,6 +453,7 @@ private const val PLACEHOLDER_ROWS = 3
 @Composable
 private fun RoutePlanningPlanningPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -463,6 +465,7 @@ private fun RoutePlanningPlanningPreview() = Showcase {
 @Composable
 private fun RoutePlanningPlanningIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -474,6 +477,7 @@ private fun RoutePlanningPlanningIosPreview() = Showcase(platform = UiPlatform.I
 @Composable
 private fun RoutePlanningPlannedPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -485,6 +489,7 @@ private fun RoutePlanningPlannedPreview() = Showcase {
 @Composable
 private fun RoutePlanningPlannedIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -496,6 +501,7 @@ private fun RoutePlanningPlannedIosPreview() = Showcase(platform = UiPlatform.Io
 @Composable
 private fun RoutePlanningPlannedDistancePreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedDistanceViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -507,6 +513,7 @@ private fun RoutePlanningPlannedDistancePreview() = Showcase {
 @Composable
 private fun RoutePlanningPlannedDistanceIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedDistanceViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -518,6 +525,7 @@ private fun RoutePlanningPlannedDistanceIosPreview() = Showcase(platform = UiPla
 @Composable
 private fun RoutePlanningPlannedMilesPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedMilesViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -529,6 +537,7 @@ private fun RoutePlanningPlannedMilesPreview() = Showcase {
 @Composable
 private fun RoutePlanningPlannedFarStartPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedFarStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -540,6 +549,7 @@ private fun RoutePlanningPlannedFarStartPreview() = Showcase {
 @Composable
 private fun RoutePlanningPlannedFarStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedFarStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -551,6 +561,7 @@ private fun RoutePlanningPlannedFarStartIosPreview() = Showcase(platform = UiPla
 @Composable
 private fun RoutePlanningNoFunRoutePreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.noFunRouteViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -562,6 +573,7 @@ private fun RoutePlanningNoFunRoutePreview() = Showcase {
 @Composable
 private fun RoutePlanningNoFunRouteIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.noFunRouteViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -573,6 +585,7 @@ private fun RoutePlanningNoFunRouteIosPreview() = Showcase(platform = UiPlatform
 @Composable
 private fun RoutePlanningNoFunRouteBeyondPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.noFunRouteBeyondViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -584,6 +597,7 @@ private fun RoutePlanningNoFunRouteBeyondPreview() = Showcase {
 @Composable
 private fun RoutePlanningNoFunRouteBeyondIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.noFunRouteBeyondViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -595,6 +609,7 @@ private fun RoutePlanningNoFunRouteBeyondIosPreview() = Showcase(platform = UiPl
 @Composable
 private fun RoutePlanningNotCoveredPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningNotCoveredViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -606,6 +621,7 @@ private fun RoutePlanningNotCoveredPreview() = Showcase {
 @Composable
 private fun RoutePlanningNotCoveredIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningNotCoveredViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -617,6 +633,7 @@ private fun RoutePlanningNotCoveredIosPreview() = Showcase(platform = UiPlatform
 @Composable
 private fun RoutePlanningOfflinePreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningOfflineViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -628,6 +645,7 @@ private fun RoutePlanningOfflinePreview() = Showcase {
 @Composable
 private fun RoutePlanningOfflineIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningOfflineViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -639,6 +657,7 @@ private fun RoutePlanningOfflineIosPreview() = Showcase(platform = UiPlatform.Io
 @Composable
 private fun RoutePlanningFailedPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningFailedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -650,6 +669,7 @@ private fun RoutePlanningFailedPreview() = Showcase {
 @Composable
 private fun RoutePlanningFailedIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningFailedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -661,6 +681,7 @@ private fun RoutePlanningFailedIosPreview() = Showcase(platform = UiPlatform.Ios
 @Composable
 private fun RoutePlanningCollapsedPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedCollapsedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -672,6 +693,7 @@ private fun RoutePlanningCollapsedPreview() = Showcase {
 @Composable
 private fun RoutePlanningCollapsedIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.plannedCollapsedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -683,6 +705,7 @@ private fun RoutePlanningCollapsedIosPreview() = Showcase(platform = UiPlatform.
 @Composable
 private fun RoutePlanningCollapsedPlanningPreview() = Showcase {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningCollapsedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -694,6 +717,7 @@ private fun RoutePlanningCollapsedPlanningPreview() = Showcase {
 @Composable
 private fun RoutePlanningCollapsedPlanningIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
+        step = ActiveSheetStep.RoutePlanning,
         viewState = RoutePlanningPreviewStates.planningCollapsedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
