@@ -3,8 +3,8 @@ package com.syntey.spiriteddriving.shared.navigation.root
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesScreen
 import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesScreenNavigation
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreenNavigation
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreenNavigation
 import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreen
 import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreenNavigation
 import com.syntey.spiriteddriving.feature.profile.model.SignInReason
@@ -17,7 +17,7 @@ import com.arkivanov.decompose.router.slot.dismiss
 
 internal interface RootNavHostNavigation :
     OnboardingScreenNavigation,
-    TripPlanScreenNavigation,
+    MapSheetScreenNavigation,
     SignInSheetScreenNavigation,
     SavedRoutesScreenNavigation {
     val slotNavigator: SlotNavigation<RootConfig>
@@ -36,7 +36,7 @@ internal class RootNavHostNavigator(
 
     override fun OnboardingScreen.finish() = slotNavigator.activate(RootConfig.Map)
 
-    override fun TripPlanScreen.openProfile() = sheetNavigator.activate(RootSheetConfig.Profile)
+    override fun MapSheetScreen.openProfile() = sheetNavigator.activate(RootSheetConfig.Profile)
 
     override fun SavedRoutesScreen.close() = sheetNavigator.dismiss()
 
@@ -46,11 +46,11 @@ internal class RootNavHostNavigator(
         onSavedRouteChosen(savedRouteId)
     }
 
-    override fun TripPlanScreen.openSignInToSaveRoute() = openSignIn(SignInReason.SaveRoute)
+    override fun MapSheetScreen.openSignInToSaveRoute() = openSignIn(SignInReason.SaveRoute)
 
-    override fun TripPlanScreen.openSavedRoutes() = sheetNavigator.activate(RootSheetConfig.SavedRoutes)
+    override fun MapSheetScreen.openSavedRoutes() = sheetNavigator.activate(RootSheetConfig.SavedRoutes)
 
-    override fun TripPlanScreen.openSignInForSavedRoutes() = openSignIn(SignInReason.SavedRoutes)
+    override fun MapSheetScreen.openSignInForSavedRoutes() = openSignIn(SignInReason.SavedRoutes)
 
     override fun SignInSheetScreen.finish(reason: SignInReason, isSignedIn: Boolean) {
         sheetNavigator.dismiss()

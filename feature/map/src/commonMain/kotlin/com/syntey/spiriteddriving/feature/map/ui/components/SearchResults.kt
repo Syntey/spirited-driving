@@ -30,7 +30,7 @@ import com.syntey.spiriteddriving.core.ui.components.ListRow
 import com.syntey.spiriteddriving.core.ui.components.ListRowIcon
 import com.syntey.spiriteddriving.core.ui.components.StateMessage
 import com.syntey.spiriteddriving.core.ui.theme.Grid
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.RecentPlaceRow
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchFailure
@@ -46,7 +46,7 @@ import kotlinx.collections.immutable.ImmutableList
 /** What the sheet shows below the search field: the hint, a state that explains why there are no places, or the places. */
 @Composable
 internal fun SearchResults(
-    viewState: TripPlanViewState,
+    viewState: MapSheetViewState,
     onSuggestionClick: (PlaceSuggestion) -> Unit,
     onRecentPlaceClick: (Place) -> Unit,
     onRecentPlaceRemove: (Place) -> Unit,

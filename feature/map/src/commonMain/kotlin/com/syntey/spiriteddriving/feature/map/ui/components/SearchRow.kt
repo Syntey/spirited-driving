@@ -12,14 +12,14 @@ import com.syntey.spiriteddriving.core.ui.components.ButtonDefaultColors
 import com.syntey.spiriteddriving.core.ui.components.ButtonDefaultStyles
 import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.theme.Grid
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
 
 @Composable
-internal fun SearchRow(viewState: TripPlanViewState, actions: TripPlanScreen.Actions) {
+internal fun SearchRow(viewState: MapSheetViewState, actions: MapSheetScreen.Actions) {
     val style = MapPlatformStyle.current
     val isOpen = viewState.sheetHeight != SheetHeight.Collapsed
     val isStartStep = viewState.startSearch != null

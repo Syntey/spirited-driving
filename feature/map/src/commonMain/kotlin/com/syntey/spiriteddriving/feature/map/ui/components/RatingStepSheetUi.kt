@@ -32,11 +32,11 @@ import com.syntey.spiriteddriving.core.ui.components.ThumbContent
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
-import com.syntey.spiriteddriving.feature.map.model.ui.TripPlanPreviewStates
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.Content
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen.Actions.Companion.noOpActions
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
+import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
@@ -46,7 +46,7 @@ import dev.icerock.moko.resources.compose.stringResource
  * planned duration and distance.
  */
 @Composable
-internal fun RatingStepHeader(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+internal fun RatingStepHeader(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
     // Both texts are null only without the step, which the sheet doesn't show the header for
     val number = viewState.ratingStep?.question?.routeNumber ?: return
     SheetHeader(
@@ -78,7 +78,7 @@ internal fun RatingRouteBadge(number: Int, modifier: Modifier = Modifier) {
  * chips and Done after it, with the attribution at the end. It scrolls when the sheet is shorter than its content.
  */
 @Composable
-internal fun RatingStepBody(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+internal fun RatingStepBody(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
     val rating = viewState.ratingStep?.rating
     val style = MapPlatformStyle.current
     Column(
@@ -134,7 +134,7 @@ internal fun RatingStepBody(viewState: TripPlanViewState, actions: TripPlanScree
  * height, so the sheet stops where the thumbs are.
  */
 @Composable
-internal fun CollapsedRatingStep(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+internal fun CollapsedRatingStep(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
     val step = viewState.ratingStep ?: return
     val style = MapPlatformStyle.current
     Column(
@@ -148,7 +148,7 @@ internal fun CollapsedRatingStep(viewState: TripPlanViewState, actions: TripPlan
 
 // The offer of the drive reminder, a hint with its own button; it's Android only, as iOS asks for the permission on its own
 @Composable
-private fun ReminderOffer(actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+private fun ReminderOffer(actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
     NoteCard(
         text = stringResource(MR.strings.drive_feedback_offer_text),
         modifier = modifier,
@@ -161,7 +161,7 @@ private fun ReminderOffer(actions: TripPlanScreen.Actions, modifier: Modifier = 
 
 // Good and Not good, with the drive's rating picked
 @Composable
-private fun RatingStepThumbs(rating: Rating?, actions: TripPlanScreen.Actions) {
+private fun RatingStepThumbs(rating: Rating?, actions: MapSheetScreen.Actions) {
     RatingThumbs(
         groupLabel = stringResource(MR.strings.rating_label),
         good = ThumbContent(
@@ -185,7 +185,7 @@ private fun RatingStepThumbs(rating: Rating?, actions: TripPlanScreen.Actions) {
 @Composable
 private fun RatingStepPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.ratingViewState(),
+        viewState = MapSheetPreviewStates.ratingViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -196,7 +196,7 @@ private fun RatingStepPreview() = Showcase {
 @Composable
 private fun RatingStepIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.ratingViewState(),
+        viewState = MapSheetPreviewStates.ratingViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -207,7 +207,7 @@ private fun RatingStepIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun RatingStepGoodPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.ratingViewState(
+        viewState = MapSheetPreviewStates.ratingViewState(
             Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews)),
         ),
         actions = noOpActions(),
@@ -220,7 +220,7 @@ private fun RatingStepGoodPreview() = Showcase {
 @Composable
 private fun RatingStepGoodIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.ratingViewState(
+        viewState = MapSheetPreviewStates.ratingViewState(
             Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews)),
         ),
         actions = noOpActions(),
@@ -233,7 +233,7 @@ private fun RatingStepGoodIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun RatingStepNotGoodPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
+        viewState = MapSheetPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -244,7 +244,7 @@ private fun RatingStepNotGoodPreview() = Showcase {
 @Composable
 private fun RatingStepNotGoodIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
+        viewState = MapSheetPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -255,7 +255,7 @@ private fun RatingStepNotGoodIosPreview() = Showcase(platform = UiPlatform.Ios) 
 @Composable
 private fun RatingStepGoodReminderOfferPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.ratingViewState(
+        viewState = MapSheetPreviewStates.ratingViewState(
             Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews)),
             showsReminderOffer = true,
         ),
@@ -268,5 +268,5 @@ private fun RatingStepGoodReminderOfferPreview() = Showcase {
 @ComponentPreviews
 @Composable
 private fun RatingStepCollapsedPreview() = Showcase {
-    CollapsedRatingStep(viewState = TripPlanPreviewStates.ratingViewState(), actions = noOpActions())
+    CollapsedRatingStep(viewState = MapSheetPreviewStates.ratingViewState(), actions = noOpActions())
 }

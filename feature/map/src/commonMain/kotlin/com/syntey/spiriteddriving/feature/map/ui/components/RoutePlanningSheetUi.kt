@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.height
 import com.syntey.spiriteddriving.core.ui.components.Showcase
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.Content
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen.Actions.Companion.noOpActions
-import com.syntey.spiriteddriving.feature.map.model.ui.TripPlanPreviewStates
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
+import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -56,8 +56,8 @@ import com.syntey.spiriteddriving.core.ui.components.StateMessage
 import com.syntey.spiriteddriving.core.ui.theme.AppTheme
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.withTabularFigures
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
 import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
@@ -75,7 +75,7 @@ import kotlinx.collections.immutable.ImmutableList
  * tappable: it opens the start step, where the user changes it.
  */
 @Composable
-internal fun RoutePlanningHeader(planning: RoutePlanningState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+internal fun RoutePlanningHeader(planning: RoutePlanningState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
     val start = planning.start
     SheetHeader(
         title = planning.destination.name ?: stringResource(MR.strings.search_point_on_map),
@@ -99,7 +99,7 @@ internal fun RoutePlanningHeader(planning: RoutePlanningState, actions: TripPlan
  * Save and Drive. The budget and Save and Drive stay in every state.
  */
 @Composable
-internal fun RoutePlanningBody(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+internal fun RoutePlanningBody(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
     val planning = viewState.planning ?: return
     val style = MapPlatformStyle.current
     val direction = LocalLayoutDirection.current
@@ -173,7 +173,7 @@ internal fun RoutePlanningBody(viewState: TripPlanViewState, actions: TripPlanSc
  * and that the maps app takes the user there first.
  */
 @Composable
-internal fun RoutePlanningActions(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+internal fun RoutePlanningActions(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
     val style = MapPlatformStyle.current
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(style.sheetSpacing)) {
         viewState.startDistance?.let { distance ->
@@ -244,7 +244,7 @@ internal fun RouteAttribution(modifier: Modifier = Modifier) {
 
 /** Route planning in the collapsed sheet: the header, the plan's summary, Save and Drive. */
 @Composable
-internal fun CollapsedRoutePlanning(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+internal fun CollapsedRoutePlanning(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
     val planning = viewState.planning ?: return
     val style = MapPlatformStyle.current
     Column(
@@ -259,7 +259,7 @@ internal fun CollapsedRoutePlanning(viewState: TripPlanViewState, actions: TripP
 
 /** What the collapsed sheet shows of the plan: the selected route, or what's happening instead. */
 @Composable
-internal fun RoutePlanningSummary(viewState: TripPlanViewState, modifier: Modifier = Modifier) {
+internal fun RoutePlanningSummary(viewState: MapSheetViewState, modifier: Modifier = Modifier) {
     val planning = viewState.planning ?: return
     Column(modifier.fillMaxWidth()) {
         when (planning.status) {
@@ -298,7 +298,7 @@ internal fun RoutePlanningSummary(viewState: TripPlanViewState, modifier: Modifi
 }
 
 @Composable
-internal fun retryAction(actions: TripPlanScreen.Actions): IconAction = IconAction(
+internal fun retryAction(actions: MapSheetScreen.Actions): IconAction = IconAction(
     icon = painterResource(MR.images.refresh),
     label = stringResource(MR.strings.generic_try_again),
     onClick = actions::onPlanningRetry,
@@ -451,7 +451,7 @@ private const val PLACEHOLDER_ROWS = 3
 @Composable
 private fun RoutePlanningPlanningPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.planningViewState(),
+        viewState = MapSheetPreviewStates.planningViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -462,7 +462,7 @@ private fun RoutePlanningPlanningPreview() = Showcase {
 @Composable
 private fun RoutePlanningPlanningIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.planningViewState(),
+        viewState = MapSheetPreviewStates.planningViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -473,7 +473,7 @@ private fun RoutePlanningPlanningIosPreview() = Showcase(platform = UiPlatform.I
 @Composable
 private fun RoutePlanningPlannedPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.plannedViewState(),
+        viewState = MapSheetPreviewStates.plannedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -484,7 +484,7 @@ private fun RoutePlanningPlannedPreview() = Showcase {
 @Composable
 private fun RoutePlanningPlannedIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.plannedViewState(),
+        viewState = MapSheetPreviewStates.plannedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -495,7 +495,7 @@ private fun RoutePlanningPlannedIosPreview() = Showcase(platform = UiPlatform.Io
 @Composable
 private fun RoutePlanningPlannedDistancePreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.plannedDistanceViewState(),
+        viewState = MapSheetPreviewStates.plannedDistanceViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -506,7 +506,7 @@ private fun RoutePlanningPlannedDistancePreview() = Showcase {
 @Composable
 private fun RoutePlanningPlannedDistanceIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.plannedDistanceViewState(),
+        viewState = MapSheetPreviewStates.plannedDistanceViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -517,7 +517,7 @@ private fun RoutePlanningPlannedDistanceIosPreview() = Showcase(platform = UiPla
 @Composable
 private fun RoutePlanningPlannedMilesPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.plannedMilesViewState(),
+        viewState = MapSheetPreviewStates.plannedMilesViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -528,7 +528,7 @@ private fun RoutePlanningPlannedMilesPreview() = Showcase {
 @Composable
 private fun RoutePlanningPlannedFarStartPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.plannedFarStartViewState(),
+        viewState = MapSheetPreviewStates.plannedFarStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -539,7 +539,7 @@ private fun RoutePlanningPlannedFarStartPreview() = Showcase {
 @Composable
 private fun RoutePlanningPlannedFarStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.plannedFarStartViewState(),
+        viewState = MapSheetPreviewStates.plannedFarStartViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -550,7 +550,7 @@ private fun RoutePlanningPlannedFarStartIosPreview() = Showcase(platform = UiPla
 @Composable
 private fun RoutePlanningNoFunRoutePreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.noFunRouteViewState(),
+        viewState = MapSheetPreviewStates.noFunRouteViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -561,7 +561,7 @@ private fun RoutePlanningNoFunRoutePreview() = Showcase {
 @Composable
 private fun RoutePlanningNoFunRouteIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.noFunRouteViewState(),
+        viewState = MapSheetPreviewStates.noFunRouteViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -572,7 +572,7 @@ private fun RoutePlanningNoFunRouteIosPreview() = Showcase(platform = UiPlatform
 @Composable
 private fun RoutePlanningNoFunRouteBeyondPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.noFunRouteBeyondViewState(),
+        viewState = MapSheetPreviewStates.noFunRouteBeyondViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -583,7 +583,7 @@ private fun RoutePlanningNoFunRouteBeyondPreview() = Showcase {
 @Composable
 private fun RoutePlanningNoFunRouteBeyondIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.noFunRouteBeyondViewState(),
+        viewState = MapSheetPreviewStates.noFunRouteBeyondViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -594,7 +594,7 @@ private fun RoutePlanningNoFunRouteBeyondIosPreview() = Showcase(platform = UiPl
 @Composable
 private fun RoutePlanningNotCoveredPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.planningNotCoveredViewState(),
+        viewState = MapSheetPreviewStates.planningNotCoveredViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -605,7 +605,7 @@ private fun RoutePlanningNotCoveredPreview() = Showcase {
 @Composable
 private fun RoutePlanningNotCoveredIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.planningNotCoveredViewState(),
+        viewState = MapSheetPreviewStates.planningNotCoveredViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -616,7 +616,7 @@ private fun RoutePlanningNotCoveredIosPreview() = Showcase(platform = UiPlatform
 @Composable
 private fun RoutePlanningOfflinePreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.planningOfflineViewState(),
+        viewState = MapSheetPreviewStates.planningOfflineViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -627,7 +627,7 @@ private fun RoutePlanningOfflinePreview() = Showcase {
 @Composable
 private fun RoutePlanningOfflineIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.planningOfflineViewState(),
+        viewState = MapSheetPreviewStates.planningOfflineViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -638,7 +638,7 @@ private fun RoutePlanningOfflineIosPreview() = Showcase(platform = UiPlatform.Io
 @Composable
 private fun RoutePlanningFailedPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.planningFailedViewState(),
+        viewState = MapSheetPreviewStates.planningFailedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -649,7 +649,7 @@ private fun RoutePlanningFailedPreview() = Showcase {
 @Composable
 private fun RoutePlanningFailedIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.planningFailedViewState(),
+        viewState = MapSheetPreviewStates.planningFailedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -660,7 +660,7 @@ private fun RoutePlanningFailedIosPreview() = Showcase(platform = UiPlatform.Ios
 @Composable
 private fun RoutePlanningCollapsedPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.plannedCollapsedViewState(),
+        viewState = MapSheetPreviewStates.plannedCollapsedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -671,7 +671,7 @@ private fun RoutePlanningCollapsedPreview() = Showcase {
 @Composable
 private fun RoutePlanningCollapsedIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.plannedCollapsedViewState(),
+        viewState = MapSheetPreviewStates.plannedCollapsedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -682,7 +682,7 @@ private fun RoutePlanningCollapsedIosPreview() = Showcase(platform = UiPlatform.
 @Composable
 private fun RoutePlanningCollapsedPlanningPreview() = Showcase {
     Content(
-        viewState = TripPlanPreviewStates.planningCollapsedViewState(),
+        viewState = MapSheetPreviewStates.planningCollapsedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -693,7 +693,7 @@ private fun RoutePlanningCollapsedPlanningPreview() = Showcase {
 @Composable
 private fun RoutePlanningCollapsedPlanningIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        viewState = TripPlanPreviewStates.planningCollapsedViewState(),
+        viewState = MapSheetPreviewStates.planningCollapsedViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),

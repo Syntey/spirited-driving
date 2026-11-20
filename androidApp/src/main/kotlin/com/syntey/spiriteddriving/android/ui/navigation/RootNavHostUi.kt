@@ -24,7 +24,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesScreenUi
 import com.syntey.spiriteddriving.core.ui.components.DragHandle
 import com.syntey.spiriteddriving.core.ui.theme.Grid
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.MapScreenUi
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapScreenUi
 import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreenUi
 import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreen
 import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreenUi

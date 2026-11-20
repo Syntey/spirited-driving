@@ -1,9 +1,9 @@
 package com.syntey.spiriteddriving.feature.map.ui
 
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanComponentFactory
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreenNavigation
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetComponentFactory
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreenNavigation
 
 /**
  * The screens this feature offers to the navigation hosts in `:shared`. Components stay internal, so each screen is
@@ -11,6 +11,6 @@ import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreenNa
  */
 object MapScreens {
 
-    fun tripPlan(componentContext: AppComponentContext, navigation: TripPlanScreenNavigation): TripPlanScreen =
-        TripPlanComponentFactory.createComponent(componentContext, navigation)
+    fun mapSheet(componentContext: AppComponentContext, navigation: MapSheetScreenNavigation): MapSheetScreen =
+        MapSheetComponentFactory.createComponent(componentContext, navigation)
 }
