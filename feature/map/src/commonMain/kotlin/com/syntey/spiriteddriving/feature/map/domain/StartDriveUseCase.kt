@@ -15,7 +15,6 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
 import kotlin.time.Instant
 import kotlin.uuid.Uuid
 import org.koin.core.annotation.Factory
-import org.koin.core.annotation.Provided
 
 /**
  * Starts a drive on [Args.route] at [Args.at]. Starting the same route again before half its planned duration has passed
@@ -33,7 +32,7 @@ internal class StartDriveUseCase(
     private val driveRecorder: DriveRecorder,
     private val openDriveQuestion: OpenDriveQuestion,
     private val tripHistoryCache: TripHistoryCache,
-    @Provided private val driveReminders: DriveReminders,
+    private val driveReminders: DriveReminders,
 ) : UseCase<StartDriveUseCase.Args, Drive> {
 
     data class Args(

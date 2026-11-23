@@ -4,7 +4,6 @@ import com.syntey.spiriteddriving.core.platform.binding.Platform
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.http.HttpHeaders
-import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
 
 /**
@@ -12,7 +11,7 @@ import org.koin.core.annotation.Single
  * They're read for each request, as the user can change them while the app runs.
  */
 @Single
-internal class AcceptLanguagePlugin(@Provided private val platform: Platform) : HttpClientPlugin {
+internal class AcceptLanguagePlugin(private val platform: Platform) : HttpClientPlugin {
 
     override fun install(config: HttpClientConfig<*>) {
         config.install(

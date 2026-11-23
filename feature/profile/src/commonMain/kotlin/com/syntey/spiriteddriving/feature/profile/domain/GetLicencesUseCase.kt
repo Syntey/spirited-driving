@@ -8,11 +8,10 @@ import com.syntey.spiriteddriving.feature.profile.tools.OpenSourceLibrariesParse
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import org.koin.core.annotation.Factory
-import org.koin.core.annotation.Provided
 
 /** The licences of one library on the Licences screen, or of the Phosphor icons. Empty when the library isn't listed. */
 @Factory
-internal class GetLicencesUseCase(@Provided private val platform: Platform) : UseCase<GetLicencesUseCase.Args, ImmutableList<Licence>> {
+internal class GetLicencesUseCase(private val platform: Platform) : UseCase<GetLicencesUseCase.Args, ImmutableList<Licence>> {
 
     data class Args(val libraryId: String)
 

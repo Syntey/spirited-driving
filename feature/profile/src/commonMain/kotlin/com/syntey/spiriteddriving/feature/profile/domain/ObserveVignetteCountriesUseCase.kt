@@ -9,7 +9,6 @@ import com.syntey.spiriteddriving.feature.profile.tools.Constants
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import org.koin.core.annotation.Factory
-import org.koin.core.annotation.Provided
 
 /**
  * Emits the countries with a motorway vignette to ask about, now and after each change to them or to the covered area:
@@ -20,7 +19,7 @@ import org.koin.core.annotation.Provided
 internal class ObserveVignetteCountriesUseCase(
     private val coverageCache: CoverageCache,
     private val vignetteSettings: VignetteSettings,
-    @Provided private val platform: Platform,
+    private val platform: Platform,
 ) : FlowUseCase<Unit, List<VignetteCountry>> {
 
     override fun build(args: Unit): Flow<List<VignetteCountry>> =

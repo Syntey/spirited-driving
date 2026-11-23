@@ -19,14 +19,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
-import org.koin.core.annotation.Provided
 
 @Factory
 @GenerateFactory
 internal class ProfileComponent(
     @InjectedParam componentContext: AppComponentContext,
     @InjectedParam override val navigation: ProfileScreenNavigation,
-    @Provided private val platform: Platform,
+    private val platform: Platform,
     private val observeAccountUseCase: ObserveAccountUseCase,
     private val signInUseCase: SignInUseCase,
 ) : ScreenComponent<ProfileViewState, ProfileUiEvent, ProfileScreenNavigation>(

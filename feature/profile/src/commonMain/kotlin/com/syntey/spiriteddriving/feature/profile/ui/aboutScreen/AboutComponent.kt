@@ -16,14 +16,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
-import org.koin.core.annotation.Provided
 
 @Factory
 @GenerateFactory
 internal class AboutComponent(
     @InjectedParam componentContext: AppComponentContext,
     @InjectedParam override val navigation: AboutScreenNavigation,
-    @Provided private val platform: Platform,
+    private val platform: Platform,
     private val openWebPageUseCase: OpenWebPageUseCase,
 ) : ScreenComponent<AboutViewState, Nothing, AboutScreenNavigation>(
     componentContext = componentContext,

@@ -1,9 +1,13 @@
 package com.syntey.spiriteddriving.core.platform.binding
 
+import org.koin.core.annotation.Provided
+
 /**
  * This interface provides native binding interfaces which are used to interface between KMP and all its targets.
  * Each interface must be implemented natively on each platform.
+ * The app passes it to Koin at start, so it is `@Provided`.
  */
+@Provided
 interface PlatformBindings {
 
     /**

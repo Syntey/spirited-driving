@@ -166,7 +166,7 @@ private fun {Name}ScreenPreview() = Showcase {
   composable, like one in `:core:ui`. A preview in `Showcase(platform = UiPlatform.Ios)` shows the iOS look in Android
   Studio.
 
-**`model/ui/{Name}PreviewStates.kt`**: sample view states that several previews share (see `TripPlanPreviewStates`).
+**`model/ui/{Name}PreviewStates.kt`**: sample view states that several previews share (see `RoutePlanningPreviewStates`).
 A preview's own data stays in its file.
 
 ```kotlin
@@ -189,7 +189,7 @@ ui/components/     composables beyond a screen's entry one, shared by the featur
 ui/<name>Screen/   the contract, component, view state, navigation, UI events and entry composable
 ```
 
-- `androidMain` and `commonTest` mirror these packages: `MapScreenUi.android.kt` is in `ui/tripPlanScreen`, a test of
+- `androidMain` and `commonTest` mirror these packages: `MapScreenUi.android.kt` is in `ui/mapSheetScreen`, a test of
   `model/ui/SearchState` in `model/ui`. `iosMain/ui/ViewControllers.ios.kt` sits next to `<Feature>Screens`.
 - Previews go at the bottom of the file of the composable they show, never in a separate file. Only sample view states
   shared by several previews get their own file, `model/ui/{Name}PreviewStates.kt`.

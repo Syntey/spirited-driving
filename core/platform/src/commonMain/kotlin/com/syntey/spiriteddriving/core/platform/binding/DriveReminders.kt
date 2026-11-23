@@ -6,10 +6,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import org.koin.core.annotation.Factory
 
 /**
  * [PlatformDriveReminders] for coroutines.
  */
+@Factory
 class DriveReminders(private val binding: PlatformDriveReminders) {
 
     /** Whether the phone delivers the drive feedback notification now. */

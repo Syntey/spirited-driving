@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.withIndex
 import org.koin.core.annotation.Factory
-import org.koin.core.annotation.Provided
 
 /**
  * Keeps the account's data on the device in step with the account. Every sign-in, sign-out and account switch clears the
@@ -25,7 +24,7 @@ import org.koin.core.annotation.Provided
  */
 @Factory
 internal class SyncAccountDataOnAccountChangeUseCase(
-    @Provided private val auth: Auth,
+    private val auth: Auth,
     private val savedRoutesSource: SavedRoutesSource,
     private val savedRoutesCache: SavedRoutesCache,
     private val tripHistoryCache: TripHistoryCache,
