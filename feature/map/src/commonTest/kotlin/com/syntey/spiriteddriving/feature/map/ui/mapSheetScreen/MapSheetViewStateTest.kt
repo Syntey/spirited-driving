@@ -9,7 +9,6 @@ import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.kilometres
-import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.miles
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceKind
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
@@ -36,14 +35,10 @@ import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
-import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
-import com.syntey.spiriteddriving.feature.map.model.ui.UseBudgetButton
-import com.syntey.spiriteddriving.feature.map.tools.budgetText
-import com.syntey.spiriteddriving.core.resources.measure.durationText
-import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.desc
 import dev.icerock.moko.resources.desc.StringDesc
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningViewState
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -53,9 +48,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
-import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 class MapSheetViewStateTest {
 
@@ -252,10 +245,15 @@ class MapSheetViewStateTest {
         val state = MapSheetViewState(
             locationAccess = LocationAccess.Precise,
             baseMap = RouteMapState(userLocation = origin),
-            planning = RoutePlanningState(
-                destination = dresden,
-                start = Place(name = null, area = null, location = start),
-                budget = Budget.Time(30.minutes),
+            sheetStep = RoutePlanningViewState(
+                planning = RoutePlanningState(
+                    destination = dresden,
+                    start = Place(name = null, area = null, location = start),
+                    budget = Budget.Time(30.minutes),
+                ),
+                budgetChoice = choice(kind = BudgetKind.Time),
+                distanceUnit = DistanceUnit.Kilometres,
+                userLocation = origin,
             ),
         )
 
@@ -304,162 +302,6 @@ class MapSheetViewStateTest {
     }
 
     @Test
-    fun `no budget chips without planning`() {
-        assertTrue(MapSheetViewState().budgetChips.isEmpty())
-    }
-
-    @Test
-    fun `a time plan shows the six time chips with its budget selected`() {
-        val chips = planning(Budget.Time(30.minutes)).budgetChips
-
-        assertEquals(Constants.Budgets.TIME, chips.map { it.budget })
-        assertEquals(listOf(Budget.Time(30.minutes)), chips.filter { it.isSelected }.map { it.budget })
-    }
-
-    @Test
-    fun `a distance plan shows the six kilometre chips with its budget selected`() {
-        val chips = planning(Budget.Distance(50.kilometres)).budgetChips
-
-        assertEquals(Constants.Budgets.DISTANCE_KILOMETRES, chips.map { it.budget })
-        assertEquals(listOf(Budget.Distance(50.kilometres)), chips.filter { it.isSelected }.map { it.budget })
-    }
-
-    @Test
-    fun `no chip is selected for a budget that isn't a chip`() {
-        val chips = planning(Budget.Time(25.minutes)).budgetChips
-
-        assertEquals(6, chips.size)
-        assertTrue(chips.none { it.isSelected })
-    }
-
-    @Test
-    fun `the budget kind follows the planning budget`() {
-        val state = planning(Budget.Distance(50.kilometres)).copy(budgetChoice = choice(kind = BudgetKind.Time))
-
-        assertEquals(BudgetKind.Distance, state.budgetKind)
-    }
-
-    @Test
-    fun `the budget kind is the choice's without planning`() {
-        assertEquals(BudgetKind.Distance, MapSheetViewState(budgetChoice = choice(kind = BudgetKind.Distance)).budgetKind)
-    }
-
-    @Test
-    fun `there is no selected route row without planning`() {
-        assertNull(MapSheetViewState().selectedRouteRow)
-    }
-
-    @Test
-    fun `the selected route row is route 1 when planned`() {
-        val row = MapSheetPreviewStates.plannedViewState().selectedRouteRow
-
-        assertEquals(1, row?.number)
-        assertTrue(row?.isSelected == true)
-    }
-
-    @Test
-    fun `a distance plan in miles shows the six mile chips with its budget selected`() {
-        val chips = planning(Budget.Distance(20.miles)).copy(distanceUnit = DistanceUnit.Miles).budgetChips
-
-        assertEquals(Constants.Budgets.DISTANCE_MILES, chips.map { it.budget })
-        assertEquals(listOf(Budget.Distance(20.miles)), chips.filter { it.isSelected }.map { it.budget })
-    }
-
-    @Test
-    fun `the mile chips are labelled in miles`() {
-        val chips = planning(Budget.Distance(20.miles)).copy(distanceUnit = DistanceUnit.Miles).budgetChips
-
-        assertEquals(budgetText(Budget.Distance(5.miles), DistanceUnit.Miles), chips.first().label)
-    }
-
-    @Test
-    fun `no fun route message names the budget and the closest fun route`() {
-        val text = noFunRoute(budget = Budget.Time(15.minutes), closest = Budget.Time(22.minutes)).noFunRouteMessage?.text
-
-        assertEquals(
-            StringDesc.ResourceFormatted(
-                MR.strings.planning_no_fun_route,
-                budgetText(Budget.Time(15.minutes), DistanceUnit.Kilometres),
-                StringDesc.ResourceFormatted(MR.strings.planning_extra, durationText(22.minutes)),
-            ),
-            text,
-        )
-    }
-
-    @Test
-    fun `the use budget button picks the smallest chip that fits the closest fun route`() {
-        val useBudget = noFunRoute(budget = Budget.Time(15.minutes), closest = Budget.Time(22.minutes))
-            .noFunRouteMessage?.useBudget
-
-        assertEquals(
-            UseBudgetButton(
-                budget = Budget.Time(30.minutes),
-                label = StringDesc.ResourceFormatted(
-                    MR.strings.planning_use_budget,
-                    budgetText(Budget.Time(30.minutes), DistanceUnit.Kilometres),
-                ),
-            ),
-            useBudget,
-        )
-    }
-
-    @Test
-    fun `the closest fun route minutes round up to whole minutes`() {
-        val rounded = noFunRoute(budget = Budget.Time(15.minutes), closest = Budget.Time(21.minutes + 10.seconds))
-        val whole = noFunRoute(budget = Budget.Time(15.minutes), closest = Budget.Time(22.minutes))
-
-        assertEquals(whole.noFunRouteMessage?.text, rounded.noFunRouteMessage?.text)
-    }
-
-    @Test
-    fun `the use budget button picks the distance chip that fits the closest fun route`() {
-        val useBudget = noFunRoute(budget = Budget.Distance(10.kilometres), closest = Budget.Distance(23.kilometres))
-            .noFunRouteMessage?.useBudget
-
-        assertEquals(Budget.Distance(30.kilometres), useBudget?.budget)
-    }
-
-    @Test
-    fun `no fun route message without a chip big enough says it needs more than the largest one`() {
-        val message = noFunRoute(budget = Budget.Time(15.minutes), closest = Budget.Time(150.minutes)).noFunRouteMessage
-
-        assertEquals(
-            StringDesc.ResourceFormatted(
-                MR.strings.planning_no_fun_route_beyond,
-                budgetText(Budget.Time(15.minutes), DistanceUnit.Kilometres),
-                budgetText(Budget.Time(120.minutes), DistanceUnit.Kilometres),
-            ),
-            message?.text,
-        )
-        assertNull(message?.useBudget)
-    }
-
-    @Test
-    fun `no fun route message without a closest fun route says it needs more than the largest chip`() {
-        val message = noFunRoute(budget = Budget.Time(15.minutes), closest = null).noFunRouteMessage
-
-        assertEquals(
-            StringDesc.ResourceFormatted(
-                MR.strings.planning_no_fun_route_beyond,
-                budgetText(Budget.Time(15.minutes), DistanceUnit.Kilometres),
-                budgetText(Budget.Time(120.minutes), DistanceUnit.Kilometres),
-            ),
-            message?.text,
-        )
-        assertNull(message?.useBudget)
-    }
-
-    @Test
-    fun `no fun route message is absent when fun routes are listed`() {
-        assertNull(MapSheetPreviewStates.plannedViewState().noFunRouteMessage)
-    }
-
-    @Test
-    fun `no fun route message is absent while planning`() {
-        assertNull(MapSheetPreviewStates.planningViewState().noFunRouteMessage)
-    }
-
-    @Test
     fun `the rating step draws only the driven line`() {
         assertEquals(listOf("drive"), ratingState().routeLines.map { it.id })
     }
@@ -495,97 +337,6 @@ class MapSheetViewStateTest {
         assertFalse(ratingState().showsMapButtons)
     }
 
-    @Test
-    fun `the rating title names the destination`() {
-        assertEquals(StringDesc.ResourceFormatted(MR.strings.drive_feedback_question, "Karlštejn Castle"), ratingState().ratingTitle)
-    }
-
-    @Test
-    fun `the rating title asks without a name for an unnamed destination`() {
-        assertEquals(MR.strings.drive_feedback_question_unnamed.desc(), ratingState(destinationName = null).ratingTitle)
-    }
-
-    @Test
-    fun `the drive text joins the time, the planned duration and the distance`() {
-        val expected = StringDesc.ResourceFormatted(
-            MR.strings.drive_feedback_drive,
-            "Today, 14:20".desc(),
-            StringDesc.ResourceFormatted(MR.strings.unit_hours_minutes, 1, 5),
-            km("58"),
-        )
-
-        assertEquals(expected, ratingState().ratingDriveText)
-    }
-
-    @Test
-    fun `there are no reason chips before a thumb`() {
-        assertTrue(ratingState().reasonChips.isEmpty())
-    }
-
-    @Test
-    fun `there is no thanks before a thumb`() {
-        assertNull(ratingState().ratingThanks)
-    }
-
-    @Test
-    fun `a Good rating thanks for what stood out`() {
-        assertEquals(MR.strings.drive_feedback_thanks_good.desc(), ratingState(Rating(Thumb.Up)).ratingThanks)
-    }
-
-    @Test
-    fun `a Not good rating asks what didn't work`() {
-        assertEquals(MR.strings.drive_feedback_thanks_not_good.desc(), ratingState(Rating(Thumb.Down)).ratingThanks)
-    }
-
-    @Test
-    fun `a Good rating gives its five reason chips in order`() {
-        val reasons = ratingState(Rating(Thumb.Up)).reasonChips.map { it.reason }
-
-        assertEquals(
-            listOf(
-                RatingReason.CurvyRoads,
-                RatingReason.NiceViews,
-                RatingReason.LittleTraffic,
-                RatingReason.SmoothSurface,
-                RatingReason.WorthTheExtraTime,
-            ),
-            reasons,
-        )
-    }
-
-    @Test
-    fun `a Not good rating gives its eight reason chips in order`() {
-        val reasons = ratingState(Rating(Thumb.Down)).reasonChips.map { it.reason }
-
-        assertEquals(
-            listOf(
-                RatingReason.BoringRoads,
-                RatingReason.TooManyTowns,
-                RatingReason.TooNarrow,
-                RatingReason.RoughSurface,
-                RatingReason.HeavyTraffic,
-                RatingReason.Roadworks,
-                RatingReason.TookTooLong,
-                RatingReason.MapsAppWentAnotherWay,
-            ),
-            reasons,
-        )
-    }
-
-    @Test
-    fun `the picked reason chip is selected`() {
-        val chips = ratingState(Rating(Thumb.Up, setOf(RatingReason.NiceViews))).reasonChips
-
-        assertEquals(listOf(RatingReason.NiceViews), chips.filter { it.isSelected }.map { it.reason })
-    }
-
-    @Test
-    fun `a reason chip has the text of its reason`() {
-        val chip = ratingState(Rating(Thumb.Up)).reasonChips.single { it.reason == RatingReason.NiceViews }
-
-        assertEquals(MR.strings.reason_nice_views.desc(), chip.label)
-    }
-
     // The rating step after the first fun route of the recorded plan, driven at 14:20 today from the start to the castle
     @Test
     fun `the reminder shows on the collapsed search step`() {
@@ -600,7 +351,12 @@ class MapSheetViewStateTest {
     @Test
     fun `the reminder hides while planning`() {
         val planning = RoutePlanningState(destination = dresden, budget = Budget.Time(30.minutes))
-        assertFalse(reminderState().copy(planning = planning).showsReminder)
+        val sheetStep = RoutePlanningViewState(
+            planning = planning,
+            budgetChoice = choice(kind = BudgetKind.Time),
+            distanceUnit = DistanceUnit.Kilometres,
+        )
+        assertFalse(reminderState().copy(sheetStep = sheetStep).showsReminder)
     }
 
     @Test
@@ -669,12 +425,6 @@ class MapSheetViewStateTest {
         )
     }
 
-    private fun noFunRoute(budget: Budget, closest: Budget?) = MapSheetViewState(
-        planning = RoutePlanningState(destination = dresden, budget = budget).withPlan(
-            FakeRoutePlanner.Recorded.copy(funRoutes = emptyList(), closestFunRouteBudget = closest),
-        ),
-    )
-
     // The selected route starts at [start]; the user is at [from]
     private fun stateStartingAt(start: GeoPoint, from: GeoPoint?): MapSheetViewState {
         val recorded = FakeRoutePlanner.Recorded
@@ -682,12 +432,21 @@ class MapSheetViewStateTest {
         val plan = recorded.copy(funRoutes = recorded.funRoutes.map { it.copy(start = movedStart) })
         return MapSheetViewState(
             baseMap = RouteMapState(userLocation = from),
-            planning = RoutePlanningState(destination = dresden, budget = Budget.Time(30.minutes)).withPlan(plan),
+            sheetStep = RoutePlanningViewState(
+                planning = RoutePlanningState(destination = dresden, budget = Budget.Time(30.minutes)).withPlan(plan),
+                budgetChoice = choice(kind = BudgetKind.Time),
+                distanceUnit = DistanceUnit.Kilometres,
+                userLocation = from,
+            ),
         )
     }
 
     private fun planning(budget: Budget) = MapSheetViewState(
-        planning = RoutePlanningState(destination = dresden, budget = budget),
+        sheetStep = RoutePlanningViewState(
+            planning = RoutePlanningState(destination = dresden, budget = budget),
+            budgetChoice = choice(kind = BudgetKind.Time),
+            distanceUnit = DistanceUnit.Kilometres,
+        ),
     )
 
     private fun choice(kind: BudgetKind) = BudgetChoice(
@@ -818,15 +577,6 @@ class MapSheetViewStateTest {
     }
 
     @Test
-    fun `a saved route's row is route 1 without an extra`() {
-        val row = assertNotNull(savedRouteState().oneRouteRow)
-
-        assertEquals(1, row.number)
-        assertNull(row.extra)
-        assertTrue(row.isSelected)
-    }
-
-    @Test
     fun `a saved route's start distance counts from the route's start`() {
         val farAway =
             GeoPoint(latitude = savedRoute.route.start.location.latitude + 0.1, longitude = savedRoute.route.start.location.longitude)
@@ -876,18 +626,6 @@ class MapSheetViewStateTest {
         sheetHeight = SheetHeight.Half,
         savedRoutes = savedRoutes.toImmutableList(),
     )
-
-    @Test
-    fun `a past drive's header is its destination's name`() {
-        assertEquals("Karlštejn Castle", pastDriveState().oneRouteTitle)
-    }
-
-    @Test
-    fun `a past drive without a destination name is headed by its area`() {
-        val unnamed = pastDrive.copy(destination = Place(name = null, area = "49.9, 14.2", location = pastRoute.destination.location))
-
-        assertEquals("49.9, 14.2", pastDriveState(drive = unnamed).oneRouteTitle)
-    }
 
     @Test
     fun `a past drive's route is its drive route once loaded`() {

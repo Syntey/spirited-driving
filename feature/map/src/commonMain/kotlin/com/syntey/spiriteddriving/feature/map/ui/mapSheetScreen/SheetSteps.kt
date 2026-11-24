@@ -3,7 +3,12 @@ package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
-import kotlinx.coroutines.flow.StateFlow
+import com.syntey.spiriteddriving.feature.map.model.ui.SheetStep
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.oneRoute.OneRouteComponent
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.placeSearch.PlaceSearchComponent
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.rating.RatingComponent
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningComponent
+import kotlinx.coroutines.flow.Flow
 
 /**
  * The steps the map sheet holds in its child stack, as configurations. Not serialized, so the steps don't survive process death
@@ -15,16 +20,9 @@ internal sealed interface SheetStepConfig {
     data object DestinationSearch : SheetStepConfig
 
     /**
-     * The start search, pushed over route planning.
-     *
-     * @property closesPlanning Whether closing it closes route planning too.
-     */
-    data class StartSearch(val closesPlanning: Boolean) : SheetStepConfig
-
-    /**
      * Route planning to [destination], pushed over the destination search.
      *
-     * @property waitsForStart Whether the start search is pushed over it at once, as the user's location isn't usable.
+     * @property waitsForStart Whether planning opens with its start search, as the user's location isn't usable.
      */
     data class RoutePlanning(val destination: Place, val waitsForStart: Boolean) : SheetStepConfig
 
@@ -46,32 +44,35 @@ internal sealed interface SheetStepConfig {
 /** The child component of each sheet step, one per configuration. */
 internal sealed interface SheetStepChild {
 
-    /** The state the step shows, which the parent's view state follows. */
-    val state: StateFlow<*>
+    /** What the parent's view state follows. */
+    val state: Flow<*>
 
     /** The kind of sheet the step draws, which the parent's map and sheet content switch on. */
     val activeStep: ActiveSheetStep
 
-    /**
-     * @property isStart Whether this is the start search pushed over route planning rather than the destination search.
-     */
-    class PlaceSearch(val component: PlaceSearchComponent, isStart: Boolean) : SheetStepChild {
-        override val state: StateFlow<*> get() = component.viewState
-        override val activeStep: ActiveSheetStep = if (isStart) ActiveSheetStep.StartSearch else ActiveSheetStep.Search
+    /** The step's pins, route line and bounds on the map, when it shows one route instead of search and planning; null for the others. */
+    val sheetStep: SheetStep? get() = null
+
+    class PlaceSearch(val component: PlaceSearchComponent) : SheetStepChild {
+        override val state: Flow<*> get() = component.viewState
+        override val activeStep: ActiveSheetStep = ActiveSheetStep.Search
     }
 
     class RoutePlanning(val component: RoutePlanningComponent) : SheetStepChild {
-        override val state: StateFlow<*> get() = component.viewState
-        override val activeStep: ActiveSheetStep get() = ActiveSheetStep.RoutePlanning
+        override val state: Flow<*> get() = component.stateChanges
+        override val activeStep: ActiveSheetStep = ActiveSheetStep.RoutePlanning(component)
+        override val sheetStep: SheetStep get() = component.viewState.value
     }
 
     class OneRoute(val component: OneRouteComponent) : SheetStepChild {
-        override val state: StateFlow<*> get() = component.viewState
-        override val activeStep: ActiveSheetStep get() = ActiveSheetStep.OneRoute
+        override val state: Flow<*> get() = component.viewState
+        override val activeStep: ActiveSheetStep = ActiveSheetStep.OneRoute(component)
+        override val sheetStep: SheetStep get() = component.viewState.value.step
     }
 
     class Rating(val component: RatingComponent) : SheetStepChild {
-        override val state: StateFlow<*> get() = component.viewState
-        override val activeStep: ActiveSheetStep get() = ActiveSheetStep.Rating
+        override val state: Flow<*> get() = component.viewState
+        override val activeStep: ActiveSheetStep = ActiveSheetStep.Rating(component)
+        override val sheetStep: SheetStep get() = component.viewState.value.step
     }
 }

@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.map.ui.components
+package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.placeSearch
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +18,9 @@ import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningPreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
+import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
+import com.syntey.spiriteddriving.feature.map.ui.components.SearchResults
+import com.syntey.spiriteddriving.feature.map.ui.components.SearchRow
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.ActiveSheetStep
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
@@ -29,11 +32,13 @@ import dev.icerock.moko.resources.compose.stringResource
 /**
  * The place search step of the map's sheet: the field, the notes above it while collapsed, the start's destination and the
  * results. The destination search and the start search both show it.
+ *
+ * @param tripDestination The trip's destination, shown over the start search.
  */
 @Composable
-internal fun PlaceSearchHeader(viewState: MapSheetViewState, actions: MapSheetScreen.Actions) {
+internal fun PlaceSearchHeader(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, tripDestination: Place? = null) {
     if (viewState.startSearch != null) {
-        StartStepTo(destination = viewState.planning?.destination)
+        StartStepTo(destination = tripDestination)
     } else if (viewState.sheetHeight == SheetHeight.Collapsed) {
         CollapsedNotes(viewState, actions)
     }
@@ -267,7 +272,7 @@ private fun MapSheetSearchDistancesIosPreview() = Showcase(platform = UiPlatform
 @Composable
 private fun MapSheetStartPreview() = Showcase {
     Content(
-        step = ActiveSheetStep.StartSearch,
+        step = RoutePlanningPreviewStates.stepOf(RoutePlanningPreviewStates.startStepViewState()),
         viewState = RoutePlanningPreviewStates.startStepViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -279,7 +284,7 @@ private fun MapSheetStartPreview() = Showcase {
 @Composable
 private fun MapSheetStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        step = ActiveSheetStep.StartSearch,
+        step = RoutePlanningPreviewStates.stepOf(RoutePlanningPreviewStates.startStepViewState()),
         viewState = RoutePlanningPreviewStates.startStepViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -291,7 +296,9 @@ private fun MapSheetStartIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun MapSheetStartApproximatePreview() = Showcase {
     Content(
-        step = ActiveSheetStep.StartSearch,
+        step = RoutePlanningPreviewStates.stepOf(
+            RoutePlanningPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
+        ),
         viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -303,7 +310,9 @@ private fun MapSheetStartApproximatePreview() = Showcase {
 @Composable
 private fun MapSheetStartApproximateIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        step = ActiveSheetStep.StartSearch,
+        step = RoutePlanningPreviewStates.stepOf(
+            RoutePlanningPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
+        ),
         viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = LocationAccess.Approximate),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -315,7 +324,7 @@ private fun MapSheetStartApproximateIosPreview() = Showcase(platform = UiPlatfor
 @Composable
 private fun MapSheetStartNoAccessPreview() = Showcase {
     Content(
-        step = ActiveSheetStep.StartSearch,
+        step = RoutePlanningPreviewStates.stepOf(RoutePlanningPreviewStates.startStepViewState(locationAccess = null)),
         viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = null),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -327,7 +336,7 @@ private fun MapSheetStartNoAccessPreview() = Showcase {
 @Composable
 private fun MapSheetStartNoAccessIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        step = ActiveSheetStep.StartSearch,
+        step = RoutePlanningPreviewStates.stepOf(RoutePlanningPreviewStates.startStepViewState(locationAccess = null)),
         viewState = RoutePlanningPreviewStates.startStepViewState(locationAccess = null),
         actions = noOpActions(),
         onCollapsedHeightChange = {},

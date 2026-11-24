@@ -196,7 +196,7 @@ private fun Content(
         }
         // While planning or showing a saved route, the routes are framed above the sheet; the collapsed height otherwise, so the
         // camera doesn't move as the sheet is dragged
-        val fitBottomPadding = sheetCover.takeIf { viewState.planning != null || viewState.oneRouteStep != null }
+        val fitBottomPadding = sheetCover.takeIf { viewState.sheetStep != null && viewState.ratingStep == null }
         // The reminder sits above the collapsed sheet, so the map's logo and legal notice move up with it
         val reminderHeight = if (viewState.showsReminder) REMINDER_GAP + Grid.d14 else Grid.d0
         Map(
@@ -678,7 +678,10 @@ private fun MapScreenPlannedPreview() {
             viewState = state,
             actions = noOpActions(),
             sheet = { onCollapsedHeightChange ->
-                MapSheetUi(screen = MapSheetPreviewStates.screen(state), onCollapsedHeightChange = onCollapsedHeightChange)
+                MapSheetUi(
+                    screen = MapSheetPreviewStates.screen(state, step = RoutePlanningPreviewStates.stepOf(state)),
+                    onCollapsedHeightChange = onCollapsedHeightChange,
+                )
             },
         )
     }

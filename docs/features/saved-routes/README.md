@@ -33,7 +33,7 @@ Needed.
 
 The list, with rename and delete, is `SavedRoutesComponent` in `:feature:routes`: a native sheet at large height on iOS,
 full screen on Android. A saved route on the map is a one-route step of the map's sheet, held by `MapSheetComponent` in
-`:feature:map`, and Save is `RouteSavingComponent`, its child there. The code holds their layout, sizes and copy; these
+`:feature:map`, which holds Save too. The code holds their layout, sizes and copy; these
 are the decisions behind them. What isn't built yet, the list's order by last use and the vignette note, is still in
 [design.md](design.md).
 

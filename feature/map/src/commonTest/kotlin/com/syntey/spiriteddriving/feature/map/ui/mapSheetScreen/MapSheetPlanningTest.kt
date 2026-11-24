@@ -39,47 +39,46 @@ class MapSheetPlanningTest {
     fun `choosing a budget plans again with it`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
 
-        trip.screen.actions.onBudgetClick(Budget.Time(60.minutes))
-        assertEquals(PlanningStatus.Planning, trip.screen.viewState.value.planning?.status)
+        trip.planning.actions.onBudgetClick(Budget.Time(60.minutes))
+        assertEquals(PlanningStatus.Planning, trip.planningState?.planning?.status)
         advanceUntilIdle()
 
-        val planned = trip.screen.viewState.value
-        assertEquals(Budget.Time(60.minutes), planned.planning?.budget)
-        assertEquals(PlanningStatus.Planned, planned.planning?.status)
+        assertEquals(Budget.Time(60.minutes), trip.planningState?.planning?.budget)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 
     @Test
     fun `the budget chosen is kept for the next trip`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
-        trip.screen.actions.onBudgetClick(Budget.Time(60.minutes))
+        trip.planning.actions.onBudgetClick(Budget.Time(60.minutes))
         advanceUntilIdle()
 
-        trip.screen.actions.onRoutePlanningClose()
+        trip.planning.actions.onCloseClick()
         trip.screen.actions.onSuggestionClick(firstCovered(trip))
         advanceUntilIdle()
 
-        assertEquals(Budget.Time(60.minutes), trip.screen.viewState.value.planning?.budget)
+        assertEquals(Budget.Time(60.minutes), trip.planningState?.planning?.budget)
     }
 
     @Test
     fun `switching the budget to distance plans again in kilometres`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
 
-        trip.screen.actions.onBudgetKindChange(BudgetKind.Distance)
-        assertEquals(PlanningStatus.Planning, trip.screen.viewState.value.planning?.status)
+        trip.planning.actions.onBudgetKindChange(BudgetKind.Distance)
+        assertEquals(PlanningStatus.Planning, trip.planningState?.planning?.status)
         advanceUntilIdle()
 
         val state = trip.screen.viewState.value
-        assertEquals(Budget.Distance(30.kilometres), state.planning?.budget)
-        assertEquals(BudgetKind.Distance, state.budgetKind)
+        assertEquals(Budget.Distance(30.kilometres), trip.planningState?.planning?.budget)
+        assertEquals(BudgetKind.Distance, trip.planning.viewState.value.budgetKind)
         assertEquals(DistanceUnit.Kilometres, state.distanceUnit)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 
     @Test
     fun `changing the distance unit moves a distance budget`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
-        trip.screen.actions.onBudgetKindChange(BudgetKind.Distance)
+        trip.planning.actions.onBudgetKindChange(BudgetKind.Distance)
         advanceUntilIdle()
         trip.routePlanner.plan = otherPlan
 
@@ -89,22 +88,21 @@ class MapSheetPlanningTest {
         val state = trip.screen.viewState.value
         assertEquals(DistanceUnit.Miles, state.distanceUnit)
         // 30 km is nearest to 20 miles among the mile budgets
-        assertEquals(Budget.Distance(20.miles), state.planning?.budget)
+        assertEquals(Budget.Distance(20.miles), trip.planningState?.planning?.budget)
     }
 
     @Test
     fun `changing the distance unit plans again`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
-        trip.screen.actions.onBudgetKindChange(BudgetKind.Distance)
+        trip.planning.actions.onBudgetKindChange(BudgetKind.Distance)
         advanceUntilIdle()
         trip.routePlanner.plan = otherPlan
 
         trip.distanceUnits.set(DistanceUnit.Miles)
         advanceUntilIdle()
 
-        val state = trip.screen.viewState.value
-        assertEquals(otherPlan, state.planning?.plan)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertEquals(otherPlan, trip.planningState?.planning?.plan)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 
     @Test
@@ -115,9 +113,8 @@ class MapSheetPlanningTest {
         trip.vignettes.setHasVignette(CountryCode.Czechia, hasVignette = true)
         advanceUntilIdle()
 
-        val state = trip.screen.viewState.value
-        assertEquals(otherPlan, state.planning?.plan)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertEquals(otherPlan, trip.planningState?.planning?.plan)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 
     @Test
@@ -130,7 +127,7 @@ class MapSheetPlanningTest {
         trip.screen.actions.onSuggestionClick(searchForCovered(trip))
         advanceUntilIdle()
 
-        assertEquals(PlanningStatus.Offline, trip.screen.viewState.value.planning?.status)
+        assertEquals(PlanningStatus.Offline, trip.planningState?.planning?.status)
     }
 
     @Test
@@ -143,10 +140,10 @@ class MapSheetPlanningTest {
         advanceUntilIdle()
 
         trip.routePlanner.failure = null
-        trip.screen.actions.onPlanningRetry()
+        trip.planning.actions.onRetryClick()
         advanceUntilIdle()
 
-        assertEquals(PlanningStatus.Planned, trip.screen.viewState.value.planning?.status)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 
     @Test
@@ -159,7 +156,7 @@ class MapSheetPlanningTest {
         trip.screen.actions.onSuggestionClick(searchForCovered(trip))
         advanceUntilIdle()
 
-        assertEquals(PlanningStatus.NotCovered, trip.screen.viewState.value.planning?.status)
+        assertEquals(PlanningStatus.NotCovered, trip.planningState?.planning?.status)
     }
 
     @Test
@@ -172,17 +169,17 @@ class MapSheetPlanningTest {
         trip.screen.actions.onSuggestionClick(searchForCovered(trip))
         advanceUntilIdle()
 
-        assertEquals(PlanningStatus.Failed, trip.screen.viewState.value.planning?.status)
+        assertEquals(PlanningStatus.Failed, trip.planningState?.planning?.status)
     }
 
     @Test
     fun `closing route planning brings the search back at full height`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
 
-        trip.screen.actions.onRoutePlanningClose()
+        trip.planning.actions.onCloseClick()
 
         val state = trip.screen.viewState.value
-        assertNull(state.planning)
+        assertNull(trip.planningState)
         assertEquals(SheetHeight.Full, state.sheetHeight)
         assertEquals("karlst", state.search.text)
     }
@@ -192,7 +189,7 @@ class MapSheetPlanningTest {
         val trip = planFromPrague()
         assertNotNull(trip.screen.viewState.value.map.destination)
 
-        trip.screen.actions.onRoutePlanningClose()
+        trip.planning.actions.onCloseClick()
 
         val state = trip.screen.viewState.value
         assertNull(state.map.destination)
@@ -207,19 +204,18 @@ class MapSheetPlanningTest {
         advanceUntilIdle()
         trip.screen.actions.onSuggestionClick(searchForCovered(trip))
         advanceUntilIdle()
-        assertEquals(PlanningStatus.Planning, trip.screen.viewState.value.planning?.status)
+        assertEquals(PlanningStatus.Planning, trip.planningState?.planning?.status)
 
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         trip.screen.actions.onMyLocationClick()
         advanceUntilIdle()
         assertNull(trip.screen.viewState.value.startSearch)
-        assertEquals(PlanningStatus.Planning, trip.screen.viewState.value.planning?.status)
+        assertEquals(PlanningStatus.Planning, trip.planningState?.planning?.status)
 
         sendFix(trip, Points.prague)
 
-        val state = trip.screen.viewState.value
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
-        assertNull(state.planning?.start)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
+        assertNull(trip.planningState?.planning?.start)
     }
 
     /** A trip planned from the user's location at Prague, with the destination's first covered suggestion chosen. */

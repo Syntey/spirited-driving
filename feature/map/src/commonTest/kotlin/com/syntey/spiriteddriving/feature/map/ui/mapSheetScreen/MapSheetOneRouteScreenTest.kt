@@ -40,8 +40,8 @@ class MapSheetOneRouteScreenTest {
 
         val state = trip.screen.viewState.value
         assertEquals(OneRouteStatus.Ready, state.oneRouteStep?.status)
-        assertNotNull(state.oneRouteRow)
-        assertEquals(FakeSavedRoutesSource.Recorded.name, state.oneRouteTitle)
+        assertNotNull(trip.oneRoute.viewState.value.row)
+        assertEquals(FakeSavedRoutesSource.Recorded.name, trip.oneRoute.viewState.value.title)
         assertEquals(SheetHeight.Half, state.sheetHeight)
     }
 
@@ -56,8 +56,8 @@ class MapSheetOneRouteScreenTest {
         val state = trip.screen.viewState.value
         assertIs<OneRouteOrigin.Past>(state.oneRouteStep?.origin)
         assertEquals(OneRouteStatus.Ready, state.oneRouteStep?.status)
-        assertNotNull(state.oneRouteRow)
-        assertEquals(FakeTripHistorySource.Recorded.destination.name, state.oneRouteTitle)
+        assertNotNull(trip.oneRoute.viewState.value.row)
+        assertEquals(FakeTripHistorySource.Recorded.destination.name, trip.oneRoute.viewState.value.title)
     }
 
     @Test
@@ -71,7 +71,7 @@ class MapSheetOneRouteScreenTest {
         assertEquals(OneRouteStatus.Offline, trip.screen.viewState.value.oneRouteStep?.status)
 
         trip.savedRoutesSource.error = null
-        trip.screen.actions.onOneRouteRetry()
+        trip.oneRoute.actions.onRetryClick()
         advanceUntilIdle()
         assertEquals(OneRouteStatus.Ready, trip.screen.viewState.value.oneRouteStep?.status)
     }
@@ -87,7 +87,7 @@ class MapSheetOneRouteScreenTest {
         assertEquals(OneRouteStatus.Failed, trip.screen.viewState.value.oneRouteStep?.status)
 
         trip.savedRoutesSource.error = null
-        trip.screen.actions.onOneRouteRetry()
+        trip.oneRoute.actions.onRetryClick()
         advanceUntilIdle()
         assertEquals(OneRouteStatus.Ready, trip.screen.viewState.value.oneRouteStep?.status)
     }
@@ -99,7 +99,7 @@ class MapSheetOneRouteScreenTest {
         trip.screen.showSavedRoute(FakeSavedRoutesSource.Recorded.id)
         advanceUntilIdle()
 
-        trip.screen.actions.onOneRouteClose()
+        trip.oneRoute.actions.onCloseClick()
         advanceUntilIdle()
 
         val state = trip.screen.viewState.value
@@ -140,8 +140,8 @@ class MapSheetOneRouteScreenTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.oneRouteStep)
-        assertEquals(FakeTripHistorySource.Recorded.destination.location, state.planning?.destination?.location)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertEquals(FakeTripHistorySource.Recorded.destination.location, trip.planningState?.planning?.destination?.location)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 
     @Test
@@ -157,7 +157,7 @@ class MapSheetOneRouteScreenTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.oneRouteStep)
-        assertEquals(Points.pinned, state.planning?.destination?.location)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertEquals(Points.pinned, trip.planningState?.planning?.destination?.location)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 }

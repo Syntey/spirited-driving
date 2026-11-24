@@ -8,10 +8,13 @@ import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
+import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.savedAs
+import com.syntey.spiriteddriving.feature.map.tools.Constants
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningViewState
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -149,9 +152,13 @@ class MapSheetOneRouteTest {
     private fun stateWith(selectedRouteId: String?, savedRoutes: List<SavedRoute>): MapSheetViewState {
         val planning = RoutePlanningState(
             destination = Place(name = "Karlštejn Castle", area = null, location = route.destination.location),
-            budget = MapSheetViewState().budgetChoice.budget,
-            selectedRouteId = selectedRouteId,
+            budget = Constants.Budgets.DEFAULT_CHOICE.budget,
+        ).withPlan(FakeRoutePlanner.Recorded).copy(selectedRouteId = selectedRouteId)
+        val sheetStep = RoutePlanningViewState(
+            planning = planning,
+            budgetChoice = Constants.Budgets.DEFAULT_CHOICE,
+            distanceUnit = DistanceUnit.Kilometres,
         )
-        return MapSheetViewState(planning = planning, savedRoutes = savedRoutes.toImmutableList())
+        return MapSheetViewState(sheetStep = sheetStep, savedRoutes = savedRoutes.toImmutableList())
     }
 }

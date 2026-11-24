@@ -11,17 +11,14 @@ internal interface MapSheetHost {
     /** The user's location, once it's known. */
     val userLocation: GeoPoint?
 
-    /** Whether the start search is open, which route planning waits on for its start. */
-    val isStartSearchOpen: Boolean
-
     /** How far the sheet is pulled up now. */
     val sheetHeight: SheetHeight
 
     /** Asks for the sheet to be pulled to [height]. */
     fun requestSheetHeight(height: SheetHeight)
 
-    /** The step on top is done or closed: it's popped, and the sheet collapses. */
-    fun onStepClosed()
+    /** The step on top is done or closed: it's popped, and the sheet goes to [sheetHeight] over the search it leaves. */
+    fun onStepClosed(sheetHeight: SheetHeight = SheetHeight.Collapsed)
 
     /** Whether [point] is in the covered area. */
     fun covers(point: GeoPoint): Boolean
@@ -29,11 +26,11 @@ internal interface MapSheetHost {
     /** Shows that the chosen place is outside the covered area. */
     fun onNotCovered()
 
-    /** A place was chosen: a destination, or the start while the start search is open. */
+    /** A place was chosen in a search: the destination, or in planning's start search the start. */
     fun onPlaceChosen(place: Place)
 
-    /** A picked point was named, or failed to be named with its coordinates; the destination search keeps the place. */
-    fun onPlaceNamed(place: Place)
+    /** The destination search keeps [place] with the recent places: a chosen start, or a picked point once it's named. */
+    fun keepRecentPlace(place: Place)
 
     /** The recent places changed; every place search shows them. */
     fun onRecentPlacesChanged(places: List<Place>)

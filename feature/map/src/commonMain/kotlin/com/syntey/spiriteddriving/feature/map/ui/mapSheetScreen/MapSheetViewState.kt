@@ -2,65 +2,38 @@ package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
 
 import com.syntey.spiriteddriving.core.domain.geo.GeoBounds
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
-import com.syntey.spiriteddriving.core.domain.drive.RatingReason
-import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.geo.Length
-import com.syntey.spiriteddriving.core.domain.route.Budget
-import com.syntey.spiriteddriving.core.domain.route.BudgetChoice
-import com.syntey.spiriteddriving.core.domain.route.BudgetKind
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
-import com.syntey.spiriteddriving.core.domain.route.RouteKind
-import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
-import com.syntey.spiriteddriving.core.resources.datetime.driveDateTimeText
-import com.syntey.spiriteddriving.feature.map.model.ui.BudgetChip
+import com.syntey.spiriteddriving.core.resources.measure.distanceText
 import com.syntey.spiriteddriving.feature.map.model.ui.DriveDialog
-import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
-import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage
-import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
-import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
-import com.syntey.spiriteddriving.feature.map.model.ui.ReasonChip
-import com.syntey.spiriteddriving.feature.map.model.ui.SheetStep
-import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
-import com.syntey.spiriteddriving.feature.map.model.ui.RouteNameDialog
-import com.syntey.spiriteddriving.feature.map.model.ui.UseBudgetButton
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
-import com.syntey.spiriteddriving.feature.map.model.ui.RecentPlaceRow
-import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
+import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
-import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
-import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
+import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
+import com.syntey.spiriteddriving.feature.map.model.ui.RecentPlaceRow
+import com.syntey.spiriteddriving.feature.map.model.ui.ReminderBubble
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteLine
-import com.syntey.spiriteddriving.feature.map.model.ui.RouteRow
+import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
+import com.syntey.spiriteddriving.feature.map.model.ui.RouteNameDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
+import com.syntey.spiriteddriving.feature.map.model.ui.SheetStep
 import com.syntey.spiriteddriving.feature.map.model.ui.StartSearch
 import com.syntey.spiriteddriving.feature.map.model.ui.SuggestionRow
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
-import com.syntey.spiriteddriving.feature.map.tools.budgetText
-import com.syntey.spiriteddriving.feature.map.tools.distanceChips
-import com.syntey.spiriteddriving.core.resources.measure.distanceText
-import com.syntey.spiriteddriving.core.resources.measure.durationText
-import com.syntey.spiriteddriving.core.resources.measure.heightText
-import com.syntey.spiriteddriving.core.resources.rating.label
-import com.syntey.spiriteddriving.feature.map.tools.boundsOf
+import com.syntey.spiriteddriving.feature.map.tools.Constants
 import com.syntey.spiriteddriving.feature.map.tools.matchedRanges
-import com.syntey.spiriteddriving.feature.map.tools.midpointAlong
-import com.syntey.spiriteddriving.feature.map.tools.withMinimumSpan
 import dev.icerock.moko.resources.desc.ResourceFormatted
-import dev.icerock.moko.resources.desc.desc
 import dev.icerock.moko.resources.desc.StringDesc
-import kotlin.math.ceil
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.DurationUnit
+import dev.icerock.moko.resources.desc.desc
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
-import com.syntey.spiriteddriving.feature.map.tools.Constants
 
 /**
  * @property baseMap The map from the component's own location, coverage and following, without pins; [map] adds the pins.
@@ -69,13 +42,12 @@ import com.syntey.spiriteddriving.feature.map.tools.Constants
  *   the note doesn't flash.
  * @property sheetHeight How far the sheet is pulled up: by the user, or by focusing or closing the search.
  * @property distanceUnit The unit distances are shown in.
- * @property planning The route planning step; null while the sheet shows the search.
- * @property startSearch The start step, open over route planning; null otherwise.
- * @property budgetChoice The budget planning starts with, and the last value in each unit.
+ * @property startSearch The start search, open over route planning; null otherwise. Projected from planning for the search's field
+ *   and rows.
  * @property driveDialog The dialog about a drive shown over the trip; null when none is.
  * @property isFirstDriveExplained Whether the user went past the first-drive dialog.
- * @property sheetStep The step that takes the sheet's place of the search and planning: the rating step after a drive, or a
- *   one-route step of a saved route or a past drive; null otherwise.
+ * @property sheetStep The step that takes the sheet's place of the search and shows a trip or a route: route planning, the rating
+ *   step after a drive, or a one-route step of a saved route or a past drive; null while the sheet shows the destination search.
  * @property reminder The reminder about the drive not rated yet; null when there's none.
  * @property isSignedIn Whether a user is signed in; Save needs one.
  * @property savedRoutes The kept saved routes, which the selected route is checked against.
@@ -89,9 +61,7 @@ data class MapSheetViewState(
     val sheetHeight: SheetHeight = SheetHeight.Collapsed,
     val search: SearchState = SearchState(),
     val distanceUnit: DistanceUnit = DistanceUnit.Kilometres,
-    val planning: RoutePlanningState? = null,
     val startSearch: StartSearch? = null,
-    val budgetChoice: BudgetChoice = Constants.Budgets.DEFAULT_CHOICE,
     val driveDialog: DriveDialog? = null,
     val isFirstDriveExplained: Boolean = false,
     val sheetStep: SheetStep? = null,
@@ -101,16 +71,9 @@ data class MapSheetViewState(
     val isSavingRoute: Boolean = false,
     val nameDialog: RouteNameDialog? = null,
 ) {
-    /**
-     * The map the screen shows: [baseMap] with the pins of the step being shown, the sheet step's when there is one, else the
-     * planning's.
-     */
+    /** The map the screen shows: [baseMap] with the pins of the step on top, when it shows a trip or a route. */
     val map: RouteMapState
-        get() {
-            val step = sheetStep
-            if (step != null) return baseMap.copy(start = step.start, destination = step.destination)
-            return baseMap.copy(start = planning?.start?.location, destination = planning?.destination?.location)
-        }
+        get() = sheetStep?.let { baseMap.copy(start = it.start, destination = it.destination) } ?: baseMap
 
     /** The rating step after a drive; null otherwise. */
     val ratingStep: RatingStep? get() = sheetStep as? RatingStep
@@ -120,51 +83,14 @@ data class MapSheetViewState(
 
     val locateButton: LocateButton get() = LocateButton.of(locationAccess, map.followsUser)
 
-    /** The unit the budget is in: the planning's budget's while planning, otherwise the choice's. */
-    val budgetKind: BudgetKind
-        get() = when (planning?.budget) {
-            is Budget.Time -> BudgetKind.Time
-            is Budget.Distance -> BudgetKind.Distance
-            null -> budgetChoice.kind
-        }
+    /** The profile and locate buttons hide while a step shows a trip or a route on the map, and during the rating step. */
+    val showsMapButtons: Boolean get() = sheetStep == null
 
-    /** The chips in the planning budget's unit; empty without planning. */
-    val budgetChips: ImmutableList<BudgetChip>
-        get() {
-            val budget = planning?.budget ?: return persistentListOf()
-            return budgetOptions(budget, distanceUnit).map { option ->
-                BudgetChip(budget = option, label = budgetText(option, distanceUnit), isSelected = option == budget)
-            }.toImmutableList()
-        }
+    /** The area the map frames, from the step on top; null without one. */
+    val routeBounds: GeoBounds? get() = sheetStep?.routeBounds
 
-    /**
-     * The message above the fastest route when no fun route fits the budget. Null unless planned without fun routes, so it
-     * never shows while planning or with fun routes listed.
-     */
-    val noFunRouteMessage: NoFunRouteMessage?
-        get() {
-            val planning = planning ?: return null
-            val plan = planning.plan ?: return null
-            if (planning.status != PlanningStatus.Planned || plan.funRoutes.isNotEmpty()) return null
-            return noFunRouteMessageFor(planning, plan)
-        }
-
-    /** The profile and locate buttons hide while planning, as the planned routes take the map, and during the rating step. */
-    val showsMapButtons: Boolean get() = planning == null && sheetStep == null
-
-    /**
-     * The area the map frames: all the planned routes' lines once they have points; otherwise, and while planning, the start,
-     * or the user's location when known, and the destination. Never smaller than the minimum span, so a single point still shows
-     * its streets. During the rating step, the driven line. Null without planning or the rating step.
-     */
-    val routeBounds: GeoBounds?
-        get() {
-            sheetStep?.let { return it.routeBounds }
-            val planning = planning ?: return null
-            val points = if (planning.plan != null) planning.listedRoutes.flatMap { it.line } else emptyList()
-            val bounds = if (points.isEmpty()) planningBounds(planning) else boundsOf(points)
-            return bounds.withMinimumSpan()
-        }
+    /** The line of each route the map draws, from the step on top; empty without one. */
+    val routeLines: ImmutableList<RouteLine> get() = sheetStep?.routeLines ?: persistentListOf()
 
     /** The user's location can start a trip: precise, as an approximate start can be kilometres off, and in the covered area. */
     val hasUsableLocation: Boolean get() = locationAccess == LocationAccess.Precise && !map.isOutsideCoveredArea
@@ -209,58 +135,11 @@ data class MapSheetViewState(
             )
         }.toImmutableList()
 
-    /** The routes of the plan as the route list shows them; empty without a plan. */
-    val routeRows: ImmutableList<RouteRow>
-        get() {
-            val planning = planning ?: return persistentListOf()
-            // The fun routes come first in the listed routes, so a fun route's number is its place in the list
-            return planning.listedRoutes.mapIndexed { index, route ->
-                routeRow(
-                    route = route,
-                    number = (index + 1).takeIf { route.kind == RouteKind.Fun },
-                    extra = extraText(route, planning.budget),
-                    isSelected = route.id == planning.selectedRouteId,
-                )
-            }.toImmutableList()
-        }
-
-    /** The selected route as the route list shows it; null without a plan. */
-    val selectedRouteRow: RouteRow? get() = routeRows.firstOrNull { it.isSelected }
-
-    /** The saved route's route as its step's summary shows it: numbered 1, without an extra; null until it's loaded. */
-    val oneRouteRow: RouteRow?
-        get() {
-            val route = oneRouteStep?.route ?: return null
-            return routeRow(route = route, number = 1, extra = null, isSelected = true)
-        }
-
     /**
-     * The route Drive hands off: the saved route's while its step is open, else the selected planned route. Null while there's
-     * none to drive, such as while the saved route is still loading.
+     * The route Drive hands off, from the step on top. Null while there's none to drive, such as while the saved route is still
+     * loading.
      */
-    val driveRoute: Route? get() = oneRouteStep?.route ?: planning?.selectedRoute
-
-    /** The one-route step's header title: the saved route's name, or the past drive's destination. Null without the step. */
-    val oneRouteTitle: String?
-        get() = when (val origin = oneRouteStep?.origin ?: return null) {
-            is OneRouteOrigin.Saved -> origin.savedRoute.name
-            is OneRouteOrigin.Past -> origin.destination.name ?: origin.destination.area.orEmpty()
-        }
-
-    /**
-     * The one-route step's header subtitle: the start's area, and for a past drive, when it started before that. Null without the
-     * step, and without the start's area for a saved route.
-     */
-    val oneRouteSubtitle: StringDesc?
-        get() = when (val origin = oneRouteStep?.origin ?: return null) {
-            is OneRouteOrigin.Saved -> origin.start.shortArea?.let { StringDesc.ResourceFormatted(MR.strings.planning_from, it) }
-
-            is OneRouteOrigin.Past -> {
-                val started = driveDateTimeText(origin.drive.startedAt)
-                origin.start.shortArea?.let { StringDesc.ResourceFormatted(MR.strings.map_past_drive_subtitle, started, it) }
-                    ?: StringDesc.ResourceFormatted(MR.strings.map_past_drive_subtitle_no_start, started)
-            }
-        }
+    val driveRoute: Route? get() = sheetStep?.driveRoute
 
     /**
      * The saved route the route on screen is kept as, or null when it isn't saved: by its route ID for a plan, by the saved route's
@@ -274,16 +153,15 @@ data class MapSheetViewState(
                     is OneRouteOrigin.Past -> savedRoutes.firstOrNull { it.route.id == origin.drive.routeId }
                 }
             }
-            val routeId = planning?.selectedRouteId ?: return null
+            val routeId = driveRoute?.id ?: return null
             return savedRoutes.firstOrNull { it.route.id == routeId }
         }
 
     /** Whether the route on screen is saved; see [savedRouteOnScreen]. */
     val isSelectedRouteSaved: Boolean get() = savedRouteOnScreen != null
 
-    /** The route with the ID among the routes on screen: a planned route or the one-route step's; null when neither has it. */
-    fun routeOnScreen(routeId: String): Route? =
-        planning?.listedRoutes?.firstOrNull { it.id == routeId } ?: driveRoute?.takeIf { it.id == routeId }
+    /** The route with the ID among the routes on screen: the step on top's, when it shows a trip or a route. */
+    fun routeOnScreen(routeId: String): Route? = sheetStep?.routeWithId(routeId)
 
     /** Drive is offered once a route is selected, or a saved route's route is loaded. */
     val isDriveEnabled: Boolean get() = driveRoute != null
@@ -311,49 +189,10 @@ data class MapSheetViewState(
             return from.distanceTo(start).takeIf { it > Constants.Drive.START_ELSEWHERE_DISTANCE }
         }
 
-    /**
-     * The routes' lines as the map draws them, each with its label; empty without a plan. The selected line is last, so it
-     * draws on top of the others. The rating step's drive is its one line, without a label.
-     */
-    val routeLines: ImmutableList<RouteLine>
-        get() {
-            sheetStep?.let { step -> return listOfNotNull(step.routeLine).toImmutableList() }
-            val planning = planning ?: return persistentListOf()
-            return planning.listedRoutes.mapIndexedNotNull { index, route ->
-                // A line without points has nothing to draw, and no midpoint
-                if (route.line.isEmpty()) return@mapIndexedNotNull null
-                // Same numbering as routeRows
-                val number = (index + 1).takeIf { route.kind == RouteKind.Fun }
-                val points = route.line.toImmutableList()
-                RouteLine(
-                    id = route.id,
-                    number = number,
-                    points = points,
-                    label = if (number == null) {
-                        StringDesc.ResourceFormatted(MR.strings.planning_fastest_label, durationText(route.duration))
-                    } else {
-                        StringDesc.ResourceFormatted(
-                            MR.strings.planning_route_label,
-                            number,
-                            requireNotNull(extraText(route, planning.budget)) { "A fun route has an extra over the fastest" },
-                        )
-                    },
-                    labelPoint = midpointAlong(route.line),
-                    isSelected = route.id == planning.selectedRouteId,
-                )
-            }.sortedBy { it.isSelected }.toImmutableList()
-        }
-
-    /** The offer of the drive reminder above Done in the rating step; false without the step. */
-    val showsReminderOffer: Boolean
-        get() = ratingStep?.showsReminderOffer == true
-
     /** The reminder shows on the search step with the sheet collapsed, and never over the rating step or planning. */
     val showsReminder: Boolean
         get() = reminder != null &&
             sheetStep == null &&
-            planning == null &&
-            startSearch == null &&
             sheetHeight == SheetHeight.Collapsed
 
     /** The reminder's second line: the destination's name, or the point on the map, and the day; null without a reminder. */
@@ -364,117 +203,6 @@ data class MapSheetViewState(
                 ?: MR.strings.search_point_on_map.desc()
             return StringDesc.ResourceFormatted(MR.strings.drive_feedback_reminder_text, name, reminder.day)
         }
-
-    /** The rating step's title: the question about the destination; null without the step. */
-    val ratingTitle: StringDesc?
-        get() {
-            val question = ratingStep?.question ?: return null
-            val name = question.destination.name ?: return MR.strings.drive_feedback_question_unnamed.desc()
-            return StringDesc.ResourceFormatted(MR.strings.drive_feedback_question, name)
-        }
-
-    /** The drive's time, planned duration and distance under the title; null without the rating step. */
-    val ratingDriveText: StringDesc?
-        get() {
-            val step = ratingStep ?: return null
-            return StringDesc.ResourceFormatted(
-                MR.strings.drive_feedback_drive,
-                step.driveTime,
-                durationText(step.question.duration),
-                distanceText(step.question.distance, distanceUnit, isApproximate = false),
-            )
-        }
-
-    /** The thanks for the picked thumb; null before a thumb is picked. */
-    val ratingThanks: StringDesc?
-        get() = when (ratingStep?.rating?.thumb) {
-            null -> null
-            Thumb.Up -> MR.strings.drive_feedback_thanks_good.desc()
-            Thumb.Down -> MR.strings.drive_feedback_thanks_not_good.desc()
-        }
-
-    /** The reason chips of the picked thumb, in order; empty before a thumb is picked. */
-    val reasonChips: ImmutableList<ReasonChip>
-        get() {
-            val rating = ratingStep?.rating ?: return persistentListOf()
-            return RatingReason.of(rating.thumb).map { reason ->
-                ReasonChip(reason = reason, label = reason.label(), isSelected = reason in rating.reasons)
-            }.toImmutableList()
-        }
-
-    private fun planningBounds(planning: RoutePlanningState): GeoBounds {
-        val destination = planning.destination.location
-        val origin = planning.start?.location ?: map.userLocation ?: return GeoBounds(destination, destination)
-        return GeoBounds(origin, origin).including(destination)
-    }
-
-    private fun routeRow(route: Route, number: Int?, extra: StringDesc?, isSelected: Boolean): RouteRow = RouteRow(
-        id = route.id,
-        number = number,
-        extra = extra,
-        duration = durationText(route.duration),
-        distance = distanceText(route.distance, distanceUnit, isApproximate = false),
-        curvyDistance = distanceText(route.stats.curvyDistance, distanceUnit, isApproximate = false),
-        ascent = heightText(route.stats.ascent, distanceUnit),
-        funLevel = route.funLevel,
-        isSelected = isSelected,
-    )
-
-    // The fastest route is the reference, so it has no extra over itself
-    private fun extraText(route: Route, budget: Budget): StringDesc? {
-        if (route.kind == RouteKind.Fastest) return null
-        return when (budget) {
-            is Budget.Time -> StringDesc.ResourceFormatted(MR.strings.planning_extra, durationText(route.extraDuration))
-
-            is Budget.Distance -> StringDesc.ResourceFormatted(
-                MR.strings.planning_extra,
-                distanceText(route.extraDistance, distanceUnit, isApproximate = false),
-            )
-        }
-    }
-
-    // The closest fun route's budget picks the smallest chip that fits it. A budget in the other unit fits nothing, as with none.
-    private fun noFunRouteMessageFor(planning: RoutePlanningState, plan: TripPlan): NoFunRouteMessage {
-        val budget = planning.budget
-        val options = budgetOptions(budget, distanceUnit)
-        val closest = plan.closestFunRouteBudget
-        val fitting = closest?.let { needed -> options.firstOrNull { it.allowsAtLeast(needed) } }
-        return if (closest != null && fitting != null) {
-            NoFunRouteMessage(
-                text = StringDesc.ResourceFormatted(
-                    MR.strings.planning_no_fun_route,
-                    budgetText(budget, distanceUnit),
-                    closestText(closest),
-                ),
-                useBudget = UseBudgetButton(
-                    budget = fitting,
-                    label = StringDesc.ResourceFormatted(MR.strings.planning_use_budget, budgetText(fitting, distanceUnit)),
-                ),
-            )
-        } else {
-            NoFunRouteMessage(
-                text = StringDesc.ResourceFormatted(
-                    MR.strings.planning_no_fun_route_beyond,
-                    budgetText(budget, distanceUnit),
-                    budgetText(options.last(), distanceUnit),
-                ),
-                useBudget = null,
-            )
-        }
-    }
-
-    private fun closestText(closest: Budget): StringDesc = when (closest) {
-        is Budget.Time -> {
-            // Rounded up to whole minutes, so the text never names a value the current chip already covers
-            val wholeMinutes = ceil(closest.extra.toDouble(DurationUnit.MINUTES)).toInt().minutes
-            StringDesc.ResourceFormatted(MR.strings.planning_extra, durationText(wholeMinutes))
-        }
-
-        is Budget.Distance -> StringDesc.ResourceFormatted(
-            MR.strings.planning_extra,
-            distanceText(closest.extra, distanceUnit, isApproximate = false),
-        )
-    }
 
     // Straight-line, so it's known without a route; with approximate access it's only whole units
     private fun distanceFrom(location: GeoPoint): StringDesc? {
@@ -489,16 +217,4 @@ data class MapSheetViewState(
             )
         }
     }
-}
-
-// The chips of the budget's unit, the distance ones in [unit]
-private fun budgetOptions(budget: Budget, unit: DistanceUnit): List<Budget> = when (budget) {
-    is Budget.Time -> Constants.Budgets.TIME
-    is Budget.Distance -> distanceChips(unit)
-}
-
-// Whether this budget allows at least [other]'s extra; never across units
-private fun Budget.allowsAtLeast(other: Budget): Boolean = when (this) {
-    is Budget.Time -> other is Budget.Time && extra >= other.extra
-    is Budget.Distance -> other is Budget.Distance && extra >= other.extra
 }

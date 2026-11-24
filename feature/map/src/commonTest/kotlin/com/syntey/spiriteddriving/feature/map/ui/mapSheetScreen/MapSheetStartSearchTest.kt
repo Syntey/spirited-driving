@@ -29,24 +29,24 @@ class MapSheetStartSearchTest {
     fun `Start opens the start search over planning`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
 
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
 
         val state = trip.screen.viewState.value
         assertNotNull(state.startSearch)
-        assertNotNull(state.planning)
+        assertNotNull(trip.planningState)
     }
 
     @Test
     fun `closing the start search keeps the planning`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
 
         trip.screen.actions.onSearchClose()
         advanceUntilIdle()
 
         val state = trip.screen.viewState.value
         assertNull(state.startSearch)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
         assertEquals(SheetHeight.Half, state.sheetHeight)
     }
 
@@ -58,7 +58,7 @@ class MapSheetStartSearchTest {
         val destination = searchForCovered(trip, text = "karlst")
         trip.screen.actions.onSuggestionClick(destination)
         advanceUntilIdle()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         trip.screen.actions.onSearchTextChange("karl")
         advanceUntilIdle()
         // A different covered place than the destination, last in the list so it isn't the first one
@@ -69,9 +69,9 @@ class MapSheetStartSearchTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.startSearch)
-        assertEquals(start.place, state.planning?.start)
-        assertEquals(destination.place, state.planning?.destination)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertEquals(start.place, trip.planningState?.planning?.start)
+        assertEquals(destination.place, trip.planningState?.planning?.destination)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 
     @Test
@@ -83,7 +83,7 @@ class MapSheetStartSearchTest {
         trip.screen.actions.onSuggestionClick(destination)
         advanceUntilIdle()
         val destinationSearch = trip.screen.viewState.value.search
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         trip.screen.actions.onSearchTextChange("karl")
         advanceUntilIdle()
         val start = trip.screen.viewState.value.suggestionRows.last { it.suggestion.isCovered }.suggestion
@@ -101,7 +101,7 @@ class MapSheetStartSearchTest {
     @Test
     fun `My location as the start plans from the user's location`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         assertEquals(MyLocationRow.Available, trip.screen.viewState.value.myLocationRow)
 
         trip.screen.actions.onMyLocationClick()
@@ -109,8 +109,8 @@ class MapSheetStartSearchTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.startSearch)
-        assertNull(state.planning?.start)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertNull(trip.planningState?.planning?.start)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
         assertEquals(SheetHeight.Half, state.sheetHeight)
     }
 
@@ -135,12 +135,12 @@ class MapSheetStartSearchTest {
         // Precise now, but no fix yet: the trip waits for the location, with no start picked by hand
         val waiting = trip.screen.viewState.value
         assertNull(waiting.startSearch)
-        assertNull(waiting.planning?.start)
-        assertEquals(PlanningStatus.Planning, waiting.planning?.status)
+        assertNull(trip.planningState?.planning?.start)
+        assertEquals(PlanningStatus.Planning, trip.planningState?.planning?.status)
 
         sendFix(trip, Points.prague)
 
-        assertEquals(PlanningStatus.Planned, trip.screen.viewState.value.planning?.status)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 
     @Test
@@ -163,11 +163,11 @@ class MapSheetStartSearchTest {
 
         val waiting = trip.screen.viewState.value
         assertNull(waiting.startSearch)
-        assertEquals(PlanningStatus.Planning, waiting.planning?.status)
+        assertEquals(PlanningStatus.Planning, trip.planningState?.planning?.status)
 
         sendFix(trip, Points.prague)
 
-        assertEquals(PlanningStatus.Planned, trip.screen.viewState.value.planning?.status)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 
     @Test
@@ -177,7 +177,7 @@ class MapSheetStartSearchTest {
         sendFix(trip, Points.outside)
         trip.screen.actions.onSuggestionClick(searchForCovered(trip))
         advanceUntilIdle()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         assertEquals(MyLocationRow.OutsideCoveredArea, trip.screen.viewState.value.myLocationRow)
 
         trip.screen.actions.onMyLocationClick()
@@ -190,7 +190,7 @@ class MapSheetStartSearchTest {
     @Test
     fun `dragging the start search down closes it`() = runTest(main.dispatcher) {
         val trip = planFromPrague()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
 
         trip.screen.actions.onSheetHeightChange(SheetHeight.Collapsed)
         advanceUntilIdle()
@@ -199,7 +199,7 @@ class MapSheetStartSearchTest {
         assertNull(state.startSearch)
         // The drag's own height wins over the step's, so the sheet ends collapsed where the user let go
         assertEquals(SheetHeight.Collapsed, state.sheetHeight)
-        assertNotNull(state.planning)
+        assertNotNull(trip.planningState)
     }
 
     @Test
@@ -210,7 +210,7 @@ class MapSheetStartSearchTest {
             sendFix(trip, Points.prague)
             trip.screen.actions.onSuggestionClick(searchForCovered(trip))
             advanceUntilIdle()
-            trip.screen.actions.onStartClick()
+            trip.planning.actions.onStartClick()
 
             trip.screen.actions.onRecentPlaceRemove(recentPlace)
             advanceUntilIdle()

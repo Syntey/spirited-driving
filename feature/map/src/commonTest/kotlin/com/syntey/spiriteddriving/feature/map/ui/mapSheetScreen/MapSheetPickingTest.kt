@@ -33,9 +33,9 @@ class MapSheetPickingTest {
         advanceUntilIdle()
 
         val state = trip.screen.viewState.value
-        assertEquals(Points.pinned, state.planning?.destination?.location)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
-        assertTrue(state.routeRows.isNotEmpty())
+        assertEquals(Points.pinned, trip.planningState?.planning?.destination?.location)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
+        assertTrue(trip.planning.viewState.value.routeRows.isNotEmpty())
     }
 
     @Test
@@ -46,10 +46,10 @@ class MapSheetPickingTest {
 
         trip.screen.actions.onMapLongPress(Points.pinned)
         // Shown at once with the point's coordinates as its area, and no name until the backend names the point
-        assertNull(trip.screen.viewState.value.planning?.destination?.name)
+        assertNull(trip.planningState?.planning?.destination?.name)
 
         advanceUntilIdle()
-        assertEquals(FakePlaceSearch.RecordedPlaceAt.name, trip.screen.viewState.value.planning?.destination?.name)
+        assertEquals(FakePlaceSearch.RecordedPlaceAt.name, trip.planningState?.planning?.destination?.name)
     }
 
     @Test
@@ -84,7 +84,7 @@ class MapSheetPickingTest {
         trip.screen.actions.onMapLongPress(Points.outside)
         advanceUntilIdle()
 
-        assertNull(trip.screen.viewState.value.planning)
+        assertNull(trip.planningState)
     }
 
     @Test
@@ -101,8 +101,8 @@ class MapSheetPickingTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.startSearch)
-        assertEquals(Points.pinned, state.planning?.start?.location)
-        assertEquals(destination.place, state.planning?.destination)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertEquals(Points.pinned, trip.planningState?.planning?.start?.location)
+        assertEquals(destination.place, trip.planningState?.planning?.destination)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
     }
 }

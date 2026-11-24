@@ -9,6 +9,8 @@ import com.syntey.spiriteddriving.feature.map.tools.boundsOf
 import com.syntey.spiriteddriving.feature.map.tools.midpointAlong
 import com.syntey.spiriteddriving.feature.map.tools.withMinimumSpan
 import dev.icerock.moko.resources.desc.StringDesc
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
@@ -34,17 +36,19 @@ data class RatingStep(
             return boundsOf(question.line.ifEmpty { listOf(question.start, question.destination.location) }).withMinimumSpan()
         }
 
-    override val routeLine: RouteLine?
+    override val routeLines: ImmutableList<RouteLine>
         get() {
-            if (question.line.isEmpty()) return null
-            return RouteLine(
-                id = question.driveId,
-                number = question.routeNumber,
-                points = question.line.toImmutableList(),
-                label = null,
-                labelPoint = midpointAlong(question.line),
-                isSelected = true,
-            )
+            if (question.line.isEmpty()) return persistentListOf()
+            return listOf(
+                RouteLine(
+                    id = question.driveId,
+                    number = question.routeNumber,
+                    points = question.line.toImmutableList(),
+                    label = null,
+                    labelPoint = midpointAlong(question.line),
+                    isSelected = true,
+                ),
+            ).toImmutableList()
         }
 }
 

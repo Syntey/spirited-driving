@@ -9,8 +9,6 @@ import com.syntey.spiriteddriving.core.domain.route.TripPlan
  * The route planning step of the sheet, from [start], or the user's location, to [destination].
  *
  * @property start The start picked by hand; null starts from the user's location.
- * @property isHandedOff Whether a route of this plan was handed off to the maps app, so the rating step may take its place when
- *   the user comes back.
  */
 data class RoutePlanningState(
     val destination: Place,
@@ -19,7 +17,6 @@ data class RoutePlanningState(
     val status: PlanningStatus = PlanningStatus.Planning,
     val plan: TripPlan? = null,
     val selectedRouteId: String? = null,
-    val isHandedOff: Boolean = false,
 ) {
     /**
      * The routes as the list shows them: fun routes first, most fun first, then the fastest as the reference. Empty until

@@ -183,7 +183,7 @@ class MapSheetComponentTest {
         trip.screen.actions.onSuggestionClick(outside)
         advanceUntilIdle()
 
-        assertNull(trip.screen.viewState.value.planning)
+        assertNull(trip.planningState)
     }
 
     @Test
@@ -197,10 +197,10 @@ class MapSheetComponentTest {
         advanceUntilIdle()
 
         val state = trip.screen.viewState.value
-        assertEquals(chosen.place, state.planning?.destination)
-        assertEquals(PlanningStatus.Planned, state.planning?.status)
+        assertEquals(chosen.place, trip.planningState?.planning?.destination)
+        assertEquals(PlanningStatus.Planned, trip.planningState?.planning?.status)
         // The fun routes are listed first, numbered from 1; the fastest route follows without a number
-        assertEquals(listOf<Int?>(1, null), state.routeRows.map { it.number })
+        assertEquals(listOf<Int?>(1, null), trip.planning.viewState.value.routeRows.map { it.number })
         assertEquals(SheetHeight.Half, state.sheetHeight)
         assertNull(state.startSearch)
     }
@@ -216,8 +216,8 @@ class MapSheetComponentTest {
 
         val state = trip.screen.viewState.value
         assertNotNull(state.startSearch)
-        assertEquals(chosen.place, state.planning?.destination)
-        assertNull(state.planning?.plan)
+        assertEquals(chosen.place, trip.planningState?.planning?.destination)
+        assertNull(trip.planningState?.planning?.plan)
         assertEquals(SheetHeight.Full, state.sheetHeight)
         assertEquals(MyLocationRow.NeedsLocationAccess, state.myLocationRow)
     }
@@ -234,7 +234,7 @@ class MapSheetComponentTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.startSearch)
-        assertNull(state.planning)
+        assertNull(trip.planningState)
     }
 
     @Test

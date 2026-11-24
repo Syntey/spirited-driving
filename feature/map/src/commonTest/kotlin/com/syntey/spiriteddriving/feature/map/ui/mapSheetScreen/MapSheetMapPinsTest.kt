@@ -34,7 +34,7 @@ class MapSheetMapPinsTest {
     @Test
     fun `a point picked for the start pins the start and keeps the destination`() = runTest(main.dispatcher) {
         val trip = planned()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         advanceUntilIdle()
 
         trip.screen.actions.onMapLongPress(Points.prague)
@@ -48,12 +48,12 @@ class MapSheetMapPinsTest {
     @Test
     fun `closing route planning clears the start and destination pins`() = runTest(main.dispatcher) {
         val trip = planned()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         advanceUntilIdle()
         trip.screen.actions.onMapLongPress(Points.prague)
         advanceUntilIdle()
 
-        trip.screen.actions.onRoutePlanningClose()
+        trip.planning.actions.onCloseClick()
         advanceUntilIdle()
 
         val map = trip.screen.viewState.value.map
@@ -77,7 +77,7 @@ class MapSheetMapPinsTest {
         val trip = mapSheetFixture(driveQuestion = driveQuestion(startedAgo = 15.minutes))
         advanceUntilIdle()
 
-        trip.screen.actions.onRatingClose()
+        trip.rating.actions.onCloseClick()
         advanceUntilIdle()
 
         val map = trip.screen.viewState.value.map
@@ -106,7 +106,7 @@ class MapSheetMapPinsTest {
         trip.screen.showSavedRoute(FakeSavedRoutesSource.Recorded.id)
         advanceUntilIdle()
 
-        trip.screen.actions.onOneRouteClose()
+        trip.oneRoute.actions.onCloseClick()
         advanceUntilIdle()
 
         val map = trip.screen.viewState.value.map

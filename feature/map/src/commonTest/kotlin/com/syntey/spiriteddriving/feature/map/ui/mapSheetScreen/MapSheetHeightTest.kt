@@ -37,7 +37,7 @@ class MapSheetHeightTest {
         val trip = mapSheetFixture(driveQuestion = driveQuestion(startedAgo = 15.minutes))
         advanceUntilIdle()
 
-        trip.screen.actions.onRatingClose()
+        trip.rating.actions.onCloseClick()
         advanceUntilIdle()
 
         assertEquals(SheetHeight.Collapsed, trip.screen.viewState.value.sheetHeight)
@@ -54,7 +54,7 @@ class MapSheetHeightTest {
     fun `closing route planning opens the pulled-up search`() = runTest(main.dispatcher) {
         val trip = planned()
 
-        trip.screen.actions.onRoutePlanningClose()
+        trip.planning.actions.onCloseClick()
         advanceUntilIdle()
 
         assertEquals(SheetHeight.Full, trip.screen.viewState.value.sheetHeight)
@@ -64,7 +64,7 @@ class MapSheetHeightTest {
     fun `opening the start search opens the sheet to full`() = runTest(main.dispatcher) {
         val trip = planned()
 
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         advanceUntilIdle()
 
         assertEquals(SheetHeight.Full, trip.screen.viewState.value.sheetHeight)
@@ -73,7 +73,7 @@ class MapSheetHeightTest {
     @Test
     fun `closing the start search returns the sheet to half`() = runTest(main.dispatcher) {
         val trip = planned()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         advanceUntilIdle()
 
         trip.screen.actions.onSearchClose()
@@ -86,7 +86,7 @@ class MapSheetHeightTest {
     @Test
     fun `dragging the start search down closes it and keeps the planning`() = runTest(main.dispatcher) {
         val trip = planned()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         advanceUntilIdle()
 
         trip.screen.actions.onSheetHeightChange(SheetHeight.Collapsed)
@@ -94,7 +94,7 @@ class MapSheetHeightTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.startSearch)
-        assertNotNull(state.planning)
+        assertNotNull(trip.planningState)
         assertEquals(SheetHeight.Collapsed, state.sheetHeight)
     }
 

@@ -30,7 +30,7 @@ class SheetStepTest {
             driveTime = "Today, 14:20".desc(),
         )
 
-        assertNull(step.routeLine)
+        assertNull(step.routeLines.singleOrNull())
     }
 
     @Test

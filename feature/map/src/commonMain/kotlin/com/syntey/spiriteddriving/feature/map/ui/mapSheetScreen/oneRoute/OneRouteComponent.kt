@@ -1,8 +1,9 @@
-package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
+package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.oneRoute
 
 import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
@@ -11,10 +12,12 @@ import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.feature.map.domain.LoadPastDriveRouteUseCase
 import com.syntey.spiriteddriving.feature.map.domain.LoadSavedRouteUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteOrigin
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStep
 import com.syntey.spiriteddriving.feature.map.model.ui.savedAs
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetHost
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
@@ -32,28 +35,43 @@ internal class OneRouteComponent(
     @InjectedParam private val args: Args,
     private val loadSavedRouteUseCase: LoadSavedRouteUseCase,
     private val loadPastDriveRouteUseCase: LoadPastDriveRouteUseCase,
+    private val observeDistanceUnitUseCase: ObserveDistanceUnitUseCase,
 ) : AppComponent<OneRouteViewState, Nothing>(
     componentContext = componentContext,
     defaultState = OneRouteViewState(step = OneRouteStep(origin = args.origin)),
-) {
+),
+    OneRouteScreen,
+    OneRouteScreen.Actions {
 
     /** @property origin Where the route comes from. */
     data class Args(val origin: OneRouteOrigin)
 
     private val logger = Logger.withTag("OneRouteComponent")
 
-    val viewState: StateFlow<OneRouteViewState> = componentState
+    override val viewState: StateFlow<OneRouteViewState> = componentState
+
+    override val actions: OneRouteScreen.Actions = this
+
+    // Back closes the step as its close button does; the step's own handler wins over the parent's while it's on top
+    private val backCallback = BackCallback { close() }
 
     init {
+        backHandler.register(backCallback)
         load(args.origin)
+        observeDistanceUnit()
     }
 
-    // A handed-off route lets the rating step take the place of this one when the user comes back
-    fun markHandedOff() = componentState.update { it.copy(step = it.step.copy(isHandedOff = true)) }
+    // Observed, so a unit picked in Settings applies while the route is shown
+    private fun observeDistanceUnit() = observeDistanceUnitUseCase.execute {
+        onNext { unit -> componentState.update { it.copy(distanceUnit = unit) } }
+        onError { error -> logger.e(error) { "Distance unit not observed" } }
+    }
 
-    fun onRetry() = load(componentState.value.step.origin)
+    override fun onRetryClick() = load(componentState.value.step.origin)
 
-    fun close() = host.onStepClosed()
+    override fun onCloseClick() = close()
+
+    private fun close() = host.onStepClosed()
 
     // Saving the route again makes a new saved route, which the step is about from then on
     fun savedAs(routeId: String, savedRoute: SavedRoute) = componentState.update { it.copy(step = it.step.savedAs(routeId, savedRoute)) }

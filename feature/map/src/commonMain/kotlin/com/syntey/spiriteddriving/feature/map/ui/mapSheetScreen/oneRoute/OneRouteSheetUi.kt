@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.map.ui.components
+package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.oneRoute
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,9 +19,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.IconAction
 import com.syntey.spiriteddriving.core.ui.components.Showcase
@@ -34,11 +37,15 @@ import com.syntey.spiriteddriving.feature.map.model.ui.OneRouteStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import com.syntey.spiriteddriving.feature.map.model.ui.OneRoutePreviewStates
 import com.syntey.spiriteddriving.feature.map.model.ui.allowsLocation
+import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.ActiveSheetStep
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.PlanningProgress
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningActions
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RouteRowContent
 import dev.icerock.moko.resources.ImageResource
 import dev.icerock.moko.resources.StringResource
 import dev.icerock.moko.resources.compose.painterResource
@@ -47,15 +54,14 @@ import dev.icerock.moko.resources.compose.stringResource
 
 /** The top of a saved route's step: its name, the start's area under it and a close button. The start can't be changed. */
 @Composable
-internal fun OneRouteHeader(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
-    val title = viewState.oneRouteTitle ?: return
+internal fun OneRouteHeader(oneRoute: OneRouteViewState, oneRouteActions: OneRouteScreen.Actions, modifier: Modifier = Modifier) {
     SheetHeader(
-        title = title,
-        subtitle = viewState.oneRouteSubtitle?.localized(),
+        title = oneRoute.title,
+        subtitle = oneRoute.subtitle?.localized(),
         close = IconAction(
             icon = painterResource(MR.images.close),
             label = stringResource(MR.strings.generic_close),
-            onClick = actions::onOneRouteClose,
+            onClick = oneRouteActions::onCloseClick,
         ),
         modifier = modifier,
     )
@@ -66,28 +72,40 @@ internal fun OneRouteHeader(viewState: MapSheetViewState, actions: MapSheetScree
  * when the sheet is shorter than its content.
  */
 @Composable
-internal fun OneRouteBody(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
+internal fun OneRouteBody(
+    oneRoute: OneRouteViewState,
+    oneRouteActions: OneRouteScreen.Actions,
+    viewState: MapSheetViewState,
+    actions: MapSheetScreen.Actions,
+    modifier: Modifier = Modifier,
+) {
     val style = MapPlatformStyle.current
     Column(
         modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
     ) {
-        OneRouteSummary(viewState = viewState, actions = actions, isCollapsed = false)
-        OneRouteStartNote(viewState = viewState)
+        OneRouteSummary(oneRoute = oneRoute, oneRouteActions = oneRouteActions, isCollapsed = false)
+        OneRouteStartNote(oneRoute = oneRoute, locationAccess = viewState.locationAccess)
         RoutePlanningActions(viewState = viewState, actions = actions)
     }
 }
 
 /** The header, the summary, then Save and Drive: the collapsed sheet's layout of a saved route. */
 @Composable
-internal fun CollapsedOneRoute(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
+internal fun CollapsedOneRoute(
+    oneRoute: OneRouteViewState,
+    oneRouteActions: OneRouteScreen.Actions,
+    viewState: MapSheetViewState,
+    actions: MapSheetScreen.Actions,
+    modifier: Modifier = Modifier,
+) {
     val style = MapPlatformStyle.current
     Column(
         modifier = modifier.fillMaxWidth().padding(style.sheetContentPadding),
         verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
     ) {
-        OneRouteHeader(viewState = viewState, actions = actions)
-        OneRouteSummary(viewState = viewState, actions = actions, isCollapsed = true)
+        OneRouteHeader(oneRoute = oneRoute, oneRouteActions = oneRouteActions)
+        OneRouteSummary(oneRoute = oneRoute, oneRouteActions = oneRouteActions, isCollapsed = true)
         RoutePlanningActions(viewState = viewState, actions = actions)
     }
 }
@@ -95,17 +113,16 @@ internal fun CollapsedOneRoute(viewState: MapSheetViewState, actions: MapSheetSc
 // The route's facts once loaded, the planning progress while it loads, and why it can't load, with Try again where it helps
 @Composable
 private fun OneRouteSummary(
-    viewState: MapSheetViewState,
-    actions: MapSheetScreen.Actions,
+    oneRoute: OneRouteViewState,
+    oneRouteActions: OneRouteScreen.Actions,
     isCollapsed: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val step = viewState.oneRouteStep ?: return
     Column(modifier.fillMaxWidth()) {
-        when (step.status) {
+        when (oneRoute.step.status) {
             OneRouteStatus.Loading -> PlanningProgress()
 
-            OneRouteStatus.Ready -> viewState.oneRouteRow?.let { row ->
+            OneRouteStatus.Ready -> oneRoute.row?.let { row ->
                 RouteRowContent(row = row, showsFacts = !isCollapsed, showsExtra = false)
             }
 
@@ -114,7 +131,7 @@ private fun OneRouteSummary(
                 title = MR.strings.planning_offline_title,
                 message = MR.strings.one_route_offline_text,
                 isCollapsed = isCollapsed,
-                actions = actions,
+                oneRouteActions = oneRouteActions,
             )
 
             OneRouteStatus.Failed -> OneRouteFailure(
@@ -122,7 +139,7 @@ private fun OneRouteSummary(
                 title = MR.strings.planning_failed_title,
                 message = MR.strings.planning_failed_text,
                 isCollapsed = isCollapsed,
-                actions = actions,
+                oneRouteActions = oneRouteActions,
             )
         }
     }
@@ -135,7 +152,7 @@ private fun OneRouteFailure(
     title: StringResource,
     message: StringResource,
     isCollapsed: Boolean,
-    actions: MapSheetScreen.Actions,
+    oneRouteActions: OneRouteScreen.Actions,
 ) {
     if (isCollapsed) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Grid.d2)) {
@@ -159,7 +176,7 @@ private fun OneRouteFailure(
             retry = IconAction(
                 icon = painterResource(MR.images.refresh),
                 label = stringResource(MR.strings.generic_try_again),
-                onClick = actions::onOneRouteRetry,
+                onClick = oneRouteActions::onRetryClick,
             ),
             modifier = Modifier.fillMaxWidth(),
         )
@@ -168,9 +185,9 @@ private fun OneRouteFailure(
 
 // Without location access the note says where the route starts; with it, the start's distance comes with the actions
 @Composable
-private fun OneRouteStartNote(viewState: MapSheetViewState) {
-    val start = viewState.oneRouteStep?.origin?.start?.shortArea ?: return
-    if (viewState.locationAccess.allowsLocation) return
+private fun OneRouteStartNote(oneRoute: OneRouteViewState, locationAccess: LocationAccess?) {
+    val start = oneRoute.step.origin.start.shortArea ?: return
+    if (locationAccess.allowsLocation) return
     Text(
         text = stringResource(MR.strings.saved_route_starts_in, start),
         style = MaterialTheme.typography.bodyMedium,
@@ -184,7 +201,7 @@ private fun OneRouteStartNote(viewState: MapSheetViewState) {
 @Composable
 private fun OneRouteReadyPreview() = Showcase {
     Content(
-        step = ActiveSheetStep.OneRoute,
+        step = ActiveSheetStep.OneRoute(OneRoutePreviewStates.screen(OneRoutePreviewStates.savedStep())),
         viewState = OneRoutePreviewStates.oneRouteViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -196,7 +213,7 @@ private fun OneRouteReadyPreview() = Showcase {
 @Composable
 private fun OneRouteReadyIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        step = ActiveSheetStep.OneRoute,
+        step = ActiveSheetStep.OneRoute(OneRoutePreviewStates.screen(OneRoutePreviewStates.savedStep())),
         viewState = OneRoutePreviewStates.oneRouteViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -208,7 +225,7 @@ private fun OneRouteReadyIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @Composable
 private fun OneRoutePastDrivePreview() = Showcase {
     Content(
-        step = ActiveSheetStep.OneRoute,
+        step = ActiveSheetStep.OneRoute(OneRoutePreviewStates.screen(OneRoutePreviewStates.pastDriveStep())),
         viewState = OneRoutePreviewStates.pastDriveViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -220,7 +237,7 @@ private fun OneRoutePastDrivePreview() = Showcase {
 @Composable
 private fun OneRoutePastDriveIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        step = ActiveSheetStep.OneRoute,
+        step = ActiveSheetStep.OneRoute(OneRoutePreviewStates.screen(OneRoutePreviewStates.pastDriveStep())),
         viewState = OneRoutePreviewStates.pastDriveViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -232,7 +249,7 @@ private fun OneRoutePastDriveIosPreview() = Showcase(platform = UiPlatform.Ios) 
 @Composable
 private fun OneRouteLoadingPreview() = Showcase {
     Content(
-        step = ActiveSheetStep.OneRoute,
+        step = ActiveSheetStep.OneRoute(OneRoutePreviewStates.screen(OneRoutePreviewStates.savedStep(status = OneRouteStatus.Loading))),
         viewState = OneRoutePreviewStates.oneRouteViewState(status = OneRouteStatus.Loading),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -244,7 +261,7 @@ private fun OneRouteLoadingPreview() = Showcase {
 @Composable
 private fun OneRouteOfflinePreview() = Showcase {
     Content(
-        step = ActiveSheetStep.OneRoute,
+        step = ActiveSheetStep.OneRoute(OneRoutePreviewStates.screen(OneRoutePreviewStates.savedStep(status = OneRouteStatus.Offline))),
         viewState = OneRoutePreviewStates.oneRouteViewState(status = OneRouteStatus.Offline),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -256,7 +273,7 @@ private fun OneRouteOfflinePreview() = Showcase {
 @Composable
 private fun OneRouteCollapsedPreview() = Showcase {
     Content(
-        step = ActiveSheetStep.OneRoute,
+        step = ActiveSheetStep.OneRoute(OneRoutePreviewStates.screen(OneRoutePreviewStates.savedStep())),
         viewState = OneRoutePreviewStates.oneRouteViewState(sheetHeight = SheetHeight.Collapsed),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -266,10 +283,19 @@ private fun OneRouteCollapsedPreview() = Showcase {
 
 // A saved route's step replaces the search and planning, and is measured the same way as the rating step
 @Composable
-internal fun ColumnScope.OneRouteLayout(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
+internal fun ColumnScope.OneRouteLayout(
+    screen: OneRouteScreen,
+    viewState: MapSheetViewState,
+    actions: MapSheetScreen.Actions,
+    onCollapsedHeight: (Dp) -> Unit,
+) {
+    val oneRoute by screen.viewState.collectAsStateWithLifecycle()
+    val oneRouteActions = screen.actions
     val style = MapPlatformStyle.current
     val density = LocalDensity.current
     CollapsedOneRoute(
+        oneRoute = oneRoute,
+        oneRouteActions = oneRouteActions,
         viewState = viewState,
         actions = actions,
         modifier = Modifier
@@ -277,14 +303,20 @@ internal fun ColumnScope.OneRouteLayout(viewState: MapSheetViewState, actions: M
             .clearAndSetSemantics {},
     )
     if (viewState.sheetHeight == SheetHeight.Collapsed) {
-        CollapsedOneRoute(viewState = viewState, actions = actions)
+        CollapsedOneRoute(oneRoute = oneRoute, oneRouteActions = oneRouteActions, viewState = viewState, actions = actions)
     } else {
         Column(
             Modifier.fillMaxSize().padding(style.sheetContentPadding),
             verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
         ) {
-            OneRouteHeader(viewState = viewState, actions = actions)
-            OneRouteBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
+            OneRouteHeader(oneRoute = oneRoute, oneRouteActions = oneRouteActions)
+            OneRouteBody(
+                oneRoute = oneRoute,
+                oneRouteActions = oneRouteActions,
+                viewState = viewState,
+                actions = actions,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }

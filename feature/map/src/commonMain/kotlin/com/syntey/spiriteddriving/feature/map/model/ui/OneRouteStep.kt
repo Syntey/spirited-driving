@@ -9,6 +9,8 @@ import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.feature.map.tools.boundsOf
 import com.syntey.spiriteddriving.feature.map.tools.midpointAlong
 import com.syntey.spiriteddriving.feature.map.tools.withMinimumSpan
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 /**
@@ -17,14 +19,9 @@ import kotlinx.collections.immutable.toImmutableList
  * @property origin Where the route comes from.
  * @property route The full route; null until it's loaded.
  * @property status Where loading the full route is.
- * @property isHandedOff Whether the route was handed off to the maps app, so the rating step may take its place when the user comes back.
  */
-data class OneRouteStep(
-    val origin: OneRouteOrigin,
-    val route: Route? = null,
-    val status: OneRouteStatus = OneRouteStatus.Loading,
-    val isHandedOff: Boolean = false,
-) : SheetStep {
+data class OneRouteStep(val origin: OneRouteOrigin, val route: Route? = null, val status: OneRouteStatus = OneRouteStatus.Loading) :
+    SheetStep {
     override val start: GeoPoint get() = origin.start.location
 
     override val destination: GeoPoint get() = origin.destination.location
@@ -36,19 +33,23 @@ data class OneRouteStep(
             return boundsOf(line.ifEmpty { listOf(origin.start.location, origin.destination.location) }).withMinimumSpan()
         }
 
-    override val routeLine: RouteLine?
+    override val routeLines: ImmutableList<RouteLine>
         get() {
             val line = route?.line.orEmpty()
-            if (line.isEmpty()) return null
-            return RouteLine(
-                id = origin.id,
-                number = 1,
-                points = line.toImmutableList(),
-                label = null,
-                labelPoint = midpointAlong(line),
-                isSelected = true,
-            )
+            if (line.isEmpty()) return persistentListOf()
+            return listOf(
+                RouteLine(
+                    id = origin.id,
+                    number = 1,
+                    points = line.toImmutableList(),
+                    label = null,
+                    labelPoint = midpointAlong(line),
+                    isSelected = true,
+                ),
+            ).toImmutableList()
         }
+
+    override val driveRoute: Route? get() = route
 }
 
 /**

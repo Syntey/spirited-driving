@@ -150,7 +150,7 @@ private fun RouteList(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(modifier = modifier, contentPadding = PaddingValues(vertical = Grid.d4)) {
-        itemsIndexed(items = routes, key = { _, row -> row.id }) { index, row ->
+        itemsIndexed(items = routes, key = { _, row -> row.id.value }) { index, row ->
             SavedRouteItem(row = row, position = GroupPosition.of(index, routes.size), actions = actions)
         }
     }

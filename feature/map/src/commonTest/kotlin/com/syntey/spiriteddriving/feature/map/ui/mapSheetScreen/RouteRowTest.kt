@@ -10,7 +10,9 @@ import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
+import com.syntey.spiriteddriving.feature.map.tools.Constants
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningViewState
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlin.test.Test
@@ -54,7 +56,7 @@ class RouteRowTest {
     @Test
     fun `the selected route is the one with the selected id`() {
         val state = stateWith(threeFunRoutes())
-        val selected = state.copy(planning = state.planning?.copy(selectedRouteId = "fun-2")).routeRows
+        val selected = state.copy(planning = state.planning.copy(selectedRouteId = "fun-2")).routeRows
 
         assertEquals(listOf(false, true, false, false), selected.map { it.isSelected })
     }
@@ -62,11 +64,6 @@ class RouteRowTest {
     @Test
     fun `route 1 is selected when the plan arrives`() {
         assertEquals(listOf(true, false, false, false), stateWith(threeFunRoutes()).routeRows.map { it.isSelected })
-    }
-
-    @Test
-    fun `there are no rows without planning`() {
-        assertTrue(MapSheetViewState().routeRows.isEmpty())
     }
 
     @Test
@@ -86,9 +83,13 @@ class RouteRowTest {
         assertEquals(m("180"), row.ascent)
     }
 
-    private fun stateWith(plan: TripPlan, budget: Budget = Budget.Time(45.minutes)): MapSheetViewState {
+    private fun stateWith(plan: TripPlan, budget: Budget = Budget.Time(45.minutes)): RoutePlanningViewState {
         val planning = RoutePlanningState(destination = plan.fastest.destination, budget = budget).withPlan(plan)
-        return MapSheetViewState(planning = planning)
+        return RoutePlanningViewState(
+            planning = planning,
+            budgetChoice = Constants.Budgets.DEFAULT_CHOICE,
+            distanceUnit = DistanceUnit.Kilometres,
+        )
     }
 
     private fun threeFunRoutes(): TripPlan = plan(

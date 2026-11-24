@@ -95,9 +95,8 @@ map buttons are native on iOS, so the sheet and buttons are real Liquid Glass ov
 shared Compose on both platforms.
 
 ```
-:feature:map   MapSheetComponent ──► child stack of sheet steps (search, start search, route planning,
-                                 │      one route, rating) ──► each step's own component
-                                 ├─► DriveHandOffComponent, RouteSavingComponent (Drive and Save)
+:feature:map   MapSheetComponent ──► child stack of sheet steps (search, route planning with its
+                                 │      start search, one route, rating) ──► each step's own component
                                  └─► MapSheetViewState ──► RouteMapState (base map + the active step's pins, lines, bounds)
 
 Android        :feature:map   MapScreenUi: GoogleMap + bottom sheet { MapSheetUi }                 maps-compose
@@ -113,22 +112,24 @@ iOS            iosApp         MapComponent: MKMapView + native sheet { ComposeVi
   Android, `CLLocationManager` on iOS), only while the screen is started. Whether the map follows the user is
   `RouteMapState.followsUser`: on Android the map's camera moves with each location, on iOS it sets MapKit's own
   tracking mode, and MapKit leaving that mode when the user pans is reported back.
-- `MapSheetComponent` is the parent of the map screen. It holds the user's location, the covered area, the sheet's
-  height, the distance unit and the reminder. Its sheet is a child stack of sheet steps, each a `SheetStepConfig` with
-  its own component: the destination search is the root and stays alive under the steps pushed over it, the start
-  search is pushed over route planning to pick the start, and route planning, one route and the rating are pushed over
-  the root, replacing what's above it. The steps are `PlaceSearchComponent`, `RoutePlanningComponent`,
+- `MapSheetComponent` is the parent of the map screen. It holds the sheet's height, the distance unit, the location
+  (location access and its prompts, location updates, following the user, the covered area and the base map), Drive,
+  Save and the drive question (which opens the rating step or shows the reminder bubble): what lives as long as the
+  sheet and has no step of its own. Its sheet is a child stack of sheet steps, each a `SheetStepConfig` with
+  its own component: the destination search is the root and stays alive under the steps pushed over it, and route
+  planning, one route and the rating are pushed over the root, replacing what's above it. Route planning opens its own
+  start search over itself, as a child slot, to pick the start. The steps are `PlaceSearchComponent`, `RoutePlanningComponent`,
   `OneRouteComponent` and `RatingComponent`.
 - A step reaches the parent only through `MapSheetHost`, an internal interface the parent implements: the user's
-  location, the sheet's height, whether the start search is open, the covered area, and events such as a place chosen
-  or a step closed. A step never sees the parent's other children.
-- Drive (`DriveHandOffComponent`) and Save (`RouteSavingComponent`) are children of the parent rather than steps. Each
-  lives as long as the sheet, with its own use case scope, and reports back to the parent through a listener.
-- `MapSheetViewState` is built from the parent's state, the state of Drive and Save, and the active step's state. Its
-  `map` is the parent's base map with the pins, route lines and camera bounds of the step on top, or of route planning
-  while it's the active one. Each platform's map draws `RouteMapState`, so both read one view state.
+  location, the sheet's height, the covered area, and events such as a place chosen
+  or a step closed. A step never sees the other steps.
+- `MapSheetViewState` is built from the parent's state and the active step's state. Its `map` is the location's base map with the pins, route lines and camera bounds of the step on
+  top (its `SheetStep`), which also gives Drive and Save their route. Each platform's map draws `RouteMapState`, so both read one view state.
 - `MapSheetUi` is the sheet's content and its steps, shared by both platforms: the search field, budget chips and route
-  cards. It reads `MapSheetViewState` and calls the parent's actions through `MapSheetScreen`.
+  cards. It reads `MapSheetViewState` and calls the parent's actions through `MapSheetScreen`. Route planning, the rating and
+  one-route steps have their own contracts, `RoutePlanningScreen`, `RatingScreen` and `OneRouteScreen`, which `MapSheetScreen.activeStep` carries while
+  one is on top: its content reads the step's state and calls the step's actions directly, and the step handles Back
+  itself.
 - **Android:** `MapScreenUi` (`:feature:map`, Android source set) draws the map with `maps-compose`, and the sheet
   and map buttons as solid Compose surfaces.
 - **iOS:** `MapComponent` in Swift renders `RouteMapState` on an `MKMapView` with `MKPolyline` and annotations, and
