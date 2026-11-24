@@ -2,7 +2,6 @@ package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
 
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
-import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.settings.Note
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.platform.binding.MapsAppResult
@@ -17,6 +16,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 
@@ -39,7 +39,7 @@ class MapSheetDriveTest {
 
         val state = trip.screen.viewState.value
         assertEquals(DriveDialog.FirstDrive, state.driveDialog)
-        assertEquals(false, state.planning?.isHandedOff)
+        assertTrue(trip.startedDrives.drives.isEmpty())
     }
 
     @Test
@@ -52,7 +52,7 @@ class MapSheetDriveTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.driveDialog)
-        assertEquals(true, state.planning?.isHandedOff)
+        assertEquals(1, trip.startedDrives.drives.size)
     }
 
     @Test
@@ -69,7 +69,7 @@ class MapSheetDriveTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.driveDialog)
-        assertEquals(true, state.planning?.isHandedOff)
+        assertEquals(2, trip.mapsApp.links.size)
     }
 
     @Test
@@ -83,7 +83,7 @@ class MapSheetDriveTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.driveDialog)
-        assertEquals(true, state.planning?.isHandedOff)
+        assertEquals(1, trip.startedDrives.drives.size)
     }
 
     @Test
@@ -101,7 +101,7 @@ class MapSheetDriveTest {
 
         val state = trip.screen.viewState.value
         assertEquals(DriveDialog.MapsAppMissing, state.driveDialog)
-        assertEquals(false, state.planning?.isHandedOff)
+        assertTrue(trip.startedDrives.drives.isEmpty())
     }
 
     @Test
@@ -153,24 +153,7 @@ class MapSheetDriveTest {
 
         val state = trip.screen.viewState.value
         assertNull(state.reminder)
-        assertEquals(true, state.planning?.isHandedOff)
-    }
-
-    @Test
-    fun `a hand-off from a saved route's step marks the step handed off`() = runTest(main.dispatcher) {
-        val trip = mapSheetFixture(
-            locationAccess = LocationAccess.Precise,
-            initiallyClosed = setOf(Note.FirstDrive),
-            savedRoutes = listOf(FakeSavedRoutesSource.Recorded),
-        )
-        advanceUntilIdle()
-        trip.screen.showSavedRoute(FakeSavedRoutesSource.Recorded.id)
-        advanceUntilIdle()
-
-        trip.screen.actions.onDriveClick()
-        advanceUntilIdle()
-
-        assertEquals(true, trip.screen.viewState.value.oneRouteStep?.isHandedOff)
+        assertEquals(1, trip.startedDrives.drives.size)
     }
 }
 

@@ -28,6 +28,7 @@ import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.rating.RatingRouteBadge
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource

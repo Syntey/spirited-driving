@@ -1,13 +1,13 @@
 package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
 
 import com.syntey.spiriteddriving.core.domain.coverage.FakeCoverageSource
+import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.FakeDriveRater
 import com.syntey.spiriteddriving.core.domain.drive.FakeDriveRecorder
 import com.syntey.spiriteddriving.core.domain.drive.FakeOpenDriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.FakeStartedDrives
 import com.syntey.spiriteddriving.core.domain.drive.FakeTripHistoryCache
 import com.syntey.spiriteddriving.core.domain.drive.FakeTripHistorySource
-import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.PastDrive
 import com.syntey.spiriteddriving.core.domain.drive.PastDrivePage
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
@@ -16,10 +16,10 @@ import com.syntey.spiriteddriving.core.domain.place.FakeRecentPlaces
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSearch
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
+import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
+import com.syntey.spiriteddriving.core.domain.route.RoutePlanner
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.domain.route.TripRequest
-import com.syntey.spiriteddriving.core.domain.route.RoutePlanner
-import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesCache
 import com.syntey.spiriteddriving.core.domain.savedroute.FakeSavedRoutesSource
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
@@ -27,6 +27,7 @@ import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.domain.settings.FakeDistanceUnitSettings
 import com.syntey.spiriteddriving.core.domain.settings.FakeVignetteSettings
 import com.syntey.spiriteddriving.core.domain.settings.Note
+import com.syntey.spiriteddriving.core.domain.work.AppWork
 import com.syntey.spiriteddriving.core.platform.binding.Auth
 import com.syntey.spiriteddriving.core.platform.binding.AuthUser
 import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
@@ -40,10 +41,6 @@ import com.syntey.spiriteddriving.core.platform.binding.SignInProvider
 import com.syntey.spiriteddriving.core.platform.binding.UserLocation
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.testing.TestComponentContext
-import com.syntey.spiriteddriving.core.domain.work.AppWork
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.dsl.module
 import com.syntey.spiriteddriving.feature.map.domain.AddRecentPlaceUseCase
 import com.syntey.spiriteddriving.feature.map.domain.CloseNoteUseCase
 import com.syntey.spiriteddriving.feature.map.domain.DriveSender
@@ -90,15 +87,26 @@ import com.syntey.spiriteddriving.feature.map.domain.SkipDriveQuestionUseCase
 import com.syntey.spiriteddriving.feature.map.domain.StartDriveUseCase
 import com.syntey.spiriteddriving.feature.map.domain.TurnOnRemindersUseCase
 import com.syntey.spiriteddriving.feature.map.domain.UnsaveRouteUseCase
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.oneRoute.OneRouteComponent
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.oneRoute.OneRouteScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.placeSearch.PlaceSearchComponent
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.rating.RatingComponent
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.rating.RatingScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningComponent
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningViewState
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import org.koin.core.context.startKoin
+import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 
 /**
  * The map sheet screen built from real use cases over fakes, started and on screen. Tests act on [screen] and read its
@@ -122,7 +130,27 @@ internal class MapSheetFixture(
     val driveReminders: FakePlatformDriveReminders,
     val auth: FakePlatformAuth,
     val savedRoutesSource: FakeSavedRoutesSource,
+    /** The drives started by a hand-off, newest first. */
+    val startedDrives: FakeStartedDrives,
+    /** The maps app: [FakePlatformMapsApp.links] holds each route handed to it. */
+    val mapsApp: FakePlatformMapsApp,
 )
+
+/** The rating step on top of the sheet; fails when another step is. */
+internal val MapSheetFixture.rating: RatingScreen
+    get() = (screen.activeStep.value as ActiveSheetStep.Rating).screen
+
+/** The one-route step on top of the sheet; fails when another step is. */
+internal val MapSheetFixture.oneRoute: OneRouteScreen
+    get() = (screen.activeStep.value as ActiveSheetStep.OneRoute).screen
+
+/** Route planning on top of the sheet, with its start search; fails when another step is. */
+internal val MapSheetFixture.planning: RoutePlanningScreen
+    get() = (screen.activeStep.value as ActiveSheetStep.RoutePlanning).screen
+
+/** Route planning's state while it's the step on top; null otherwise. */
+internal val MapSheetFixture.planningState: RoutePlanningViewState?
+    get() = (screen.activeStep.value as? ActiveSheetStep.RoutePlanning)?.screen?.viewState?.value
 
 /**
  * Builds a [MapSheetComponent] with [recentPlaces] kept and the user's location access at [locationAccess]. Covered area is
@@ -153,7 +181,8 @@ internal fun TestScope.mapSheetFixture(
     val budgetSettings = FakeBudgetSettings(choice = null)
     val distanceUnits = FakeDistanceUnitSettings(DistanceUnit.Kilometres)
     val platform = FakePlatform()
-    val mapsApp = MapsApp(FakePlatformMapsApp(MapsAppKind.GoogleMaps, mapsAppResult))
+    val platformMapsApp = FakePlatformMapsApp(MapsAppKind.GoogleMaps, mapsAppResult)
+    val mapsApp = MapsApp(platformMapsApp)
     val platformReminders = FakePlatformDriveReminders(canOffer = canOfferReminders)
     val reminders = DriveReminders(platformReminders)
     val platformAuth = FakePlatformAuth(initialUser = if (signedIn) TEST_USER else null)
@@ -173,22 +202,11 @@ internal fun TestScope.mapSheetFixture(
         }
     }
 
-    // The child components are built by their generated factories, which resolve from the global Koin, so Koin is started with
-    // the same fakes the parent gets
+    // The step components are built by their generated factories, which resolve from the global Koin, so Koin is started with
+    // the same fakes the sheet gets
     startKoin {
         modules(
             module {
-                factory { (context: AppComponentContext, listener: DriveHandOffComponent.Listener) ->
-                    DriveHandOffComponent(
-                        componentContext = context,
-                        listener = listener,
-                        handOffUseCase = HandOffUseCase(mapsApp),
-                        startDriveUseCase = StartDriveUseCase(startedDrives, driveRecorder, openDriveQuestion, tripHistoryCache, reminders),
-                        openMapsAppStoreUseCase = OpenMapsAppStoreUseCase(mapsApp),
-                        isNoteClosedUseCase = IsNoteClosedUseCase(closedNotes),
-                        closeNoteUseCase = CloseNoteUseCase(closedNotes),
-                    )
-                }
                 factory { (context: AppComponentContext, host: MapSheetHost, args: RoutePlanningComponent.Args) ->
                     RoutePlanningComponent(
                         componentContext = context,
@@ -220,6 +238,7 @@ internal fun TestScope.mapSheetFixture(
                         args = args,
                         loadSavedRouteUseCase = LoadSavedRouteUseCase(savedRoutesSource, savedRoutesCache),
                         loadPastDriveRouteUseCase = LoadPastDriveRouteUseCase(tripHistorySource, tripHistoryCache),
+                        observeDistanceUnitUseCase = ObserveDistanceUnitUseCase(distanceUnits, platform),
                     )
                 }
                 factory { (context: AppComponentContext, host: MapSheetHost, args: RatingComponent.Args) ->
@@ -233,16 +252,7 @@ internal fun TestScope.mapSheetFixture(
                         markNotDrivenUseCase = MarkNotDrivenUseCase(openDriveQuestion, startedDrives, driveSender, reminders),
                         shouldOfferReminderUseCase = ShouldOfferReminderUseCase(closedNotes, reminders),
                         turnOnRemindersUseCase = TurnOnRemindersUseCase(reminders),
-                    )
-                }
-                factory { (context: AppComponentContext, listener: RouteSavingComponent.Listener) ->
-                    RouteSavingComponent(
-                        componentContext = context,
-                        listener = listener,
-                        observeSignedInUseCase = ObserveSignedInUseCase(auth),
-                        observeSavedRoutesUseCase = ObserveSavedRoutesUseCase(savedRoutesCache),
-                        saveRouteUseCase = SaveRouteUseCase(savedRoutesSource, savedRoutesCache),
-                        unsaveRouteUseCase = UnsaveRouteUseCase(savedRoutesSource, savedRoutesCache),
+                        observeDistanceUnitUseCase = ObserveDistanceUnitUseCase(distanceUnits, platform),
                     )
                 }
             },
@@ -252,20 +262,27 @@ internal fun TestScope.mapSheetFixture(
     val component = MapSheetComponent(
         componentContext = lifecycle.context,
         navigation = navigation,
+        observeDistanceUnitUseCase = ObserveDistanceUnitUseCase(distanceUnits, platform),
+        sendPendingDrivesUseCase = SendPendingDrivesUseCase(startedDrives, driveSender),
+        getPastDriveUseCase = GetPastDriveUseCase(tripHistoryCache),
         getLocationAccessUseCase = GetLocationAccessUseCase(permission),
         requestLocationAccessUseCase = RequestLocationAccessUseCase(permission),
         openLocationSettingsUseCase = OpenLocationSettingsUseCase(permission),
+        requestPreciseLocationUseCase = RequestPreciseLocationUseCase(permission),
         observeUserLocationUseCase = ObserveUserLocationUseCase(UserLocation(location)),
         observeCoverageUseCase = ObserveCoverageUseCase(FakeCoverageSource(), coverageCache),
-        requestPreciseLocationUseCase = RequestPreciseLocationUseCase(permission),
         isNoteClosedUseCase = IsNoteClosedUseCase(closedNotes),
         closeNoteUseCase = CloseNoteUseCase(closedNotes),
-        observeDistanceUnitUseCase = ObserveDistanceUnitUseCase(distanceUnits, platform),
-        sendPendingDrivesUseCase = SendPendingDrivesUseCase(startedDrives, driveSender),
+        handOffUseCase = HandOffUseCase(mapsApp),
+        startDriveUseCase = StartDriveUseCase(startedDrives, driveRecorder, openDriveQuestion, tripHistoryCache, reminders),
+        openMapsAppStoreUseCase = OpenMapsAppStoreUseCase(mapsApp),
+        observeSignedInUseCase = ObserveSignedInUseCase(auth),
+        observeSavedRoutesUseCase = ObserveSavedRoutesUseCase(savedRoutesCache),
+        saveRouteUseCase = SaveRouteUseCase(savedRoutesSource, savedRoutesCache),
+        unsaveRouteUseCase = UnsaveRouteUseCase(savedRoutesSource, savedRoutesCache),
         getDriveQuestionUseCase = GetDriveQuestionUseCase(openDriveQuestion, reminders),
         skipDriveQuestionUseCase = SkipDriveQuestionUseCase(openDriveQuestion, reminders),
         observeOpenedReminderUseCase = ObserveOpenedReminderUseCase(reminders, openDriveQuestion),
-        getPastDriveUseCase = GetPastDriveUseCase(tripHistoryCache),
     )
 
     // Unconfined: a background coroutine doesn't run under advanceUntilIdle, so the event is taken as soon as it's sent
@@ -296,6 +313,8 @@ internal fun TestScope.mapSheetFixture(
         driveReminders = platformReminders,
         auth = platformAuth,
         savedRoutesSource = savedRoutesSource,
+        startedDrives = startedDrives,
+        mapsApp = platformMapsApp,
     )
 }
 

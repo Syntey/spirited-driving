@@ -8,8 +8,6 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.hours
@@ -45,7 +43,7 @@ class MapSheetDriveQuestionTest {
     }
 
     @Test
-    fun `a trip planned after the hand-off shows the reminder bubble instead of the rating step`() = runTest(main.dispatcher) {
+    fun `a due rating step replaces a trip planned after the hand-off`() = runTest(main.dispatcher) {
         val trip = mapSheetFixture(locationAccess = LocationAccess.Precise)
         advanceUntilIdle()
         sendFix(trip, Points.prague)
@@ -56,14 +54,8 @@ class MapSheetDriveQuestionTest {
         returnToScreen(trip)
 
         val state = trip.screen.viewState.value
-        assertNull(state.ratingStep)
-        assertNotNull(state.reminder)
-        // The bubble only shows once the planning is closed and the sheet is collapsed
-        assertFalse(state.showsReminder)
-        trip.screen.actions.onRoutePlanningClose()
-        trip.screen.actions.onSearchClose()
-        advanceUntilIdle()
-        assertTrue(trip.screen.viewState.value.showsReminder)
+        assertEquals("drive", state.ratingStep?.question?.driveId)
+        assertNull(trip.planningState)
     }
 
     @Test
@@ -104,7 +96,7 @@ class MapSheetDriveQuestionTest {
 
         val state = trip.screen.viewState.value
         assertEquals("drive", state.ratingStep?.question?.driveId)
-        assertNull(state.planning)
+        assertNull(trip.planningState)
     }
 
     @Test

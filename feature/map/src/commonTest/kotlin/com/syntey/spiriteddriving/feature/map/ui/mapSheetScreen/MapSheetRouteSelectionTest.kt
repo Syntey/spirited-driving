@@ -23,11 +23,11 @@ class MapSheetRouteSelectionTest {
     @Test
     fun `tapping a listed route selects it`() = runTest(main.dispatcher) {
         val trip = plannedFromPrague()
-        assertEquals(FakeRoutePlanner.Recorded.funRoutes.first().id, trip.screen.viewState.value.selectedRouteRow?.id)
+        assertEquals(FakeRoutePlanner.Recorded.funRoutes.first().id, trip.planning.viewState.value.selectedRouteRow?.id)
 
         trip.screen.actions.onRouteClick(FakeRoutePlanner.Recorded.fastest.id)
 
-        assertEquals(FakeRoutePlanner.Recorded.fastest.id, trip.screen.viewState.value.selectedRouteRow?.id)
+        assertEquals(FakeRoutePlanner.Recorded.fastest.id, trip.planning.viewState.value.selectedRouteRow?.id)
     }
 
     @Test

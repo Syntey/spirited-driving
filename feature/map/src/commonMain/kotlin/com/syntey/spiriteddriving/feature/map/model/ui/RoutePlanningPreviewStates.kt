@@ -6,28 +6,44 @@ import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.miles
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.Budget
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
-import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates.recentPlaces
 import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates.viewState
+import com.syntey.spiriteddriving.feature.map.tools.Constants
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.ActiveSheetStep
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningViewState
 import kotlin.time.Duration.Companion.minutes
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Sample view states of route planning, which the planning's previews share. */
 internal object RoutePlanningPreviewStates {
     private val PRAGUE_START = GeoPoint(latitude = 50.0755, longitude = 14.4378)
 
-    /** The start step over route planning to Karlštejn Castle, with the recent places and the My location row for [locationAccess]. */
+    /** The step that shows [state]'s route planning, with a screen over its planning state. */
+    fun stepOf(state: MapSheetViewState): ActiveSheetStep.RoutePlanning {
+        val planning = requireNotNull(state.sheetStep as? RoutePlanningViewState) { "The sheet shows route planning" }
+        return ActiveSheetStep.RoutePlanning(screen(planning))
+    }
+
+    /** A route planning screen that shows [planning] and takes no taps. */
+    fun screen(planning: RoutePlanningViewState): RoutePlanningScreen = object : RoutePlanningScreen {
+        override val viewState: MutableStateFlow<RoutePlanningViewState> = MutableStateFlow(planning)
+        override val actions: RoutePlanningScreen.Actions = RoutePlanningScreen.Actions.noOpActions()
+    }
+
+    /** The start search over route planning to Karlštejn Castle, with the recent places and the My location row for [locationAccess]. */
     fun startStepViewState(locationAccess: LocationAccess? = LocationAccess.Precise): MapSheetViewState {
+        val startSearch = StartSearch(closesPlanning = false)
         val state = viewState(locationAccess = locationAccess)
         return state.copy(
             sheetHeight = SheetHeight.Full,
             baseMap = state.baseMap.copy(userLocation = PRAGUE_START),
-            planning = RoutePlanningState(destination = DESTINATION, budget = BUDGET),
-            startSearch = StartSearch(closesPlanning = false),
+            sheetStep = planningOf(RoutePlanningState(destination = DESTINATION, budget = BUDGET), startSearch = startSearch),
+            startSearch = startSearch,
             search = SearchState(recentPlaces = recentPlaces),
         )
     }
@@ -59,12 +75,14 @@ internal object RoutePlanningPreviewStates {
     /** The plan of [plannedViewState] with a distance budget in miles, so the picker shows the mile chips. */
     fun plannedMilesViewState(): MapSheetViewState = planningState(
         RoutePlanningState(destination = DESTINATION, budget = Budget.Distance(20.miles)).withPlan(plannedPlan),
-    ).copy(distanceUnit = DistanceUnit.Miles)
+        distanceUnit = DistanceUnit.Miles,
+    )
 
     /** [plannedViewState] with the user about 12 km north of the start, so Drive says the maps app takes them there first. */
-    fun plannedFarStartViewState(): MapSheetViewState = plannedViewState().let { state ->
-        state.copy(baseMap = state.baseMap.copy(userLocation = FAR_FROM_START))
-    }
+    fun plannedFarStartViewState(): MapSheetViewState = planningState(
+        RoutePlanningState(destination = DESTINATION, budget = BUDGET).withPlan(plannedPlan),
+        userLocation = FAR_FROM_START,
+    )
 
     /**
      * A plan without a fun route that fits +15 min, where the closest one needs +22 min: only the fastest route is listed, and
@@ -93,10 +111,29 @@ internal object RoutePlanningPreviewStates {
         RoutePlanningState(destination = DESTINATION, budget = BUDGET, status = PlanningStatus.Failed),
     )
 
-    private fun planningState(planning: RoutePlanningState): MapSheetViewState = viewState().copy(
+    // The sheet with route planning on top, and the planning state the step shows
+    private fun planningState(
+        planning: RoutePlanningState,
+        distanceUnit: DistanceUnit = DistanceUnit.Kilometres,
+        userLocation: GeoPoint = PRAGUE_START,
+    ): MapSheetViewState = viewState().copy(
         sheetHeight = SheetHeight.Half,
-        baseMap = RouteMapState(showsUserLocation = true, userLocation = PRAGUE_START),
+        baseMap = RouteMapState(showsUserLocation = true, userLocation = userLocation),
+        distanceUnit = distanceUnit,
+        sheetStep = planningOf(planning, distanceUnit = distanceUnit, userLocation = userLocation),
+    )
+
+    private fun planningOf(
+        planning: RoutePlanningState,
+        startSearch: StartSearch? = null,
+        distanceUnit: DistanceUnit = DistanceUnit.Kilometres,
+        userLocation: GeoPoint = PRAGUE_START,
+    ): RoutePlanningViewState = RoutePlanningViewState(
         planning = planning,
+        budgetChoice = Constants.Budgets.DEFAULT_CHOICE,
+        distanceUnit = distanceUnit,
+        userLocation = userLocation,
+        startSearch = startSearch,
     )
 
     private val DESTINATION: Place = FakeRoutePlanner.Recorded.fastest.destination

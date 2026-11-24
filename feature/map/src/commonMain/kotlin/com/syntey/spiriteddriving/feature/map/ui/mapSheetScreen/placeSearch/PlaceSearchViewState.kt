@@ -1,4 +1,4 @@
-package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
+package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.placeSearch
 
 import com.syntey.spiriteddriving.feature.map.model.ui.SearchState
 

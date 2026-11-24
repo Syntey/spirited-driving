@@ -1,15 +1,10 @@
-package com.syntey.spiriteddriving.feature.map.ui.components
+package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.rating
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.unit.Dp
-import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
-import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.measureOnly
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,8 +13,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.RatingReason
 import com.syntey.spiriteddriving.core.domain.drive.Thumb
@@ -40,11 +40,14 @@ import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
 import com.syntey.spiriteddriving.core.ui.theme.Grid
 import com.syntey.spiriteddriving.core.ui.theme.UiPlatform
 import com.syntey.spiriteddriving.feature.map.model.ui.RatingPreviewStates
-import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
+import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
+import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RouteAttribution
+import com.syntey.spiriteddriving.feature.map.ui.components.routeColor
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.ActiveSheetStep
-import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.Content
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
-import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.measureOnly
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
@@ -54,17 +57,16 @@ import dev.icerock.moko.resources.compose.stringResource
  * planned duration and distance.
  */
 @Composable
-internal fun RatingStepHeader(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
-    // Both texts are null only without the step, which the sheet doesn't show the header for
-    val number = viewState.ratingStep?.question?.routeNumber ?: return
+internal fun RatingStepHeader(viewState: RatingViewState, actions: RatingScreen.Actions, modifier: Modifier = Modifier) {
+    val number = viewState.step.question.routeNumber
     SheetHeader(
-        title = viewState.ratingTitle?.localized().orEmpty(),
+        title = viewState.title.localized(),
         close = IconAction(
             icon = painterResource(MR.images.close),
             label = stringResource(MR.strings.generic_close),
-            onClick = actions::onRatingClose,
+            onClick = actions::onCloseClick,
         ),
-        subtitle = viewState.ratingDriveText?.localized().orEmpty(),
+        subtitle = viewState.driveText.localized(),
         subtitleLeading = { RatingRouteBadge(number = number) },
         modifier = modifier,
     )
@@ -86,8 +88,8 @@ internal fun RatingRouteBadge(number: Int, modifier: Modifier = Modifier) {
  * chips and Done after it, with the attribution at the end. It scrolls when the sheet is shorter than its content.
  */
 @Composable
-internal fun RatingStepBody(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
-    val rating = viewState.ratingStep?.rating
+internal fun RatingStepBody(viewState: RatingViewState, actions: RatingScreen.Actions, modifier: Modifier = Modifier) {
+    val rating = viewState.step.rating
     val style = MapPlatformStyle.current
     Column(
         modifier = modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
@@ -103,7 +105,7 @@ internal fun RatingStepBody(viewState: MapSheetViewState, actions: MapSheetScree
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         } else {
-            viewState.ratingThanks?.let { thanks ->
+            viewState.thanks?.let { thanks ->
                 Text(
                     text = thanks.localized(),
                     style = MaterialTheme.typography.bodyLarge,
@@ -118,7 +120,7 @@ internal fun RatingStepBody(viewState: MapSheetViewState, actions: MapSheetScree
                     AppChip(
                         label = chip.label.localized(),
                         selected = chip.isSelected,
-                        onClick = { actions.onRatingReasonClick(chip.reason) },
+                        onClick = { actions.onReasonClick(chip.reason) },
                         colors = ChipDefaultColors.filter(),
                         checkIcon = painterResource(MR.images.check),
                     )
@@ -129,7 +131,7 @@ internal fun RatingStepBody(viewState: MapSheetViewState, actions: MapSheetScree
             }
             AppButton(
                 text = stringResource(MR.strings.drive_feedback_done),
-                onClick = actions::onRatingDone,
+                onClick = actions::onDoneClick,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -142,21 +144,20 @@ internal fun RatingStepBody(viewState: MapSheetViewState, actions: MapSheetScree
  * height, so the sheet stops where the thumbs are.
  */
 @Composable
-internal fun CollapsedRatingStep(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
-    val step = viewState.ratingStep ?: return
+internal fun CollapsedRatingStep(viewState: RatingViewState, actions: RatingScreen.Actions, modifier: Modifier = Modifier) {
     val style = MapPlatformStyle.current
     Column(
         modifier = modifier.fillMaxWidth().padding(style.sheetContentPadding),
         verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
     ) {
         RatingStepHeader(viewState = viewState, actions = actions)
-        RatingStepThumbs(rating = step.rating, actions = actions)
+        RatingStepThumbs(rating = viewState.step.rating, actions = actions)
     }
 }
 
 // The offer of the drive reminder, a hint with its own button; it's Android only, as iOS asks for the permission on its own
 @Composable
-private fun ReminderOffer(actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
+private fun ReminderOffer(actions: RatingScreen.Actions, modifier: Modifier = Modifier) {
     NoteCard(
         text = stringResource(MR.strings.drive_feedback_offer_text),
         modifier = modifier,
@@ -169,7 +170,7 @@ private fun ReminderOffer(actions: MapSheetScreen.Actions, modifier: Modifier = 
 
 // Good and Not good, with the drive's rating picked
 @Composable
-private fun RatingStepThumbs(rating: Rating?, actions: MapSheetScreen.Actions) {
+private fun RatingStepThumbs(rating: Rating?, actions: RatingScreen.Actions) {
     RatingThumbs(
         groupLabel = stringResource(MR.strings.rating_label),
         good = ThumbContent(
@@ -177,14 +178,14 @@ private fun RatingStepThumbs(rating: Rating?, actions: MapSheetScreen.Actions) {
             icon = painterResource(MR.images.thumb_up),
             pickedIcon = painterResource(MR.images.thumb_up_filled),
             picked = rating?.thumb == Thumb.Up,
-            onClick = { actions.onRatingThumbClick(Thumb.Up) },
+            onClick = { actions.onThumbClick(Thumb.Up) },
         ),
         notGood = ThumbContent(
             label = stringResource(MR.strings.rating_not_good),
             icon = painterResource(MR.images.thumb_down),
             pickedIcon = painterResource(MR.images.thumb_down_filled),
             picked = rating?.thumb == Thumb.Down,
-            onClick = { actions.onRatingThumbClick(Thumb.Down) },
+            onClick = { actions.onThumbClick(Thumb.Down) },
         ),
     )
 }
@@ -193,7 +194,7 @@ private fun RatingStepThumbs(rating: Rating?, actions: MapSheetScreen.Actions) {
 @Composable
 private fun RatingStepPreview() = Showcase {
     Content(
-        step = ActiveSheetStep.Rating,
+        step = ActiveSheetStep.Rating(RatingPreviewStates.screen()),
         viewState = RatingPreviewStates.ratingViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -205,7 +206,7 @@ private fun RatingStepPreview() = Showcase {
 @Composable
 private fun RatingStepIosPreview() = Showcase(platform = UiPlatform.Ios) {
     Content(
-        step = ActiveSheetStep.Rating,
+        step = ActiveSheetStep.Rating(RatingPreviewStates.screen()),
         viewState = RatingPreviewStates.ratingViewState(),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
@@ -216,11 +217,10 @@ private fun RatingStepIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @ComponentPreviews
 @Composable
 private fun RatingStepGoodPreview() = Showcase {
+    val rating = Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews))
     Content(
-        step = ActiveSheetStep.Rating,
-        viewState = RatingPreviewStates.ratingViewState(
-            Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews)),
-        ),
+        step = ActiveSheetStep.Rating(RatingPreviewStates.screen(rating)),
+        viewState = RatingPreviewStates.ratingViewState(rating),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -230,11 +230,10 @@ private fun RatingStepGoodPreview() = Showcase {
 @ComponentPreviews
 @Composable
 private fun RatingStepGoodIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    val rating = Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews))
     Content(
-        step = ActiveSheetStep.Rating,
-        viewState = RatingPreviewStates.ratingViewState(
-            Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews)),
-        ),
+        step = ActiveSheetStep.Rating(RatingPreviewStates.screen(rating)),
+        viewState = RatingPreviewStates.ratingViewState(rating),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -244,9 +243,10 @@ private fun RatingStepGoodIosPreview() = Showcase(platform = UiPlatform.Ios) {
 @ComponentPreviews
 @Composable
 private fun RatingStepNotGoodPreview() = Showcase {
+    val rating = Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))
     Content(
-        step = ActiveSheetStep.Rating,
-        viewState = RatingPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
+        step = ActiveSheetStep.Rating(RatingPreviewStates.screen(rating)),
+        viewState = RatingPreviewStates.ratingViewState(rating),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -256,9 +256,10 @@ private fun RatingStepNotGoodPreview() = Showcase {
 @ComponentPreviews
 @Composable
 private fun RatingStepNotGoodIosPreview() = Showcase(platform = UiPlatform.Ios) {
+    val rating = Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))
     Content(
-        step = ActiveSheetStep.Rating,
-        viewState = RatingPreviewStates.ratingViewState(Rating(thumb = Thumb.Down, reasons = setOf(RatingReason.TookTooLong))),
+        step = ActiveSheetStep.Rating(RatingPreviewStates.screen(rating)),
+        viewState = RatingPreviewStates.ratingViewState(rating),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -268,12 +269,10 @@ private fun RatingStepNotGoodIosPreview() = Showcase(platform = UiPlatform.Ios) 
 @ComponentPreviews
 @Composable
 private fun RatingStepGoodReminderOfferPreview() = Showcase {
+    val rating = Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews))
     Content(
-        step = ActiveSheetStep.Rating,
-        viewState = RatingPreviewStates.ratingViewState(
-            Rating(thumb = Thumb.Up, reasons = setOf(RatingReason.CurvyRoads, RatingReason.NiceViews)),
-            showsReminderOffer = true,
-        ),
+        step = ActiveSheetStep.Rating(RatingPreviewStates.screen(rating, showsReminderOffer = true)),
+        viewState = RatingPreviewStates.ratingViewState(rating, showsReminderOffer = true),
         actions = noOpActions(),
         onCollapsedHeightChange = {},
         modifier = Modifier.height(Grid.d100),
@@ -283,31 +282,32 @@ private fun RatingStepGoodReminderOfferPreview() = Showcase {
 @ComponentPreviews
 @Composable
 private fun RatingStepCollapsedPreview() = Showcase {
-    CollapsedRatingStep(viewState = RatingPreviewStates.ratingViewState(), actions = noOpActions())
+    CollapsedRatingStep(viewState = RatingPreviewStates.viewState(), actions = RatingScreen.Actions.noOpActions())
 }
 
 // The rating step takes the place of the search and planning. Its collapsed layout is measured unplaced first, as planning's
 // is, so the sheet's collapsed height is known before the sheet gets there.
 @Composable
-internal fun ColumnScope.RatingLayout(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, onCollapsedHeight: (Dp) -> Unit) {
+internal fun ColumnScope.RatingLayout(screen: RatingScreen, sheetHeight: SheetHeight, onCollapsedHeight: (Dp) -> Unit) {
+    val viewState by screen.viewState.collectAsStateWithLifecycle()
     val style = MapPlatformStyle.current
     val density = LocalDensity.current
     CollapsedRatingStep(
         viewState = viewState,
-        actions = actions,
+        actions = screen.actions,
         modifier = Modifier
             .measureOnly { height -> onCollapsedHeight(with(density) { height.toDp() }) }
             .clearAndSetSemantics {},
     )
-    if (viewState.sheetHeight == SheetHeight.Collapsed) {
-        CollapsedRatingStep(viewState = viewState, actions = actions)
+    if (sheetHeight == SheetHeight.Collapsed) {
+        CollapsedRatingStep(viewState = viewState, actions = screen.actions)
     } else {
         Column(
             Modifier.fillMaxSize().padding(style.sheetContentPadding),
             verticalArrangement = Arrangement.spacedBy(style.sheetSpacing),
         ) {
-            RatingStepHeader(viewState = viewState, actions = actions)
-            RatingStepBody(viewState = viewState, actions = actions, modifier = Modifier.weight(1f))
+            RatingStepHeader(viewState = viewState, actions = screen.actions)
+            RatingStepBody(viewState = viewState, actions = screen.actions, modifier = Modifier.weight(1f))
         }
     }
 }

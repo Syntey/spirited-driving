@@ -13,7 +13,9 @@ import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteMapState
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
+import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.routePlanning.RoutePlanningViewState
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
 import kotlin.test.Test
@@ -54,7 +56,7 @@ class RouteLineTest {
     @Test
     fun `the selected line is last and the others keep the list order`() {
         val state = stateWith(threeFunRoutes())
-        val selected = state.copy(planning = state.planning?.copy(selectedRouteId = "fun-2")).routeLines
+        val selected = state.copy(planning = state.planning.copy(selectedRouteId = "fun-2")).routeLines
 
         assertEquals(listOf("fun-1", "fun-3", "fastest", "fun-2"), selected.map { it.id })
         assertTrue(selected.last().isSelected)
@@ -91,9 +93,11 @@ class RouteLineTest {
     fun `while planning the route bounds are the user's location and the destination`() {
         val origin = GeoPoint(latitude = 50.0, longitude = 14.0)
         val destination = GeoPoint(latitude = 49.5, longitude = 14.5)
-        val state = MapSheetViewState(
-            baseMap = RouteMapState(userLocation = origin),
+        val state = RoutePlanningViewState(
             planning = RoutePlanningState(destination = place(destination), budget = Budget.Time(45.minutes)),
+            budgetChoice = Constants.Budgets.DEFAULT_CHOICE,
+            distanceUnit = DistanceUnit.Kilometres,
+            userLocation = origin,
         )
 
         assertEquals(boundsOf(listOf(origin, destination)), state.routeBounds)
@@ -102,7 +106,11 @@ class RouteLineTest {
     @Test
     fun `a single point's route bounds are at least the minimum span`() {
         val destination = GeoPoint(latitude = 50.0, longitude = 14.0)
-        val state = MapSheetViewState(planning = RoutePlanningState(destination = place(destination), budget = Budget.Time(45.minutes)))
+        val state = RoutePlanningViewState(
+            planning = RoutePlanningState(destination = place(destination), budget = Budget.Time(45.minutes)),
+            budgetChoice = Constants.Budgets.DEFAULT_CHOICE,
+            distanceUnit = DistanceUnit.Kilometres,
+        )
 
         val bounds = assertNotNull(state.routeBounds)
         assertTrue(bounds.northEast.latitude - bounds.southWest.latitude >= Constants.Map.MIN_ROUTE_LAT_SPAN - TOLERANCE)
@@ -121,9 +129,11 @@ class RouteLineTest {
                 fastest = plan.fastest.copy(line = emptyList()),
             )
         }
-        val state = MapSheetViewState(
-            baseMap = RouteMapState(userLocation = origin),
+        val state = RoutePlanningViewState(
             planning = RoutePlanningState(destination = place(destination), budget = Budget.Time(45.minutes)).withPlan(emptyPlan),
+            budgetChoice = Constants.Budgets.DEFAULT_CHOICE,
+            distanceUnit = DistanceUnit.Kilometres,
+            userLocation = origin,
         )
 
         assertEquals(boundsOf(listOf(origin, destination)), state.routeBounds)
@@ -141,7 +151,7 @@ class RouteLineTest {
 
     @Test
     fun `the map buttons hide while planning`() {
-        val state = stateWith(threeFunRoutes())
+        val state = MapSheetViewState(sheetStep = stateWith(threeFunRoutes()))
 
         assertFalse(state.showsMapButtons)
     }
@@ -157,9 +167,13 @@ class RouteLineTest {
         const val TOLERANCE = 1e-9
     }
 
-    private fun stateWith(plan: TripPlan, budget: Budget = Budget.Time(45.minutes)): MapSheetViewState {
+    private fun stateWith(plan: TripPlan, budget: Budget = Budget.Time(45.minutes)): RoutePlanningViewState {
         val planning = RoutePlanningState(destination = plan.fastest.destination, budget = budget).withPlan(plan)
-        return MapSheetViewState(planning = planning)
+        return RoutePlanningViewState(
+            planning = planning,
+            budgetChoice = Constants.Budgets.DEFAULT_CHOICE,
+            distanceUnit = DistanceUnit.Kilometres,
+        )
     }
 
     private fun threeFunRoutes(): TripPlan = plan(

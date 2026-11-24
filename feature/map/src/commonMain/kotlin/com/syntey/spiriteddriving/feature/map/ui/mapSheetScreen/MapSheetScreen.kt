@@ -1,12 +1,8 @@
 package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
 
-import com.syntey.spiriteddriving.core.domain.drive.RatingReason
-import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.place.PlaceSuggestion
-import com.syntey.spiriteddriving.core.domain.route.Budget
-import com.syntey.spiriteddriving.core.domain.route.BudgetKind
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
 import kotlinx.coroutines.flow.Flow
@@ -67,9 +63,6 @@ interface MapSheetScreen {
         /** Swiped a recent place away. */
         fun onRecentPlaceRemove(place: Place)
 
-        /** Tapped "From" in route planning's header. */
-        fun onStartClick()
-
         /** Tapped My location in the start step. */
         fun onMyLocationClick()
 
@@ -85,20 +78,8 @@ interface MapSheetScreen {
         /** Touched and held the map at [point]: the start while the start step is open, else the destination. */
         fun onMapLongPress(point: GeoPoint)
 
-        /** Tapped a route in the list or its line on the map. */
+        /** Tapped a route's line on the map. */
         fun onRouteClick(routeId: String)
-
-        /** Tapped a budget chip. */
-        fun onBudgetClick(budget: Budget)
-
-        /** Switched the budget's unit. */
-        fun onBudgetKindChange(kind: BudgetKind)
-
-        /** Closed route planning: Cancel, or Back on Android. */
-        fun onRoutePlanningClose()
-
-        /** Tapped Try again after planning failed. */
-        fun onPlanningRetry()
 
         /** Tapped the profile button. */
         fun onProfileClick()
@@ -121,41 +102,17 @@ interface MapSheetScreen {
         /** Tapped Get Apple Maps or Open Play Store in the maps-app-missing dialog. */
         fun onMapsAppStoreClick()
 
-        /** Tapped Good or Not good in the rating step. */
-        fun onRatingThumbClick(thumb: Thumb)
-
-        /** Tapped a reason chip in the rating step. */
-        fun onRatingReasonClick(reason: RatingReason)
-
-        /** Tapped Done in the rating step. */
-        fun onRatingDone()
-
-        /** Closed the rating step: its close button, or Back on Android. */
-        fun onRatingClose()
-
-        /** Tapped I didn't drive it. */
-        fun onNotDrivenClick()
-
         /** Tapped the reminder bubble. */
         fun onReminderClick()
 
         /** Dismissed the reminder bubble. */
         fun onReminderDismiss()
 
-        /** Tapped Turn on in the reminder offer. */
-        fun onReminderOfferClick()
-
         /** Tapped Save, or Saved, in route planning. */
         fun onSaveClick()
 
         /** Tapped the Saved routes row in the search step. */
         fun onSavedRoutesClick()
-
-        /** Closed the saved route's step: its close button, or Back on Android. */
-        fun onOneRouteClose()
-
-        /** Tapped Try again after the saved route didn't load. */
-        fun onOneRouteRetry()
 
         /** Tapped Save in the name dialog, with the name typed. */
         fun onRouteNameSave(name: String)
@@ -173,17 +130,12 @@ interface MapSheetScreen {
                 override fun onSuggestionClick(suggestion: PlaceSuggestion) = Unit
                 override fun onRecentPlaceClick(place: Place) = Unit
                 override fun onRecentPlaceRemove(place: Place) = Unit
-                override fun onStartClick() = Unit
                 override fun onMyLocationClick() = Unit
                 override fun onSearchRetry() = Unit
                 override fun onLocateClick() = Unit
                 override fun onMapPanned() = Unit
                 override fun onMapLongPress(point: GeoPoint) = Unit
                 override fun onRouteClick(routeId: String) = Unit
-                override fun onBudgetClick(budget: Budget) = Unit
-                override fun onBudgetKindChange(kind: BudgetKind) = Unit
-                override fun onRoutePlanningClose() = Unit
-                override fun onPlanningRetry() = Unit
                 override fun onProfileClick() = Unit
                 override fun onPreciseLocationClick() = Unit
                 override fun onPreciseLocationNoteClose() = Unit
@@ -191,20 +143,12 @@ interface MapSheetScreen {
                 override fun onFirstDriveConfirm() = Unit
                 override fun onDriveDialogDismiss() = Unit
                 override fun onMapsAppStoreClick() = Unit
-                override fun onRatingThumbClick(thumb: Thumb) = Unit
-                override fun onRatingReasonClick(reason: RatingReason) = Unit
-                override fun onRatingDone() = Unit
-                override fun onRatingClose() = Unit
-                override fun onNotDrivenClick() = Unit
                 override fun onReminderClick() = Unit
                 override fun onReminderDismiss() = Unit
-                override fun onReminderOfferClick() = Unit
                 override fun onSaveClick() = Unit
                 override fun onRouteNameSave(name: String) = Unit
                 override fun onRouteNameDismiss() = Unit
                 override fun onSavedRoutesClick() = Unit
-                override fun onOneRouteClose() = Unit
-                override fun onOneRouteRetry() = Unit
             }
         }
     }

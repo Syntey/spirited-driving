@@ -43,17 +43,17 @@ class MapSheetBackTest {
     @Test
     fun `back closes the start search before route planning`() = runTest(main.dispatcher) {
         val trip = planned()
-        trip.screen.actions.onStartClick()
+        trip.planning.actions.onStartClick()
         advanceUntilIdle()
 
         assertTrue(trip.lifecycle.back())
         advanceUntilIdle()
         assertNull(trip.screen.viewState.value.startSearch)
-        assertNotNull(trip.screen.viewState.value.planning)
+        assertNotNull(trip.planningState)
 
         assertTrue(trip.lifecycle.back())
         advanceUntilIdle()
-        assertNull(trip.screen.viewState.value.planning)
+        assertNull(trip.planningState)
     }
 
     @Test
@@ -63,7 +63,7 @@ class MapSheetBackTest {
         assertTrue(trip.lifecycle.back())
         advanceUntilIdle()
         val state = trip.screen.viewState.value
-        assertNull(state.planning)
+        assertNull(trip.planningState)
         assertEquals(SheetHeight.Full, state.sheetHeight)
     }
 

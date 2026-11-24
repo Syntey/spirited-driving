@@ -1,8 +1,9 @@
-package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen
+package com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.rating
 
 import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.syntey.spiriteddriving.core.domain.drive.DriveQuestion
 import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.RatingReason
@@ -13,12 +14,15 @@ import com.syntey.spiriteddriving.core.resources.datetime.driveTimeText
 import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.feature.map.domain.MarkNotDrivenUseCase
+import com.syntey.spiriteddriving.feature.map.domain.ObserveDistanceUnitUseCase
 import com.syntey.spiriteddriving.feature.map.domain.RateDriveUseCase
 import com.syntey.spiriteddriving.feature.map.domain.ShouldOfferReminderUseCase
 import com.syntey.spiriteddriving.feature.map.domain.SkipDriveQuestionUseCase
 import com.syntey.spiriteddriving.feature.map.domain.TurnOnRemindersUseCase
 import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
 import com.syntey.spiriteddriving.feature.map.model.ui.SheetHeight
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetHost
+import kotlin.time.Clock
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
@@ -26,7 +30,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.TimeZone
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
-import kotlin.time.Clock
 
 /**
  * The rating of a drive: the thumbs, the reasons, Not driven, the reminder offer and sending the rating. A step of the sheet's
@@ -44,6 +47,7 @@ internal class RatingComponent(
     private val markNotDrivenUseCase: MarkNotDrivenUseCase,
     private val shouldOfferReminderUseCase: ShouldOfferReminderUseCase,
     private val turnOnRemindersUseCase: TurnOnRemindersUseCase,
+    private val observeDistanceUnitUseCase: ObserveDistanceUnitUseCase,
 ) : AppComponent<RatingViewState, Nothing>(
     componentContext = componentContext,
     defaultState = RatingViewState(
@@ -52,7 +56,9 @@ internal class RatingComponent(
             driveTime = driveTimeText(args.question.startedAt, Clock.System.now(), TimeZone.currentSystemDefault()),
         ),
     ),
-) {
+),
+    RatingScreen,
+    RatingScreen.Actions {
 
     /** @property question The drive's question, which the rating answers. */
     data class Args(val question: DriveQuestion)
@@ -62,10 +68,26 @@ internal class RatingComponent(
     // Sends run one at a time in the order of the taps, so the last rating is the one kept (a Mutex resumes waiters in order)
     private val sendLock = Mutex()
 
-    val viewState: StateFlow<RatingViewState> = componentState
+    override val viewState: StateFlow<RatingViewState> = componentState
+
+    override val actions: RatingScreen.Actions = this
+
+    // Back closes the step as its close button does; the step's own handler wins over the parent's while it's on top
+    private val backCallback = BackCallback { close() }
+
+    init {
+        backHandler.register(backCallback)
+        observeDistanceUnit()
+    }
+
+    // Observed, so a unit picked in Settings applies while the drive is rated
+    private fun observeDistanceUnit() = observeDistanceUnitUseCase.execute {
+        onNext { unit -> componentState.update { it.copy(distanceUnit = unit) } }
+        onError { error -> logger.e(error) { "Distance unit not observed" } }
+    }
 
     // Tapping the thumb already picked changes nothing and sends nothing
-    fun onThumbClick(thumb: Thumb) {
+    override fun onThumbClick(thumb: Thumb) {
         val step = componentState.value.step
         if (step.rating?.thumb == thumb) return
         updateRating(Rating(thumb))
@@ -76,7 +98,7 @@ internal class RatingComponent(
     }
 
     // Only the reasons of the picked thumb can be picked
-    fun onReasonClick(reason: RatingReason) {
+    override fun onReasonClick(reason: RatingReason) {
         val rating = componentState.value.step.rating ?: return
         if (reason.thumb != rating.thumb) return
         val reasons = if (reason in rating.reasons) rating.reasons - reason else rating.reasons + reason
@@ -85,7 +107,7 @@ internal class RatingComponent(
     }
 
     // Marked not driven, the question is already cleared, so the step closes without a skip
-    fun onNotDriven() {
+    override fun onNotDrivenClick() {
         val driveId = componentState.value.step.question.driveId
         // In AppWork, as the step pops right after and the removal has to be sent through that
         appWork.launch {
@@ -100,7 +122,7 @@ internal class RatingComponent(
     }
 
     // Hidden at once, so the offer doesn't wait for the settings to open
-    fun onReminderOfferClick() {
+    override fun onReminderOfferClick() {
         updateStep { it.copy(showsReminderOffer = false) }
         // In AppWork, as the step may pop before the settings are opened
         appWork.launch {
@@ -109,6 +131,10 @@ internal class RatingComponent(
             }
         }
     }
+
+    override fun onDoneClick() = close()
+
+    override fun onCloseClick() = close()
 
     // A step closed without a thumb drops the drive's question, so it isn't asked about again
     fun close() {
