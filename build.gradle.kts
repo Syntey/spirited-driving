@@ -26,8 +26,8 @@ moduleGraphAssert {
     )
     // :core:ui uses only Compose: screens pass it their texts and icons, so a new string or icon doesn't rebuild the components
     restricted = arrayOf(":core:ui -X> :core:resources")
-    // :androidApp -> :shared -> :feature:* or :data:* -> :core:*, with room for one :core:* module using another
-    maxHeight = 4
+    // :androidApp -> :shared -> :feature:* or :data:* -> :core:*; :core:* modules don't use each other, so they build in parallel
+    maxHeight = 3
     configurations = setOf("api", "implementation") +
         listOf("commonMain", "commonTest", "androidMain", "iosMain").flatMap { listOf("${it}Api", "${it}Implementation") }
     assertOnAnyBuild = true

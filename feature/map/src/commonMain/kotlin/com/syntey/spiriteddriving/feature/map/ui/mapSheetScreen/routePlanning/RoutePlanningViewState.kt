@@ -10,7 +10,7 @@ import com.syntey.spiriteddriving.core.domain.route.RouteKind
 import com.syntey.spiriteddriving.core.domain.route.TripPlan
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.resources.*
-import com.syntey.spiriteddriving.core.resources.measure.distanceText
+import com.syntey.spiriteddriving.feature.map.model.ui.distanceText
 import com.syntey.spiriteddriving.core.resources.measure.durationText
 import com.syntey.spiriteddriving.feature.map.model.ui.BudgetChip
 import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage

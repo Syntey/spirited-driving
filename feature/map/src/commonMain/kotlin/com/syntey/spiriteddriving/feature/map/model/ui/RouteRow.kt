@@ -2,9 +2,7 @@ package com.syntey.spiriteddriving.feature.map.model.ui
 
 import com.syntey.spiriteddriving.core.domain.route.Route
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
-import com.syntey.spiriteddriving.core.resources.measure.distanceText
 import com.syntey.spiriteddriving.core.resources.measure.durationText
-import com.syntey.spiriteddriving.core.resources.measure.heightText
 import dev.icerock.moko.resources.desc.StringDesc
 
 /** A route as the route list shows it. */

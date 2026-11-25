@@ -8,7 +8,7 @@ import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.platform.binding.LocationAccess
 import com.syntey.spiriteddriving.core.resources.*
-import com.syntey.spiriteddriving.core.resources.measure.distanceText
+import com.syntey.spiriteddriving.feature.map.model.ui.distanceText
 import com.syntey.spiriteddriving.feature.map.model.ui.DriveDialog
 import com.syntey.spiriteddriving.feature.map.model.ui.LocateButton
 import com.syntey.spiriteddriving.feature.map.model.ui.MyLocationRow
