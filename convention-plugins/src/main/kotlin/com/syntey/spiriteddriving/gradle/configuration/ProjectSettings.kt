@@ -26,8 +26,9 @@ object ProjectSettings {
         const val MinSdkVersion = 31
         const val TargetSdkVersion = 36
 
-        // androidx.lifecycle 2.11.0 (pulled in by Compose Multiplatform) refuses to be compiled against anything lower.
+        // API 37.2: AndroidX libraries from the Compose BOM refuse to be compiled against anything lower.
         const val CompileSdkVersion = 37
+        const val CompileSdkMinorVersion = 2
 
         const val ApplicationId = "com.syntey.spiriteddriving.android"
 

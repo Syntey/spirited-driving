@@ -23,7 +23,11 @@ kotlin {
 
     android {
         namespace = project.androidNamespace
-        compileSdk = ProjectSettings.Android.CompileSdkVersion
+        compileSdk {
+            version = release(ProjectSettings.Android.CompileSdkVersion) {
+                minorApiLevel = ProjectSettings.Android.CompileSdkMinorVersion
+            }
+        }
         minSdk = ProjectSettings.Android.MinSdkVersion
 
         // Runs `commonTest` on the JVM (`testAndroidHostTest`), which is what CI runs.

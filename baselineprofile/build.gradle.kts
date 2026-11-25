@@ -12,7 +12,11 @@ kotlin {
 
 android {
     namespace = libs.versions.project.baselineprofile.namespace.get()
-    compileSdk = ProjectSettings.Android.CompileSdkVersion
+    compileSdk {
+        version = release(ProjectSettings.Android.CompileSdkVersion) {
+            minorApiLevel = ProjectSettings.Android.CompileSdkMinorVersion
+        }
+    }
 
     compileOptions {
         sourceCompatibility = ProjectSettings.Android.JavaCompatibility
