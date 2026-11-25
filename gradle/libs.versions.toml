@@ -1,11 +1,12 @@
 [versions]
-agp = "9.5.1"
+agp = "9.5.2"
+# @pin needed by other dependencies
 kotlin = "2.4.10"
-ksp = "2.3.13"
+ksp = "2.3.14"
 desugarLibs = "2.1.5"
 # Android-only, consumed by `androidApp`
-androidxLifecycle = "2.11.0"
-androidxComposeBom = "2026.09.00"
+androidxLifecycle = "2.11.1"
+androidxComposeBom = "2026.11.01"
 # Needs to align with version in Compose BOM as closely as possible
 composeMultiplatform = "1.12.2"
 # Versioned separately from `composeMultiplatform`, see `compose.material3` in CMP Gradle plugin
@@ -15,12 +16,12 @@ jetbrainsLifecycle = "2.11.0"
 androidxActivity = "1.13.0"
 androidxBrowser = "1.10.0"
 androidxWork = "2.12.0"
-decompose = "3.6.1"
+decompose = "3.6.2"
 # Must be compatible with: `composeMultiplatform`
 haze = "2.1.0"
 essenty = "2.7.1"
 koin = "4.2.2"
-# Must be compatible with: `kotlin`
+# @pin Must be compatible with: `kotlin`
 # Held at 1.2.1 (pinned in the root build script): 1.2.2 and 1.2.3 break the iOS framework link, because `:shared`
 # re-declares the `@Configuration` hints of the feature modules it exports. https://github.com/InsertKoinIO/koin-compiler-plugin/issues/146
 koinCompilerPlugin = "1.2.1"
@@ -31,17 +32,24 @@ ktlintGradlePlugin = "14.2.0"
 ktlint = "1.8.0"
 detektGradlePlugin = "2.0.0-alpha.6"
 composeLint = "1.6.1"
-# Must be compatible with: `ksp`
+# @pin Must be compatible with: `ksp`, and its klibs are built with Kotlin 2.4
 ktorfit = "2.7.5"
-# Must be compatible with: `ktorfit`
+# @pin Must be compatible with: `ktorfit`
 ktor = "3.5.2"
 # Must be compatible with: `kotlin`
-kotlinx-serialization = "1.12.0"
+kotlinx-serialization = "1.13.0"
 timber = "5.0.1"
 kermit = "2.2.0"
-# Must be compatible with: `kotlin`
+# @pin Must be compatible with: `kotlin`
 skie = "0.10.16"
-buildkonfig = "0.24.0"
+buildkonfig = "0.24.1"
+# @pin Held back on purpose. Two things change on the way to 1.0.x and both need deciding, not guessing:
+# the artifact is published per Kotlin release (1.0.9 -> Kotlin 2.3.21, 1.0.10 -> 2.4.0,
+# 1.0.11 -> 2.4.10, so it moves in lockstep with `kotlin`), and `asNSException` /
+# `wrapUnhandledExceptionHook` — the whole of this project's use of it, in
+# `shared/app/src/iosMain/.../crashreporting/` — became `internal`, with no documented replacement
+# and the `nsexception-kt-crashlytics` companion module abandoned back on Kotlin 2.2. Since this is
+# the iOS crash-reporting path, it gets its own change rather than riding along with a version sweep.
 nsExceptionKt = "1.0.0-BETA-7"
 datastore = "1.3.0"
 moko-resources = "0.27.1"
@@ -52,7 +60,7 @@ espressoCore = "3.7.0"
 uiautomator = "2.4.1"
 benchmarkMacroJunit4 = "1.5.0"
 profileinstaller = "1.4.1"
-google-servicesPlugin = "4.5.0"
+google-servicesPlugin = "4.6.0"
 google-firebaseAppDistributionPlugin = "5.3.1"
 google-firebaseCrashlyticsPlugin = "3.0.8"
 google-playServicesLocation = "21.4.0"
@@ -64,7 +72,6 @@ arkitekt = "6.1.0"
 versionCatalogUpdate = "1.1.2"
 modulesGraphAssert = "2.9.1"
 konsist = "1.0.0-beta.1"
-
 # Android Namespaces (shared modules derive theirs from their path, see `conventions-kmp-library`)
 project-android-namespace = "com.syntey.spiriteddriving.android"
 project-baselineprofile-namespace = "com.syntey.spiriteddriving.baselineprofile"

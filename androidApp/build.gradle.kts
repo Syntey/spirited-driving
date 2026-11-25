@@ -31,7 +31,11 @@ val mapsApiKey: String = providers.environmentVariable("MAPS_API_KEY").orNull
 
 android {
     namespace = libs.versions.project.android.namespace.get()
-    compileSdk = ProjectSettings.Android.CompileSdkVersion
+    compileSdk {
+        version = release(ProjectSettings.Android.CompileSdkVersion) {
+            minorApiLevel = ProjectSettings.Android.CompileSdkMinorVersion
+        }
+    }
 
     defaultConfig {
         applicationId = ProjectSettings.Android.ApplicationId
