@@ -5,9 +5,6 @@ import app.futured.arkitekt.decompose.presentation.UiEvent
 /** One-time events from the trip history screen. */
 sealed interface TripHistoryUiEvent : UiEvent {
 
-    /** A drive was removed from the list; the screen offers to undo it for a few seconds. */
-    data class DriveDeleted(val driveId: String) : TripHistoryUiEvent
-
     /** A change needs a connection, and there's none. */
     data object ChangesOffline : TripHistoryUiEvent
 

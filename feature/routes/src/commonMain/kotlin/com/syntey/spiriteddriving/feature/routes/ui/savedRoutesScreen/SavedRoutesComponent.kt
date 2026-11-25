@@ -4,7 +4,6 @@ import app.futured.arkitekt.annotation.GenerateFactory
 import app.futured.arkitekt.crusecases.execute
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.lifecycle.doOnCreate
-import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
 import com.syntey.spiriteddriving.core.resources.*
@@ -15,7 +14,6 @@ import com.syntey.spiriteddriving.feature.routes.domain.ObserveDistanceUnitUseCa
 import com.syntey.spiriteddriving.feature.routes.domain.ObserveSavedRoutesUseCase
 import com.syntey.spiriteddriving.feature.routes.domain.RefreshSavedRoutesUseCase
 import com.syntey.spiriteddriving.feature.routes.domain.RenameSavedRouteUseCase
-import com.syntey.spiriteddriving.feature.routes.domain.SavedRouteDeleter
 import com.syntey.spiriteddriving.feature.routes.model.ui.RenameDialog
 import com.syntey.spiriteddriving.feature.routes.model.ui.SavedRoutesStatus
 import dev.icerock.moko.resources.desc.StringDesc
@@ -37,7 +35,6 @@ internal class SavedRoutesComponent(
     private val refreshSavedRoutesUseCase: RefreshSavedRoutesUseCase,
     private val renameSavedRouteUseCase: RenameSavedRouteUseCase,
     private val deleteSavedRouteUseCase: DeleteSavedRouteUseCase,
-    private val savedRouteDeleter: SavedRouteDeleter,
 ) : ScreenComponent<SavedRoutesViewState, SavedRoutesUiEvent, SavedRoutesScreenNavigation>(
     componentContext = componentContext,
     defaultState = SavedRoutesViewState(),
@@ -58,8 +55,6 @@ internal class SavedRoutesComponent(
             observeDistanceUnit()
             refresh()
         }
-        // The deletes still hidden were confirmed by closing the list, and its own work stops with it
-        doOnDestroy { savedRouteDeleter.deleteLater(componentState.value.deletingIds) }
     }
 
     override fun onRouteClick(id: SavedRouteId) = openOnMap(id)
@@ -70,11 +65,21 @@ internal class SavedRoutesComponent(
 
     override fun onRenameDismiss() = closeRenameDialog()
 
-    override fun onDeleteClick(id: SavedRouteId) = hideRow(id)
+    override fun onDeleteClick(id: SavedRouteId) {
+        componentState.update { it.copy(deleteConfirmationId = id) }
+    }
 
-    override fun onDeleteUndo(id: SavedRouteId) = restoreRow(id)
+    override fun onDeleteConfirm() {
+        val id = componentState.value.deleteConfirmationId ?: return
+        componentState.update {
+            it.copy(deleteConfirmationId = null, deletingIds = (it.deletingIds + id).toImmutableSet())
+        }
+        deleteRoute(id)
+    }
 
-    override fun onDeleteMessageGone(id: SavedRouteId) = deleteRoute(id)
+    override fun onDeleteDismiss() {
+        componentState.update { it.copy(deleteConfirmationId = null) }
+    }
 
     override fun onRetry() = retry()
 
@@ -100,11 +105,6 @@ internal class SavedRoutesComponent(
 
     private fun closeRenameDialog() {
         componentState.update { it.copy(renameDialog = null) }
-    }
-
-    private fun hideRow(id: SavedRouteId) {
-        componentState.update { it.copy(deletingIds = (it.deletingIds + id).toImmutableSet()) }
-        sendUiEvent(SavedRoutesUiEvent.RouteDeleted(id))
     }
 
     private fun retry() {
@@ -149,6 +149,8 @@ internal class SavedRoutesComponent(
     }
 
     private fun deleteRoute(id: SavedRouteId) = deleteSavedRouteUseCase.execute(id) {
+        // Each confirmed delete is sent, even while another is still being sent
+        disposePrevious(false)
         onSuccess { restoreRow(id) }
         onError { error ->
             // The row comes back where it was, and the message says why it's still there

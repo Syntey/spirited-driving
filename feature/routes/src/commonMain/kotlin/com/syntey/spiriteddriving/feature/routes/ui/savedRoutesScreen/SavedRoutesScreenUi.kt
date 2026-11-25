@@ -9,7 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -53,20 +58,10 @@ import kotlinx.collections.immutable.ImmutableList
 fun SavedRoutesScreenUi(screen: SavedRoutesScreen, modifier: Modifier = Modifier) {
     val viewState by screen.viewState.collectAsStateWithLifecycle()
     val hostState = remember { SnackbarHostState() }
-    val deletedText = stringResource(MR.strings.saved_routes_deleted)
-    val undoText = stringResource(MR.strings.saved_routes_undo)
     val changesOfflineText = stringResource(MR.strings.saved_routes_offline_changes)
     val renameFailedText = stringResource(MR.strings.saved_routes_rename_failed)
     val deleteFailedText = stringResource(MR.strings.saved_routes_delete_failed)
-    // Each message is shown in turn: a deleted route's delete waits for its message to end, or for its Undo
     EventsEffect(screen.events) {
-        onEvent<SavedRoutesUiEvent.RouteDeleted> { event ->
-            if (hostState.showMessage(deletedText, undoText)) {
-                screen.actions.onDeleteUndo(event.savedRouteId)
-            } else {
-                screen.actions.onDeleteMessageGone(event.savedRouteId)
-            }
-        }
         onEvent<SavedRoutesUiEvent.ChangesOffline> { hostState.showMessage(changesOfflineText) }
         onEvent<SavedRoutesUiEvent.RenameFailed> { hostState.showMessage(renameFailedText) }
         onEvent<SavedRoutesUiEvent.DeleteFailed> { hostState.showMessage(deleteFailedText) }
@@ -80,10 +75,13 @@ fun SavedRoutesScreenUi(screen: SavedRoutesScreen, modifier: Modifier = Modifier
         )
         MessageHost(hostState, Modifier.align(Alignment.BottomCenter))
     }
-    // iOS shows the rename as a native alert, from SavedRoutesComponentModel.swift
+    // iOS shows the rename and the delete confirmation as native alerts, from SavedRoutesComponentModel.swift
     val renameDialog = viewState.renameDialog
     if (AppTheme.platform == UiPlatform.Android && renameDialog != null) {
         RenameTextDialog(dialog = renameDialog, actions = screen.actions)
+    }
+    if (AppTheme.platform == UiPlatform.Android && viewState.isDeleteConfirmationShown) {
+        DeleteRouteDialog(actions = screen.actions)
     }
 }
 
@@ -219,6 +217,24 @@ private fun RenameTextDialog(dialog: RenameDialog, actions: SavedRoutesScreen.Ac
 }
 
 @Composable
+private fun DeleteRouteDialog(actions: SavedRoutesScreen.Actions) {
+    AlertDialog(
+        onDismissRequest = actions::onDeleteDismiss,
+        icon = { Icon(painterResource(MR.images.delete), contentDescription = null) },
+        title = { Text(stringResource(MR.strings.saved_routes_delete_title)) },
+        text = { Text(stringResource(MR.strings.saved_routes_delete_text)) },
+        dismissButton = {
+            TextButton(onClick = actions::onDeleteDismiss) { Text(stringResource(MR.strings.generic_cancel)) }
+        },
+        confirmButton = {
+            TextButton(onClick = actions::onDeleteConfirm) {
+                Text(stringResource(MR.strings.saved_routes_delete), color = MaterialTheme.colorScheme.error)
+            }
+        },
+    )
+}
+
+@Composable
 private fun retryAction(actions: SavedRoutesScreen.Actions): IconAction = IconAction(
     icon = painterResource(MR.images.refresh),
     label = stringResource(MR.strings.generic_try_again),
@@ -273,6 +289,12 @@ private fun SavedRoutesFailedPreview() = Showcase {
         actions = noOpActions(),
         title = stringResource(MR.strings.saved_routes_title),
     )
+}
+
+@ScreenPreviews
+@Composable
+private fun SavedRoutesDeleteDialogPreview() = Showcase(platform = UiPlatform.Android) {
+    DeleteRouteDialog(actions = noOpActions())
 }
 
 @DarkLightPreviews

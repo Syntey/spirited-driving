@@ -35,6 +35,13 @@ struct TripHistoryComponent: View {
             } message: {
                 Text(Localizable.trip_history_clear_text.localized)
             }
+            .alert(Localizable.trip_history_delete_title.localized,
+                   isPresented: $model.isDeleteConfirmationPresented) {
+                Button(Localizable.generic_cancel.localized, role: .cancel) {}
+                Button(Localizable.trip_history_delete.localized, role: .destructive) { model.onDeleteConfirm() }
+            } message: {
+                Text(Localizable.trip_history_delete_text.localized)
+            }
             .sheet(isPresented: $model.isRatingSheetPresented) {
                 ComposeView {
                     RatingSheetUiController(screen: screen) { height in

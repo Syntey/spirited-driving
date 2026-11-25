@@ -45,7 +45,7 @@ class TripHistoryViewStateTest {
     }
 
     @Test
-    fun `a drive being deleted is left out of the sections until its message ends`() {
+    fun `a drive being deleted is left out of the sections until its delete is sent`() {
         val state = TripHistoryViewState(
             page = PastDrivePage(drives = listOf(drive("a"), drive("b")), nextCursor = null),
             now = FakeTripHistorySource.STARTED_AT,
@@ -63,6 +63,12 @@ class TripHistoryViewStateTest {
         )
 
         assertFalse(state.isEmpty)
+    }
+
+    @Test
+    fun `the delete confirmation is shown only while a drive is picked for it`() {
+        assertTrue(TripHistoryViewState(deleteConfirmationId = "a").isDeleteConfirmationShown)
+        assertFalse(TripHistoryViewState(deleteConfirmationId = null).isDeleteConfirmationShown)
     }
 
     @Test

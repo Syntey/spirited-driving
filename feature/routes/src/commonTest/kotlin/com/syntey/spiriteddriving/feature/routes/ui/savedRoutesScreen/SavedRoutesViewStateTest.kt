@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 class SavedRoutesViewStateTest {
 
     @Test
-    fun `a route being deleted is left out of the rows until its message ends`() {
+    fun `a route being deleted is left out of the rows until its delete is sent`() {
         val state = SavedRoutesViewState(
             savedRoutes = persistentListOf(route("a"), route("b")),
             deletingIds = persistentSetOf(SavedRouteId("a")),
@@ -32,6 +32,12 @@ class SavedRoutesViewStateTest {
     @Test
     fun `nothing kept is empty`() {
         assertTrue(SavedRoutesViewState(savedRoutes = null).isEmpty)
+    }
+
+    @Test
+    fun `the delete confirmation is shown only while a route is picked for it`() {
+        assertTrue(SavedRoutesViewState(deleteConfirmationId = SavedRouteId("a")).isDeleteConfirmationShown)
+        assertFalse(SavedRoutesViewState(deleteConfirmationId = null).isDeleteConfirmationShown)
     }
 
     private fun route(id: String): SavedRoute = FakeSavedRoutesSource.Recorded.copy(id = SavedRouteId(id))
