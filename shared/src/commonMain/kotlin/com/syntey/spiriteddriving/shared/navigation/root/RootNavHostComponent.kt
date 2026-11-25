@@ -12,7 +12,7 @@ import com.syntey.spiriteddriving.core.ui.base.AppComponent
 import com.syntey.spiriteddriving.core.ui.base.AppComponentContext
 import com.syntey.spiriteddriving.core.ui.base.AppComponentFactory
 import com.syntey.spiriteddriving.feature.map.ui.MapScreens
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
 import com.syntey.spiriteddriving.feature.onboarding.ui.OnboardingScreens
 import com.syntey.spiriteddriving.feature.profile.model.SignInReason
 import com.syntey.spiriteddriving.feature.profile.ui.ProfileScreens
@@ -38,7 +38,7 @@ internal class RootNavHostComponent(
 
     private val logger = Logger.withTag("RootNavHostComponent")
     private val rootNavigator: RootNavHostNavigation = RootNavHostNavigator(::onSignInFinished, ::onSavedRouteChosen)
-    private val mapScreen: TripPlanScreen?
+    private val mapScreen: MapSheetScreen?
         get() = (slot.value.child?.instance as? RootChild.Map)?.screen
 
     override val slot: StateFlow<ChildSlot<RootConfig, RootChild>> = childSlot(
@@ -50,7 +50,7 @@ internal class RootNavHostComponent(
         childFactory = { config, childCtx ->
             when (config) {
                 RootConfig.Onboarding -> RootChild.Onboarding(OnboardingScreens.onboarding(childCtx, rootNavigator))
-                RootConfig.Map -> RootChild.Map(MapScreens.tripPlan(childCtx, rootNavigator))
+                RootConfig.Map -> RootChild.Map(MapScreens.mapSheet(childCtx, rootNavigator))
             }
         },
     ).asStateFlow()

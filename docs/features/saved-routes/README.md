@@ -32,9 +32,10 @@ Needed.
 ## Design
 
 The list, with rename and delete, is `SavedRoutesComponent` in `:feature:routes`: a native sheet at large height on iOS,
-full screen on Android. Saving and a saved route on the map are steps of the map's sheet, held by `TripPlanComponent` in
-`:feature:map`. The code holds their layout, sizes and copy; these are the decisions behind them. What isn't built yet,
-the list's order by last use and the vignette note, is still in [design.md](design.md).
+full screen on Android. A saved route on the map is a one-route step of the map's sheet, held by `MapSheetComponent` in
+`:feature:map`, which holds Save too. The code holds their layout, sizes and copy; these
+are the decisions behind them. What isn't built yet, the list's order by last use and the vignette note, is still in
+[design.md](design.md).
 
 - **Save asks nothing** when the destination's name is free: the route is named as the planning header shows it.
   A taken name opens a dialog with "Karlštejn Castle from Smíchov" (the start's area) selected, then a number after it

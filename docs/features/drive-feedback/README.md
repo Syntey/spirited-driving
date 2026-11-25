@@ -1,6 +1,6 @@
 # Drive feedback
 
-> **Status:** built, MVP. Last updated 2026-11-16.
+> **Status:** built, MVP. Last updated 2026-11-23.
 
 A quick question after a drive: how was the route?
 
@@ -49,9 +49,10 @@ Rate a drive, and mark a drive as not driven.
 
 ## Design
 
-The rating step and the reminder bubble are part of the map's screen, held by `TripPlanComponent` in `:feature:map`;
-the notification is the drive reminders binding in `:core:platform`. The code holds their layout, sizes and copy;
-these are the decisions behind them.
+The rating step and the reminder bubble are part of the map's screen: `RatingComponent` is a step of
+`MapSheetComponent` in `:feature:map`, which also decides when to ask and shows the bubble; the notification is the
+drive reminders binding in `:core:platform`. The code holds their layout, sizes and copy; these are the decisions
+behind them.
 
 - **The phone keeps one open question,** about the newest drive, with what the step shows: the route's line, number,
   destination and planned time and distance. So the question works after a restart and offline. A new drive replaces
@@ -60,8 +61,8 @@ these are the decisions behind them.
   2 hours after the planned arrival; later, the reminder bubble shows instead, until 48 hours after the hand-off, when
   the question is dropped. Two hours covers stops on the way; after that the user is more likely opening the app for a
   new trip, and a sheet in the way annoys. 48 hours covers "yesterday"; a later rating says little.
-- **A trip planned after the hand-off isn't thrown away:** the step only takes the place of the planning it was handed
-  off from. Otherwise the question waits as the bubble.
+- **A due rating step takes the place of whatever is open,** planning included. A trip planned mid-drive, before the step
+  is due, is the only one lost, and it's quick to plan again; keeping it made every step track whether it was handed off.
 - **The first thumb answers the question everywhere,** and each change of thumb or reason is sent at once, replacing
   the one before. Closing the step without a thumb, or dismissing the bubble, skips it. A rating made offline, and a
   drive marked as not driven, are kept on the drive and sent with the pending drives on the next start of the map,

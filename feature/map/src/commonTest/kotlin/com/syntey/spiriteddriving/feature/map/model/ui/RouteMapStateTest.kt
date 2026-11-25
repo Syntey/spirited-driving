@@ -111,28 +111,16 @@ class RouteMapStateTest {
     }
 
     @Test
-    fun `a destination drops its pin and stops following`() {
-        val state = following.withDestination(prague)
+    fun `framing a point stops following`() {
+        val state = following.framing(prague)
 
-        assertEquals(prague, state.destination)
         assertEquals(false, state.followsUser)
     }
 
     @Test
-    fun `a picked point drops its pin and stops following but keeps the camera`() {
-        val before = following.withCoverage(covered).withUserLocation(prague)
-        val state = before.withPickedPoint(dresden)
-
-        assertEquals(dresden, state.destination)
-        assertEquals(false, state.followsUser)
-        assertEquals(before.overview, state.overview)
-        assertEquals(before.overviewRequest, state.overviewRequest)
-    }
-
-    @Test
-    fun `a destination moves the map around its pin`() {
+    fun `framing a point moves the map around it`() {
         val before = following.withCoverage(covered)
-        val state = before.withDestination(prague)
+        val state = before.framing(prague)
 
         assertTrue(state.overview.southWest.latitude < prague.latitude)
         assertTrue(state.overview.southWest.longitude < prague.longitude)

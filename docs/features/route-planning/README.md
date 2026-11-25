@@ -38,9 +38,9 @@ The core of the app: from a start, a destination and a detour budget to a list o
 
 ## Design
 
-Route planning is a step of the map's sheet: `TripPlanComponent` in `:feature:map` holds it, `TripPlanSheetUi` draws
-the sheet on both platforms, and each platform's map draws the routes. The code holds its layout and copy; these are
-the decisions behind it. Drive is in [Drive](../drive/README.md#design), and Save in
+Route planning is a step of the map's sheet: `RoutePlanningComponent`, a child of `MapSheetComponent` in `:feature:map`,
+holds it, `MapSheetUi` draws the sheet on both platforms, and each platform's map draws the routes. The code holds its
+layout and copy; these are the decisions behind it. Drive is in [Drive](../drive/README.md#design), and Save in
 [Saved routes](../saved-routes/README.md#design).
 
 - **Save is tonal, next to Drive,** and disabled whenever Drive is.

@@ -24,10 +24,11 @@ import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.ui.components.Showcase
 import com.syntey.spiriteddriving.core.ui.preview.ComponentPreviews
 import com.syntey.spiriteddriving.core.ui.theme.Grid
-import com.syntey.spiriteddriving.feature.map.model.ui.TripPlanPreviewStates
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen.Actions.Companion.noOpActions
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanViewState
+import com.syntey.spiriteddriving.feature.map.model.ui.MapSheetPreviewStates
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen.Actions.Companion.noOpActions
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetViewState
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.rating.RatingRouteBadge
 import dev.icerock.moko.resources.compose.localized
 import dev.icerock.moko.resources.compose.painterResource
 import dev.icerock.moko.resources.compose.stringResource
@@ -38,7 +39,7 @@ import dev.icerock.moko.resources.compose.stringResource
  * gives it its surface.
  */
 @Composable
-internal fun ReminderBubbleContent(viewState: TripPlanViewState, actions: TripPlanScreen.Actions, modifier: Modifier = Modifier) {
+internal fun ReminderBubbleContent(viewState: MapSheetViewState, actions: MapSheetScreen.Actions, modifier: Modifier = Modifier) {
     // Both texts are null only without a reminder, which the map doesn't show the bubble for
     val number = viewState.reminder?.question?.routeNumber ?: return
     val question = stringResource(MR.strings.drive_feedback_question_unnamed)
@@ -83,18 +84,18 @@ internal fun ReminderBubbleContent(viewState: TripPlanViewState, actions: TripPl
 @ComponentPreviews
 @Composable
 private fun ReminderBubbleNamedPreview() = Showcase {
-    ReminderBubblePreviewFrame(viewState = TripPlanPreviewStates.reminderViewState())
+    ReminderBubblePreviewFrame(viewState = MapSheetPreviewStates.reminderViewState())
 }
 
 @ComponentPreviews
 @Composable
 private fun ReminderBubbleUnnamedPreview() = Showcase {
-    ReminderBubblePreviewFrame(viewState = TripPlanPreviewStates.reminderViewState(destinationName = null))
+    ReminderBubblePreviewFrame(viewState = MapSheetPreviewStates.reminderViewState(destinationName = null))
 }
 
 // The map gives the bubble its surface and height; the previews stand in for it
 @Composable
-private fun ReminderBubblePreviewFrame(viewState: TripPlanViewState) {
+private fun ReminderBubblePreviewFrame(viewState: MapSheetViewState) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         shape = RoundedCornerShape(percent = 50),

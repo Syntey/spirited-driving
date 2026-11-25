@@ -28,13 +28,4 @@ class GetBudgetChoiceUseCaseTest {
     fun `returns the default when nothing is stored`() = runTest {
         assertEquals(Constants.Budgets.DEFAULT_CHOICE, GetBudgetChoiceUseCase(FakeBudgetSettings(null)).build(Unit))
     }
-
-    private class FakeBudgetSettings(private var choice: BudgetChoice?) : BudgetSettings {
-
-        override suspend fun get(): BudgetChoice? = choice
-
-        override suspend fun set(choice: BudgetChoice) {
-            this.choice = choice
-        }
-    }
 }

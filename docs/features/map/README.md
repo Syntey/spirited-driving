@@ -28,8 +28,8 @@ The primary screen, inspired by Waze: a full-screen map around the user, with th
 
 ## Design
 
-The screen is `TripPlanComponent` in `:feature:map`. `MapScreenUi` draws it on Android and `MapComponent` on iOS, around
-the sheet's shared content, `TripPlanSheetUi` ([Architecture](../../architecture.md#how-the-map-screen-is-built)). The
+The screen is `MapSheetComponent` in `:feature:map`. `MapScreenUi` draws it on Android and `MapComponent` on iOS, around
+the sheet's shared content, `MapSheetUi` ([Architecture](../../architecture.md#how-the-map-screen-is-built)). The
 code holds its layout, sizes and copy; these are the decisions behind it.
 
 - **The half sheet starts with the Saved routes row,** its own group above the recent places, while the field is

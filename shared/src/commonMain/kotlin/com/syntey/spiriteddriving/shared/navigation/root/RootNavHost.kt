@@ -1,7 +1,7 @@
 package com.syntey.spiriteddriving.shared.navigation.root
 
 import com.syntey.spiriteddriving.feature.routes.ui.savedRoutesScreen.SavedRoutesScreen
-import com.syntey.spiriteddriving.feature.map.ui.tripPlanScreen.TripPlanScreen
+import com.syntey.spiriteddriving.feature.map.ui.mapSheetScreen.MapSheetScreen
 import com.syntey.spiriteddriving.feature.onboarding.ui.onboardingScreen.OnboardingScreen
 import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetArgs
 import com.syntey.spiriteddriving.feature.profile.ui.signInSheet.SignInSheetScreen
@@ -61,5 +61,5 @@ sealed interface RootChild {
 
     data class Onboarding(val screen: OnboardingScreen, override val iosViewId: String = Uuid.random().toString()) : RootChild
 
-    data class Map(val screen: TripPlanScreen, override val iosViewId: String = Uuid.random().toString()) : RootChild
+    data class Map(val screen: MapSheetScreen, override val iosViewId: String = Uuid.random().toString()) : RootChild
 }

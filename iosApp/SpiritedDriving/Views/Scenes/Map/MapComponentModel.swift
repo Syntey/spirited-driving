@@ -108,8 +108,8 @@ final class MapComponentModel: MapComponentModelProtocol {
 
     // MARK: Private stored properties
 
-    private var viewState: TripPlanViewState
-    @ObservationIgnored private let screen: TripPlanScreen
+    private var viewState: MapSheetViewState
+    @ObservationIgnored private let screen: MapSheetScreen
 
     // MARK: Private @ObservationIgnored properties
 
@@ -117,7 +117,7 @@ final class MapComponentModel: MapComponentModelProtocol {
 
     // MARK: Init / Deinit
 
-    init(_ screen: TripPlanScreen) {
+    init(_ screen: MapSheetScreen) {
         self.screen = screen
         viewState = screen.viewState.value
 
@@ -137,7 +137,7 @@ final class MapComponentModel: MapComponentModelProtocol {
     // MARK: Public functions
 
     func sheetViewController() -> UIViewController {
-        TripPlanSheetUiController(screen: screen) { [weak self] height in
+        MapSheetUiController(screen: screen) { [weak self] height in
             self?.collapsedSheetHeight = CGFloat(height.doubleValue)
         }
     }
