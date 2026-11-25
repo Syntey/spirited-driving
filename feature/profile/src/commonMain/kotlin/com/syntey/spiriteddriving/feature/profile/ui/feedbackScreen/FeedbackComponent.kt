@@ -18,14 +18,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import org.koin.core.annotation.Factory
 import org.koin.core.annotation.InjectedParam
-import org.koin.core.annotation.Provided
 
 @Factory
 @GenerateFactory
 internal class FeedbackComponent(
     @InjectedParam componentContext: AppComponentContext,
     @InjectedParam override val navigation: FeedbackScreenNavigation,
-    @Provided private val platform: Platform,
+    private val platform: Platform,
     private val sendFeedbackUseCase: SendFeedbackUseCase,
 ) : ScreenComponent<FeedbackViewState, Nothing, FeedbackScreenNavigation>(
     componentContext = componentContext,

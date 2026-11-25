@@ -6,7 +6,6 @@ import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
 import com.syntey.spiriteddriving.feature.map.tools.Constants
 import kotlin.time.Instant
 import org.koin.core.annotation.Factory
-import org.koin.core.annotation.Provided
 
 /**
  * Tells how the open question is asked at [Instant]. Nothing is asked before half the planned duration has passed, as the
@@ -15,10 +14,8 @@ import org.koin.core.annotation.Provided
  * question is cleared, with its notification. Returns null when nothing is asked now, or when there is no question.
  */
 @Factory
-internal class GetDriveQuestionUseCase(
-    private val openDriveQuestion: OpenDriveQuestion,
-    @Provided private val driveReminders: DriveReminders,
-) : UseCase<Instant, DrivePrompt?> {
+internal class GetDriveQuestionUseCase(private val openDriveQuestion: OpenDriveQuestion, private val driveReminders: DriveReminders) :
+    UseCase<Instant, DrivePrompt?> {
 
     override suspend fun build(args: Instant): DrivePrompt? {
         val question = openDriveQuestion.get()

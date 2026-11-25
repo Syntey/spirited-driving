@@ -10,7 +10,6 @@ import com.syntey.spiriteddriving.core.domain.drive.TripHistoryCache
 import com.syntey.spiriteddriving.core.domain.error.OfflineException
 import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
 import org.koin.core.annotation.Factory
-import org.koin.core.annotation.Provided
 
 /**
  * Keeps [Args.rating] on a past drive and sends it. Rating a drive here ends its drive feedback question everywhere, so the
@@ -20,7 +19,7 @@ import org.koin.core.annotation.Provided
 @Factory
 internal class RatePastDriveUseCase(
     private val openDriveQuestion: OpenDriveQuestion,
-    @Provided private val driveReminders: DriveReminders,
+    private val driveReminders: DriveReminders,
     private val tripHistoryCache: TripHistoryCache,
     private val startedDrives: StartedDrives,
     private val driveRater: DriveRater,

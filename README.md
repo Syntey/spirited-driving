@@ -108,6 +108,10 @@ The build fails when a module breaks these rules, or when its longest dependency
 (`:data:network` is `com.syntey.spiriteddriving.data.network`), so a new feature's build file only applies
 `conventions-kmp-feature`.
 
+The full graph, from `./gradlew generateModulesGraphvizText` (the longest chain in red):
+
+![Module dependency graph](docs/images/readme/modules.png)
+
 ## UI architecture
 
 Screens are implemented once in Compose Multiplatform, in the feature module that owns them, next to the component

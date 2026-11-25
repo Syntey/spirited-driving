@@ -6,8 +6,10 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import org.koin.core.annotation.Single
 
 /** Coroutine and Flow view of [PlatformAuth], for use cases and `:data:*` classes. */
+@Single
 class Auth(private val binding: PlatformAuth) {
 
     /** The signed-in user, emitted at once and on each change. */

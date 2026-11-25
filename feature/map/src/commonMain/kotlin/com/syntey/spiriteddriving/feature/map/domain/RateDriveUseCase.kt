@@ -6,7 +6,6 @@ import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.StartedDrives
 import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
 import org.koin.core.annotation.Factory
-import org.koin.core.annotation.Provided
 
 /**
  * Keeps [Args.rating] on the drive and sends the drive as kept now. A thumb answers the question about the drive, so the
@@ -18,7 +17,7 @@ internal class RateDriveUseCase(
     private val openDriveQuestion: OpenDriveQuestion,
     private val startedDrives: StartedDrives,
     private val driveSender: DriveSender,
-    @Provided private val driveReminders: DriveReminders,
+    private val driveReminders: DriveReminders,
 ) : UseCase<RateDriveUseCase.Args, Unit> {
 
     data class Args(val driveId: String, val rating: Rating)

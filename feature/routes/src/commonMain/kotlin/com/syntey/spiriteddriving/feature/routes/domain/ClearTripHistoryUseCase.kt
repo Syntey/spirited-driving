@@ -7,7 +7,6 @@ import com.syntey.spiriteddriving.core.domain.drive.TripHistoryCache
 import com.syntey.spiriteddriving.core.domain.drive.TripHistorySource
 import com.syntey.spiriteddriving.core.platform.binding.DriveReminders
 import org.koin.core.annotation.Factory
-import org.koin.core.annotation.Provided
 
 /**
  * Removes all of the user's past drives and their ratings from the backend, then from the device, and clears the drive
@@ -18,7 +17,7 @@ internal class ClearTripHistoryUseCase(
     private val tripHistorySource: TripHistorySource,
     private val tripHistoryCache: TripHistoryCache,
     private val openDriveQuestion: OpenDriveQuestion,
-    @Provided private val driveReminders: DriveReminders,
+    private val driveReminders: DriveReminders,
 ) : UseCase<Unit, Unit> {
 
     override suspend fun build(args: Unit) {

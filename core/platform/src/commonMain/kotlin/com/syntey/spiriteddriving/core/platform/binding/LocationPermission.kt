@@ -2,10 +2,12 @@ package com.syntey.spiriteddriving.core.platform.binding
 
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import org.koin.core.annotation.Factory
 
 /**
  * [PlatformLocationPermission] for coroutines.
  */
+@Factory
 class LocationPermission(private val binding: PlatformLocationPermission) {
 
     /**

@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import org.koin.core.annotation.Factory
-import org.koin.core.annotation.Provided
 
 /**
  * Claims the drives recorded while signed out, after each sign-in and once at start when already signed in. A failed
@@ -20,7 +19,7 @@ import org.koin.core.annotation.Provided
  */
 @Factory
 internal class ClaimDrivesOnSignInUseCase(
-    @Provided private val auth: Auth,
+    private val auth: Auth,
     private val startedDrives: StartedDrives,
     private val driveClaimer: DriveClaimer,
 ) : FlowUseCase<Unit, Unit> {

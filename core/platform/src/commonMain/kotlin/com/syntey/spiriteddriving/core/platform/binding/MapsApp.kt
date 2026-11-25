@@ -2,10 +2,12 @@ package com.syntey.spiriteddriving.core.platform.binding
 
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
+import org.koin.core.annotation.Factory
 
 /**
  * [PlatformMapsApp] for coroutines.
  */
+@Factory
 class MapsApp(private val binding: PlatformMapsApp) {
 
     /** Which maps app drives are handed to on this platform. */

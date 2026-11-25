@@ -6,7 +6,6 @@ import com.syntey.spiriteddriving.data.network.tools.Constants
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.api.createClientPlugin
 import io.ktor.http.HttpHeaders
-import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
 
 /**
@@ -15,7 +14,7 @@ import org.koin.core.annotation.Single
  * when its token is null.
  */
 @Single
-internal class AuthTokensPlugin(@Provided private val auth: Auth, @Provided private val appCheck: AppCheck) : HttpClientPlugin {
+internal class AuthTokensPlugin(private val auth: Auth, private val appCheck: AppCheck) : HttpClientPlugin {
 
     override fun install(config: HttpClientConfig<*>) {
         config.install(

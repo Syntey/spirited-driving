@@ -4,11 +4,10 @@ import com.syntey.spiriteddriving.data.network.FlavorConstants
 import com.syntey.spiriteddriving.core.platform.binding.Platform
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.UserAgent
-import org.koin.core.annotation.Provided
 import org.koin.core.annotation.Single
 
 @Single
-internal class UserAgentPlugin(@Provided platform: Platform) : HttpClientPlugin {
+internal class UserAgentPlugin(platform: Platform) : HttpClientPlugin {
 
     private val userAgentString = with(platform) {
         listOf(
