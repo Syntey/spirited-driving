@@ -62,7 +62,7 @@ import com.syntey.spiriteddriving.feature.map.model.ui.NoFunRouteMessage
 import com.syntey.spiriteddriving.feature.map.model.ui.PlanningStatus
 import com.syntey.spiriteddriving.feature.map.model.ui.RoutePlanningState
 import com.syntey.spiriteddriving.feature.map.model.ui.RouteRow
-import com.syntey.spiriteddriving.core.resources.measure.distanceText
+import com.syntey.spiriteddriving.feature.map.model.ui.distanceText
 import com.syntey.spiriteddriving.feature.map.ui.components.BudgetPicker
 import com.syntey.spiriteddriving.feature.map.ui.components.MapPlatformStyle
 import com.syntey.spiriteddriving.feature.map.ui.components.routeColor

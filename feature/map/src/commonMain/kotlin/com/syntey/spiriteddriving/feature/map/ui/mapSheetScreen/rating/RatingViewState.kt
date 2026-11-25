@@ -4,9 +4,9 @@ import com.syntey.spiriteddriving.core.domain.drive.RatingReason
 import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.resources.*
-import com.syntey.spiriteddriving.core.resources.measure.distanceText
+import com.syntey.spiriteddriving.feature.map.model.ui.distanceText
 import com.syntey.spiriteddriving.core.resources.measure.durationText
-import com.syntey.spiriteddriving.core.resources.rating.label
+import com.syntey.spiriteddriving.feature.map.model.ui.label
 import com.syntey.spiriteddriving.feature.map.model.ui.RatingStep
 import com.syntey.spiriteddriving.feature.map.model.ui.ReasonChip
 import dev.icerock.moko.resources.desc.ResourceFormatted

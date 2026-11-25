@@ -7,9 +7,7 @@ import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.resources.datetime.driveTimeText
-import com.syntey.spiriteddriving.core.resources.measure.distanceText
 import com.syntey.spiriteddriving.core.resources.measure.durationText
-import com.syntey.spiriteddriving.core.resources.rating.label
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
 import dev.icerock.moko.resources.desc.desc

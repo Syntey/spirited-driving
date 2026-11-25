@@ -11,7 +11,6 @@ import com.syntey.spiriteddriving.core.domain.settings.DistanceUnit
 import com.syntey.spiriteddriving.core.resources.*
 import com.syntey.spiriteddriving.core.resources.datetime.driveDateSpokenText
 import com.syntey.spiriteddriving.core.resources.datetime.driveDateText
-import com.syntey.spiriteddriving.core.resources.measure.distanceText
 import dev.icerock.moko.resources.desc.ResourceFormatted
 import dev.icerock.moko.resources.desc.StringDesc
 import dev.icerock.moko.resources.desc.desc

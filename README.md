@@ -103,10 +103,10 @@ What the project shows:
 - **`:shared`** is the only module that sees all others. Features meet each other in its navigation hosts, and
   domain interfaces meet their `:data:*` implementations in its Koin graph.
 
-The build fails when a module breaks these rules, or when its longest dependency chain gets longer than four steps
-(`moduleGraphAssert` in the root `build.gradle.kts`). A module's package and Android namespace come from its path
-(`:data:network` is `com.syntey.spiriteddriving.data.network`), so a new feature's build file only applies
-`conventions-kmp-feature`.
+The build fails when a module breaks these rules, or when its longest dependency chain gets longer than three steps,
+so no `:core:*` module depends on another (`moduleGraphAssert` in the root `build.gradle.kts`). A module's package and
+Android namespace come from its path (`:data:network` is `com.syntey.spiriteddriving.data.network`), so a new feature's
+build file only applies `conventions-kmp-feature`.
 
 The full graph, from `./gradlew generateModulesGraphvizText` (the longest chain in red):
 
