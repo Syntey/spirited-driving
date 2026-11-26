@@ -62,19 +62,6 @@ internal class JsonPersistence(@Provided private val dataStore: DataStore<Prefer
             }
 
     /**
-     * Returns a [Flow] of persisted objects with provided [key].
-     *
-     * @return [Flow] of objects. Values in [Flow] can be `null` if not found in persistence.
-     * @throws [SerializationException] if object could not be deserialized as [T].
-     */
-    inline fun <reified T : Any> observe(key: Preferences.Key<String>): Flow<T?> =
-        dataStore.data
-            .map { preferences -> preferences[key] }
-            .map { jsonString ->
-                jsonString?.let { json.decodeFromString(jsonString) }
-            }
-
-    /**
      * Replaces the object under [key] with what [transform] makes of it, in one edit. An object that can't be read as [T]
      * reaches [transform] as `null`.
      *
