@@ -50,7 +50,7 @@ are the decisions behind them. What isn't built yet, the list's order by last us
   opens and is driven offline. Every sign-in, sign-out and account switch clears it before the account's list loads,
   so one user's routes never show to the next. Only the user already signed in at start keeps it until the new list
   arrives.
-- **Delete hides the row at once** and is sent when the 5-second Undo ends, as a deleted route can't be saved again by
+- **Delete asks first,** then hides the row and sends the delete at once, as a deleted route can't be saved again by
   its ID. If sending fails, the row comes back where it was and the message says why: offline, or try again.
 - **Rename and delete need a connection;** offline, the message says so and nothing changes. The list itself shows
   from the phone; only a phone with nothing kept shows "You're offline" with Try again.

@@ -57,8 +57,8 @@ behind them.
   drive started on this phone, so past drives open and are driven offline. Account changes clear it, as for saved
   routes. A rating made offline is kept and sent the next time the list loads.
 - **The list loads 30 drives at a time** as the user scrolls, with placeholder rows while they load.
-- **Delete hides the row at once** and is sent when the 5-second Undo ends, as in Saved routes. **Clear asks first**
-  and has no Undo. Its message doesn't count the drives, as the phone knows only the ones loaded.
+- **Delete and Clear ask first,** then send at once. If a delete fails, the row comes back where it was and the
+  message says why. Clear's message doesn't count the drives, as the phone knows only the ones loaded.
 - **A past drive on the map isn't planned again.** Save names it after its destination, as in route planning.
 - **Plan new routes plans from where the user is now,** whatever the drive's start, with the budget last used.
 - **The details line truncates as a whole,** as every list row does, not only the start's area.

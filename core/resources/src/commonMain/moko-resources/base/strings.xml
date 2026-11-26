@@ -135,10 +135,10 @@
     <string name="saved_routes_failed_title">Saved routes didn\'t load</string>
     <string name="saved_routes_failed_text">Something went wrong on our side. Try again.</string>
     <string name="saved_routes_rename_title">Rename route</string>
-    <string name="saved_routes_deleted">Route deleted</string>
-    <string name="saved_routes_undo">Undo</string>
     <string name="saved_routes_rename_failed">The route wasn\'t renamed. Try again.</string>
     <string name="saved_routes_delete_failed">The route wasn\'t deleted. Try again.</string>
+    <string name="saved_routes_delete_title">Delete this route?</string>
+    <string name="saved_routes_delete_text">It\'s deleted from your saved routes for good.</string>
     <string name="planning_drive">Drive</string>
     <string name="planning_attribution">Route data © OpenStreetMap contributors</string>
     <string name="drive_routing_provider">Routing provided by Spirited Driving</string>
@@ -207,10 +207,10 @@
     <string name="trip_history_delete">Delete</string>
     <string name="trip_history_plan">Plan new routes</string>
     <string name="trip_history_more">More for %1$s</string>
-    <string name="trip_history_deleted">Drive deleted</string>
-    <string name="trip_history_undo">Undo</string>
     <string name="trip_history_offline_changes">You\'re offline. Changes need a connection.</string>
     <string name="trip_history_delete_failed">The drive wasn\'t deleted. Try again.</string>
+    <string name="trip_history_delete_title">Delete this drive?</string>
+    <string name="trip_history_delete_text">It\'s deleted from your trip history for good, with its rating.</string>
     <string name="trip_history_clear">Clear trip history</string>
     <string name="trip_history_clear_title">Clear trip history?</string>
     <string name="trip_history_clear_text">All your drives and their ratings are deleted for good.</string>

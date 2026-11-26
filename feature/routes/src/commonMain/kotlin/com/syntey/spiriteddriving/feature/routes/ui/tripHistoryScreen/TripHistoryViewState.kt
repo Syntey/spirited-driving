@@ -21,7 +21,9 @@ data class TripHistoryViewState(
     /** The time the rows' days are worked out from; set when the screen is created and refreshed. */
     val now: Instant = Instant.DISTANT_PAST,
     val timeZone: TimeZone = TimeZone.UTC,
-    /** Drives deleted with their Undo still open: they're left out of [sections] until the message ends. */
+    /** The drive whose delete confirmation is shown, or `null`. */
+    val deleteConfirmationId: String? = null,
+    /** Drives whose delete is being sent: they're left out of [sections] until it's done, and come back if it fails. */
     val deletingIds: ImmutableSet<String> = persistentSetOf(),
     /** The rating sheet over the list, while a drive is being rated; null otherwise. */
     val ratingSheet: RatingSheet? = null,
@@ -29,15 +31,18 @@ data class TripHistoryViewState(
     /** The history is being cleared on the backend, so a second confirmation is ignored. */
     val isClearing: Boolean = false,
 ) {
-    /** The drives in sections by month, newest first, without the drives whose delete is still undoable. */
+    /** The drives in sections by month, newest first, without the drives whose delete is being sent. */
     val sections: ImmutableList<TripHistorySection>
         get() = page?.drives.orEmpty()
             .filterNot { it.id in deletingIds }
             .toSections(now, timeZone, distanceUnit)
 
-    /** Whether nothing is kept. A drive whose delete is undoable still counts, so the list doesn't flash empty. */
+    /** Whether nothing is kept. A drive whose delete is being sent still counts, so the list doesn't flash empty. */
     val isEmpty: Boolean
         get() = page?.drives.isNullOrEmpty()
+
+    /** Whether the delete confirmation is shown. */
+    val isDeleteConfirmationShown: Boolean get() = deleteConfirmationId != null
 
     /** Whether the backend has a page after the kept ones. */
     val hasMore: Boolean

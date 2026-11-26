@@ -20,6 +20,16 @@ final class TripHistoryComponentModel {
         }
     }
 
+    /// Whether the delete alert is shown. SwiftUI sets it to false when the alert goes away; that dismisses the confirmation.
+    var isDeleteConfirmationPresented: Bool {
+        get { viewState.isDeleteConfirmationShown }
+        set {
+            if !newValue, viewState.isDeleteConfirmationShown {
+                screen.actions.onDeleteDismiss()
+            }
+        }
+    }
+
     /// Whether the rating sheet is shown. SwiftUI sets it to false when the sheet goes away; that closes the rating, as Done does.
     var isRatingSheetPresented: Bool {
         get { viewState.ratingSheet != nil }
@@ -69,5 +79,9 @@ final class TripHistoryComponentModel {
 
     func onClearConfirm() {
         screen.actions.onClearConfirm()
+    }
+
+    func onDeleteConfirm() {
+        screen.actions.onDeleteConfirm()
     }
 }

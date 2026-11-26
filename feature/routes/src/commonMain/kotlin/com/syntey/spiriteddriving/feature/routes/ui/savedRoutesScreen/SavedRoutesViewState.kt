@@ -18,17 +18,22 @@ data class SavedRoutesViewState(
     val distanceUnit: DistanceUnit = DistanceUnit.Kilometres,
     val status: SavedRoutesStatus = SavedRoutesStatus.Loading,
     val renameDialog: RenameDialog? = null,
-    /** Routes deleted with their Undo still open: they're left out of [routes] until the message ends. */
+    /** The route whose delete confirmation is shown, or `null`. */
+    val deleteConfirmationId: SavedRouteId? = null,
+    /** Routes whose delete is being sent: they're left out of [routes] until it's done, and come back if it fails. */
     val deletingIds: ImmutableSet<SavedRouteId> = persistentSetOf(),
 ) {
-    /** The rows to show, without the routes whose delete is still undoable. */
+    /** The rows to show, without the routes whose delete is being sent. */
     val routes: ImmutableList<SavedRouteRow>
         get() = savedRoutes.orEmpty()
             .filterNot { it.id in deletingIds }
             .map { it.toRow(distanceUnit) }
             .toImmutableList()
 
-    /** Whether nothing is kept. A route whose delete is undoable still counts, so the list doesn't flash empty. */
+    /** Whether nothing is kept. A route whose delete is being sent still counts, so the list doesn't flash empty. */
     val isEmpty: Boolean
         get() = savedRoutes.isNullOrEmpty()
+
+    /** Whether the delete confirmation is shown. */
+    val isDeleteConfirmationShown: Boolean get() = deleteConfirmationId != null
 }

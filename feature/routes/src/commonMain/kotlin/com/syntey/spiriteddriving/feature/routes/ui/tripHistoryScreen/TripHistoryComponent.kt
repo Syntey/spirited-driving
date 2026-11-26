@@ -95,13 +95,20 @@ internal class TripHistoryComponent(
     }
 
     override fun onDeleteClick(id: String) {
-        componentState.update { it.copy(deletingIds = (it.deletingIds + id).toImmutableSet()) }
-        sendUiEvent(TripHistoryUiEvent.DriveDeleted(id))
+        componentState.update { it.copy(deleteConfirmationId = id) }
     }
 
-    override fun onDeleteUndo(id: String) = restoreRow(id)
+    override fun onDeleteConfirm() {
+        val id = componentState.value.deleteConfirmationId ?: return
+        componentState.update {
+            it.copy(deleteConfirmationId = null, deletingIds = (it.deletingIds + id).toImmutableSet())
+        }
+        deleteDrive(id)
+    }
 
-    override fun onDeleteMessageGone(id: String) = deleteDrive(id)
+    override fun onDeleteDismiss() {
+        componentState.update { it.copy(deleteConfirmationId = null) }
+    }
 
     override fun onClearClick() {
         componentState.update { it.copy(isClearConfirmationShown = true) }
@@ -165,6 +172,8 @@ internal class TripHistoryComponent(
     }
 
     private fun deleteDrive(id: String) = deletePastDriveUseCase.execute(id) {
+        // Each confirmed delete is sent, even while another is still being sent
+        disposePrevious(false)
         onSuccess { restoreRow(id) }
         onError { error ->
             // The row comes back where it was, and the message says why it's still there

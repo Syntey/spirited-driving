@@ -18,6 +18,16 @@ final class SavedRoutesComponentModel {
         }
     }
 
+    /// Whether the delete alert is shown. SwiftUI sets it to false when the alert goes away; that dismisses the confirmation.
+    var isDeleteConfirmationPresented: Bool {
+        get { viewState.isDeleteConfirmationShown }
+        set {
+            if !newValue, viewState.isDeleteConfirmationShown {
+                screen.actions.onDeleteDismiss()
+            }
+        }
+    }
+
     // MARK: Private stored properties
 
     private var viewState: SavedRoutesViewState
@@ -54,5 +64,9 @@ final class SavedRoutesComponentModel {
 
     func onRenameDismiss() {
         screen.actions.onRenameDismiss()
+    }
+
+    func onDeleteConfirm() {
+        screen.actions.onDeleteConfirm()
     }
 }

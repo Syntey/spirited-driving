@@ -34,14 +34,14 @@ interface TripHistoryScreen {
         /** Chose Plan new routes in a row's menu. */
         fun onPlanNewRoutesClick(id: String)
 
-        /** Chose Delete in a row's menu, or swiped the row away. */
+        /** Chose Delete in a row's menu, or swiped the row away: asks first. */
         fun onDeleteClick(id: String)
 
-        /** Tapped Undo on a deleted drive's message. */
-        fun onDeleteUndo(id: String)
+        /** Confirmed the delete confirmation. */
+        fun onDeleteConfirm()
 
-        /** The deleted drive's message ended without Undo, so the delete goes through. */
-        fun onDeleteMessageGone(id: String)
+        /** Dismissed the delete confirmation with Cancel or outside it. */
+        fun onDeleteDismiss()
 
         /** Chose Clear trip history in the bar's menu. */
         fun onClearClick()
@@ -70,8 +70,8 @@ interface TripHistoryScreen {
                 override fun onRatingReasonClick(reason: RatingReason) = Unit
                 override fun onRatingSheetClose() = Unit
                 override fun onDeleteClick(id: String) = Unit
-                override fun onDeleteUndo(id: String) = Unit
-                override fun onDeleteMessageGone(id: String) = Unit
+                override fun onDeleteConfirm() = Unit
+                override fun onDeleteDismiss() = Unit
                 override fun onClearClick() = Unit
                 override fun onClearConfirm() = Unit
                 override fun onClearDismiss() = Unit

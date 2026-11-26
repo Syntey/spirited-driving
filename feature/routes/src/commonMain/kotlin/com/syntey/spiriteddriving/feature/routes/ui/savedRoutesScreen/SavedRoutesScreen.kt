@@ -27,14 +27,14 @@ interface SavedRoutesScreen {
         /** Dismissed the rename dialog with Cancel or outside it. */
         fun onRenameDismiss()
 
-        /** Chose Delete in a row's menu, or swiped the row away. */
+        /** Chose Delete in a row's menu, or swiped the row away: asks first. */
         fun onDeleteClick(id: SavedRouteId)
 
-        /** Tapped Undo on a deleted route's message. */
-        fun onDeleteUndo(id: SavedRouteId)
+        /** Confirmed the delete confirmation. */
+        fun onDeleteConfirm()
 
-        /** The deleted route's message ended without Undo, so the delete goes through. */
-        fun onDeleteMessageGone(id: SavedRouteId)
+        /** Dismissed the delete confirmation with Cancel or outside it. */
+        fun onDeleteDismiss()
 
         /** Tapped Try again after the list failed to load. */
         fun onRetry()
@@ -49,8 +49,8 @@ interface SavedRoutesScreen {
                 override fun onRenameSave(name: String) = Unit
                 override fun onRenameDismiss() = Unit
                 override fun onDeleteClick(id: SavedRouteId) = Unit
-                override fun onDeleteUndo(id: SavedRouteId) = Unit
-                override fun onDeleteMessageGone(id: SavedRouteId) = Unit
+                override fun onDeleteConfirm() = Unit
+                override fun onDeleteDismiss() = Unit
                 override fun onRetry() = Unit
                 override fun onClose() = Unit
             }

@@ -72,20 +72,10 @@ import kotlinx.collections.immutable.ImmutableList
 fun TripHistoryScreenUi(screen: TripHistoryScreen, modifier: Modifier = Modifier) {
     val viewState by screen.viewState.collectAsStateWithLifecycle()
     val hostState = remember { SnackbarHostState() }
-    val deletedText = stringResource(MR.strings.trip_history_deleted)
-    val undoText = stringResource(MR.strings.trip_history_undo)
     val changesOfflineText = stringResource(MR.strings.trip_history_offline_changes)
     val deleteFailedText = stringResource(MR.strings.trip_history_delete_failed)
     val clearFailedText = stringResource(MR.strings.trip_history_clear_failed)
-    // Each message is shown in turn: a deleted drive's delete waits for its message to end, or for its Undo
     EventsEffect(screen.events) {
-        onEvent<TripHistoryUiEvent.DriveDeleted> { event ->
-            if (hostState.showMessage(deletedText, undoText)) {
-                screen.actions.onDeleteUndo(event.driveId)
-            } else {
-                screen.actions.onDeleteMessageGone(event.driveId)
-            }
-        }
         onEvent<TripHistoryUiEvent.ChangesOffline> { hostState.showMessage(changesOfflineText) }
         onEvent<TripHistoryUiEvent.DeleteFailed> { hostState.showMessage(deleteFailedText) }
         onEvent<TripHistoryUiEvent.ClearFailed> { hostState.showMessage(clearFailedText) }
@@ -99,7 +89,10 @@ fun TripHistoryScreenUi(screen: TripHistoryScreen, modifier: Modifier = Modifier
         )
         MessageHost(hostState, Modifier.align(Alignment.BottomCenter))
     }
-    // iOS shows the clear confirmation as a native alert, from TripHistoryComponentModel.swift
+    // iOS shows the delete and clear confirmations as native alerts, from TripHistoryComponent.swift
+    if (AppTheme.platform == UiPlatform.Android && viewState.isDeleteConfirmationShown) {
+        DeleteDriveDialog(actions = screen.actions)
+    }
     if (AppTheme.platform == UiPlatform.Android && viewState.isClearConfirmationShown) {
         ClearHistoryDialog(actions = screen.actions)
     }
@@ -290,6 +283,24 @@ private fun ClearMenuButton(actions: TripHistoryScreen.Actions) {
 }
 
 @Composable
+private fun DeleteDriveDialog(actions: TripHistoryScreen.Actions) {
+    AlertDialog(
+        onDismissRequest = actions::onDeleteDismiss,
+        icon = { Icon(painterResource(MR.images.delete), contentDescription = null) },
+        title = { Text(stringResource(MR.strings.trip_history_delete_title)) },
+        text = { Text(stringResource(MR.strings.trip_history_delete_text)) },
+        dismissButton = {
+            TextButton(onClick = actions::onDeleteDismiss) { Text(stringResource(MR.strings.generic_cancel)) }
+        },
+        confirmButton = {
+            TextButton(onClick = actions::onDeleteConfirm) {
+                Text(stringResource(MR.strings.trip_history_delete), color = MaterialTheme.colorScheme.error)
+            }
+        },
+    )
+}
+
+@Composable
 private fun ClearHistoryDialog(actions: TripHistoryScreen.Actions) {
     AlertDialog(
         onDismissRequest = actions::onClearDismiss,
@@ -475,4 +486,10 @@ private fun TripHistoryFailedIosPreview() = Showcase(platform = UiPlatform.Ios) 
 @Composable
 private fun TripHistoryClearDialogPreview() = Showcase(platform = UiPlatform.Android) {
     ClearHistoryDialog(actions = noOpActions())
+}
+
+@ScreenPreviews
+@Composable
+private fun TripHistoryDeleteDialogPreview() = Showcase(platform = UiPlatform.Android) {
+    DeleteDriveDialog(actions = noOpActions())
 }
