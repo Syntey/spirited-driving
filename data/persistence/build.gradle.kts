@@ -1,6 +1,7 @@
 plugins {
     id(libs.plugins.conventions.kmp.library.get().pluginId)
     id(libs.plugins.conventions.koin.get().pluginId)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -12,6 +13,8 @@ kotlin {
                 implementation(libs.logging.kermit)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.androidx.datastore.preferences.core)
+                implementation(libs.androidx.room.runtime)
+                implementation(libs.androidx.sqlite.bundled)
 
                 implementation(projects.core.domain)
             }
@@ -21,5 +24,16 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
             }
         }
+        getByName("androidHostTest") {
+            dependencies {
+                implementation(libs.robolectric)
+            }
+        }
     }
+}
+
+dependencies {
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
 }

@@ -8,7 +8,7 @@ import org.koin.core.annotation.Configuration
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 
-@Module(includes = [DataStoreModule::class])
+@Module(includes = [DataStoreModule::class, DatabaseModule::class, DaoModule::class])
 @ComponentScan("com.syntey.spiriteddriving.data.persistence")
 @Configuration
 class PersistenceModule {
