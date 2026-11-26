@@ -13,19 +13,32 @@ import com.syntey.spiriteddriving.core.domain.drive.Thumb
 import com.syntey.spiriteddriving.core.domain.drive.toPastDrive
 import com.syntey.spiriteddriving.core.domain.route.FakeRoutePlanner
 import com.syntey.spiriteddriving.core.domain.route.Route
+import com.syntey.spiriteddriving.data.persistence.database.DatabaseTest
+import com.syntey.spiriteddriving.data.persistence.database.PastDriveRouteEntity
+import com.syntey.spiriteddriving.data.persistence.database.PersistenceDatabase
+import com.syntey.spiriteddriving.data.persistence.database.toEntity
 import com.syntey.spiriteddriving.data.persistence.injection.PersistenceModule
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
-import com.syntey.spiriteddriving.data.persistence.persistence.route.toStored
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-class TripHistoryPersistenceTest {
+internal class TripHistoryPersistenceTest : DatabaseTest() {
 
     @Test
     fun `nothing kept reads as null`() = runTest {
@@ -111,12 +124,35 @@ class TripHistoryPersistenceTest {
     }
 
     @Test
+    fun `an unsent rating outlives a replaced page without its drive and shows when the drive is appended`() = runTest {
+        val persistence = tripHistoryPersistence()
+        persistence.replaceAll(page(drive("drive-1")))
+        persistence.rate("drive-1", Rating(Thumb.Up))
+
+        persistence.replaceAll(page(drive("drive-2")))
+        persistence.append(page(drive("drive-1", rating = Rating(Thumb.Down))))
+
+        assertEquals(page(drive("drive-2"), drive("drive-1", rating = Rating(Thumb.Up))), persistence.get())
+        assertEquals(mapOf("drive-1" to Rating(Thumb.Up)), persistence.unsentRatings())
+    }
+
+    @Test
     fun `rating a drive not kept keeps no rating`() = runTest {
         val persistence = tripHistoryPersistence()
         persistence.replaceAll(page(drive("drive-1")))
 
         persistence.rate("drive-2", Rating(Thumb.Up))
 
+        assertEquals(emptyMap(), persistence.unsentRatings())
+    }
+
+    @Test
+    fun `rating with nothing kept keeps no rating`() = runTest {
+        val persistence = tripHistoryPersistence()
+
+        persistence.rate("drive-1", Rating(Thumb.Up))
+
+        assertNull(persistence.get())
         assertEquals(emptyMap(), persistence.unsentRatings())
     }
 
@@ -132,6 +168,17 @@ class TripHistoryPersistenceTest {
     }
 
     @Test
+    fun `marking a rating sent keeps it on the drive`() = runTest {
+        val persistence = tripHistoryPersistence()
+        persistence.replaceAll(page(drive("drive-1")))
+        persistence.rate("drive-1", Rating(Thumb.Up))
+
+        persistence.markRatingSent("drive-1", Rating(Thumb.Up))
+
+        assertEquals(page(drive("drive-1", rating = Rating(Thumb.Up))), persistence.get())
+    }
+
+    @Test
     fun `marking a different rating sent leaves the rating unsent`() = runTest {
         val persistence = tripHistoryPersistence()
         persistence.replaceAll(page(drive("drive-1")))
@@ -143,7 +190,7 @@ class TripHistoryPersistenceTest {
     }
 
     @Test
-    fun `removing a drive drops it, its full route and its unsent rating`() = runTest {
+    fun `removing a drive drops it and its full route and its unsent rating`() = runTest {
         val persistence = tripHistoryPersistence()
         persistence.replaceAll(page(drive("drive-1"), drive("drive-2")))
         persistence.putRoute("drive-1", funRoute)
@@ -157,7 +204,7 @@ class TripHistoryPersistenceTest {
     }
 
     @Test
-    fun `clearing empties the drives, the full routes and the unsent ratings`() = runTest {
+    fun `clearing empties the drives and the full routes and the unsent ratings`() = runTest {
         val persistence = tripHistoryPersistence()
         persistence.replaceAll(page(drive("drive-1")))
         persistence.putRoute("drive-1", funRoute)
@@ -171,6 +218,15 @@ class TripHistoryPersistenceTest {
     }
 
     @Test
+    fun `a full route put for a drive not in the list is kept`() = runTest {
+        val persistence = tripHistoryPersistence()
+
+        persistence.putRoute("drive-1", funRoute)
+
+        assertEquals(funRoute, persistence.getRoute("drive-1"))
+    }
+
+    @Test
     fun `observing emits the page after each change`() = runTest {
         val persistence = tripHistoryPersistence()
 
@@ -179,29 +235,96 @@ class TripHistoryPersistenceTest {
         assertEquals(page(drive("drive-1")), persistence.observe().first())
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `an invalid copy of the trip history reads as nothing kept`() = runTest {
-        val dataStore = InMemoryDataStore()
-        dataStore.edit { it[TRIP_HISTORY_KEY] = "garbage" }
+    fun `a change to a full route doesn't emit the page again`() = runTest {
+        val persistence = tripHistoryPersistence()
+        val emissions = MutableStateFlow<List<PastDrivePage?>>(emptyList())
+        val collecting = launch(UnconfinedTestDispatcher(testScheduler)) {
+            persistence.observe().collect { page -> emissions.update { it + listOf(page) } }
+        }
 
-        assertNull(tripHistoryPersistence(dataStore).get())
+        // Each write waits for its emission, so the emissions come in the order of the writes
+        awaitEmissions(emissions, count = 1)
+        persistence.replaceAll(page(drive("drive-1")))
+        awaitEmissions(emissions, count = 2)
+        persistence.putRoute("drive-1", funRoute)
+        persistence.append(page(drive("drive-2")))
+        awaitEmissions(emissions, count = 3)
+        collecting.cancel()
+
+        assertEquals(
+            listOf(null, page(drive("drive-1")), page(drive("drive-1"), drive("drive-2"))),
+            emissions.value,
+        )
+    }
+
+    private suspend fun awaitEmissions(emissions: MutableStateFlow<List<PastDrivePage?>>, count: Int) =
+        withContext(Dispatchers.Default) {
+            withTimeout(5.seconds) { emissions.first { it.size >= count } }
+        }
+
+    @Test
+    fun `an unreadable full route reads as none`() = runTest {
+        val database = database()
+        val persistence = tripHistoryPersistence(database = database)
+        database.tripHistoryDao().upsertRoute(PastDriveRouteEntity(driveId = "drive-1", route = "garbage"))
+
+        assertNull(persistence.getRoute("drive-1"))
     }
 
     @Test
-    fun `an invalid copy of the full routes reads as no route`() = runTest {
-        val dataStore = InMemoryDataStore()
-        dataStore.edit { it[TRIP_HISTORY_ROUTES_KEY] = "garbage" }
+    fun `an unreadable rating reads as no rating`() = runTest {
+        val database = database()
+        val persistence = tripHistoryPersistence(database = database)
+        persistence.replaceAll(page(drive("drive-1", rating = Rating(Thumb.Up))))
+        database.tripHistoryDao().setRating("drive-1", "garbage")
 
-        assertNull(tripHistoryPersistence(dataStore).getRoute("drive-1"))
+        assertEquals(page(drive("drive-1")), persistence.get())
     }
 
     @Test
     fun `a drive with an unknown kind reads as a fun drive`() = runTest {
-        val jsonPersistence = JsonPersistence(InMemoryDataStore(), PersistenceModule().provideJson())
-        val stored = drive("drive-1").toStored().copy(kind = "SOMETHING_NEW")
-        jsonPersistence.save(TRIP_HISTORY_KEY, StoredTripHistory(drives = listOf(stored), nextCursor = null))
+        val database = database()
+        val persistence = tripHistoryPersistence(database = database)
+        val stored = drive("drive-1").toEntity(position = 0, rating = null).copy(kind = "SOMETHING_NEW")
+        database.tripHistoryDao().replaceAll(drives = listOf(stored), nextCursor = null)
 
-        assertEquals(drive("drive-1"), TripHistoryPersistence(jsonPersistence).get()?.drives?.single())
+        assertEquals(drive("drive-1"), persistence.get()?.drives?.single())
+    }
+
+    @Test
+    fun `replaceAll removes the legacy DataStore keys`() = runTest {
+        val dataStore = InMemoryDataStore()
+        dataStore.edit {
+            it[LEGACY_LIST_KEY] = "{}"
+            it[LEGACY_ROUTES_KEY] = "{}"
+            it[LEGACY_UNSENT_KEY] = "{}"
+        }
+
+        tripHistoryPersistence(dataStore).replaceAll(page(drive("drive-1")))
+
+        val preferences = dataStore.data.first()
+        assertNull(preferences[LEGACY_LIST_KEY])
+        assertNull(preferences[LEGACY_ROUTES_KEY])
+        assertNull(preferences[LEGACY_UNSENT_KEY])
+    }
+
+    @Test
+    fun `clear removes the legacy DataStore keys`() = runTest {
+        val dataStore = InMemoryDataStore()
+        dataStore.edit {
+            it[LEGACY_LIST_KEY] = "{}"
+            it[LEGACY_ROUTES_KEY] = "{}"
+            it[LEGACY_UNSENT_KEY] = "{}"
+        }
+
+        tripHistoryPersistence(dataStore).clear()
+
+        val preferences = dataStore.data.first()
+        assertNull(preferences[LEGACY_LIST_KEY])
+        assertNull(preferences[LEGACY_ROUTES_KEY])
+        assertNull(preferences[LEGACY_UNSENT_KEY])
     }
 
     private val fastestRoute: Route = FakeRoutePlanner.Recorded.fastest
@@ -212,19 +335,30 @@ class TripHistoryPersistenceTest {
 
     private fun page(vararg drives: PastDrive, nextCursor: String? = null) = PastDrivePage(drives.toList(), nextCursor)
 
-    private fun tripHistoryPersistence(dataStore: DataStore<Preferences> = InMemoryDataStore()) =
-        TripHistoryPersistence(JsonPersistence(dataStore, PersistenceModule().provideJson()))
+    private fun tripHistoryPersistence(
+        dataStore: DataStore<Preferences> = InMemoryDataStore(),
+        database: PersistenceDatabase = database(),
+    ): TripHistoryPersistence {
+        val json = PersistenceModule().provideJson()
+        return TripHistoryPersistence(
+            jsonPersistence = JsonPersistence(dataStore, json),
+            database = database,
+            tripHistoryDao = database.tripHistoryDao(),
+            json = json,
+        )
+    }
 
     private companion object {
         val STARTED_AT: Instant = Instant.parse("2026-11-08T09:30:00Z")
-        val TRIP_HISTORY_KEY = stringPreferencesKey("TRIP_HISTORY")
-        val TRIP_HISTORY_ROUTES_KEY = stringPreferencesKey("TRIP_HISTORY_ROUTES")
+        val LEGACY_LIST_KEY = stringPreferencesKey("TRIP_HISTORY")
+        val LEGACY_ROUTES_KEY = stringPreferencesKey("TRIP_HISTORY_ROUTES")
+        val LEGACY_UNSENT_KEY = stringPreferencesKey("TRIP_HISTORY_UNSENT_RATINGS")
     }
 
     private class InMemoryDataStore : DataStore<Preferences> {
         private val preferences = MutableStateFlow(emptyPreferences())
 
-        override val data: Flow<Preferences> = preferences
+        override val data: Flow<Preferences> = flow { emitAll(preferences) }
 
         override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences =
             transform(preferences.value).also { preferences.value = it }

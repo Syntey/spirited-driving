@@ -3,9 +3,7 @@ package com.syntey.spiriteddriving.data.persistence.database
 import androidx.room3.Embedded
 import androidx.room3.Entity
 import androidx.room3.PrimaryKey
-import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.Length.Companion.metres
-import com.syntey.spiriteddriving.core.domain.place.Place
 import com.syntey.spiriteddriving.core.domain.route.RouteSummary
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRoute
 import com.syntey.spiriteddriving.core.domain.savedroute.SavedRouteId
@@ -50,9 +48,6 @@ internal data class SavedRoutesMetaEntity(@PrimaryKey val id: Int = ROW_ID) {
     }
 }
 
-/** A [Place] spread over columns, with its point as latitude and longitude. */
-internal data class PlaceColumns(val name: String?, val area: String?, val latitude: Double, val longitude: Double)
-
 internal fun SavedRoute.toEntity(position: Int) = SavedRouteEntity(
     id = id.value,
     position = position,
@@ -81,17 +76,4 @@ internal fun SavedRouteEntity.toDomain() = SavedRoute(
         funLevel = funLevel,
         stats = routeStatsOf(curvyDistanceMetres, ascentMetres),
     ),
-)
-
-private fun Place.toColumns() = PlaceColumns(
-    name = name,
-    area = area,
-    latitude = location.latitude,
-    longitude = location.longitude,
-)
-
-private fun PlaceColumns.toDomain() = Place(
-    name = name,
-    area = area,
-    location = GeoPoint(latitude = latitude, longitude = longitude),
 )
