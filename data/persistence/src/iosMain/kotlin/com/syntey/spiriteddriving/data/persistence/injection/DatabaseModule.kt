@@ -15,6 +15,7 @@ internal actual class DatabaseModule actual constructor() {
         name = documentsPath(Constants.Files.DATABASE),
     )
         .setDriver(BundledSQLiteDriver())
+        // TODO remove destructive migration after development
         .fallbackToDestructiveMigration(dropAllTables = true)
         .build()
 }
