@@ -20,8 +20,9 @@ import androidx.room3.RoomDatabaseConstructor
         TripHistoryMetaEntity::class,
         PastDriveRouteEntity::class,
         UnsentRatingEntity::class,
+        StartedDriveEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = false,
 )
 @ConstructedBy(PersistenceDatabaseConstructor::class)
@@ -31,6 +32,8 @@ internal abstract class PersistenceDatabase : RoomDatabase() {
     abstract fun savedRoutesDao(): SavedRoutesDao
 
     abstract fun tripHistoryDao(): TripHistoryDao
+
+    abstract fun startedDrivesDao(): StartedDrivesDao
 }
 
 // Room's compiler generates the actual for each target

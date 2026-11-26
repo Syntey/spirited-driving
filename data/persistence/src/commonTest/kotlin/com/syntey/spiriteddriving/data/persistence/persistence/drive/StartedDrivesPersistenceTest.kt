@@ -4,23 +4,27 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.syntey.spiriteddriving.core.domain.drive.Drive
 import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.RatingReason
 import com.syntey.spiriteddriving.core.domain.drive.Thumb
+import com.syntey.spiriteddriving.data.persistence.database.DatabaseTest
+import com.syntey.spiriteddriving.data.persistence.database.PersistenceDatabase
 import com.syntey.spiriteddriving.data.persistence.injection.PersistenceModule
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
-import androidx.datastore.preferences.core.stringPreferencesKey
 
-class StartedDrivesPersistenceTest {
+internal class StartedDrivesPersistenceTest : DatabaseTest() {
 
     @Test
     fun `nothing kept reads as empty`() = runTest {
@@ -109,25 +113,6 @@ class StartedDrivesPersistenceTest {
     }
 
     @Test
-    fun `an invalid copy reads as empty`() = runTest {
-        val dataStore = InMemoryDataStore()
-        dataStore.edit { it[STARTED_DRIVES_KEY] = "garbage" }
-
-        assertTrue(startedDrivesPersistence(dataStore).all().isEmpty())
-    }
-
-    @Test
-    fun `adding to an invalid copy starts from empty`() = runTest {
-        val dataStore = InMemoryDataStore()
-        dataStore.edit { it[STARTED_DRIVES_KEY] = "garbage" }
-        val persistence = startedDrivesPersistence(dataStore)
-
-        persistence.add(sampleDrive(id = "first"))
-
-        assertEquals(listOf(sampleDrive(id = "first")), persistence.all())
-    }
-
-    @Test
     fun `a rated drive keeps its rating unsent`() = runTest {
         val persistence = startedDrivesPersistence()
         persistence.add(sampleDrive(id = "first"))
@@ -182,30 +167,94 @@ class StartedDrivesPersistenceTest {
     }
 
     @Test
-    fun `a drive stored before ratings existed still reads`() = runTest {
+    fun `the legacy DataStore key is ignored`() = runTest {
         val dataStore = InMemoryDataStore()
         dataStore.edit {
-            it[STARTED_DRIVES_KEY] =
+            it[LEGACY_KEY] =
                 """[{"id":"first","routeId":"9c4e7a2d-1b3f-4c8e-8d5a-6f7b2e9c0a1d","startedAtEpochMillis":1794564930000,"plannedDurationSeconds":3900,"isRecorded":false}]"""
         }
 
-        assertEquals(listOf(sampleDrive(id = "first")), startedDrivesPersistence(dataStore).all())
+        assertTrue(startedDrivesPersistence(dataStore).all().isEmpty())
     }
 
-    private fun startedDrivesPersistence(dataStore: DataStore<Preferences> = InMemoryDataStore()) =
-        StartedDrivesPersistence(JsonPersistence(dataStore, PersistenceModule().provideJson()))
+    @Test
+    fun `adding removes the legacy DataStore key`() = runTest {
+        val dataStore = InMemoryDataStore()
+        dataStore.edit { it[LEGACY_KEY] = "garbage" }
 
-    private fun sampleDrive(id: String, isRecorded: Boolean = false, isNotDriven: Boolean = false) = Drive(
+        startedDrivesPersistence(dataStore).add(sampleDrive(id = "first"))
+
+        assertNull(dataStore.data.first()[LEGACY_KEY])
+    }
+
+    @Test
+    fun `adding past the limit drops the oldest added, not the oldest started`() = runTest {
+        val persistence = startedDrivesPersistence()
+        persistence.add(sampleDrive(id = "a", startedAt = Instant.parse("2030-01-01T00:00:00Z")))
+
+        repeat(100) { persistence.add(sampleDrive(id = "drive-$it", startedAt = Instant.parse("2020-01-01T00:00:00Z"))) }
+
+        val kept = persistence.all()
+        assertEquals(100, kept.size)
+        assertTrue(kept.none { it.id == "a" })
+    }
+
+    @Test
+    fun `re-adding a drive keeps its new fields`() = runTest {
+        val persistence = startedDrivesPersistence()
+        persistence.add(sampleDrive(id = "first"))
+        persistence.add(sampleDrive(id = "second"))
+
+        persistence.add(sampleDrive(id = "first", isRecorded = true))
+
+        assertEquals(listOf(sampleDrive(id = "first", isRecorded = true), sampleDrive(id = "second")), persistence.all())
+    }
+
+    @Test
+    fun `an unreadable rating reads as no rating`() = runTest {
+        val database = database()
+        val persistence = startedDrivesPersistence(database = database)
+        persistence.add(sampleDrive(id = "first"))
+        database.startedDrivesDao().rate("first", "garbage")
+
+        assertNull(persistence.all().single().rating)
+    }
+
+    @Test
+    fun `a rated drive keeps the others as they are`() = runTest {
+        val persistence = startedDrivesPersistence()
+        persistence.add(sampleDrive(id = "first"))
+        persistence.add(sampleDrive(id = "second"))
+
+        persistence.rate("first", Rating(Thumb.Up))
+
+        assertEquals(listOf(sampleDrive(id = "second"), sampleDrive(id = "first").copy(rating = Rating(Thumb.Up))), persistence.all())
+    }
+
+    private fun startedDrivesPersistence(
+        dataStore: DataStore<Preferences> = InMemoryDataStore(),
+        database: PersistenceDatabase = database(),
+    ): StartedDrivesPersistence {
+        val json = PersistenceModule().provideJson()
+        return StartedDrivesPersistence(JsonPersistence(dataStore, json), database.startedDrivesDao(), json)
+    }
+
+    private fun sampleDrive(
+        id: String,
+        isRecorded: Boolean = false,
+        isNotDriven: Boolean = false,
+        startedAt: Instant = Instant.parse("2026-11-13T10:15:30Z"),
+    ) = Drive(
         id = id,
         routeId = "9c4e7a2d-1b3f-4c8e-8d5a-6f7b2e9c0a1d",
-        startedAt = Instant.parse("2026-11-13T10:15:30Z"),
+        startedAt = startedAt,
         plannedDuration = 3900.seconds,
         isRecorded = isRecorded,
         isNotDriven = isNotDriven,
     )
 
     private companion object {
-        val STARTED_DRIVES_KEY = stringPreferencesKey("STARTED_DRIVES")
+        val LEGACY_KEY = stringPreferencesKey("STARTED_DRIVES")
     }
 
     private class InMemoryDataStore : DataStore<Preferences> {

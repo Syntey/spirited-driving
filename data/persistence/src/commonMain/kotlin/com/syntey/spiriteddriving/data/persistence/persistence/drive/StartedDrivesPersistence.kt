@@ -1,62 +1,81 @@
 package com.syntey.spiriteddriving.data.persistence.persistence.drive
 
 import androidx.datastore.preferences.core.stringPreferencesKey
+import co.touchlab.kermit.Logger
 import com.syntey.spiriteddriving.core.domain.drive.Drive
 import com.syntey.spiriteddriving.core.domain.drive.Rating
 import com.syntey.spiriteddriving.core.domain.drive.StartedDrives
+import com.syntey.spiriteddriving.data.persistence.database.StartedDrivesDao
+import com.syntey.spiriteddriving.data.persistence.database.toDomain
+import com.syntey.spiriteddriving.data.persistence.database.toEntity
+import com.syntey.spiriteddriving.data.persistence.injection.PersistenceJson
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import com.syntey.spiriteddriving.data.persistence.tools.Constants
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
 /**
- * Keeps the started drives as one JSON list, newest first. An unreadable list reads as empty.
+ * Keeps the started drives in Room: one row per drive with its rating as JSON, most recently added first. An unreadable
+ * rating reads as no rating.
  */
 @Single
-internal class StartedDrivesPersistence(private val jsonPersistence: JsonPersistence) : StartedDrives {
+internal class StartedDrivesPersistence(
+    private val jsonPersistence: JsonPersistence,
+    private val startedDrivesDao: StartedDrivesDao,
+    @PersistenceJson private val json: Json,
+) : StartedDrives {
+
+    private val logger = Logger.withTag("StartedDrivesPersistence")
 
     override suspend fun all(): List<Drive> =
-        jsonPersistence.getCatching<List<StoredDrive>>(KEY)?.map { it.toDomain() }.orEmpty()
+        startedDrivesDao.drives().map { drive -> drive.toDomain(decodeRating(drive.rating)) }
 
     override suspend fun add(drive: Drive) {
-        jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
-            (listOf(drive.toStored()) + stored.orEmpty().filterNot { it.id == drive.id })
-                .take(Constants.Drives.MAX_KEPT)
-        }
+        // The DAO picks the position: the drive goes on top
+        startedDrivesDao.add(
+            drive.toEntity(position = 0, rating = drive.rating?.let(::encodeRating)),
+            Constants.Drives.MAX_KEPT,
+        )
+        jsonPersistence.delete(LEGACY_KEY)
     }
 
     override suspend fun markRecorded(id: String) {
-        jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
-            stored.orEmpty().map { if (it.id == id) it.copy(isRecorded = true) else it }
-        }
+        startedDrivesDao.markRecorded(id)
     }
 
     override suspend fun remove(id: String) {
-        jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
-            stored.orEmpty().filterNot { it.id == id }
-        }
+        startedDrivesDao.remove(id)
     }
 
     override suspend fun rate(id: String, rating: Rating) {
-        jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
-            stored.orEmpty().map { if (it.id == id) it.copy(rating = rating.toStored(), isRatingSent = false) else it }
-        }
+        startedDrivesDao.rate(id, encodeRating(rating))
     }
 
     override suspend fun markRatingSent(id: String, rating: Rating) {
-        jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
-            stored.orEmpty().map {
-                if (it.id == id && it.rating == rating.toStored()) it.copy(isRatingSent = true) else it
-            }
-        }
+        // Rating.toStored() sorts the reasons, so the same rating always encodes to the same JSON
+        startedDrivesDao.markRatingSent(id, encodeRating(rating))
     }
 
     override suspend fun markNotDriven(id: String) {
-        jsonPersistence.update<List<StoredDrive>>(KEY) { stored ->
-            stored.orEmpty().map { if (it.id == id) it.copy(isNotDriven = true) else it }
+        startedDrivesDao.markNotDriven(id)
+    }
+
+    private fun encodeRating(rating: Rating): String =
+        json.encodeToString(StoredRating.serializer(), rating.toStored())
+
+    private fun decodeRating(stored: String?): Rating? {
+        if (stored == null) return null
+        return try {
+            json.decodeFromString(StoredRating.serializer(), stored).toDomain()
+        } catch (error: SerializationException) {
+            logger.e(error) { "Unable to decode the kept rating of a started drive" }
+            null
         }
     }
 
     private companion object {
-        val KEY = stringPreferencesKey("STARTED_DRIVES")
+        // The started drives used to be kept under this key. It's removed on the next add and never read.
+        val LEGACY_KEY = stringPreferencesKey("STARTED_DRIVES")
     }
 }
