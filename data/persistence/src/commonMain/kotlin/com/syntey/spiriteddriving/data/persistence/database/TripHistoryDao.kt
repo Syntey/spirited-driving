@@ -35,9 +35,11 @@ internal interface TripHistoryDao {
     @Query("SELECT COALESCE(MAX(position) + 1, 0) FROM past_drive")
     suspend fun nextPosition(): Int
 
-    /** The number of rated drives: 0 when the drive isn't kept. */
+    @Query("SELECT COUNT(*) > 0 FROM past_drive WHERE id = :id")
+    suspend fun isKept(id: String): Boolean
+
     @Query("UPDATE past_drive SET rating = :rating WHERE id = :id")
-    suspend fun setRating(id: String, rating: String): Int
+    suspend fun setRating(id: String, rating: String)
 
     @Query(
         "UPDATE past_drive SET rating = (SELECT rating FROM unsent_rating WHERE unsent_rating.driveId = past_drive.id) " +
@@ -53,6 +55,9 @@ internal interface TripHistoryDao {
 
     @Query("DELETE FROM past_drive_route WHERE driveId = :driveId")
     suspend fun deleteRoute(driveId: String)
+
+    @Query("DELETE FROM past_drive_route")
+    suspend fun deleteRoutes()
 
     @Query("DELETE FROM past_drive_route WHERE driveId NOT IN (SELECT id FROM past_drive)")
     suspend fun deleteOrphanedRoutes()
@@ -101,7 +106,8 @@ internal interface TripHistoryDao {
     /** Shows the rating on the kept drive and keeps it as not sent yet. Nothing happens without a kept drive. */
     @Transaction
     suspend fun rate(id: String, rating: String) {
-        if (setRating(id, rating) == 0) return
+        if (!isKept(id)) return
+        setRating(id, rating)
         upsertUnsentRating(UnsentRatingEntity(driveId = id, rating = rating))
     }
 
@@ -113,11 +119,10 @@ internal interface TripHistoryDao {
         deleteUnsentRatingOf(id)
     }
 
-    /** Removes everything. With no drives left every full route is orphaned, so the orphan query drops them all. */
     @Transaction
     suspend fun clear() {
         deleteDrives()
-        deleteOrphanedRoutes()
+        deleteRoutes()
         deleteUnsentRatings()
         deleteMeta()
     }
