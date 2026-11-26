@@ -39,12 +39,12 @@ private val holesSerializer = ListSerializer(pointsSerializer)
 
 /** The polygon's points go through the module's [Json], so they're stored in the same format as before. */
 internal fun StoredPolygon.toEntity(json: Json): CoveredPolygonEntity {
-    val allPoints = outline + holes.flatten()
+    // Holes lie inside the outline, so the outline alone gives the box
     return CoveredPolygonEntity(
-        minLatitude = allPoints.minOf { it.latitude },
-        maxLatitude = allPoints.maxOf { it.latitude },
-        minLongitude = allPoints.minOf { it.longitude },
-        maxLongitude = allPoints.maxOf { it.longitude },
+        minLatitude = outline.minOf { it.latitude },
+        maxLatitude = outline.maxOf { it.latitude },
+        minLongitude = outline.minOf { it.longitude },
+        maxLongitude = outline.maxOf { it.longitude },
         outline = json.encodeToString(pointsSerializer, outline),
         holes = json.encodeToString(holesSerializer, holes),
     )

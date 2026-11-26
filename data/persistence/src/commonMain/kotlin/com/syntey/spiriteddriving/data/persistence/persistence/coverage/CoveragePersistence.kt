@@ -17,6 +17,7 @@ import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
@@ -51,8 +52,7 @@ internal class CoveragePersistence(
     /** `null` when a polygon can't be decoded, so the whole area is fetched again rather than shown in part. */
     private fun decodeArea(polygons: List<CoveredPolygonEntity>): List<GeoPolygon>? = try {
         polygons.map { it.toStored(json).toDomain() }
-    } catch (error: IllegalArgumentException) {
-        // SerializationException is an IllegalArgumentException
+    } catch (error: SerializationException) {
         logger.e(error) { "Unable to decode the kept covered area" }
         null
     }

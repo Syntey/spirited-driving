@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.syntey.spiriteddriving.data.persistence.database.PersistenceDatabase
-import com.syntey.spiriteddriving.data.persistence.tools.DATABASE_FILENAME
+import com.syntey.spiriteddriving.data.persistence.tools.Constants
 import org.koin.core.annotation.Module
 import org.koin.core.annotation.Single
 import org.koin.core.component.KoinComponent
@@ -18,7 +18,7 @@ internal actual class DatabaseModule actual constructor() : KoinComponent {
     @Single
     actual fun provideDatabase(): PersistenceDatabase = Room.databaseBuilder<PersistenceDatabase>(
         context = context,
-        name = DATABASE_FILENAME,
+        name = Constants.Files.DATABASE,
     )
         .setDriver(BundledSQLiteDriver())
         .build()
