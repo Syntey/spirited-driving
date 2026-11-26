@@ -34,6 +34,21 @@ internal class JsonPersistence(@Provided private val dataStore: DataStore<Prefer
     }
 
     /**
+     * Saves [value] under [key] and removes [removedKey] in the same edit, so a reader never sees the new value
+     * alongside the old one under [removedKey].
+     */
+    suspend inline fun <reified T : Any> saveAndRemove(
+        key: Preferences.Key<String>,
+        value: T,
+        removedKey: Preferences.Key<String>,
+    ) {
+        dataStore.edit { preferences ->
+            preferences[key] = json.encodeToString<T>(value)
+            preferences.remove(removedKey)
+        }
+    }
+
+    /**
      * Returns persisted object with provided [key].
      *
      * @return Persisted object, or `null` if does not exist.

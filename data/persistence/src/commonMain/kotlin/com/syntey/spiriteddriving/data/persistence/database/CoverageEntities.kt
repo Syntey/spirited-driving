@@ -31,6 +31,9 @@ internal data class CoverageMetaEntity(@PrimaryKey val id: Int = ROW_ID, val ver
     }
 }
 
+/** The kept covered area as read back: its version row and its polygons. */
+internal data class CoverageRows(val meta: CoverageMetaEntity, val polygons: List<CoveredPolygonEntity>)
+
 private val pointsSerializer = ListSerializer(StoredPoint.serializer())
 private val holesSerializer = ListSerializer(pointsSerializer)
 

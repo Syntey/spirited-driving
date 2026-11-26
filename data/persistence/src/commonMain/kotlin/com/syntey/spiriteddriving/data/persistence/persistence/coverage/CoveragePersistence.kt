@@ -1,49 +1,84 @@
 package com.syntey.spiriteddriving.data.persistence.persistence.coverage
 
 import androidx.datastore.preferences.core.stringPreferencesKey
+import co.touchlab.kermit.Logger
+import com.syntey.spiriteddriving.core.domain.coverage.Coverage
 import com.syntey.spiriteddriving.core.domain.coverage.CoverageCache
 import com.syntey.spiriteddriving.core.domain.coverage.VersionedCoverage
+import com.syntey.spiriteddriving.core.domain.geo.GeoPolygon
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
+import com.syntey.spiriteddriving.data.persistence.database.CoveredPolygonEntity
+import com.syntey.spiriteddriving.data.persistence.database.CoverageDao
+import com.syntey.spiriteddriving.data.persistence.database.CoverageMetaEntity
+import com.syntey.spiriteddriving.data.persistence.database.toEntity
+import com.syntey.spiriteddriving.data.persistence.database.toStored
+import com.syntey.spiriteddriving.data.persistence.injection.PersistenceJson
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
 import org.koin.core.annotation.Single
 
 /**
- * Keeps the covered area as one JSON value, and its vignette countries under their own key, so reading the countries
- * doesn't decode the area. The countries are stored as a list of codes, which is the stored format.
- * An unreadable copy reads as `null`, so the app fetches it again.
+ * Keeps the covered area in Room, one row per polygon and a version row, and its vignette countries under their own
+ * DataStore key, so reading the countries doesn't read the area. An unreadable copy reads as `null`, so the app
+ * fetches it again.
  */
 @Single
-internal class CoveragePersistence(private val jsonPersistence: JsonPersistence) : CoverageCache {
+internal class CoveragePersistence(
+    private val jsonPersistence: JsonPersistence,
+    private val coverageDao: CoverageDao,
+    @PersistenceJson private val json: Json,
+) : CoverageCache {
 
-    override suspend fun get(): VersionedCoverage? = jsonPersistence.getCatching<StoredCoverage>(KEY)?.toDomain()
+    private val logger = Logger.withTag("CoveragePersistence")
 
-    // DataStore emits on every edit of any key; only a change of the countries key reaches the fallback, so an edit
-    // elsewhere doesn't read the area again
+    override suspend fun get(): VersionedCoverage? {
+        val rows = coverageDao.read()
+        val vignetteCountries = rows?.let { jsonPersistence.getCatching<List<String>>(VIGNETTE_COUNTRIES_KEY) }
+        val area = rows?.let { decodeArea(it.polygons) }
+        return if (rows == null || vignetteCountries == null || area == null) {
+            null
+        } else {
+            VersionedCoverage(
+                coverage = Coverage(area = area, vignetteCountries = vignetteCountries.map(::CountryCode)),
+                version = rows.meta.version,
+            )
+        }
+    }
+
+    /** `null` when a polygon can't be decoded, so the whole area is fetched again rather than shown in part. */
+    private fun decodeArea(polygons: List<CoveredPolygonEntity>): List<GeoPolygon>? = try {
+        polygons.map { it.toStored(json).toDomain() }
+    } catch (error: IllegalArgumentException) {
+        // SerializationException is an IllegalArgumentException
+        logger.e(error) { "Unable to decode the kept covered area" }
+        null
+    }
+
+    // DataStore emits on every edit of any key; distinctUntilChanged keeps an edit elsewhere from re-emitting
     override fun observeVignetteCountries(): Flow<List<CountryCode>?> =
         jsonPersistence.observeCatching<List<String>>(VIGNETTE_COUNTRIES_KEY)
+            .map { stored -> stored?.map(::CountryCode) }
             .distinctUntilChanged()
-            .map { stored -> stored?.map(::CountryCode) ?: countriesFromCoverage() }
-            .distinctUntilChanged()
-
-    /**
-     * Installs from before the countries had their own key keep their copy until the backend's covered area changes (it
-     * answers 304 until then), so they'd otherwise never get the key. Reading the copy once stores the key for next time.
-     */
-    private suspend fun countriesFromCoverage(): List<CountryCode>? =
-        get()?.coverage?.vignetteCountries?.also { countries ->
-            jsonPersistence.save(VIGNETTE_COUNTRIES_KEY, countries.map { it.value })
-        }
 
     override suspend fun save(coverage: VersionedCoverage) {
-        jsonPersistence.save(KEY, coverage.toStored())
-        jsonPersistence.save(VIGNETTE_COUNTRIES_KEY, coverage.coverage.vignetteCountries.map { it.value })
+        val polygons = coverage.coverage.area.map { it.toStored().toEntity(json) }
+        jsonPersistence.saveAndRemove(
+            key = VIGNETTE_COUNTRIES_KEY,
+            value = coverage.coverage.vignetteCountries.map { it.value },
+            removedKey = LEGACY_COVERAGE_KEY,
+        )
+        // The version row is written last, so it's the commit marker: a copy whose countries were written but whose
+        // area wasn't reads as the previous version, and the next fetch replaces both
+        coverageDao.replace(polygons = polygons, meta = CoverageMetaEntity(version = coverage.version))
     }
 
     private companion object {
-        val KEY = stringPreferencesKey("COVERAGE")
         val VIGNETTE_COUNTRIES_KEY = stringPreferencesKey("VIGNETTE_COUNTRIES")
+
+        // The covered area used to be one JSON value under this key; it's removed on save and never read
+        val LEGACY_COVERAGE_KEY = stringPreferencesKey("COVERAGE")
     }
 }

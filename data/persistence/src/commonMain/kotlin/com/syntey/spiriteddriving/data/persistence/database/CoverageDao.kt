@@ -3,12 +3,13 @@ package com.syntey.spiriteddriving.data.persistence.database
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 
 @Dao
 internal interface CoverageDao {
 
-    @Query("SELECT * FROM coverage_polygon")
+    @Query("SELECT * FROM coverage_polygon ORDER BY id")
     suspend fun polygons(): List<CoveredPolygonEntity>
 
     @Insert
@@ -22,4 +23,19 @@ internal interface CoverageDao {
 
     @Upsert
     suspend fun upsertMeta(meta: CoverageMetaEntity)
+
+    /** Replaces the kept polygons and the version together, so a read never sees one without the other. */
+    @Transaction
+    suspend fun replace(polygons: List<CoveredPolygonEntity>, meta: CoverageMetaEntity) {
+        deletePolygons()
+        insertPolygons(polygons)
+        upsertMeta(meta)
+    }
+
+    /** The version and the polygons read in one transaction, or `null` when no copy is kept. */
+    @Transaction
+    suspend fun read(): CoverageRows? {
+        val meta = meta() ?: return null
+        return CoverageRows(meta = meta, polygons = polygons())
+    }
 }

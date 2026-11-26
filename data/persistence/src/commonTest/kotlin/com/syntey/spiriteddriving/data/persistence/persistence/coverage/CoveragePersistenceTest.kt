@@ -10,6 +10,10 @@ import com.syntey.spiriteddriving.core.domain.coverage.VersionedCoverage
 import com.syntey.spiriteddriving.core.domain.geo.GeoPoint
 import com.syntey.spiriteddriving.core.domain.geo.GeoPolygon
 import com.syntey.spiriteddriving.core.domain.settings.CountryCode
+import com.syntey.spiriteddriving.data.persistence.database.CoveredPolygonEntity
+import com.syntey.spiriteddriving.data.persistence.database.CoverageMetaEntity
+import com.syntey.spiriteddriving.data.persistence.database.DatabaseTest
+import com.syntey.spiriteddriving.data.persistence.database.PersistenceDatabase
 import com.syntey.spiriteddriving.data.persistence.injection.PersistenceModule
 import com.syntey.spiriteddriving.data.persistence.persistence.JsonPersistence
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,10 +28,9 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class CoveragePersistenceTest {
+internal class CoveragePersistenceTest : DatabaseTest() {
 
     @Test
     fun `nothing kept reads as null`() = runTest {
@@ -35,7 +38,7 @@ class CoveragePersistenceTest {
     }
 
     @Test
-    fun `a kept copy reads back equal`() = runTest {
+    fun `a kept copy with several polygons reads back equal with holes and version`() = runTest {
         val persistence = coveragePersistence()
 
         persistence.save(sampleCoverage())
@@ -46,12 +49,21 @@ class CoveragePersistenceTest {
     @Test
     fun `saving again replaces the previous copy`() = runTest {
         val persistence = coveragePersistence()
-        val newer = sampleCoverage().copy(version = "\"newer\"")
+        val newer = sampleCoverage(area = listOf(samplePolygon(70.0))).copy(version = "\"newer\"")
 
         persistence.save(sampleCoverage())
         persistence.save(newer)
 
         assertEquals(newer, persistence.get())
+    }
+
+    @Test
+    fun `saving writes the vignette countries key`() = runTest {
+        val dataStore = InMemoryDataStore()
+
+        coveragePersistence(dataStore).save(sampleCoverage())
+
+        assertEquals("""["CZ","SK"]""", dataStore.data.first()[VIGNETTE_COUNTRIES_KEY])
     }
 
     @Test
@@ -84,17 +96,6 @@ class CoveragePersistenceTest {
         assertEquals(listOf(null, listOf(CountryCode.Czechia, CountryCode("SK"))), emissions)
     }
 
-    @Test
-    fun `a kept copy without its vignette countries key reads the countries from the copy and keeps them`() = runTest {
-        val dataStore = InMemoryDataStore()
-        val persistence = coveragePersistence(dataStore)
-        persistence.save(sampleCoverage())
-        dataStore.edit { it.remove(VIGNETTE_COUNTRIES_KEY) }
-
-        assertEquals(listOf(CountryCode.Czechia, CountryCode("SK")), persistence.observeVignetteCountries().first())
-        assertNotNull(dataStore.data.first()[VIGNETTE_COUNTRIES_KEY])
-    }
-
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `an edit of another key doesn't read the kept copy again`() = runTest {
@@ -115,39 +116,81 @@ class CoveragePersistenceTest {
     }
 
     @Test
-    fun `an invalid copy reads as null`() = runTest {
+    fun `an undecodable polygon reads as null`() = runTest {
+        val database = database()
+        val persistence = coveragePersistence(database = database)
+        persistence.save(sampleCoverage())
+        database.coverageDao().replace(
+            polygons = listOf(
+                CoveredPolygonEntity(
+                    minLatitude = 0.0,
+                    maxLatitude = 0.0,
+                    minLongitude = 0.0,
+                    maxLongitude = 0.0,
+                    outline = "garbage",
+                    holes = "[]",
+                ),
+            ),
+            meta = CoverageMetaEntity(version = "\"v1\""),
+        )
+
+        assertNull(persistence.get())
+    }
+
+    @Test
+    fun `a legacy COVERAGE key is ignored`() = runTest {
         val dataStore = InMemoryDataStore()
-        dataStore.edit { it[COVERAGE_KEY] = "garbage" }
+        dataStore.edit { it[LEGACY_COVERAGE_KEY] = LEGACY_COPY }
 
         assertNull(coveragePersistence(dataStore).get())
     }
 
     @Test
-    fun `a copy missing its fields reads as null`() = runTest {
+    fun `saving removes the legacy COVERAGE key`() = runTest {
         val dataStore = InMemoryDataStore()
-        dataStore.edit { it[COVERAGE_KEY] = "{}" }
+        dataStore.edit { it[LEGACY_COVERAGE_KEY] = LEGACY_COPY }
 
-        assertNull(coveragePersistence(dataStore).get())
+        coveragePersistence(dataStore).save(sampleCoverage())
+
+        assertNull(dataStore.data.first()[LEGACY_COVERAGE_KEY])
     }
 
-    private fun coveragePersistence(dataStore: DataStore<Preferences> = InMemoryDataStore()) =
-        CoveragePersistence(JsonPersistence(dataStore, PersistenceModule().provideJson()))
+    private fun coveragePersistence(
+        dataStore: DataStore<Preferences> = InMemoryDataStore(),
+        database: PersistenceDatabase = database(),
+    ): CoveragePersistence {
+        val json = PersistenceModule().provideJson()
+        return CoveragePersistence(JsonPersistence(dataStore, json), database.coverageDao(), json)
+    }
 
-    private fun sampleCoverage() = VersionedCoverage(
+    private fun sampleCoverage(area: List<GeoPolygon> = listOf(samplePolygon(50.0), samplePolygon(60.0))) = VersionedCoverage(
         coverage = Coverage(
-            area = listOf(
-                GeoPolygon(
-                    outline = listOf(GeoPoint(50.0, 12.0), GeoPoint(50.0, 13.0), GeoPoint(51.0, 13.0), GeoPoint(50.0, 12.0)),
-                    holes = listOf(listOf(GeoPoint(50.2, 12.2), GeoPoint(50.2, 12.4), GeoPoint(50.4, 12.4), GeoPoint(50.2, 12.2))),
-                ),
-            ),
+            area = area,
             vignetteCountries = listOf(CountryCode.Czechia, CountryCode("SK")),
         ),
         version = "\"v1\"",
     )
 
+    private fun samplePolygon(latitude: Double) = GeoPolygon(
+        outline = listOf(
+            GeoPoint(latitude, 12.0),
+            GeoPoint(latitude, 13.0),
+            GeoPoint(latitude + 1.0, 13.0),
+            GeoPoint(latitude, 12.0),
+        ),
+        holes = listOf(
+            listOf(
+                GeoPoint(latitude + 0.2, 12.2),
+                GeoPoint(latitude + 0.2, 12.4),
+                GeoPoint(latitude + 0.4, 12.4),
+                GeoPoint(latitude + 0.2, 12.2),
+            ),
+        ),
+    )
+
     private companion object {
-        val COVERAGE_KEY = stringPreferencesKey("COVERAGE")
+        const val LEGACY_COPY = """{"area":[],"vignetteCountries":["CZ"],"version":"v1"}"""
+        val LEGACY_COVERAGE_KEY = stringPreferencesKey("COVERAGE")
         val VIGNETTE_COUNTRIES_KEY = stringPreferencesKey("VIGNETTE_COUNTRIES")
         val OTHER_KEY = stringPreferencesKey("OTHER")
     }

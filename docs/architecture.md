@@ -233,7 +233,7 @@ into it.
 | `:core:resources`     | Shared strings and images                                             | Attribution texts                                      |
 | `:core:platform`      | Interfaces implemented natively on each platform                      | Location, Firebase sign-in and App Check, local notifications, the in-app browser |
 | `:data:network`       | Ktorfit/Ktor client, DTOs, `NetworkResult`                            | `ApiRoutePlanner`, `ApiPlaceSearch`, `ApiCoverageSource`, `ApiSavedRoutesSource`, `ApiTripHistorySource` |
-| `:data:persistence`   | DataStore                                                             | The covered area, recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet, saved routes, trip history |
+| `:data:persistence`   | Room and DataStore                                                    | Room keeps the covered area, one row per polygon with its points as JSON, plus a version row. DataStore keeps the vignette countries, recent places, settings, last used budget, IDs of drives started while signed out, the drive waiting for a rating, ratings not sent yet, saved routes, trip history |
 
 Features that share state share a module: one `MapSheetComponent` drives the map and its sheet, so everything shown
 on the map is `:feature:map`.
