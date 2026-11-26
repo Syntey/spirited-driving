@@ -9,10 +9,22 @@ import androidx.room3.RoomDatabaseConstructor
  * Until the first release the schema isn't exported and has no migrations: a schema change bumps [version] and the
  * builders drop every table, so the device fetches its backend copies again.
  */
-@Database(entities = [CoveredPolygonEntity::class, CoverageMetaEntity::class], version = 1, exportSchema = false)
+@Database(
+    entities = [
+        CoveredPolygonEntity::class,
+        CoverageMetaEntity::class,
+        SavedRouteEntity::class,
+        SavedRouteDetailEntity::class,
+        SavedRoutesMetaEntity::class,
+    ],
+    version = 2,
+    exportSchema = false,
+)
 @ConstructedBy(PersistenceDatabaseConstructor::class)
 internal abstract class PersistenceDatabase : RoomDatabase() {
     abstract fun coverageDao(): CoverageDao
+
+    abstract fun savedRoutesDao(): SavedRoutesDao
 }
 
 // Room's compiler generates the actual for each target
