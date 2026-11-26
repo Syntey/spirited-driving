@@ -1,7 +1,7 @@
 package com.syntey.spiriteddriving.data.persistence.injection
 
 import android.content.Context
-import androidx.room.Room
+import androidx.room3.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.syntey.spiriteddriving.data.persistence.database.PersistenceDatabase
 import com.syntey.spiriteddriving.data.persistence.tools.Constants

@@ -34,7 +34,7 @@ kotlin {
 }
 
 // The schema of each database version is exported here and committed; each later step adds a migration from it.
-room {
+room3 {
     schemaDirectory("$projectDir/schemas")
 }
 

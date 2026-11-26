@@ -1,6 +1,6 @@
 package com.syntey.spiriteddriving.data.persistence.database
 
-import androidx.room.Room
+import androidx.room3.Room
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment

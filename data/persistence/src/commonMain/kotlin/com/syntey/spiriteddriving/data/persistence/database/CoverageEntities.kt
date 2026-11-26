@@ -1,7 +1,7 @@
 package com.syntey.spiriteddriving.data.persistence.database
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
+import androidx.room3.Entity
+import androidx.room3.PrimaryKey
 import com.syntey.spiriteddriving.data.persistence.persistence.coverage.StoredPolygon
 import com.syntey.spiriteddriving.data.persistence.persistence.geo.StoredPoint
 import kotlinx.serialization.builtins.ListSerializer
