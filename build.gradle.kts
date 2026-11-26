@@ -9,7 +9,6 @@ plugins {
     alias(libs.plugins.detekt) apply false
     alias(libs.plugins.koin) apply false
     alias(libs.plugins.ksp) apply false
-    alias(libs.plugins.androidx.room) apply false
     alias(libs.plugins.aboutlibraries) apply false
     alias(libs.plugins.aboutlibraries.android) apply false
     alias(libs.plugins.version.catalog.update)

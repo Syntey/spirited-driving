@@ -21,5 +21,6 @@ internal actual class DatabaseModule actual constructor() : KoinComponent {
         name = Constants.Files.DATABASE,
     )
         .setDriver(BundledSQLiteDriver())
+        .fallbackToDestructiveMigration(dropAllTables = true)
         .build()
 }

@@ -2,7 +2,6 @@ plugins {
     id(libs.plugins.conventions.kmp.library.get().pluginId)
     id(libs.plugins.conventions.koin.get().pluginId)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.androidx.room)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -31,11 +30,6 @@ kotlin {
             }
         }
     }
-}
-
-// The schema of each database version is exported here and committed; each later step adds a migration from it.
-room3 {
-    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {

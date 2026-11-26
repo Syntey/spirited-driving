@@ -210,7 +210,6 @@ firebase-distribution = { id = "com.google.firebase.appdistribution", version.re
 google-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "google-firebaseCrashlyticsPlugin" }
 detekt = { id = "dev.detekt", version.ref = "detektGradlePlugin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-androidx-room = { id = "androidx.room3", version.ref = "room" }
 koin = { id = "io.insert-koin.compiler.plugin", version.ref = "koinCompilerPlugin" }
 version-catalog-update = { id = "nl.littlerobots.version-catalog-update", version.ref = "versionCatalogUpdate" }
 modules-graph-assert = { id = "com.jraska.module.graph.assertion", version.ref = "modulesGraphAssert" }
