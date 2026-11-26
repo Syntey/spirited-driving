@@ -16,8 +16,12 @@ import androidx.room3.RoomDatabaseConstructor
         SavedRouteEntity::class,
         SavedRouteDetailEntity::class,
         SavedRoutesMetaEntity::class,
+        PastDriveEntity::class,
+        TripHistoryMetaEntity::class,
+        PastDriveRouteEntity::class,
+        UnsentRatingEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 @ConstructedBy(PersistenceDatabaseConstructor::class)
@@ -25,6 +29,8 @@ internal abstract class PersistenceDatabase : RoomDatabase() {
     abstract fun coverageDao(): CoverageDao
 
     abstract fun savedRoutesDao(): SavedRoutesDao
+
+    abstract fun tripHistoryDao(): TripHistoryDao
 }
 
 // Room's compiler generates the actual for each target
